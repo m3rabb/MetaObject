@@ -129,11 +129,12 @@ describe("Top.Module", function() {
 	});
 	
 	describe("#newSubModule", function() {
-		var submodule, InnerThis;
+		var submodule, InnerThis, InnerObject;
 				
 		it("answers a new named submodule from the receiver module", function() {
-			submodule = Top.newSubModule("Testing", function () {
+			submodule = Top.newSubModule("Testing", function (module) {
 				InnerThis = this;
+                InnerObject = module;
 				return 123;
 			});
 			expect( submodule.constructorName() ).toBe( "Module" );
@@ -231,12 +232,14 @@ describe("Top.Module", function() {
 			});
 		});
 		describe("when called with an extension action", function() {
-			it("passes in the receiver's root", function() {
-				constructor = Testing.newSubTypeFrom("Person", "Object", function () {
+			it("passes into the extension function the instance root of the new constructor as 'instanceRoot'", function() {
+				constructor = Testing.newSubTypeFrom("Person", "Object", function (instanceRoot) {
 					InnerThis = this;
+                    InnerInstanceRoot = instanceRoot;
 					return 123;
 				});
-				expect( InnerThis ).toBe( constructor.prototype );
+				expect( InnerThis ).toBe( constructor );
+                expect( InnerInstanceRoot ).toBe( constructor.prototype );
 			});
 			it("answers the new constructor", function() {
 				expect( constructor.Selector ).toBe( "Person" );
@@ -245,12 +248,13 @@ describe("Top.Module", function() {
 	});
 	
 	describe("#newType", function() {
-		var Testing, constructor, InnerThis;
+		var Testing, constructor, InnerThis, InnerInstanceRoot;
 		Testing = Top.newSubModule("Testing");
 		
 		it("answers a new constructor subtyped from the Top.Object", function() {
-			constructor = Testing.newType("Vehicle", function () {
+			constructor = Testing.newType("Vehicle", function (instanceRoot) {
 				InnerThis = this;
+                InnerInstanceRoot = instanceRoot;
 				return 123;
 			});
 			expect( typeof constructor ).toBe( "function" );
@@ -263,7 +267,8 @@ describe("Top.Module", function() {
 		});
 		describe("when called with an extension action", function() {
 			it("passes in the receiver's root", function() {
-				expect( InnerThis ).toBe( constructor.prototype );
+				expect( InnerThis ).toBe( constructor );
+                expect( InnerInstanceRoot).toBe( constructor.prototype );
 			});
 		});
 	});
@@ -285,13 +290,15 @@ describe("Top.Module", function() {
 			expect( Sandwich.prototype.constructor ).toBe( Sandwich );
 		});
 		it("the constructor has a method #passRootInto to access its prototype", function() {
-			var InnerThis, sandwich;
+			var InnerThis, InnerInstanceRoot, sandwich;
 			sandwich = new Sandwich();
-			Sandwich.passRootInto(function () {
+			Sandwich.passInstanceRootInto(function (instanceRoot) {
 				InnerThis = this;
-				this.addMethod(function calories() { return 1234; });
+                InnerInstanceRoot = instanceRoot;
+				instanceRoot.addMethod(function calories() { return 1234; });
 			});
-			expect( InnerThis ).toBe( Sandwich.prototype );
+			expect( InnerThis ).toBe( Sandwich );
+            expect( InnerInstanceRoot ).toBe( Sandwich.prototype );
 			expect( sandwich.calories() ).toBe( 1234 );
 		});
 	});
