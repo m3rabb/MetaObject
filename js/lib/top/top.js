@@ -1,7 +1,6 @@
 
-// Written by Maurice Rabb - <mr@mauricerabb.com>
-
-// Documentation by Tyler Camp - <tyler.camp@loop.colum.edu>
+// Lead Developer: Maurice Rabb <mr@mauricerabb.com>
+// Contributing Developer: Tyler Camp <tyler.camp@loop.colum.edu>
 
 
 
