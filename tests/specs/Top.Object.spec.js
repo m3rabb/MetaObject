@@ -4,7 +4,7 @@ describe("Top.Object", function() {
 	var TopObject = Top.Object;
 	var topModule = Top;
 	var TopObjectRoot = TopObject.prototype; 
-	var answer, InnerThis;
+	var answer, InnerThis, InnerObject;
 	var Testing = Top.newSubModule("Testing");
 
 	var Thing = Testing.newType("Thing");
@@ -226,7 +226,51 @@ describe("Top.Object", function() {
 				expect( thing.gg.name ).toBe( "anInstanceVarAccessor" );
 			});
 		});
-		
+
+        describe("#addCustomAccessor", function() {
+            describe("when called with only a selector and a getter", function () {;
+                it("adds an accessor without a setter", function () {
+                    function someGetter() {
+                        return 20;
+                    }
+                    thing.addCustomAccessor("custom", someGetter);
+
+                    expect(thing.custom()).toBe(20);
+                    expect(function () {thing.custom(10)}).toThrow("Attempted to access custom setter for 'custom' but no setter was defined");
+                });
+            });
+
+            describe("when called with only a selector and a setter", function() {
+                it("adds an accessor without a getter", function () {
+                    function someSetter(value) {
+                        this.someThing = value;
+                    }
+
+                    thing.addCustomAccessor("custom", someSetter);
+                    thing.custom(200);
+                    expect(thing.someThing).toBe(200);
+                    expect(function () {thing.custom()}).toThrow("Attempted to access custom getter for 'custom' but no getter was defined");
+                });
+            });
+
+            describe("when called with a selector, getter, and setter", function() {
+                it("adds an accessor with a custom getter/setter", function () {
+                    function someSetter(value) {
+                        this._someValue = "name: " + value;
+                    }
+
+                    function someGetter() {
+                        return this._someValue;
+                    }
+
+                    thing.addCustomAccessor("custom", someSetter, someGetter);
+                    var customSetterResult = thing.custom("hello");
+                    expect(thing.custom()).toBe("name: hello");
+                    expect(customSetterResult).toBe(thing);
+                });
+            });
+        });
+
 		describe("#aliasMethod", function() {
 			var answer = thingRoot.aliasMethod("speak", "talk");
 			it("adds a ref to an existing method under a new name", function() {
@@ -330,9 +374,10 @@ describe("Top.Object", function() {
 		});
 		
 		describe("#passInto", function() {
-			it("passes its receiver as 'this' into the function arg", function() {
-				answer = topModule.passInto(function () {InnerThis = this; return 123;});
+			it("passes its receiver as a function parameter, with 'this' also as the receiver", function() {
+				answer = topModule.passInto(function (module) {InnerThis = this; InnerObject = module; return 123;});
 				expect( InnerThis ).toBe( topModule );
+                expect( InnerObject).toBe( topModule );
 			});
 			it("answers its receiver", function() {
 				expect( answer ).toBe( topModule );
@@ -345,9 +390,10 @@ describe("Top.Object", function() {
 		});
 		
 		describe("#passRootInto", function() {
-			it("passes its receiver's root as 'this' into the function arg", function() {
-				answer = topModule.passRootInto(function () {InnerThis = this; return 123;});
-				expect( InnerThis ).toBe( topModule.root() );
+			it("passes its receiver's root as a parameter to the extension method, with 'this' as the receiver", function() {
+				answer = topModule.passRootInto(function (root) {InnerObject = root; InnerThis = this; return 123;});
+				expect( InnerThis ).toBe( topModule );
+                expect( InnerObject ).toBe( topModule.root() );
 			});
 			it("answers its receiver", function() {
 				expect( answer ).toBe( topModule );
