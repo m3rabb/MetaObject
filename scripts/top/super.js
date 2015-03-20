@@ -37,8 +37,44 @@ Thing_root.addMethod(function init(/* arguments */) {
 
 this.super.name();
 
+function AddSuperMethod(Selector) {
+  Super.prototype[Selector] = function () {
+    var target = this.__this;
+    SuperMethodOfFor(Selector, target).apply(target, arguments)
+  }
+}
+
+
+function AddSuperMethod(Selector) {
+  Super_root[Selector] = function (/* arguments */) {
+    var receiver, currentMethod, nextReceiver, nextMethod;
+
+    receiver = this._Self;
+    currentMethod = receiver[Selector];
+    nextReceiver = receiver;
+
+    do {
+      nextReceiver = nextReceiver.__proto__;
+      nextMethod = nextReceiver[selector];
+    } while (nextMethod === currentMethod);
+
+    return nextMethod.apply(receiver, arguments);
+  }
+}
+
+function SuperMethodOf_for(selector, receiver) {
+  var originalMethod = receiver[selector];
+  var nextReceiver = receiver;
+  var nextMethod;
+  do {
+    nextReceiver = RootOf(nextReceiver);
+    nextMethod = nextReceiver[selector];
+  } while (nextMethod === originalMethod);
+  return nextMethod;
+}
 
 //================//
+
 
 
 Type.addMethod(function newInstance(name, supertype_) {

@@ -42,7 +42,7 @@
       //// PRIV INSTANCE)
       //// $(d d d d )
       this._I
-      
+
       var actualsCount, elements, copyRule;
       actualsCount = actuals.length;
       elements  = actuals[0];
@@ -219,7 +219,7 @@ var paramCount     = paramNames.length;
       index = names.length;
       array = [];
 
-      while(index-- > 0) {
+      while(index--) {
         name = names[index];
         array[index] = spec[name];
       }
@@ -355,24 +355,23 @@ var paramCount     = paramNames.length;
 
     ParamsSpec.addInstanceMethod(function executeOnPlural(
         baseMethod, target, elements, actuals) {
-      var actual = actuals[1];
-      var values;
+      var values = actuals[1];
 
-      if (IsArray(actual)) {
-        values = actual;
+      if (IsArray(values)) {
+        // All set!
       }
       // if (arg_ instanceof Thing) {
       //   arg_.asParams()
       // }
-      else if (typeof actual === "object") {
-        if (actual.length >= 0 && typeof actual.callee === "function") {
-          values = actual;
+      else if (typeof values === "object") {
+        if (values.length >= 0 && typeof values.callee === "function") {} else {
+          values = null;
         }
       }
-      else if (typeof actual === "string") {
-        values = AsElements(actual);
+      else if (typeof values === "string") {
+        values = AsElements(values);
       }
-      else if (actual === true) {
+      else if (values === true) {
         return this.executeOnCombinedArray(baseMethod, target, elements);
       }
       return values ?
@@ -389,7 +388,7 @@ var paramCount     = paramNames.length;
       }
       spec = NewStash();
       index = array.length;
-      while (index > 0) {
+      while (index) {
         value     = array[--index];
         key       = array[--index];
         spec[key] = value;

@@ -19,38 +19,33 @@
   function factory(require) {
 
 
-    var PropertiesOf = Object.keys;
-    var IsArray      = Top.isArray;
-
-    var SpawnFrom    = Top.spawnRoof;
-    var NewStash     = Top.newStash;
-    var RootOf       = Top.rootOf;
-    var Thing        = Top.Thing;
-    var Type         = Top.Type;
+    var PropertiesOf     = Object.keys;
+    var IsArray          = Top.isArray;
+    var SpawnFrom        = Top.spawnRoof;
+    var NewStash         = Top.newStash;
+    var RootOf           = Top.rootOf;
+    var Thing            = Top.Thing;
+    var Type             = Top.Type;
     var Object_prototype = Object.prototype;
 
-    function NewStash_(spec) {
-      var stash, chain, target, chainIndex;
-      var selectors, index, selector;
+
+    // retry
+    // get all Keys from obj then remove any key while values from Object_prototype
+
+    function NewStash$(spec) {
+      var stash, selectors, index, root, selector, value;
 
       stash = NewStash();
       if (IsProtectingAgainstObjectIntrusion && spec instanceof Object) {
-        chain = [];
-        target = spec;
-        chainIndex = 0;
-        do
-          chain[chainIndex++] = target;
-          target = RootOf(target);
-        } while (target !== Object_prototype);
-
-        chainIndex = chain.length;
-        while (chainIndex-- > 0) {
-          target = chain[chainIndex];
-          selectors = PropertiesOf(target);
-          index = selectors.length;
-          while (index-- > 0) {
-            selector = selectors[index];
-            stash[selector] = target[selector];
+        selectors = PropertiesOf(target);
+        index = selectors.length;
+        root = RootOf(spec);
+        while (index--) {
+          selector = selectors[index];
+          value = spec[selector];
+          if (value !== Object_prototype[selector] ||
+              Object_hasOwnProperty.call(spec, selector)) {
+            stash[selector] = spec[selector];
           }
         }
       } else {
@@ -60,6 +55,7 @@
       }
       return stash;
     }
+
 
 
 var PRIVATE_IMMUTABLE_CONFIGURATION = NewStash_({
@@ -81,14 +77,14 @@ var LOCKED_METHOD_CONFIGURATION NewStash_({
                                });
 
     function CopyObject(source_) {
-      var source, target, selectors, selector, index;
+      var source, target, selectors, index, selector;
 
       source = source_ || this;
       target = SpawnFrom(RootOf(source));
       selectors = PropertiesOf(source);
       index = selectors.length;
 
-      while (index-- > 0) {
+      while (index--) {
         selector = selectors[index];
         target[selector] = source[selector];
       }
@@ -172,7 +168,7 @@ var LOCKED_METHOD_CONFIGURATION NewStash_({
     Type_root.addPrivilegedMethod(function newInstance_(spec, extensionAction_) {
       var instanceRoot = this._InstanceRoot;
       var instance = SpawnFrom(instanceRoot);
-      var _this = InstallPrivateThisOn(instance);
+      var _this = InstallInnerThisOn(instance);
       instanceRoot.init_.call(_this, spec);
       return _this.extend(extensionAction_);
     });

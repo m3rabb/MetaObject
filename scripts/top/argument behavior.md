@@ -123,10 +123,6 @@ $($LIST)
 $($ARGS)
 args
 
-$($options)  // $(a b c d)
-$($SPEC)     // $(a b c d)
-a:1, b:undefined, c:3, d:4
-
 
 $($options, $REST)  // $(a b c d)
 options = a:1, b:undefined, c:3, d:4

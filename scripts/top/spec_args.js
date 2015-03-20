@@ -181,7 +181,7 @@ $$spec $$LIST $$REST
       index = paramNames.length;
       args = [];
 
-      while(index-- > 0) {
+      while(index--) {
         name = paramNames[index];
         args[index] = spec[name];
       }

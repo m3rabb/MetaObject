@@ -21,16 +21,16 @@
 
 
 
-    Thing.addSharedMethod(function addAccessor(accessorSpec) {
-      var accessor = AccessorMaker.newFrom(accessorSpec).make();
+    Thing.addSharedMethod(function addAccessor(accessorSignature) {
+      var accessor = AccessorMaker.newFrom(accessorSignature).make();
       this.atPutMethod(selector, accessor);
     });
 
-    AccessorMaker.addMethod(function newFrom(accessorSpec) {
-      var matchResult = accessorSpec.match(SELECTOR_SPEC_MATCHER);
+    AccessorMaker.addMethod(function newFrom(accessorSignature) {
+      var matchResult = accessorSignature.match(SELECTOR_SPEC_MATCHER);
       return (matchResult !== null) ?
-        this._super$newFrom(accessorSpec, matchResult) :
-        this.accessorSpecError(accessorSpec);
+        this._super$newFrom(accessorSignature, matchResult) :
+        this.accessorSignatureError(accessorSignature);
     });
 
 
@@ -48,12 +48,12 @@
     var SELECTOR_SPEC_MATCHER = /(~?)(\+?)(&?)(!?)([\w$]+)(~?)(&?)(!?)(\??)/i
                          // /([~+&?]*)([\w$]+)([~&!]*)/i;
 
-    AccessorMaker.addSPMethod(function _init(validAccessorSpec, matchResult) {
+    AccessorMaker.addSPMethod(function _init(validSignature, matchResult) {
       var selector = matcher[5];
 
       this._super$_init();
-      this._AccessorSpec      = validAccessorSpec;
-      this._MatchResult         = matchResult;
+      this._AccessorSignature = validSignature;
+      this._MatchResult       = matchResult;
       this._ProtectedSelector =
         "_" + selector[0].toUpperCase() + selector.slice(1);
 
@@ -122,12 +122,12 @@
 
     AccessorMaker.addSPMethod(function answerGetter() {
       //  ~      [!]friends [&] * [?]
-      var AccessorSpec = this._AccessorSpec;
-      var accessorId = AccessorSpec.replace(GETTER_SPEC_MATCHER, "~$1$2$3$4");
+      var Signature = this._AccessorSignature;
+      var accessorId = Signature.replace(GETTER_SPEC_MATCHER, "~$1$2$3$4");
 
       return this.canonicalAccessorFor(accessorId, function () {
         var _selector = this._ProtectedSelector;
-        var  flags    = AccessorSpec.replace(GETTER_SPEC_MATCHER, "$1$3$4");
+        var  flags    = Signature.replace(GETTER_SPEC_MATCHER, "$1$3$4");
 
         return flags ?
           CreateGeneralGetter(_selector, this._Options) :
@@ -163,12 +163,12 @@
 
     AccessorMaker.addSPMethod(function answerSetter() {
       //   [+][&] * friends~      [?]
-      var AccessorSpec = this._AccessorSpec;
-      var accessorId = AccessorSpec.replace(SETTER_SPEC_MATCHER, "$1$2$3");
+      var Signature = this._AccessorSignature;
+      var accessorId = Signature.replace(SETTER_SPEC_MATCHER, "$1$2$3");
 
       return this.canonicalAccessorFor(accessorId, function () {
         var _selector = this._ProtectedSelector;
-        var  flags    = AccessorSpec.replace(SETTER_SPEC_MATCHER, "$1$3");
+        var  flags    = Signature.replace(SETTER_SPEC_MATCHER, "$1$3");
 
         return flags ?
           CreateGeneralSetter(_selector, this._Options) :
@@ -209,10 +209,10 @@
 
     AccessorMaker.addSPMethod(function answerWriteOnceAccessor() {
       //    + [&][!]friends [&][!][?]
-      var AccessorSpec = this._AccessorSpec;
+      var Signature = this._AccessorSignature;
 
-      return this.canonicalAccessorFor(AccessorSpec, function () {
-        var  flags    = AccessorSpec.replace(WRITE_ONCE_SPEC_MATCHER, "$1$2");
+      return this.canonicalAccessorFor(Signature, function () {
+        var  flags    = Signature.replace(WRITE_ONCE_SPEC_MATCHER, "$1$2");
         var _selector = this._ProtectedSelector;
         var  options  = this._Options;
 
@@ -279,11 +279,11 @@
 
     AccessorMaker.addSPMethod(function answerAccessor() {
       //      [&]   friends [&][!] *
-      var AccessorSpec = this._AccessorSpec;
-      var accessorId = AccessorSpec.replace(ACCESSOR_SPEC_MATCHER, "$1$2$3");
+      var Signature = this._AccessorSignature;
+      var accessorId = Signature.replace(ACCESSOR_SPEC_MATCHER, "$1$2$3");
 
-      return this.canonicalAccessorFor(this._AccessorSpec, function () {
-        var  flags    = accessorSpec.replace(WRITE_ONCE_SPEC_MATCHER, "$1$3");
+      return this.canonicalAccessorFor(Signature, function () {
+        var  flags    = Signature.replace(WRITE_ONCE_SPEC_MATCHER, "$1$3");
         var _selector = this._ProtectedSelector;
 
         return flags ?
