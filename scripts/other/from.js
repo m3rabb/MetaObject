@@ -1,3 +1,25 @@
+
+(function (global) {
+  "use strict";
+
+  function factory(require) {
+
+
+  }
+
+  if (typeof define === 'function' && define.amd) {
+      // AMD. Register as an anonymous module.
+      define(factory);
+  } else {
+      // Browser globals
+      global.Top = factory(global);
+  }
+})(this);
+
+
+
+
+
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -14,6 +36,8 @@
     // can return a function as the exported value.
     return {};
 }));
+
+
 
 
 
@@ -64,7 +88,7 @@
 
   this.init.apply(this, args);
 
-  
+
 
   this.
 

@@ -7,6 +7,11 @@
 
 ._super
 
+Top.Config({
+  accessors : {mname: "Upper", pname: "_$lower"},
+  locked: true
+})
+
 
 - simple structure
 - add accessors

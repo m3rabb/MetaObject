@@ -9,24 +9,24 @@ var Math_floor  = Math.floor;
 
 
 // #### Random Number Generation
-function RandomInt(minInt_, maxInt) {
+function RandomInt(max_min, max_) {
     var min, max;
     if (arguments.length <= 1) {
-        min = 0, max = minInt_;
+        min = 0, max = max_min;
     } else {
-        min = minInt_, max = maxInt;
+        min = max_min, max = max_;
     }
     return Math_floor(Math_random() * (max - min + 1)) + min;
 }
 
-// #### 128-bit ID Generation Functions
 var ZERO_PADDING, MAX_UNIQUE_ID_LENGTH, RandomIntMethod, NewUniqueIdMethod;
 
+RANDOM_MAX = 0xFFFFFFFFFFFF;
 ZERO_PADDING = "0000000000000000";
 MAX_UNIQUE_ID_LENGTH =
-  (+new Date("2067-01-01") * 0xFFFFFFFFFFFF).toString(36).length;
+  (+new Date("2067-01-01") * RANDOM_MAX).toString(36).length;
 
-function NewUniqueId(prefix, seedDate, seedValue) {
+function _NewUniqueId(prefix, seedDate, seedValue) {
   var id, zeros;
   id = seedDate * seedValue;
   id = id.toString(36);
@@ -34,7 +34,7 @@ function NewUniqueId(prefix, seedDate, seedValue) {
   return prefix + zeros + id;
 }
 
-function newUniqueId(prefix_) {
+function NewUniqueId(prefix_) {
     var prefix = prefix_ || "";
-    return NewUniqueId(prefix, Date.now(), RandomIntMethod(0xFFFFFFFFFFFF));
+    return _NewUniqueId(prefix, Date.now(), RandomIntMethod(RANDOM_MAX));
 };

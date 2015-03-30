@@ -45,6 +45,8 @@
     //  ! = focus bias of return behavior
     //  ? = check the arguments and error if problem
 
+    //  Need lazy immutable accessors!!!
+
     var SELECTOR_SPEC_MATCHER = /(~?)(\+?)(&?)(!?)([\w$]+)(~?)(&?)(!?)(\??)/i
                          // /([~+&?]*)([\w$]+)([~&!]*)/i;
 

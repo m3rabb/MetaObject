@@ -1,11 +1,33 @@
 ## Coding Conventions
 ### js
 * properties
-    * publicMethod
-    * _privateMethod
-    * _PrivateVar
-    * _OptionalPrivateVar_
-    * PublicSubproperty  -- with new cover model, perhaps not
+  * public/Public
+  * _private property or method
+  * $public/$Public property
+  * method$
+  * $  _$  $_  _$_
+
+  * _$ivar  autogen ivar property
+  * __implementation property
+    prefex rules capitalization rules
+
+  vars
+    normal
+    _private
+
+
+
+* properties
+    * PublicMethod
+    * _PrivateMethod
+    * standardJSProperty
+    * _privateProperty
+    * _optionalPrivateVar_
+    * $PublicImmutableProperty
+    * $publicImmutableProperty
+    * _$PrivateImmutableProperty
+    * _$privateImmutableProperty
+
 * variable
 	* parameter/localVar
 	* ClosuredParameters/ClosuredLocalVar
@@ -15,12 +37,3 @@
 	* _paySpecialAttentionToThisVar
 	* _PaySpecialAttentionToThisVar
 	* CONST_REF
-
-### angular specific
-* angular directives
-	* [prefix directives with data- for valid html](http://stackoverflow.com/questions/16184428/what-is-the-difference-between-ng-app-and-data-ng-app)
-
-## Coding methodology
-The structure below shows the intended structure of each instance of each class.
-Whenever possible direct access to instance properties should be avoided, and instead,
-properties should be accessed, and behaviors initiated via method calls.
