@@ -85,24 +85,47 @@
       return Math_floor(Math_random() * (max - min + 1)) + min;
     }
 
-    function _NewUniqueId(prefix, seedDate, seedValue) {
-      var id, zeros;
+    function NewUniqueId(prefix_, seedDate__, seedValue__) {
+      var prefix, seedDate, seedValue, id, zeros;
+      prefix = prefix_ || "";
+      seedDate = seedDate__ || Date.now();
+      seedValue = seedValue__ || RandomInt(RANDOM_MAX);
       id = seedDate * seedValue;
       id = id.toString(36);
       zeros = ZERO_PADDING.slice(0, MAX_UNIQUE_ID_LENGTH - id.length);
       return prefix + zeros + id;
     }
 
-    function NewUniqueId(prefix_) {
-      var prefix = prefix_ || "";
-      return _NewUniqueId(prefix, Date.now(), RandomInt(RANDOM_MAX));
-    }
 
     var BASE_KEY = NewUniqueId("BaseKey");
     var REPLACE_BASE_KEY = NewUniqueId("ReplaceBaseKey");
 
 
-    function NewStash() { return SpawnFrom(Stash_root); }
+    function NewStash(spec_) {
+      var stash, selectors, index, selector, value;
+
+      stash = SpawnFrom(Stash_root);
+      if (spec_) {
+        if (IsProtectingAgainstObjectIntrusion && spec_ instanceof Object) {
+          selectors = PropertiesOf(spc);
+          index = selectors.length;
+          while (index--) {
+            selector = selectors[index];
+            value    = spec_[selector];
+            if (value !== Object_prototype[selector] ||
+                Object_hasOwnProperty.call(spec_, selector)) {
+              stash[selector] = spec_[selector];
+            }
+          }
+        } else {
+          for (selector in spec_) {
+            stash[selector] = spec_[selector];
+          }
+        }
+      }
+      return stash;
+    }
+
 
     function IsUpperCase(target) {
       return target.match && target.match(/^[A-Z]/);

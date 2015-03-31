@@ -33,16 +33,15 @@
     // get all Keys from obj then remove any key while values from Object_prototype
 
     function NewStash$(spec) {
-      var stash, selectors, index, root, selector, value;
+      var stash, selectors, index, selector, value;
 
       stash = NewStash();
       if (IsProtectingAgainstObjectIntrusion && spec instanceof Object) {
-        selectors = PropertiesOf(target);
+        selectors = PropertiesOf(spc);
         index = selectors.length;
-        root = RootOf(spec);
         while (index--) {
           selector = selectors[index];
-          value = spec[selector];
+          value    = spec[selector];
           if (value !== Object_prototype[selector] ||
               Object_hasOwnProperty.call(spec, selector)) {
             stash[selector] = spec[selector];
