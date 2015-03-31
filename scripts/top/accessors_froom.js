@@ -563,3 +563,7 @@ function CreateCommonImmutableGetter(_Selector) {
     return this.__(PURSE_READ_KEY)[_Selector];
   };
 }
+
+
+
+// Add lazyAccessor
