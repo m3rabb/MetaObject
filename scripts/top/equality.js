@@ -60,14 +60,14 @@ Top.Extend(function () {
     });
 
     this.AddIMethod(function _HasEqualAncestry_(_that, comparator_) {
-      return this.__$type_ === _that.__$type_;
+      return this.__$type === _that.__$type;
     });
 
     this.AddIMethod(function _HasEqualProperties_(_that, comparator) {
       var namesA, namesB, index, name;
 
-      namesA =  this._knownProperties_;
-      namesB = _that._knownProperties_;
+      namesA =  this._knownProperties;
+      namesB = _that._knownProperties;
       if (namesA === namesB) {
         if (namesA) {
           index = namesA.length;
@@ -104,7 +104,7 @@ Top.Extend(function () {
   this.$Type.AddIMethod(function SupportEquality(measure) {
     var marker = measure.$supportMarker;
     SetHiddenImmutableProperty(_Ref_root, marker , true);
-    SetHiddenImmutableProperty(this._instanceRoot_, marker , true);
+    SetHiddenImmutableProperty(this._instanceRoot, marker , true);
   });
 
   EqualityMeasure = this.SetType("EqualityMeasure", function () {
@@ -133,33 +133,33 @@ Top.Extend(function () {
 
   ValuesComparator = this.SetType("ValuesComparator", function () {
     this.AddIMethod(function _Init(equalityMeasure) {
-      this._measure_           = equalityMeasure;
-      this._publicComparison_  = equalityMeasure.publicComparison;
-      this._privateComparison_ = equalityMeasure.privateComparison;
-      this._immutables_        = [];
-      this._groupings_         = NewStash();
-      // this._modified_       = [];
+      this._measure           = equalityMeasure;
+      this._publicComparison  = equalityMeasure.publicComparison;
+      this._privateComparison = equalityMeasure.privateComparison;
+      this._immutables        = [];
+      this._groupings         = NewStash();
+      // this._modified       = [];
     });
 
     this.AddIMethod(function Compare(a, b) {
-      return this._measure_.Compare(a, b, this);
+      return this._measure.Compare(a, b, this);
     });
 
     this.AddIMethod(function CompareEducatedObjects_(a, b) {
       var isImmutable = IsImmutable(a);
       if ((isImmutable) !== IsImmutable(b))  { return false; }
-      var oidA = a.__$oid_;
-      var oidB = b.__$oid_;
+      var oidA = a.__$oid;
+      var oidB = b.__$oid;
       if ( this.AlreadyCompared(oidA, oidB)) { return true;  }
 
-      return a[this._privateComparison_](b, this);
+      return a[this._privateComparison](b, this);
     });
 
     this.AddIMethod(function CompareIgnorantObjects_(a, b) {
       var isImmutable = IsImmutable(a);
       if ((isImmutable) !== IsImmutable(b)) { return false; }
-      var oidA = a.__$oid_ || this._GetOid(a, isImmutable);
-      var oidB = b.__$oid_ || this._GetOid(b, isImmutable);
+      var oidA = a.__$oid || this._GetOid(a, isImmutable);
+      var oidB = b.__$oid || this._GetOid(b, isImmutable);
       if (this.AlreadyCompared(oidA, oidB)) { return true;  }
 
       if (!this.HaveEqualAncestry(a, b))    { return false; }
@@ -171,7 +171,7 @@ Top.Extend(function () {
       var immutables, index, count;
 
       if (isImmutable) {
-        immutables = this._immutables_;
+        immutables = this._immutables;
         index = count = immutables.length;
         while (index--) {
           if (immutables[index] === target) { return -1 - index; }
@@ -179,12 +179,12 @@ Top.Extend(function () {
         immutables[count] = target;
         return count;
       }
-      // this._modified_.push(target);
-      return (target.__$oid_ = NewUniqueId(target.constructor.name));
+      // this._modified.push(target);
+      return (target.__$oid = NewUniqueId(target.constructor.name));
     });
 
     this.AddIMethod(function AlreadyCompared(oidA, oidB) {
-      var groupings = this._groupings_;
+      var groupings = this._groupings;
       var groupingA = groupings[oidA];
       var groupingB = groupings[oidB];
 
@@ -208,7 +208,7 @@ Top.Extend(function () {
     });
 
     this.AddIMethod(function _MergeGroupings(groupingA, groupingB) {
-      var groupings = this._groupings_;
+      var groupings = this._groupings;
       var countA = groupingA.length;
       var countB = groupingB.length;
       var index, source, destination, oid;
@@ -230,7 +230,7 @@ Top.Extend(function () {
     });
 
     this.AddIMethod(function HaveEqualAncestry(a, b) {
-      return this._measure_.Compare(RootOf(a), RootOf(b));
+      return this._measure.Compare(RootOf(a), RootOf(b));
     });
 
     this.AddIMethod(function HaveEqualProperties(objA, objB) {
@@ -243,7 +243,7 @@ Top.Extend(function () {
       if (index !== namesB.length)                    { return false; }
       namesA.sort();
       namesB.sort();
-      measure = this._measure_;
+      measure = this._measure;
       while (index--) {
         name = namesA[index];
         if (name !== namesB[index])                   { return false; }
@@ -253,10 +253,10 @@ Top.Extend(function () {
     });
 
     // this.AddIMethod(function Finalize() {
-    //   var modified = this._modified_;
+    //   var modified = this._modified;
     //   var index = modified.length
     //   while (index--) {
-    //     delete modified[index].__$oid_;
+    //     delete modified[index].__$oid;
     //   }
     // });
 
@@ -266,27 +266,27 @@ Top.Extend(function () {
    "StructuralComparator", "ValuesComparator", function () {
     this.AddIMethod(function _Init(equalityMeasure) {
       this._super._Init(equalityMeasure);
-      this._visitedA_  = NewStash();
-      this._visitedB_  = NewStash();
-      this._pathCount_ = 0;
+      this._visitedA  = NewStash();
+      this._visitedB  = NewStash();
+      this._pathCount = 0;
     });
 
     this.AddIMethod(function CompareEducatedObjects_(a, b) {
       var isImmutable = IsImmutable(a);
       if ((isImmutable) !== IsImmutable(b))  { return false; }
-      var oidA = a.__$oid_;
-      var oidB = b.__$oid_;
+      var oidA = a.__$oid;
+      var oidB = b.__$oid;
       if ( this.AlreadyCompared(oidA, oidB)) { return true;  }
       if (!this.HaveEqualPaths(oidA, oidB))  { return false; }
 
-      return a[this._privateComparison_](b, this);
+      return a[this._privateComparison](b, this);
     });
 
     this.AddIMethod(function CompareIgnorantObjects_(a, b) {
       var isImmutable = IsImmutable(a);
       if ((isImmutable) !== IsImmutable(b)) { return false; }
-      var oidA = a.__$oid_ || this._GetOid(a, isImmutable);
-      var oidB = b.__$oid_ || this._GetOid(b, isImmutable);
+      var oidA = a.__$oid || this._GetOid(a, isImmutable);
+      var oidB = b.__$oid || this._GetOid(b, isImmutable);
       if (this.AlreadyCompared(oidA, oidB)) { return true;  }
       if (!this.HaveEqualPaths(oidA, oidB)) { return false; }
 
@@ -295,14 +295,14 @@ Top.Extend(function () {
     });
 
     this.AddIMethod(function HaveEqualPaths(oidA, oidB) {
-      var visitedA = this._visitedA_;
-      var visitedB = this._visitedB_;
+      var visitedA = this._visitedA;
+      var visitedB = this._visitedB;
       var indexA = visitedA[oidA];
       var indexB = visitedB[oidB];
 
       if (indexA !== indexB) { return false; }
       if (indexA === undefined) {
-        visitedA[oidA] = visitedB[oidB] = this._pathCount_++;
+        visitedA[oidA] = visitedB[oidB] = this._pathCount++;
       }
       return true;
     });
@@ -340,9 +340,9 @@ Top.Extend(function () {
 //
 //   if (that instanceof _Ref) {
 //     this[PulpAccessor](PULP_KEY).
-//     return this.__$type_ === that.__Base(BASE_KEY).__$type_;
+//     return this.__$type === that.__Base(BASE_KEY).__$type;
 //   }
-//   return (that instanceof _Base) ? this.__$type_ === that.__$type_ : false;
+//   return (that instanceof _Base) ? this.__$type === that.__$type : false;
 // });
 
 
