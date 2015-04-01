@@ -8,7 +8,8 @@
   plusplus:false, noarg:true, nonew:true, latedef:true, regexp:true,
   noempty:false, lastsemic:true, immed:true, expr:true, eqnull:true,
   browser:true, jquery:true, devel:true, globalstrict:true,
-  smarttabs:true, trailing:false, newcap:false, undef:true, unused:false
+  smarttabs:true, trailing:false, newcap:false, undef:true, unused:false,
+  futurehostile:true
 */
 // validthis:true
 
@@ -60,7 +61,7 @@
     // Implementation/Base/Default
 
     var Primordial, Nothing, Thing, Type, Context, Void;
-    var HiddenConfiguration, LockedConfiguration;
+    var HiddenConfiguration, LockedConfiguration, LockedHiddenConfiguration;
     var ConnectSubtype_ToSupertype;
 
     function _Top () {}
@@ -166,8 +167,30 @@
     }
 
 
+    HiddenConfiguration = NewStash({
+      writable: true,
+      enumerable: false,
+      configurable: false,
+    });
+
+    LockedConfiguration = NewStash({
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    });
+
+    LockedHiddenConfiguration = NewStash();
+
+
+    function SetImmutableProperty(target, name, value) {
+      var configuration = SpawnFrom(LockedConfiguration);
+      configuration.value = value;
+      DefineProperty(target, name, configuration);
+      return target;
+    }
+
     function SetHiddenImmutableProperty(target, name, value) {
-      var configuration = NewStash();
+      var configuration = SpawnFrom(LockedHiddenConfiguration);
       configuration.value = value;
       DefineProperty(target, name, configuration);
       return target;
@@ -197,12 +220,12 @@
       return function __Super(/* arguments */) {
         var pulp, pulpMethod, target, superMethod;
 
-        pulp = this.__$pulp_;
+        pulp = this.__$pulp;
         pulpMethod = pulp[Selector];
         target = pulp;
 
         do {
-          target = target.__$root_;
+          target = target.__$root;
           superMethod = target[Selector];
         } while (superMethod === pulpMethod);
 
@@ -217,7 +240,7 @@
       return function __Delegation(/* arguments */) {
         var target = this.__Pulp(KNIFE);
         var result = target[Selector].apply(target, arguments);
-        return (result instanceof _Inner) ? result.__$peel_ : result;
+        return (result instanceof _Inner) ? result.__$peel : result;
       };
     }
 
@@ -258,59 +281,46 @@
     }
 
 
-    HiddenConfiguration = NewStash({
-      writable: true,
-      enumerable: false,
-      configurable: false,
-    });
-
-    LockedConfiguration = NewStash({
-      writable: false,
-      enumerable: true,
-      configurable: false,
-    });
-
-
-    AddLazyProperty(_Pulp_root, function __$peel_() {
-      // jshint validthis:true
+    AddLazyProperty(_Pulp_root, function __$peel() {
       var peel, _super;
       peel = SpawnFrom(_Peel_root);
       peel.__Pulp = NewPulpAccessor(this);
-      peel.__$oid_ = this.__$oid_;
+      peel.__$oid = this.__$oid;
 
-      DefineProperty(this, "__$peel_", HiddenConfiguration);
-      this.__$peel_ = this.__peel_ = peel;
+      DefineProperty(this, "__$peel", HiddenConfiguration);
+      this.__$peel = peel;
+      this.__peel  = peel;
 
       _super = this._super;
       if (_super) {
-        DefineProperty(_super, "__$peel_", HiddenConfiguration);
-        _super.__$peel_ = peel;
+        DefineProperty(_super, "__$peel", HiddenConfiguration);
+        _super.__$peel = peel;
       }
       return BeImmutable(peel);
     });
 
-    AddLazyProperty(_Super_root, function __$peel_() {
-      return this.__$pulp_.__$peel_;
+    AddLazyProperty(_Super_root, function __$peel() {
+      return this.__$pulp.__$peel;
     });
 
     AddLazyProperty(_Pulp_root, function _super() {
-      // jshint validthis:true
-      var super_, peel;
-      super_ = SpawnFrom(_Super_root);
-      super_.__$pulp_ = this;
+      // jshint shadow:true
+      var _super, peel;
+      _super = SpawnFrom(_Super_root);
+      _super.__$pulp = this;
 
       DefineProperty(this, "_super", HiddenConfiguration);
-      this._super = super_;
+      this._super = _super;
 
-      peel = this.__peel_;
+      peel = this.__peel;
       if (peel) {
-        DefineProperty(_super, "__$peel_", HiddenConfiguration);
-        _super.__$peel_ = peel;
+        DefineProperty(_super, "__$peel", HiddenConfiguration);
+        _super.__$peel = peel;
       }
-      return super_;
+      return _super;
     });
 
-    AddLazyProperty(_Pulp_root, function __$oid_() {
+    AddLazyProperty(_Pulp_root, function __$oid() {
       DefineProperty(this, "__$oid", HiddenConfiguration);
       return (this.__$oid = NewUniqueId(this.TypeName()));
     });
@@ -333,7 +343,7 @@
 
 
     function _SetMethod_(root, name, method) {
-      SetHiddenImmutableProperty(method, "selector", name);
+      SetImmutableProperty(method, "selector", name);
       root[name] = method;
     }
 
@@ -380,26 +390,26 @@
     // }
 
 
-    _SetMethod_(_Super_root, function __Pulp(key) { return this.__$pulp_ });
+    _SetMethod_(_Super_root, function __Pulp(key) { return this.__$pulp });
 
     _SetMethod_(_Pulp_root, function __Pulp(key) { return this; });
 
 
     AddMethod(_Peel_root, function IsIdentical(that) {
-      return that instanceof _Pulp ? (this === that.__peel_) : (this === that);
+      return that instanceof _Pulp ? (this === that.__peel) : (this === that);
     });
 
 
     AddMethod(Primordial_root, function IsIdentical(that) {
-      // return that.__Pulp ? (this.__peel_ === that) : (this === that);
-      return that instanceof _Peel ? (this.__peel_ === that) : (this === that);
+      // return that.__Pulp ? (this.__peel === that) : (this === that);
+      return that instanceof _Peel ? (this.__peel === that) : (this === that);
     });
 
     AddMethod(Primordial_root, function IsEqual(that) {
       return this.IsIdentical(that);
     });
 
-    AddMethod(Primordial_root, function Type(key) { return this.__$type_; });
+    AddMethod(Primordial_root, function Type(key) { return this.__$type; });
 
     AddMethod(Primordial_root, function _NoSuchMethod(selector, args) {
       return _SignalError(this, "Receiver has no such method #"+ selector +"!");
@@ -437,17 +447,16 @@
 
     Thing_root.AddMethod(function _Init(name_) {
       // this._super._Init(arguments);
-      if (name_ !== undefined) { this._name_ = name_; }
+      if (name_ !== undefined) { this._name = name_; }
       return this;
     });
 
     Thing_root.AddMethod(function Extend(extensionAction) {
-      // jshint validthis:true
       var receiver, peel, pulp;
       if (extensionAction == null) { return this; }
       if (extensionAction.length) {
-        peel = this.__$peel_;
-        if (this.__$isLocked_) {
+        peel = this.__$peel;
+        if (this.__$isLocked) {
           receiver = peel;
           pulp = null;
         } else {
@@ -455,7 +464,7 @@
         }
         extensionAction.call(receiver, peel, pulp);
       } else {
-        receiver = this.__$isLocked_ ? this.__$peel_ : this;
+        receiver = this.__$isLocked ? this.__$peel : this;
         extensionAction.call(receiver);
       }
       return this;
@@ -471,19 +480,19 @@
 
     Type_root.AddMethod(function _Init(name, supertype, instanceRoot) {
       this._super._Init(name);
-      this._subtypes_ = NewStash();
+      this._subtypes = NewStash();
       ConnectSubtype_ToSupertype(this, supertype);
-      this._instanceRoot_ = instanceRoot;
-      SetHiddenImmutableProperty(instanceRoot, "__$type_", this);
-      SetHiddenImmutableProperty(instanceRoot, "__$root_", instanceRoot);
+      this._instanceRoot = instanceRoot;
+      SetHiddenImmutableProperty(instanceRoot, "__$type", this);
+      SetHiddenImmutableProperty(instanceRoot, "__$root", instanceRoot);
       // SetHiddenImmutableProperty(
-      //   instanceRoot, "__$rootConstructor_", NewFauxConstructor(instanceRoot));
+      //   instanceRoot, "__$rootConstructor", NewFauxConstructor(instanceRoot));
 
       // instanceRoot.At_PutMethod("Type", CreatePureGetter(this));
     });
 
     Type_root.AddMethod(function New(/* arguments */) {
-      var instanceRoot = this._instanceRoot_;
+      var instanceRoot = this._instanceRoot;
       var instance = SpawnFrom(instanceRoot);
       instanceRoot._Init.apply(instance, arguments);
       return instanceRoot;
@@ -491,7 +500,7 @@
 
     Type_root.AddMethod(function AddInstanceMethod(namedFunction) {
       if (this.IsLocked()) { return this.LockedObjectError(); }
-      this._instanceRoot_.AddMethod(namedFunction);
+      this._instanceRoot.AddMethod(namedFunction);
       return this;
     });
 
@@ -499,7 +508,7 @@
 
     Type_root.AddMethod(function AddInstanceAlias(alias, original) {
       if (this.IsLocked()) { return this.LockedObjectError(); }
-      this._instanceRoot_.AddAlias(alias, original);
+      this._instanceRoot.AddAlias(alias, original);
       return this;
     });
 
@@ -508,24 +517,24 @@
 
     (function Bootstrap_Core_Types() {
       ConnectSubtype_ToSupertype = function (_subtype, supertype) {
-        _subtype._supertype_ = supertype;
+        _subtype._supertype = supertype;
       };
 
-      Type_root._instanceRoot_ = Type_root;
+      Type_root._instanceRoot = Type_root;
 
       Primordial = Type_root.New("Primordial", null, Primordial_root);
 
       ConnectSubtype_ToSupertype = function (_subtype, supertype) {
         var _supertype = supertype.__Pulp(KNIFE);
-        _subtype._supertype_ = supertype;
-        _supertype._subtypes_[_subtype.__$oid_] = _subtype;
+        _subtype._supertype = supertype;
+        _supertype._subtypes[_subtype.__$oid] = _subtype;
       };
 
       Nothing = Type_root.New("Nothing", Primordial, Nothing_root);
       Thing   = Type_root.New("Thing"  , Primordial, Thing_root);
       Type    = Type_root.New("Type"   , Thing     , Type_root );
 
-      delete Type_root._instanceRoot_;
+      delete Type_root._instanceRoot;
     })();
 
 
@@ -552,24 +561,26 @@
         extensionAction = supertype_extend_;
       }
 
-      instanceRoot = SpawnFrom(supertype._instanceRoot_);
+      instanceRoot = SpawnFrom(supertype._instanceRoot);
       type = this._super.New(name, supertype, instanceRoot);
       return type.Extend(extensionAction);
     });
 
 
-    Thing.Extend(function () {
-      this.AddIMethod(function IsLocked() { return this.__$isLocked_ || false; });
 
-      this.AddIMethod(function Lock()     { this.__$isLocked_ = true; return this; });
+
+    Thing.Extend(function () {
+      this.AddIMethod(function IsLocked() { return this.__$isLocked || false; });
+
+      this.AddIMethod(function Lock()     { this.__$isLocked = true; return this; });
 
       this.AddIMethod(function Yourself() { return this; });
 
-      this.AddIMethod(function Name()     { return this._name_; });
+      this.AddIMethod(function Name()     { return this._name; });
 
-      this.AddIMethod(function TypeName() { return this.__$type_._name_; });
+      this.AddIMethod(function TypeName() { return this.__$type._name; });
 
-      this.AddIMethod(function Id()       { return this.__$id_; });
+      this.AddIMethod(function Id()       { return this.__$id; });
 
       this.AddIMethod(function ToString() {
         var name = this.Name() || "";
@@ -609,12 +620,12 @@
 
       this.AddIMethod(function KnownProperties(names_) {
         return arguments.length ?
-          (this._knownProperties_ = names_.slice().sort(), this) :
-          (this._knownProperties_ || []);
+          (this._knownProperties = names_.slice().sort(), this) :
+          (this._knownProperties || []);
       });
 
       this.AddIMethod(function KnowProperty(name) {
-        var names = this._knownProperties_ || (this._knownProperties_ = []);
+        var names = this._knownProperties || (this._knownProperties = []);
         var index = names.length;
         while (index--) {
           if (names[index] === name) { return this; }
@@ -626,7 +637,7 @@
 
       this.AddIMethod(function UnknowProperty(name) {
         var names, index;
-        if ((names = this._knownProperties_)) {
+        if ((names = this._knownProperties)) {
           index = names.length;
           while (index--) {
             if (names[index] === name) {
@@ -641,7 +652,7 @@
       this.AddIMethod(function ShallowCopy() {
         var copy, names, index, name;
         copy = this.Type().New();
-        names = this._knownProperties_;
+        names = this._knownProperties;
         index = names.length;
         if (names) {
           while (index--) {
@@ -665,13 +676,13 @@
       });
 
       this.AddIMethod(function Supertype() {
-        return this._supertype_;
+        return this._supertype;
       });
 
       this.AddIMethod(function Subtypes() {
         var subtypes, index, list, oid;
 
-        subtypes = this._subtypes_;
+        subtypes = this._subtypes;
         index = 0;
         list = [];
 
@@ -682,16 +693,16 @@
       });
 
       this.AddIMethod(function AddSharedConstant(name, value) {
-        var root = this._instanceRoot_;
+        var root = this._instanceRoot;
         if (root[name]) {
           return this.SignalError("Cannot overwrite shared constant: ", name, " !");
         }
-        SetHiddenImmutableProperty(root, name, value);
+        SetImmutableProperty(root, name, value);
         return this;
       });
 
       this.AddIMethod(function InstanceMethodAt(selector) {
-        return this._instanceRoot_[selector];
+        return this._instanceRoot[selector];
       });
 
       this.AddIAlias("IMethodAt", "InstanceMethodAt");
@@ -699,12 +710,27 @@
 
       this.AddIMethod(function KnownInstanceProperties(names_) {
         return (arguments.length) ?
-          this._instanceRoot_.KnownProperties(names_) :
-          this._instanceRoot_.KnownProperties();
+          this._instanceRoot.KnownProperties(names_) :
+          this._instanceRoot.KnownProperties();
       });
 
       this.AddIAlias("KnownIProperties", "KnownInstanceProperties");
 
+      this.AddIMethod(function ShouldNotImplementError() {
+        return this.signalError("Method should not be implemented!");
+      });
+
+      this.AddIMethod(function NotYetImplementedError() {
+        return this.signalError("Method not yet implemented!");
+      });
+
+      this.AddIMethod(function NotYetTestedError() {
+        return this.signalError("Method not yet tested!");
+      });
+
+      this.AddIMethod(function SubtypeResponsibilityError() {
+        return this.signalError("Method should be implemented by this or subtype!");
+      });
     });
 
 
@@ -722,26 +748,26 @@
           return this.SignalError("Super context already contains name!");
         }
         var root = (supercontext === global) ? null : supercontext;
-        var instance = SpawnFrom(root || this._instanceRoot_);
+        var instance = SpawnFrom(root || this._instanceRoot);
         return instance._Init(name, supercontext, root);
       });
 
       this.AddIMethod(function _Init(name, supercontext, supercontext_) {
         this._super._Init(name);
-        this._subcontexts_ = [];
-        this._supercontext_ = supercontext;
+        this._subcontexts = [];
+        this._supercontext = supercontext;
         this.AddProperty(name, this);
         if (supercontext_) {
-          var subcontexts = supercontext_._subcontexts_;
+          var subcontexts = supercontext_._subcontexts;
           subcontexts.push(this);
           subcontexts.sort();
         }
       });
 
-      this.AddIMethod(function Supercontext() { return this._supercontext_; });
+      this.AddIMethod(function Supercontext() { return this._supercontext; });
 
       this.AddIMethod(function Subcontexts() {
-        return this._subcontexts_.slice();
+        return this._subcontexts.slice();
       });
 
       this.AddIMethod(function Lock() {
@@ -812,7 +838,7 @@
         }
 
         if ((type = this[As$Name(name)])) {
-          if (supertype && supertype !== type._supertype_) {
+          if (supertype && supertype !== type._supertype) {
             this.SignalError("Type ", name, " exists with different supertype!");
             return null;
           }
