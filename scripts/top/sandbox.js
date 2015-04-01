@@ -298,3 +298,14 @@ Two ways to go:
 
 // ASSIGNMENT_OF_THIS_MATCHER = /[^=!+]=\s*this([;,]|\s+[$\w;,])/;
 ASSIGNMENT_OF_THIS_MATCHER = /[^=!+]=\s*this([;,]|(\s*\/\/.*\n|\/\*(.|\n)+\*\/|\s)?\s*[$\w;,])/;
+
+
+
+function CopyMethodFor(value) {
+  if (value instanceof Thing) { return value.copy; }
+  if (typeof value === "object") {
+    if (IsArray(value)) { return value.slice; }
+    if (value !== null)  { return CopyObject; }
+  }
+  return Yourself;
+}
