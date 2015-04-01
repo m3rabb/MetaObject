@@ -1,311 +1,352 @@
-// ### JS Hint global pragmas
+Top.Extend(function () {
+  var AccessorFactory;
 
-/* global
-	Top
-*/
-/* jshint
+  function CopyObject(source_) {
+    var source, target, selectors, index, selector;
 
-	maxerr:66, bitwise:true, curly:true, eqeqeq:true, forin:true,
-  plusplus:false, noarg:true, nonew:true, latedef:true, regexp:true,
-  noempty:false, lastsemic:true, immed:true, expr:true,
-  browser:true, jquery:true, devel:true,
-  smarttabs:true, trailing:false, newcap:false, undef:true, unused:false
-*/
-// validthis:true, globalstrict:true,
+    source = source_ || this;
+    target = SpawnFrom(RootOf(source));
+    selectors = PropertiesOf(source);
+    index = selectors.length;
 
-(function (global) {
-  "use strict";
-
-  function factory(require) {
-    var ACCESSOR_DELIMITER_MATCH = /\s*[ ,]\s*/;
-    var SELECTOR_SPEC_MATCHER    = /((\+&?)|(&\+?))?([\w$]+)((!&?)|(&!?))?/i;
-
-    var PropertiesOf = Object.keys;
-    var IsArray      = Top.isArray;
-
-    var SpawnFrom    = Top.spawnRoof;
-    var NewStash     = Top.newStash;
-    var RootOf       = Top.rootOf;
-    var Thing        = Top.Thing;
-    var Type         = Top.Type;
-
-    function CopyObject(source_) {
-      var source, target, propertyNames, propertyName, index;
-
-      source = source_ || this;
-      target = SpawnFrom(RootOf(source));
-      propertyNames = PropertiesOf(source);
-      index = propertyNames.length;
-
-      while (index-- > 0) {
-        propertyName = propertyNames[index];
-        target[propertyName] = source[propertyName];
-      }
-      return target;
+    while (index--) {
+      selector         = selectors[index];
+      target[selector] = source[selector];
     }
+    return target;
+  }
 
-    function Dup(value) {
-      if (value instanceof Thing) { return value.copy(); }
-      if (typeof value === "object") {
-        if (IsArray(value)) { return value.slice(); }
-        if (value !== null)  { return CopyObject(value); }
-      }
-      return value;
+  function Dup(value) {
+    if (value instanceof Thing) { return value.copy(); }
+    if (typeof value === "object") {
+      if (IsArray(value)) { return value.slice(); }
+      if (value !== null)  { return CopyObject(value); }
     }
+    return value;
+  }
+
+  this.SetType("Thing", function () {
+    var AccessorDelimiterMatcher = /\s*[ ,]\s*/;
 
     function AsSelectorList(specsString_accessorSpecs) {
       return (typeof specsString_accessorSpecs === "string") ?
-        specsString_accessorSpecs.split(ACCESSOR_DELIMITER_MATCH) :
+        specsString_accessorSpecs.split(AccessorDelimiterMatcher) :
         specsString_accessorSpecs;
     }
 
-    function AsProtectedSelector(selector) {
-      var firstChar = selector[0];
-      return (firstChar === "_") ? selector :
-        "_" + firstChar.toUpperCase() + selector.slice(1);
-    }
 
 
-    function CreateCopyOnReadPureGetter(_Selector) {
-      return function () { return Dup(this[_Selector]); };
-    }
-
-    function CreatePureGetter(_Selector) {
-      return function () { return this[_Selector]; };
-    }
-
-
-    function CreateCopyOnReadWriteAccessor(_Selector) {
-      return function (value_) {
-        return (arguments.length) ?
-          (this[_Selector] = Dup(value_), this) : Dup(this[_Selector]);
-      };
-    }
-
-    function CreateCopyOnWriteAccessor(_Selector) {
-      return function (value_) {
-        return (arguments.length) ?
-          (this[_Selector] = Dup(value_), this) : this[_Selector];
-      };
-    }
-
-    function CreateCopyOnReadAccessor(_Selector) {
-      return function (value_) {
-        return (arguments.length) ?
-          (this[_Selector] = value_, this) : Dup(this[_Selector]);
-      };
-    }
-
-    function CreateAccessor(_Selector) {
-      return function (value_) {
-        return (arguments.length) ?
-          (this[_Selector] = value_, this) : this[_Selector];
-      };
-    }
-
-
-    function CreateThingCopyingPureGetter(Value) {
-      return function () { return Value.copy(); };
-    }
-
-    function CreateArrayCopyingPureGetter(Value) {
-      return function () { return Value.slice(); };
-    }
-
-    function CreateObjectCopyingPureGetter(Value) {
-      return function () { return CopyObject(Value); };
-    }
-
-    function CreateThingCopyingCheckingGetter(Value) {
-      return function (value_) {
-        return arguments.length ? this.setImmutableError() : Value.copy();
-      };
-    }
-
-    function CreateArrayCopyingCheckingGetter(Value) {
-      return function (value_) {
-        return arguments.length ? this.setImmutableError() : Value.slice();
-      };
-    }
-
-    function CreateObjectCopyingCheckingGetter(Value) {
-      return function (value_) {
-        return arguments.length ? this.setImmutableError() : CopyObject(Value);
-      };
-    }
-
-    function CreateCopyingClosuredGetter(value, isGetterPure) {
-      if (value instanceof Thing) {
-        return isGetterPure ?
-          CreateThingCopyingPureGetter(value) :
-          CreateThingCopyingCheckingGetter(value);
-      }
-      if (typeof value === "object") {
-        if (IsArray(value)) {
-          return isGetterPure ?
-            CreateArrayCopyingPureGetter(value) :
-            CreateArrayCopyingCheckingGetter(value);
-        }
-        if (value !== null) {
-          return isGetterPure ?
-            CreateObjectCopyingPureGetter(value) :
-            CreateObjectCopyingCheckingGetter(value);
-        }
-      }
-      return null;
-    }
-
-
-    var PureGetters     = NewStash();
-    var CheckingGetters = NewStash();
-
-    function CreateImmutablePureGetter(Selector) {
-      return function () { return this._immutablePropertyAt(Selector); };
-    }
-
-    function CreateImmutableCheckingGetter(Selector) {
-      return function (value_) {
-        return arguments.length ?
-          this.setImmutableError(Selector) :
-          this._immutablePropertyAt(Selector);
-      };
-    }
-
-    function ImmutableGetterFor(selector, isPureGetter) {
-      return isPureGetter ?
-        (PureGetters[selector] ||
-          (PureGetters[selector] = CreateImmutablePureGetter(selector))) :
-        (CheckingGetters[selector] ||
-          (CheckingGetters[selector] = CreateImmutableCheckingGetter(selector)));
-    }
-
-    function CreateWriteOnceAccessor(Selector, IsCopyOnWrite, IsCopyOnRead, IsGetterPure) {
-      return function (value_) {
-        var value, getter;
-        if (arguments.length === 0) { return undefined; }
-
-        value = IsCopyOnWrite ? Dup(value_) : value_;
-        if (IsCopyOnRead) {
-          getter = CreateCopyingClosuredGetter(value, IsGetterPure);
-          if (getter) { return this.addProperty(Selector, getter); }
-        }
-
-        this._immutablePropertyAtSet(Selector, value);
-        getter = ImmutableGetterFor(Selector, IsGetterPure);
-        return this.addProperty(Selector, getter);
-      };
-    }
-
-
-
-    Thing.addSharedMethod(function _immutablePropertyAt(selector) {
-      return undefined;
+    this.AddIMethod(function AddAccessor(accessorSignature) {
+      var accessor = AccessorFactory.New(accessorSignature).make();
+      this.atPutMethod(selector, accessor);
     });
 
-    Thing.addSharedMethod(function _immutablePropertyAtSet(selector, value) {
-      var ImmutableProperties = NewStash();
+    this.AddIMethod(function AddAccessors(signatures_list) {
 
-      this._immutablePropertyAt = function (selector) {
-        return ImmutableProperties[selector];
-      };
+    });
+  });
 
-      this._immutablePropertyAtSet = function (selector, value) {
-        if (selector in ImmutableProperties) {
-          return this.settingError(selector);
+
+
+
+//  [^][~][#][&][!]friends[~][&][!][?]
+//  [^] ~       [!]friends   [&] * [?]                  getter
+//  [^]   [#][&] * friends ~       [?]                  setter
+//  [^]    # [&][!]friends   [&][!][?]  ! only 1        write once - uses purse
+//  [^]      [&]   friends   [&][!] *   ? is moot       accessor
+
+
+//  ^ = uppercase ivar name
+//  ~ = no setter|getter
+//  # = write once
+//  & = duplicate before|after access
+//  ! = focus bias of return behavior
+//  ? = check the arguments and error if problem
+//  * = not applicable
+
+//  Need lazy immutable accessors!!!
+
+
+
+  AccessorFactory = this.SetType("AccessorFactory", function () {
+    var SigMatcher = /((\^)|(~)|(\+)|(&)|(!))*([\w$]+)((~)|(&)|(!)|(\?))/;
+
+    this.AddMethod(function New(accessorSignature) {
+      var match = accessorSignature.match(SigMatcher);
+      return match ?
+        this._super.New(accessorSignature, match) :
+        this.AccessorSignatureError(accessorSignature);
+    });
+
+    this.AddMethod(function AccessorSignatureError(accessorSignature) {
+      return this.SignalError("Accessor signature ", accessorSignature, " is improper!");
+    });
+
+    this.AddIMethod(function _Init(validSignature, match) {
+      //   2  3  4  5  6    7    9  10 11 12
+      //  [^][~][#][&][!]friends[~][&][!][?]
+      this._signature          = validSignature;
+      this._matchResult        = match;
+      this._isUpperCaseName    = match[ 2] === "^";
+      this._isNoWriting        = match[ 3] === "~";
+      this._isWriteOnce        = match[ 4] === "#";
+      this._isCopyOnWrite      = match[ 5] === "&";
+      this._isForceForWrites   = match[ 6] === "!"; // isAnswersSelfWhenAsSetter
+      this._selector           = match[ 7];
+
+      this._isNoReading        = match[ 9] === "~";
+      this._isCopyOnRead       = match[10] === "&";
+      this._isForceForReads    = match[11] === "!"; // isAlwaysAnswersValue
+      this._isArgChecking      = match[12] === "?";
+    });
+
+    this.AddIMethod(function Build() {
+      var isReadOnly       = this._isNoWriting;
+      var isWriteOnly      = this._isNoReading;
+      var isForceForWrites = this._isForceForWrites;
+      var isForceForReads  = this._isForceForReads;
+
+      if (isReadOnly && isWriteOnly) {
+        return this.CannotBeGetterAndSetterSpecError();
+      }
+      if (isForceForWrites && isForceForReads) {
+        return this.CannotForceBothReturnsSpecError();
+      }
+      if (this._isArgChecking && (isForceForWrites || isForceForReads)) {
+        return this.CannotBeArgCheckingAndForceReturnsSpecError();
+      }
+      if (isReadOnly) {
+        //  [^][~][#][&][!]friends[~][&][!][?]
+        //  [^] ~       [!]friends   [&] * [?]
+        if (this._isWriteOnce || this._isCopyOnWrite) {
+          return this.GetterSpecError();
         }
-        ImmutableProperties[selector] = value;
+        return this.BuildGetter();
+      }
+      if (isWriteOnly) {
+        //  [^][~][#][&][!]friends[~][&][!][?]
+        //  [^]   [#][&] * friends ~       [?]
+        if (this._isCopyOnRead || isForceForReads) {
+          return this.SetterSpecError();
+        }
+        return this.BuildSetter();
+      }
+      if (this._isWriteOnce) {
+        //  [^][~][#][&][!]friends[~][&][!][?]
+        //  [^]    # [&][!]friends   [&][!][?]
+        return this.BuildWriteOnceAccessor();
+      }
+      if (isForceForWrites) {
+        return this.CannotForceWriteReturnSpecError();
+      }
+        //  [^][~][#][&][!]friends[~][&][!][?]
+        //  [^]      [&]   friends   [&][!] *
+      return this.BuildAccessor();
+    });
+
+
+    this.addIMethod(function AccessorAt(canonicalSignature, absentAction_) {
+      var accessor = this.SavedAccessor(canonicalSignature);
+      return accessor ||
+        (absentAction_ ?
+          this.SavedAccessor(canonicalSignature, absentAction_.call(this)) :
+          null);
+    });
+
+    this.addIMethod(function ProtectedSelector() {
+      var selector = this._selector;
+      var match = selector.match(/^(_?)([a-z])(.*)$/i);
+      if (match == null) { return this.ImproperAccessorNameError(selector); }
+
+      var leadChar  = match[2];
+      var remaining = match[3];
+      var modifier = this._isUpperCaseName ? "toUpperCase" : "toLowerCase";
+      var _selector = "_" + leadChar[modifier]() + remaining;
+      if (_selector === selector) {
+        return this.ProtectedPropertyHasSameNameAsAccessorError(_selector);
+      }
+      return _selector;
+    });
+
+
+    this.addIMethod(function BuildGetter() {
+      //   2  3  4  5  6    7    9  10 11 12
+      //  [^] ~       [!]friends   [&] * [?]
+      var canonicalSig = this._signature.replace(SigMatcher, "$2~$6$7$10$12");
+
+      return this.AccessorAt(canonicalSig, function () {
+        var selector  = this.ProtectedSelector();
+        var modifiers = this._signature.replace(SigMatcher, "$6$10$12");
+        var a = this._isForceForWrites;
+        var b = this._isCopyOnRead;
+        var c = this._isArgChecking;
+
+        return modifiers ?
+          this.CreateGeneralGetter(selector, a, b, c) :
+          this.CreateCommonGetter(selector);
+      });
+    });
+
+    this.addIMethod(function CreateGeneralGetter(
+        _Selector, IsAnswersSelfWhenAsSetter, IsCopyOnRead, IsArgChecking) {
+      //  [^] ~       [!]friends   [&] * [?]
+      return function __GeneralGetter() {
+        var value = this[_Selector];
+        if (arguments.length) {
+          if (IsArgChecking) { return this.GetterUsedAsSetterError(); }
+          if (IsAnswersSelfWhenAsSetter) { return this; }
+        }
+        return IsCopyOnRead ? Dup(value) : value;
+      };
+    });
+
+    this.addIMethod(function CreateCommonGetter(_Selector) {
+      return function __CommonGetter() {
+        return this[_Selector];
+      };
+    });
+
+
+    this.addIMethod(function BuildSetter() {
+      //   2  3  4  5  6    7    9  10 11 12
+      //  [^]   [#][&] * friends ~       [?]
+      var canonicalSig = this._signature.replace(SigMatcher, "$2$4$5$7~$12");
+
+      return this.AccessorAt(canonicalSig, function () {
+        var selector  = this.ProtectedSelector();
+        var modifiers = this._signature.replace(SigMatcher, "$4$5$12");
+        var a = this._isWriteOnce;
+        var b = this._isCopyOnWrite;
+        var c = this._isArgChecking;
+
+        return modifiers ?
+          this.CreateGeneralSetter(selector, a, b, c) :
+          this.CreateCommonSetter(selector);
+      });
+    });
+
+    this.addIMethod(function CreateGeneralSetter(
+        _Selector, IsWriteOnce, IsCopyOnWrite, IsArgChecking) {
+      //  [^]   [#][&] * friends ~       [?]
+      return function __GeneralSetter(value) {
+        if (arguments.length) {
+          if (IsWriteOnce) {
+            if (_Selector in this) {
+              return IsArgChecking ? this.accessorWriteError() : this;
+            }
+            var _value = IsCopyOnWrite ? Dup(value) : value;
+            return SetImmutableProperty(this, _Selector, _value);
+          }
+          this[_Selector] = IsCopyOnWrite ? Dup(value) : value;
+          return this;
+        }
+        return IsArgChecking ? this.SetterUsedAsGetterError() : this;
+      };
+    });
+
+    this.addIMethod(function CreateCommonSetter(_Selector) {
+      return function __CommonSetter(value) {
+        if (arguments.length) {
+          this[_Selector] = value;
+        }
         return this;
       };
-
-      return this._immutablePropertyAtSet(selector, value);
     });
 
 
-    //   friends    basicAccessor
-    //   friends&   basicAccessor with duplicate
-    //  &friends&   basicAccessor with duplicate
-    //  &friends    basicAccessor with duplicate
-    //
-    //   friends!   basicGetter
-    //   friends!&  basicGetter with duplicate
-    //
-    //  +friends    writeOnce with closured shared immutable accessor
-    // &+friends    writeOnce with closured shared immutable accessor
-    // &+friends!   writeOnce with closured shared immutable getter
-    //  +friends!   writeOnce with closured shared immutable getter
+    this.addIMethod(function BuildWriteOnceAccessor() {
+      //   2  3  4  5  6    7    9  10 11 12
+      //  [^]    # [&][!]friends   [&][!][?]
+      var canonicalSig = this._signature.replace(SigMatcher, "$2#$5$6$7$10$11$12");
 
-    //  +friends&   writeOnce with closured per-instance copying accessor
-    // &+friends&   writeOnce with closured per-instance copying accessor
-    // &+friends!&  writeOnce with closured per-instance copying getter
-    //  +friends!&  writeOnce with closured per-instance copying getter
+      return this.AccessorAt(canonicalSig, function () {
+        var selector  = this.ProtectedSelector();
+        var modifiers = this._signature.replace(SigMatcher, "$5$6$10$11$12");
+        var a = this._isCopyOnWrite;
+        var b = this._isForceForWrites;
+        var c = this._isCopyOnRead;
+        var d = this._isForceForReads;
+        var e = this._isArgChecking;
 
-    Thing.addSharedMethod(function addAccessor(accessorSpec) {
-      var matcher = accessorSpec.match(SELECTOR_SPEC_MATCHER);
-      var writingOptions, readingOptions, selector, _selector, accessor;
-      var isWriteOnce, isCopyOnWrite, isGetterPure, isCopyOnRead;
+        return modifiers ?
+          this.CreateGeneralWriteOnceAccessor(selector, a, b, c, d, e) :
+          this.CreateCommonWriteOnceAccessor(selector);
+      });
+    });
 
-      if (matcher === null) { return this.accessorSpecError(accessorSpec); }
-
-      writingOptions = matcher[1];
-      selector       = matcher[4];
-      readingOptions = matcher[5];
-      isWriteOnce    = writingOptions.indexOf("+") >= 0;
-      isCopyOnWrite  = writingOptions.indexOf("&") >= 0;
-      isGetterPure   = readingOptions.indexOf("!") >= 0;
-      isCopyOnRead   = readingOptions.indexOf("&") >= 0;
-
-      if (isWriteOnce) {
-        accessor = CreateWriteOnceAccessor(
-          selector, isCopyOnWrite, isCopyOnRead, isGetterPure);
-      }
-      else {
-        _selector = AsProtectedSelector(selector);
-
-        if (isGetterPure) {
-          if (isCopyOnWrite) { return this.pureGetterError(accessorSpec); }
-          accessor = isCopyOnRead ?
-            CreateCopyOnReadPureGetter(_selector) : CreatePureGetter(_selector);
+    this.addIMethod(function CreateGeneralWriteOnceAccessor(
+        _Selector, IsCopyOnWrite, IsAnswersSelfWhenAsSetter,
+        IsCopyOnRead, IsAlwaysAnswersValue, IsArgChecking) {
+      //  [^]    # [&][!]friends   [&][!][?]
+      return function __GeneralWriteOnceAccessor(value_) {
+        var value;
+        if (arguments.length) {
+          if (_Selector in this) {
+            if (IsArgChecking) { return this.accessorWriteError(); }
+            if (IsAnswersSelfWhenAsSetter) { return this; }
+          }
+          else {
+            value = IsCopyOnWrite ? Dup(value_) : value_;
+            SetImmutableProperty(this, _Selector, value);
+            if (!IsAlwaysAnswersValue) { return this; }
+          }
+        } else {
+          value = this[_Selector];
         }
-        else {
-          accessor = isCopyOnWrite ?
-            (isCopyOnRead ?
-              CreateCopyOnReadWriteAccessor(_selector) :
-             CreateCopyOnWriteAccessor(_selector)) :
-            (isCopyOnRead ?
-              CreateCopyOnReadAccessor(_selector) : CreateAccessor(_selector));
+        return IsCopyOnRead ? Dup(value) : value;
+      };
+    });
+
+    this.addIMethod(function CreateCommonWriteOnceAccessor(_Selector) {
+      return function __CommonWriteOnceAccessor(value) {
+        return (arguments.length && !(_Selector in this)) ?
+           SetImmutableProperty(this, _Selector, value) : this[_Selector];
+      };
+    });
+
+
+    this.addIMethod(function BuildAccessor() {
+      //   2  3  4  5  6    7    9  10 11 12
+      //  [^]      [&]   friends   [&][!] *
+      var canonicalSig = this._signature.replace(SigMatcher, "$2$5$7$10$11");
+
+      return this.AccessorAt(canonicalSig, function () {
+        var selector  = this.ProtectedSelector();
+        var modifiers = this._signature.replace(SigMatcher, "$5$10$11");
+        var a = this._isCopyOnWrite;
+        var b = this._isCopyOnRead;
+        var c = this._isForceForReads;
+
+        return modifiers ?
+          this.CreateGeneralAccessor(selector, a, b, c) :
+          this.CreateCommonAccessor(selector);
+      });
+    });
+
+    this.addIMethod(function CreateGeneralAccessor(
+        _Selector, IsCopyOnWrite, IsCopyOnRead, IsAlwaysAnswersValue) {
+      //  [^]      [&]   friends   [&][!] *
+      return function __GeneralAccessor(value_) {
+        var value;
+        if (arguments.length) {
+          value = IsCopyOnWrite ? Dup(value_) : value_;
+          this[_Selector] = value;
+          if (!IsAlwaysAnswersValue) { return this; }
+        } else {
+          value = this[_Selector];
         }
-      }
-      return this.atPutMethod(selector, accessor);
+        return IsCopyOnRead ? Dup(value) : value;
+      };
     });
 
-    Type.addSharedMethod(function addSharedAccessor(accessorSpec) {
-      this._InstanceRoot.addAccessor(accessorSpec);
-      return this;
-    });
-
-    function AddAllToUsing(specsString_accessorSpecs, target, methodName) {
-      var accessorSpecs = AsSelectorList(specsString_accessorSpecs);
-      accessorSpecs.forEach(target[methodName], target);
-      return target;
-    }
-
-    Thing.addSharedMethod(function addAccessors(specsString_accessorSpecs) {
-      return AddAllToUsing(specsString_accessorSpecs, this, "addAccessor");
-    });
-
-    Type.addSharedMethod(function addSharedAccessors(specsString_accessorSpecs) {
-      return AddAllToUsing(specsString_accessorSpecs, this, "addSharedAccessor");
+    this.addIMethod(function CreateCommonAccessor(_Selector) {
+      return function __CommonAccessor(value_) {
+        return arguments.length ?
+          (this[_Selector] = value_, this) : this[_Selector];
+      };
     });
 
 
-    Top.dup = Dup;
-  }
 
-  if (typeof define === 'function' && define.amd) {
-      // AMD. Register as an anonymous module.
-      define(factory);
-  } else {
-      // Browser globals
-      factory(global);
-  }
-})(this);
+  });
+});
