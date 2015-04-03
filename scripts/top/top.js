@@ -13,17 +13,10 @@
 */
 // validthis:true
 
-// Epi/Endo
-// Peel/Pulp/Carp
-// Ref/Base
-
-// PeelJS PulpJS AcaiJS
-
 (function (global) {
   "use strict";
 
   function factory(require) {
-
     var RootOf           = Object.getPrototypeOf;
     var SpawnFrom        = Object.create;
     var IsArray          = Array.isArray;
@@ -36,11 +29,8 @@
     var Object_prototype = Object.prototype;
     var IsLocalProperty  = Object.hasOwnProperty;
 
-    var HandleErrorsQuietly                = false;
-    var IsProtectingAgainstObjectIntrusion = true;
-
-    var ParenthesesMatcher   = /\(|\)/;
-    var SelectorMatcher      = /[\w\$_!&]+/gi;
+    // var ParenthesesMatcher   = /\(|\)/;
+    // var SelectorMatcher      = /[\w\$_!&]+/gi;
     var VowelMatcher         = /^[aeiou]/i;
     var ValidSelectorMatcher = /_*[a-z][\w$]*/;
 
@@ -64,18 +54,48 @@
     var HiddenConfiguration, LockedConfiguration, LockedHiddenConfiguration;
     var ConnectSubtype_ToSupertype;
 
-    function _Top () {}
-    function _Inner () {}
-    function _Pulp () {}
-    function _Peel () {}
-    function _Primordial () {}
+
+    var HandleErrorsQuietly                = false;
+    var IsProtectingAgainstObjectIntrusion = true;
+
+    function _HandleErrorsQuietly(bool_) {
+      return (arguments.length) ?
+        (HandleErrorsQuietly = bool_) : HandleErrorsQuietly;
+    }
+
+    function _SignalError(target, message) {
+      var error;
+
+      if (HandleErrorsQuietly) {
+        console.warn(message);
+      } else {
+        console.error(message);
+        error = new Error(message);
+        error.name = "TopError";
+        error.target = target;
+        throw error;
+      }
+      return null;
+    }
+
+    function _ConstructorError(constructor) {
+      _SignalError(constructor.name,
+        " is only for use with 'instanceof', it's not meant to be executed!");
+    }
+
+    function _Top ()        { _ConstructorError(_Top); }
+    function _Inner ()      { _ConstructorError(_Inner); }
+    function _Pulp ()       { _ConstructorError(_Pulp); }
+    function _Peel ()       { _ConstructorError(_Peel); }
+    function _Primordial () { _ConstructorError(_Primordial); }
+    function _Thing ()      { _ConstructorError(_Thing); }
 
     _Top.prototype        = _Top_root;
     _Inner.prototype      = _Inner_root;
     _Pulp.prototype       = _Pulp_root;
     _Peel.prototype       = _Peel_root;
     _Primordial.prototype = Primordial_root;
-
+    _Thing.prototype      = Thing_root;
 
 
 
@@ -137,13 +157,21 @@
     }
 
 
-    function IsUpperCase(target) {
-      return target.match && target.match(/^[A-Z]/);
+    function IsUpperCase(string) {
+      return string.match(/^[A-Z]/);
     }
 
     function IsLowerCase(target) {
-      return target.match && target.match(/^[a-z]/);
+      return string.match(/^[a-z]/);
     }
+
+    // function IsUpperCase(target) {
+    //   return target.match && target.match(/^[A-Z]/);
+    // }
+    //
+    // function IsLowerCase(target) {
+    //   return target.match && target.match(/^[a-z]/);
+    // }
 
 
     function IsValidMethodSelector(selector) {
@@ -182,19 +210,15 @@
     LockedHiddenConfiguration = NewStash();
 
 
-    function SetImmutableProperty(target, name, value) {
-      var configuration = SpawnFrom(LockedConfiguration);
+    function SetImmutableProperty(target, name, value, isHidden_) {
+      var configurationRoot = isHidden_ ?
+        LockedHiddenConfiguration : LockedConfiguration;
+      var configuration = SpawnFrom(configurationRoot);
       configuration.value = value;
       DefineProperty(target, name, configuration);
       return target;
     }
 
-    function SetHiddenImmutableProperty(target, name, value) {
-      var configuration = SpawnFrom(LockedHiddenConfiguration);
-      configuration.value = value;
-      DefineProperty(target, name, configuration);
-      return target;
-    }
 
 
 
@@ -259,14 +283,13 @@
     // }
 
     function NewPulpAccessor(Target) {
-      return SetHiddenImmutableProperty(
+      return SetImmutableProperty(
         function __Pulp(key, newTarget_) {
           if (key === KNIFE)   { return Target; }
           if (key === SYRINGE) { return (Target = newTarget_); }
           return this.privateAccessError();
         },
-        "selector",
-        "__Pulp");
+        "selector", "__Pulp", true);
     }
 
 
@@ -326,33 +349,19 @@
     });
 
 
-    function _SignalError(target, message) {
-      var error;
 
-      if (HandleErrorsQuietly) {
-        console.warn(message);
-      } else {
-        console.error(message);
-        error = new Error(message);
-        error.name = "TopError";
-        error.target = target;
-        throw error;
-      }
-      return null;
-    }
-
-
-    function _SetMethod_(root, name, method) {
-      SetImmutableProperty(method, "selector", name);
+    function _SetMethod_(root, name, method, isHidden_) {
+      SetImmutableProperty(method, "selector", name, isHidden_);
       root[name] = method;
     }
 
     function EnsureDefaultMethodsFor(selector) {
       if (_Pulp_root[selector]) { return; }
-      _SetMethod_(_Pulp_root , selector, NewUnimplementedHandler(selector));
-      _SetMethod_(_Super_root, selector, NewSuperHandler(selector));
-      _SetMethod_(_Peel_root , selector, IsPublicSelector(selector) ?
-        NewDelegationHandler(selector) : ImproperPrivateAccessError);
+      _SetMethod_(_Pulp_root , selector, NewUnimplementedHandler(selector), true);
+      _SetMethod_(_Super_root, selector, NewSuperHandler(selector), true);
+      var handler = IsPublicSelector(selector) ?
+        NewDelegationHandler(selector) : ImproperPrivateAccessError;
+      _SetMethod_(_Peel_root, selector, handler, true);
     }
 
     function SetMethod(root, method_name, method_) {
@@ -483,8 +492,8 @@
       this._subtypes = NewStash();
       ConnectSubtype_ToSupertype(this, supertype);
       this._instanceRoot = instanceRoot;
-      SetHiddenImmutableProperty(instanceRoot, "__$type", this);
-      SetHiddenImmutableProperty(instanceRoot, "__$root", instanceRoot);
+      SetImmutableProperty(instanceRoot, "__$type", this        , true);
+      SetImmutableProperty(instanceRoot, "__$root", instanceRoot, true);
       // SetHiddenImmutableProperty(
       //   instanceRoot, "__$rootConstructor", NewFauxConstructor(instanceRoot));
 
@@ -798,8 +807,7 @@
           if (this[$name]) {
             return this.SignalError("Cannot overwrite locked property: ", $name, " !");
           }
-          this[$name] = value;
-          return this.LockProperty($name);
+          return SetImmutableProperty(this, $name, value);
         }
         this[$name] = value;
         return this;
