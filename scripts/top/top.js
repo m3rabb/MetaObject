@@ -34,6 +34,8 @@
     var VowelMatcher         = /^[aeiou]/i;
     var ValidSelectorMatcher = /_*[a-z][\w$]*/;
 
+    var _ = SpawnFrom(null);
+
     var _Base_root               = SpawnFrom(null);
     var   Stash_root             = SpawnFrom(_Base_root);
     var   _Top_root              = SpawnFrom(_Base_root);
@@ -45,6 +47,25 @@
     var           Nothing_root   = SpawnFrom(Primordial_root);
     var           Thing_root     = SpawnFrom(Primordial_root);
     var             Type_root    = SpawnFrom(Thing_root);
+
+    var _Base_root                    = SpawnFrom(null);
+    var   Stash_root                  = SpawnFrom(_Base_root);
+    var   _Top_root                   = SpawnFrom(_Base_root);
+
+    var     _Outer_root               = SpawnFrom(_Top_root);
+    var       _Peel_root              = SpawnFrom(_Top_root);
+    var         _Primordial_peel_root = SpawnFrom(_Peel_root);
+    var           _Nothing_peel_root  = SpawnFrom(_Primordial_peel_root);
+    var           _Thing_peel_root    = SpawnFrom(_Primordial_peel_root);
+    var             _Type_peel_root   = SpawnFrom(_Thing_peel_root);
+
+    var     _Inner_root               = SpawnFrom(_Top_root);
+    var       _Super_root             = SpawnFrom(_Inner_root);
+    var       _Pulp_root              = SpawnFrom(_Inner_root);
+    var         Primordial_pulp_root  = SpawnFrom(_Pulp_root);
+    var           Nothing_pulp_root   = SpawnFrom(Primordial_pulp_root);
+    var           Thing_pulp_root     = SpawnFrom(Primordial_pulp_root);
+    var             Type_pulp_root    = SpawnFrom(Thing_pulp_root);
 
     // var _Default  ----> deal with super called whne there is noe
 
@@ -83,12 +104,12 @@
         " is only for use with 'instanceof', it's not meant to be executed!");
     }
 
-    function _Top ()        { _ConstructorError(_Top); }
-    function _Inner ()      { _ConstructorError(_Inner); }
-    function _Pulp ()       { _ConstructorError(_Pulp); }
-    function _Peel ()       { _ConstructorError(_Peel); }
+    function _Top ()        { _ConstructorError(_Top);        }
+    function _Inner ()      { _ConstructorError(_Inner);      }
+    function _Pulp ()       { _ConstructorError(_Pulp);       }
+    function _Peel ()       { _ConstructorError(_Peel);       }
     function _Primordial () { _ConstructorError(_Primordial); }
-    function _Thing ()      { _ConstructorError(_Thing); }
+    function _Thing ()      { _ConstructorError(_Thing);      }
 
     _Top.prototype        = _Top_root;
     _Inner.prototype      = _Inner_root;
@@ -249,7 +270,7 @@
         target = pulp;
 
         do {
-          target = target.__$root;
+          target = target.__$pulp_root;
           superMethod = target[Selector];
         } while (superMethod === pulpMethod);
 
@@ -492,8 +513,8 @@
       this._subtypes = NewStash();
       ConnectSubtype_ToSupertype(this, supertype);
       this._instanceRoot = instanceRoot;
-      SetImmutableProperty(instanceRoot, "__$type", this        , true);
-      SetImmutableProperty(instanceRoot, "__$root", instanceRoot, true);
+      SetImmutableProperty(instanceRoot, "__$type"     , this        , true);
+      SetImmutableProperty(instanceRoot, "__$pulp_root", instanceRoot, true);
       // SetHiddenImmutableProperty(
       //   instanceRoot, "__$rootConstructor", NewFauxConstructor(instanceRoot));
 

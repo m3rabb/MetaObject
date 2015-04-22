@@ -16,6 +16,10 @@ Top.Extend(function () {
     return ValuesEQM.Compare(a, b);
   });
 
+  Top.AddMethod(function HaveEquivalentValues(a, b) {
+    return EquivalenceEQM.Compare(a, b);
+  });
+
   Top.AddMethod(function AreStructurallyEqual(a, b) {
     return StructuralEQM.Compare(a, b);
   });
@@ -103,8 +107,8 @@ Top.Extend(function () {
 
   this.$Type.AddIMethod(function SupportEquality(measure) {
     var marker = measure.$supportMarker;
-    SetHiddenImmutableProperty(_Ref_root, marker , true);
-    SetHiddenImmutableProperty(this._instanceRoot, marker , true);
+    SetImmutableProperty(_Ref_root         , marker , true, true);
+    SetImmutableProperty(this._instanceRoot, marker , true, true);
   });
 
   EqualityMeasure = this.SetType("EqualityMeasure", function () {

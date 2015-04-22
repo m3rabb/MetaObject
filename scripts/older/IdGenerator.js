@@ -38,3 +38,11 @@ function NewUniqueId(prefix_) {
     var prefix = prefix_ || "";
     return _NewUniqueId(prefix, Date.now(), RandomIntMethod(RANDOM_MAX));
 };
+
+
+function IsGUID(string) {
+	var match;
+	if (typeof string !== "string") { return false; }
+	match = string.match(/^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$/gi);
+	return match !== null && match.length === 1;
+}

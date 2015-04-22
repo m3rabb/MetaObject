@@ -5,6 +5,21 @@
 // It won't when the outer obj descends from descrete sub public roots.  It
 // requires that an obj's outer descend directly from Public_root to work.
 
+
+
+// Epi/Endo
+// Peel/Pulp/Carp
+// Ref/Base
+
+// PeelJS PulpJS AcaiJS
+// Fruit.js Citrus.js 
+
+
+
+// Add DataType to system !!!
+// DeclarePublicProperties !!!
+
+
 ._super
 
 Top.Config({
