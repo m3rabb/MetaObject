@@ -53,11 +53,11 @@
     var   _Top_root                   = SpawnFrom(_Base_root);
 
     var     _Outer_root               = SpawnFrom(_Top_root);
-    var       _Peel_root              = SpawnFrom(_Top_root);
-    var         _Primordial_peel_root = SpawnFrom(_Peel_root);
-    var           _Nothing_peel_root  = SpawnFrom(_Primordial_peel_root);
-    var           _Thing_peel_root    = SpawnFrom(_Primordial_peel_root);
-    var             _Type_peel_root   = SpawnFrom(_Thing_peel_root);
+    var       _Rind_root              = SpawnFrom(_Top_root);
+    var         _Primordial_rind_root = SpawnFrom(_Rind_root);
+    var           _Nothing_rind_root  = SpawnFrom(_Primordial_rind_root);
+    var           _Thing_rind_root    = SpawnFrom(_Primordial_rind_root);
+    var             _Type_rind_root   = SpawnFrom(_Thing_rind_root);
 
     var     _Inner_root               = SpawnFrom(_Top_root);
     var       _Super_root             = SpawnFrom(_Inner_root);
@@ -107,31 +107,32 @@
     function _Top ()        { _ConstructorError(_Top);        }
     function _Inner ()      { _ConstructorError(_Inner);      }
     function _Pulp ()       { _ConstructorError(_Pulp);       }
-    function _Peel ()       { _ConstructorError(_Peel);       }
+    function _Rind ()       { _ConstructorError(_Rind);       }
     function _Primordial () { _ConstructorError(_Primordial); }
     function _Thing ()      { _ConstructorError(_Thing);      }
 
     _Top.prototype        = _Top_root;
     _Inner.prototype      = _Inner_root;
     _Pulp.prototype       = _Pulp_root;
-    _Peel.prototype       = _Peel_root;
+    _Rind.prototype       = _Rind_root;
     _Primordial.prototype = Primordial_root;
     _Thing.prototype      = Thing_root;
 
 
 
     // #### Random Number Generation
-    var RANDOM_MAX = 0xFFFFFFFFFFFF;
-    var ZERO_PADDING = "0000000000000000";
+    var MAX_SAFE_INTEGER     = 9007199254740991;
+    var RANDOM_MAX           = 0xFFFFFFFFFFFF;
+    var ZERO_PADDING         = "0000000000000000";
     var MAX_UNIQUE_ID_LENGTH =
       (+new Date("2067-01-01") * RANDOM_MAX).toString(36).length;
 
-    function RandomInt(max_min, max_) {
+    function RandomInt(max_min_, max__) {
       var min, max;
-      if (arguments.length <= 1) {
-          min = 0, max = max_min;
-      } else {
-          min = max_min, max = max_;
+      switch (arguments.length) {
+        case 0  : min = 0       ; max = MAX_SAFE_INTEGER; break;
+        case 1  : min = 0       ; max = max_min_        ; break;
+        default : min = max_min_; max = max__           ; break;
       }
       return Math_floor(Math_random() * (max - min + 1)) + min;
     }
@@ -148,29 +149,26 @@
     }
 
 
-    var KNIFE   = NewUniqueId("KNIFE");
+    var STRAW   = NewUniqueId("STRAW");   // KNIFE???
     var SYRINGE = NewUniqueId("SYRINGE");
 
 
     function NewStash(spec_) {
-      var stash, selectors, index, selector, value;
+      var stash, name, value;
 
       stash = SpawnFrom(Stash_root);
       if (spec_) {
         if (IsProtectingAgainstObjectIntrusion && spec_ instanceof Object) {
-          selectors = PropertiesOf(spec_);
-          index = selectors.length;
-          while (index--) {
-            selector = selectors[index];
-            value    = spec_[selector];
-            if (value !== Object_prototype[selector] ||
-                IsLocalProperty.call(spec_, selector)) {
-              stash[selector] = spec_[selector];
+          for (name in spec_) {
+            value = spec_[name];
+            if (value !== Object_prototype[name] ||
+                IsLocalProperty.call(spec_, name)) {
+              stash[name] = spec_[name];
             }
           }
         } else {
-          for (selector in spec_) {
-            stash[selector] = spec_[selector];
+          for (name in spec_) {
+            stash[name] = spec_[name];
           }
         }
       }
@@ -217,18 +215,18 @@
 
 
     HiddenConfiguration = NewStash({
-      writable: true,
-      enumerable: false,
+      writable    : true,
+      enumerable  : false,
       configurable: false,
     });
 
     LockedConfiguration = NewStash({
-      writable: false,
-      enumerable: true,
+      writable    : false,
+      enumerable  : true,
       configurable: false,
     });
 
-    LockedHiddenConfiguration = NewStash();
+    LockedHiddenConfiguration = NewStash(); // all false
 
 
     function SetImmutableProperty(target, name, value, isHidden_) {
@@ -263,29 +261,29 @@
 
     function NewSuperHandler(Selector) {
       return function __Super(/* arguments */) {
-        var pulp, pulpMethod, target, superMethod;
+        var source, sourceMethod, target, superMethod;
 
-        pulp = this.__$pulp;
-        pulpMethod = pulp[Selector];
-        target = pulp;
+        source = this.__$pulp;
+        sourceMethod = source[Selector];
+        target = source;
 
         do {
           target = target.__$pulp_root;
           superMethod = target[Selector];
-        } while (superMethod === pulpMethod);
+        } while (superMethod === sourceMethod);
 
         return superMethod ?
-          superMethod.apply(pulp, arguments) :
-          pulp._NoSuchMethod(Selector, arguments);
+          superMethod.apply(source, arguments) :
+          source._NoSuchMethod(Selector, arguments);
       };
     }
 
 
     function NewDelegationHandler(Selector) {
       return function __Delegation(/* arguments */) {
-        var target = this.__Pulp(KNIFE);
+        var target = this.__Pulp(STRAW);
         var result = target[Selector].apply(target, arguments);
-        return (result instanceof _Inner) ? result.__$peel : result;
+        return (result instanceof _Inner) ? result.__$rind : result;
       };
     }
 
@@ -306,7 +304,7 @@
     function NewPulpAccessor(Target) {
       return SetImmutableProperty(
         function __Pulp(key, newTarget_) {
-          if (key === KNIFE)   { return Target; }
+          if (key === STRAW)   { return Target; }
           if (key === SYRINGE) { return (Target = newTarget_); }
           return this.privateAccessError();
         },
@@ -314,52 +312,52 @@
     }
 
 
-    function AddLazyProperty(root, installer) {
+    function AddLazyProperty(root, namedInstaller) {
       var configuration = NewStash({
-        writable: true,
-        enumerable: false,
+        writable    : true,
+        enumerable  : false,
         configurable: true,
-        get: installer
+        get         : namedInstaller
       });
-      DefineProperty(root, installer.name, configuration);
+      DefineProperty(root, namedInstaller.name, configuration);
     }
 
 
-    AddLazyProperty(_Pulp_root, function __$peel() {
-      var peel, _super;
-      peel = SpawnFrom(_Peel_root);
-      peel.__Pulp = NewPulpAccessor(this);
-      peel.__$oid = this.__$oid;
+    AddLazyProperty(_Pulp_root, function __$rind() {
+      var rind, _super;
+      rind = SpawnFrom(this.__$rind_root);
+      rind.__Pulp = NewPulpAccessor(this);
+      rind.__$oid = this.__$oid;
 
-      DefineProperty(this, "__$peel", HiddenConfiguration);
-      this.__$peel = peel;
-      this.__peel  = peel;
+      DefineProperty(this, "__$rind", HiddenConfiguration);
+      this.__$rind = rind;
+      this.__rind  = rind;
 
       _super = this._super;
       if (_super) {
-        DefineProperty(_super, "__$peel", HiddenConfiguration);
-        _super.__$peel = peel;
+        DefineProperty(_super, "__$rind", HiddenConfiguration);
+        _super.__$rind = rind;
       }
-      return BeImmutable(peel);
+      return BeImmutable(rind);
     });
 
-    AddLazyProperty(_Super_root, function __$peel() {
-      return this.__$pulp.__$peel;
+    AddLazyProperty(_Super_root, function __$rind() {
+      return this.__$pulp.__$rind;
     });
 
     AddLazyProperty(_Pulp_root, function _super() {
       // jshint shadow:true
-      var _super, peel;
+      var _super, rind;
       _super = SpawnFrom(_Super_root);
       _super.__$pulp = this;
 
       DefineProperty(this, "_super", HiddenConfiguration);
       this._super = _super;
 
-      peel = this.__peel;
-      if (peel) {
-        DefineProperty(_super, "__$peel", HiddenConfiguration);
-        _super.__$peel = peel;
+      rind = this.__rind;
+      if (rind) {
+        DefineProperty(_super, "__$rind", HiddenConfiguration);
+        _super.__$rind = rind;
       }
       return _super;
     });
@@ -378,11 +376,14 @@
 
     function EnsureDefaultMethodsFor(selector) {
       if (_Pulp_root[selector]) { return; }
-      _SetMethod_(_Pulp_root , selector, NewUnimplementedHandler(selector), true);
-      _SetMethod_(_Super_root, selector, NewSuperHandler(selector), true);
-      var handler = IsPublicSelector(selector) ?
+      var pulpHandler  = NewUnimplementedHandler(selector);
+      var superHandler = NewSuperHandler(selector);
+      var rindHandler  = IsPublicSelector(selector) ?
         NewDelegationHandler(selector) : ImproperPrivateAccessError;
-      _SetMethod_(_Peel_root, selector, handler, true);
+
+      _SetMethod_(_Pulp_root , selector, pulpHandler , true);
+      _SetMethod_(_Super_root, selector, superHandler, true);
+      _SetMethod_(_Rind_root , selector, rindHandler , true);
     }
 
     function SetMethod(root, method_name, method_) {
@@ -399,7 +400,7 @@
       return method;
     }
 
-    // function Within_At_PutMethod(root, selector, method) {
+    // function Within_AtPutMethod(root, selector, method) {
     //   EnsureDefaultMethodsFor(selector);
     //   root[selector] = method;
     // }
@@ -422,17 +423,17 @@
 
     _SetMethod_(_Super_root, function __Pulp(key) { return this.__$pulp });
 
-    _SetMethod_(_Pulp_root, function __Pulp(key) { return this; });
+    _SetMethod_(_Pulp_root , function __Pulp(key) { return this; });
 
 
-    AddMethod(_Peel_root, function IsIdentical(that) {
-      return that instanceof _Pulp ? (this === that.__peel) : (this === that);
+    AddMethod(_Rind_root, function IsIdentical(that) {
+      return that instanceof _Pulp ? (this === that.__rind) : (this === that);
     });
 
 
     AddMethod(Primordial_root, function IsIdentical(that) {
-      // return that.__Pulp ? (this.__peel === that) : (this === that);
-      return that instanceof _Peel ? (this.__peel === that) : (this === that);
+      // return that.__Pulp ? (this.__rind === that) : (this === that);
+      return that instanceof _Rind ? (this.__rind === that) : (this === that);
     });
 
     AddMethod(Primordial_root, function IsEqual(that) {
@@ -446,7 +447,7 @@
     });
 
 
-    AddMethod(Thing_root, function At_PutMethod(selector, method) {
+    AddMethod(Thing_root, function AtPutMethod(selector, method) {
       if (this.IsLocked()) { return this.LockedObjectError(); }
       AddMethod(this, selector, method);
       return this;
@@ -459,20 +460,20 @@
 
     // Minimum metahierarchy methods
 
-    Thing_root.At_PutMethod("AddMethod", function AddMethod(/* arguments */) {
+    Thing_root.AtPutMethod("AddMethod", function AddMethod(/* arguments */) {
       var index = -1;
       var count = arguments.length;
       var method;
 
       while (++index < count) {
         method = arguments[index];
-        this.At_PutMethod(method.name, method);
+        this.AtPutMethod(method.name, method);
       }
       return this;
     });
 
     Thing_root.AddMethod(function AddAlias(alias, original) {
-      return this.At_PutMethod(alias, this[original]);
+      return this.AtPutMethod(alias, this[original]);
     });
 
     Thing_root.AddMethod(function _Init(name_) {
@@ -482,19 +483,19 @@
     });
 
     Thing_root.AddMethod(function Extend(extensionAction) {
-      var receiver, peel, pulp;
+      var receiver, rind, pulp;
       if (extensionAction == null) { return this; }
       if (extensionAction.length) {
-        peel = this.__$peel;
+        rind = this.__$rind;
         if (this.__$isLocked) {
-          receiver = peel;
+          receiver = rind;
           pulp = null;
         } else {
           receiver = pulp = this;
         }
-        extensionAction.call(receiver, peel, pulp);
+        extensionAction.call(receiver, rind, pulp);
       } else {
-        receiver = this.__$isLocked ? this.__$peel : this;
+        receiver = this.__$isLocked ? this.__$rind : this;
         extensionAction.call(receiver);
       }
       return this;
@@ -518,7 +519,7 @@
       // SetHiddenImmutableProperty(
       //   instanceRoot, "__$rootConstructor", NewFauxConstructor(instanceRoot));
 
-      // instanceRoot.At_PutMethod("Type", CreatePureGetter(this));
+      // instanceRoot.AtPutMethod("Type", CreatePureGetter(this));
     });
 
     Type_root.AddMethod(function New(/* arguments */) {
@@ -555,7 +556,7 @@
       Primordial = Type_root.New("Primordial", null, Primordial_root);
 
       ConnectSubtype_ToSupertype = function (_subtype, supertype) {
-        var _supertype = supertype.__Pulp(KNIFE);
+        var _supertype = supertype.__Pulp(STRAW);
         _subtype._supertype = supertype;
         _supertype._subtypes[_subtype.__$oid] = _subtype;
       };
@@ -888,8 +889,8 @@
       this.AddMethod(NewStash, RootOf, SpawnFrom);
       this.AddMethod(IsArray, IsUpperCase);
 
-      this.AddMethod(function IsPeel(target) {
-        return target instanceof _Peel;
+      this.AddMethod(function IsRind(target) {
+        return target instanceof _Rind;
       });
 
       this.AddMethod(function IsPulp(target) {

@@ -69,7 +69,7 @@ Top.Extend(function () {
   //  [] = optional
   //  -  = not applicable
   //  *  = none, one, or both a # and/or $ prefix
-  //  +  = one, or both a # and/or $ prefix
+  //  +  =       one, or both a # and/or $ prefix
   //  |  = not applicable, but never when has ! as a suffix
 
 

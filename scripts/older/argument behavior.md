@@ -125,7 +125,7 @@ args
 
 
 $($options, $REST)  // $(a b c d)
-options = a:1, b:undefined, c:3, d:4
+options = a:1, b:2, c:3, d:4
 rest = [5, 6, 7]
 
 

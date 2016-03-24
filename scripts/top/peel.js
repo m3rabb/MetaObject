@@ -186,7 +186,7 @@ function _IsValid(unknown) {
   if (unknown instanceof _Pulp) { return true; }
   if (unknown == null) { return false; }
   var __method = unknown.__
-  return (__method == null) || Function_source.call(__method) !== __SOURCE);
+  return (__method == null) || Function_source.call(__method) !== __SOURCE;
 }
 if (unknown == null || !unknown[DefaultEQM.$supportMarker]) { return false; }
 var ThingA = this;

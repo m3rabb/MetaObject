@@ -203,21 +203,21 @@ LinkedList.AddInstanceMethod(function RemoveLast(absentAction_, presentAction_) 
 });
 
 
-list.RemoveFirst()
-list.RemoveFirst(absentAction)
-list.RemoveFirst(null, presentAction)
-list.RemoveFirst(absentAction, presentAction)
-list.RemoveFirst$({presentAction : func})
+list.RemoveFirst();
+list.RemoveFirst(absentAction);
+list.RemoveFirst(null, presentAction);
+list.RemoveFirst(absentAction, presentAction);
+list.RemoveFirst$({presentAction : func});
 list.$("RemoveFirst");
 list.$("RemoveFirst", absentAction);
 list.$("RemoveFirst$", {absentAction: func1, presentAction: func2});
 list.$({RemoveFirst: null});
 list.$({RemoveFirst: absentAction});
 
-list.at(key)
-list.at$({key: "a", absentAction: })
-list.at_ifAbsent(key, func)
-list.at_ifPresent(key, func)
-list.at_ifPresent_ifAbsent(key, func1, func2)
-list.$({at: key})
-list.$({at: key, ifPresent: func})
+list.at(key);
+list.at$({key: "a", absentAction: func});
+list.at_ifAbsent(key, func);
+list.at_ifPresent(key, func);
+list.at_ifPresent_ifAbsent(key, func1, func2);
+list.$({at: key});
+list.$({at: key, ifPresent: func});

@@ -1,0 +1,7 @@
+{
+  "esnext"    : true,
+  "jquery"    : true,
+  "asi"       : true,
+  "lastsemic" : true,
+  "eqnull"    : true
+}
