@@ -1,7 +1,29 @@
 {
   "esnext"    : true,
-  "jquery"    : true,
   "asi"       : true,
   "lastsemic" : true,
-  "eqnull"    : true
+
+  "maxerr"    : 66,
+  "bitwise"   : true,
+  "eqeqeq"    : true,
+  "eqnull"    : true,
+
+  "latedef"   : true,
+  "undef"     : true,
+
+  "newcap"    : false,
+  "curly"     : false,
+  "unused"    : false,
+  "plusplus"  : false,
+  "forin"     : false,
+
+  "futurehostile" : true,
+
+  "strict"    : true,
+  "browser"   : true,
+  "jquery"    : true
 }
+
+// "nonew"     : true,
+// "esversion" : 6,
+// "validthis" : true

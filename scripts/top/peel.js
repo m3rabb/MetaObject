@@ -5,6 +5,8 @@ Type_pulp_root.__$peel_root
 
 Type_root.AddMethod(function _Init(name, supertype, instanceRoot) {
       this._super._Init(name);
+      // this.asExec(Object, selector, arg)
+      P[selector].exec(P, args)
       this._subtypes = NewStash();
       ConnectSubtype_ToSupertype(this, supertype);
       this._instanceRoot = instanceRoot;
@@ -138,12 +140,32 @@ AttachRind = (function (K, E) {
     };
     SetHiddenImmutableProperty(Rind, "__Pulp",
       function (k){return k===K?P:E(P)}
+      k=>k===K?P:E(P)
     );
     SetHiddenImmutableProperty(Rind, "__Exec", function __Exec(selector, args) {
       if (this !== Rind) { return HijackedPulpSecurityError(this, Rind, P); }
       var result = P[selector].exec(P, args); // exec|apply
       return (result instanceof _Inner) ? result.__$rind : result;
     });
+    P.__$rind = P.__rind = Rind;
+  }
+})(PULP_KEY, ImproperAttemptToAccessPulpError);
+
+AttachRind = (function (K, E) {
+  return function AttachRind(P, R) {
+    P.__Syringe = function (pulp) {
+      P.__$rind = null;
+      P = pulp;
+      return (pulp.__$rind = Rind);
+    };
+    var __Pulp = k=>k===K?P:E(P)
+    var __Exec = function (selector, args) {
+      if (this !== R) { return HijackedPulpSecurityError(this, R, P); }
+      var result = P[selector].exec(P, args); // exec|apply
+      return (result instanceof _Inner) ? result.__$rind : result;
+    }
+    SetHiddenImmutableProperty(R, "__Pulp", __Pulp)
+    SetHiddenImmutableProperty(R, "__Exec", __Exec);
     P.__$rind = P.__rind = Rind;
   }
 })(PULP_KEY, ImproperAttemptToAccessPulpError);
