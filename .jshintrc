@@ -19,7 +19,7 @@
 
   "futurehostile" : true,
 
-  "strict"    : true,
+  "strict"    : false,
   "browser"   : true,
   "jquery"    : true
 }

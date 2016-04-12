@@ -1,6 +1,5 @@
 // See http://exploringjs.com/es6/ch_proxies.html sec 28.5.1 & 28.7.5.1
 
-// Use Symbols !!!
 
 /* global
   jasmine:false
@@ -138,15 +137,15 @@
       const stash = SpawnFrom(Stash_root)
       if (spec_) {
         if (IsProtectingAgainstObjectIntrusion && spec_ instanceof Object) {
-          for (let name in spec_) {
-            let value = spec_[name]
+          for (const name in spec_) {
+            const value = spec_[name]
             if (value !== Object_prototype[name] ||
                 IsLocalProperty.call(spec_, name)) {
               stash[name] = spec_[name]
             }
           }
         } else {
-          for (let name in spec_) {
+          for (const name in spec_) {
             stash[name] = spec_[name]
           }
         }
@@ -221,9 +220,8 @@
     }
 
     function SetImmutableProperty(target, name, value) {
-      const configuration = SpawnFrom(LockedConfiguration)
-      configuration.value = value
-      return DefineProperty(target, name, configuration)
+      target[name] = value
+      return DefineProperty(target, name, LockedConfiguration)
     }
 
     function SetHiddenImmutableProperty(target, name, value) {
@@ -266,6 +264,72 @@
     const __pulp_root   = Symbol("__pulp_root")
 
 
+
+    const ValidIVarStarts = NewStash()
+    {
+      let chars = "abcdefghijklmnopqrstuvwxyz"
+      chars = chars.toUpperCase() + chars
+      chars.forEach(char => ValidIVarStarts[char] = true)
+    }
+
+    const ProxyHandler = NewStash({
+      get (rind, selector, proxy) {
+        const pulp = rind[__pulp]
+        if (proxy !== rind[__proxy]) { return pulp._hijackedProxyError(proxy) }
+        if (IsLocalProperty(pulp, selector)) {
+          return (ValidIVarStarts[selector[0]]) ?
+            pulp[selector] :
+            pulp._improperAccessError(selector)
+        }
+        const method = rind[selector]
+        if (method) { return method }
+        return pulp._improperAccessError(selector)
+      },
+      set (rind, selector, value, proxy) {
+        const pulp = rind[__pulp]
+        if (proxy !== rind[__proxy]) { return pulp._hijackedProxyError(proxy) }
+        if (ValidIVarStarts[selector[0]]) {
+          if (pulp[selector] !== undefined) {
+            pulp[selector] = value
+          }
+          return true
+        }
+        if (selector === __setPulp) {
+          rind[__pulp] = value
+          return true
+        }
+        return pulp._improperAccessError(selector)
+      },
+      has (rind, selector) {
+        const pulp = rind[__pulp]
+        if (ValidIVarStarts[selector[0]]) {
+          if (pulp[selector] !== undefined) { return true }
+          return (rind[selector] !== undefined)
+        }
+        return pulp._improperAccessError(selector)
+      },
+      ownKeys (rind) {
+        return rind[__pulp].keys().filter(
+          selector => ValidIVarStarts[selector[0]])
+      }
+
+    })
+
+    function AttachRind() {
+      var rind = SpawnFrom(this[__rind_root])
+      var proxy = new Proxy(rind, ProxyHandler)
+      this[__rind] = this[___rind] = rind
+      // BeImmutable(rind)
+      return proxy
+    }
+
+
+    function NewDelegationHandler(Selector) {
+      return function __Delegation(/* arguments */) {
+        return this.ExecWithAll(Selector, arguments)
+      };
+    }
+
     function AsProtectedFunction(func) {
       function __Protected(/* arguments */) {
         var args = arguments.map(arg =>
@@ -275,37 +339,18 @@
       return SetImmutableProperty(__Protected, __isProtected, true)
     }
 
-    function ResetPulp(rind, oldPulp, newPulp) {
-      oldPulp[__rind] = oldPulp[___rind] = oldPulp[__oid] = null
-      newPulp[__oid] = rind[__oid]
-      return (newPulp[__rind] = newPulp[___rind] = rind)
+    argsWithProtectedFuncs = []
+    index = args.length
+    while (index--) {
+      arg = args[index]
+      argsWithProtectedFuncs[index] =
+        (typeof arg !== "function" || arg[__isProtected]) ?
+          arg : AsProtectedFunction(arg)
     }
+    result = Reflect_apply(P[selector], P, argsWithProtectedFuncs)
+    return (result instanceof _Inner) ? result[__rind] : result
 
-    function ConnectRindToPulp(R, P, K, E)  { // Rind, Pulp, Key, Error
-      SetHiddenProperty(R, __Pulp, k=>k===K?P:E(P))
 
-      return SetHiddenProperty(R, "ExecWithAll", function ExecWithAll(selector, args) { // "_SetPulp", PULP_KEY, newTarget
-        var argsWithProtectedFuncs, index, arg, result
-
-        if (this !== R) { return Hijacked__ExecSecurityError(this, R) }
-        if (selector[0] === "_") {
-          return (args !== K) ?
-            P._ImproperPrivateMethodExecError(selector) :
-            ResetPulp(R, P, arguments[2])
-        }
-
-        argsWithProtectedFuncs = []
-        index = args.length
-        while (index--) {
-          arg = args[index]
-          argsWithProtectedFuncs[index] =
-            (typeof arg !== "function" || arg[__isProtected]) ?
-              arg : AsProtectedFunction(arg)
-        }
-        result = Reflect_apply(P[selector], P, argsWithProtectedFuncs)
-        return (result instanceof _Inner) ? result[__rind] : result
-      })
-    }
 
 
 
@@ -315,11 +360,6 @@
       };
     }
 
-    function NewDelegationHandler(Selector) {
-      return function __Delegation(/* arguments */) {
-        return this.ExecWithAll(Selector, arguments)
-      };
-    }
 
     function NewSuperHandler(Selector) {
       return function __Super(/* arguments */) {
@@ -391,18 +431,7 @@
 
     SetImmutableGetter(_Rind_root, __rind, function () { return this })
 
-    SetImmutableGetter(_Super_root, __rind, function () {
-      return this._pulp[___rind];
-    })
-
-    AddLazyProperty(_Pulp_root, __rind, function () {
-      var rind = SpawnFrom(this[__rind_root])
-      var exec = ConnectRindToPulp(rind, this, KNIFE, ImproperAttemptToAccessPulpError)
-      SetImmutableProperty(exec, "selector", "ExecWithAll");
-      rind[__oid] = this[__oid]
-      this[__rind] = this[___rind] = rind
-      return BeImmutable(rind)
-    })
+    AddLazyProperty(_Pulp_root, __rind, AttachRind)
 
     AddLazyProperty(_Pulp_root, __oid, function () {
       return (this[__oid] = Symbol(NewUniqueId(this.TypeName())))
@@ -416,12 +445,13 @@
       return SetHiddenProperty(this, "_super", _super)
     })
 
-    SetImmutableProperty(_Super_root, __Pulp, function (knife) { return this[__pulp] })
     SetImmutableProperty(_Pulp_root,  __Pulp, function (knife) { return this })
 
 
     /// NOTE:  Special methods like #Is should go in _Pulp_root
     ///        unimplementedHandlers should go in    _Outer_root
+
+
 
 
 
