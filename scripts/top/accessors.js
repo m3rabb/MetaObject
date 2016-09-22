@@ -238,7 +238,7 @@ Top.Extend(function () {
       //   2  3  4  5   6 7 8  9  10   11     13 14 15 16
       //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]
       //      * [&] -  [^]([_] * (a)ccessor)  ~       [?]
-var Signature    = this._signature;
+      var Signature    = this._signature;
       var PropertyName = this.PropertyName();
       var pattern      = "$4" + PropertyName + "~$16";
       var canonicalSig = Signature.replace(SIG_MATCHER, pattern);

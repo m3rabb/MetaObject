@@ -1,11 +1,17 @@
 // See http://exploringjs.com/es6/ch_proxies.html sec 28.5.1 & 28.7.5.1
 
+// Add try catch to effective enable noSuchMethod on completely unknown methods???
 
+// set selector to string OR array of strings
 /* global
   jasmine:false
 */
 
 // validthis:true
+
+// TRY: send one time object in as key, then call method on it see inside!!!
+
+
 
 (function (global) {
   "use strict";
@@ -32,26 +38,23 @@
 
     // const _ = SpawnFrom(null)
 
-    const _Base_root               = SpawnFrom(null)
-    const   Stash_root             = SpawnFrom(_Base_root)
-    const   _Top_root              = SpawnFrom(_Base_root)
+    const _Base_root             = SpawnFrom(null)
+    const   Stash_root           = SpawnFrom(_Base_root)
+    const   _Top_root            = SpawnFrom(_Base_root)
 
-    const     _Outer_root          = SpawnFrom(_Top_root)
-    const       _Rind_root         = SpawnFrom(_Outer_root)
-    const         Primordial_root  = SpawnFrom(_Rind_root)
-    const         Nothing_root     = SpawnFrom(_Rind_root)
-    const         Thing_root       = SpawnFrom(_Rind_root)
-    const         Type_root        = SpawnFrom(_Rind_root)
-    const         Context_root     = SpawnFrom(_Rind_root)
+    const     _Rind_root         = SpawnFrom(_Top_root)
+    const       Primordial_root  = SpawnFrom(_Rind_root)
+    const       Nothing_root     = SpawnFrom(_Rind_root)
+    const       Thing_root       = SpawnFrom(_Rind_root)
+    const       Type_root        = SpawnFrom(_Rind_root)
+    const       Context_root     = SpawnFrom(_Rind_root)
 
-    const     _Inner_root          = SpawnFrom(_Top_root)
-    const       _Super_root        = SpawnFrom(_Inner_root)
-    const       _Pulp_root         = SpawnFrom(_Inner_root)
-    const         _Primordial_root = SpawnFrom(_Pulp_root)
-    const         _Nothing_root    = SpawnFrom(_Pulp_root)
-    const         _Thing_root      = SpawnFrom(_Pulp_root)
-    const         _Type_root       = SpawnFrom(_Pulp_root)
-    const         _Context_root    = SpawnFrom(_Pulp_root)
+    const     _Pulp_root         = SpawnFrom(_Top_root)
+    const       _Primordial_root = SpawnFrom(_Pulp_root)
+    const       _Nothing_root    = SpawnFrom(_Pulp_root)
+    const       _Thing_root      = SpawnFrom(_Pulp_root)
+    const       _Type_root       = SpawnFrom(_Pulp_root)
+    const       _Context_root    = SpawnFrom(_Pulp_root)
 
     // const _Default  ----> deal with super called whne there is noe
 
@@ -67,7 +70,7 @@
         (HandleErrorsQuietly = bool_) : HandleErrorsQuietly
     }
 
-    function _SignalError(target, message) {
+    function SignalError(target, message) {
       if (HandleErrorsQuietly) {
         console.warn(message)
       } else {
@@ -80,23 +83,21 @@
       return null
     }
 
-    function _ConstructorError(constructor) {
-      _SignalError(constructor.name,
+    function ConstructorError(constructor) {
+      SignalError(constructor.name,
         " is only for use with 'instanceof', it's not meant to be executed!")
     }
 
-    // function _Top ()        { _ConstructorError(_Top)        }
-    function _Inner ()      { _ConstructorError(_Inner)      }
-    function _Pulp ()       { _ConstructorError(_Pulp)       }
-    function _Rind ()       { _ConstructorError(_Rind)       }
-    function _Primordial () { _ConstructorError(_Primordial) }
-    function  Primordial () { _ConstructorError(Primordial) }
+    function Top ()         { ConstructorError(Top)        }
+    function Rind ()        { ConstructorError(Rind)       }
+    function _Pulp ()       { ConstructorError(_Pulp)       }
+    function _Primordial () { ConstructorError(_Primordial) }
+    function  Primordial () { ConstructorError(Primordial) }
     // function _Thing ()      { _ConstructorError(_Thing)      }
 
-    // _Top.prototype        = _Top_root
-    _Inner.prototype      = _Inner_root
+    Top.prototype         = _Top_root
+    Rind.prototype        = _Rind_root
     _Pulp.prototype       = _Pulp_root
-    _Rind.prototype       = _Rind_root
     _Primordial.prototype = _Primordial_root
      Primordial.prototype =  Primordial_root
     // _Thing.prototype      = Thing_root
@@ -192,21 +193,21 @@
     }
 
 
-    var HiddenConfiguration = NewStash({
+    const HiddenConfiguration = NewStash({
       writable    : true,
       enumerable  : false,
       configurable: false,
     })
 
-    var LockedConfiguration = NewStash({
+    const LockedConfiguration = NewStash({
       writable    : false,
       enumerable  : true,
       configurable: false,
     })
 
-    var LockedHiddenConfiguration = NewStash() // all false
+    const LockedHiddenConfiguration = NewStash() // all false
 
-    var LazyPropertyConfiguration = NewStash({
+    const LazyPropertyConfiguration = NewStash({
       writable    : true,
       enumerable  : false,
       configurable: true,
@@ -253,105 +254,176 @@
     //   return function Selector() { return Name; };
     // });
 
-    const __isProtected = Symbol("__isProtected")
-    const __oid         = Symbol("__oid")
-    const __rind        = Symbol("__rind")
-    const ___rind       = Symbol("___rind")
-    const __pulp        = Symbol("__pulp")
-    const __Pulp        = Symbol("__Pulp")
-    const __type        = Symbol("__type")
-    const __rind_root   = Symbol("__rind_root")
-    const __pulp_root   = Symbol("__pulp_root")
+    const __isProtected     = Symbol("__isProtected")
+    const __oid             = Symbol("__oid")
+    const __rind            = Symbol("__rind")
+    const ___rind           = Symbol("___rind")
+    const __pulp            = Symbol("__pulp")
+    const __Pulp            = Symbol("__Pulp")
+    const __type            = Symbol("__type")
+    const __rind_root       = Symbol("__rind_root")
+    const __pulp_root       = Symbol("__pulp_root")
+    const __protectedOutput = Symbol("__protectedOutput")
+    const __protectedInput  = Symbol("__protectedInput")
 
 
+    AddMethod(Top, function _hijackedRindError(pulp, rind) {
+      var message = `Unknown object: ${rind} is impersonating the rind of object: ${pulp}!`
+      return SignalError(Top, message)
+    })
 
-    const ValidIVarStarts = NewStash()
-    {
-      let chars = "abcdefghijklmnopqrstuvwxyz"
-      chars = chars.toUpperCase() + chars
-      chars.forEach(char => ValidIVarStarts[char] = true)
-    }
+    AddMethod(Top, function _privateAccessError(pulp, selector) {
+      return pulp[__type].methodAt("_privateAccessError") ?
+         pulp._privateAccessError(selector) :
+         pulp._noSuchProperty(selector)
+    })
+
+    AddMethod(Top, function _setImmutableError(pulp, selector) {
+      return pulp[__type].methodAt("_setImmutableError") ?
+         pulp._setImmutableError(selector) :
+         pulp._noSuchProperty(selector)
+    })
 
     const ProxyHandler = NewStash({
-      get (rind, selector, proxy) {
-        const pulp = rind[__pulp]
-        if (proxy !== rind[__proxy]) { return pulp._hijackedProxyError(proxy) }
-        if (IsLocalProperty(pulp, selector)) {
-          return (ValidIVarStarts[selector[0]]) ?
-            pulp[selector] :
-            pulp._improperAccessError(selector)
+      get (pulp, selector, rind) {
+        if (rind !== pulp[__rind]) { return Top._hijackedRindError(pulp, rind) }
+        if (selector[0] === "_") { return Top._privateAccessError(pulp, selector) }
+        const value = pulp[selector]
+        if (value == null) {
+          return (value === null) ? null : pulp._noSuchProperty(selector)
         }
-        const method = rind[selector]
-        if (method) { return method }
-        return pulp._improperAccessError(selector)
+        return value[__protectedOutput] || value
       },
-      set (rind, selector, value, proxy) {
-        const pulp = rind[__pulp]
-        if (proxy !== rind[__proxy]) { return pulp._hijackedProxyError(proxy) }
-        if (ValidIVarStarts[selector[0]]) {
-          if (pulp[selector] !== undefined) {
-            pulp[selector] = value
-          }
-          return true
-        }
-        if (selector === __setPulp) {
-          rind[__pulp] = value
-          return true
-        }
-        return pulp._improperAccessError(selector)
+      set (pulp, selector, value, rind) {
+        const firstChar = selector[0]
+        if (rind !== pulp[__rind]) { return Top._hijackedRindError(pulp, rind) }
+        if (firstChar === "_") { return Top._privateAccessError(pulp, selector) }
+        if (firstChar === "$") { return Top._setImmutableError(pulp, selector) }
+        if (pulp[selector] === undefined) { return pulp._noSuchProperty(selector, value) }
+        pulp[selector] = value
+        return true
       },
-      has (rind, selector) {
-        const pulp = rind[__pulp]
-        if (ValidIVarStarts[selector[0]]) {
-          if (pulp[selector] !== undefined) { return true }
-          return (rind[selector] !== undefined)
-        }
-        return pulp._improperAccessError(selector)
+      has (pulp, selector) {
+        if (selector[0] === "_") { return Top._privateAccessError(pulp, selector) }
+        return pulp[selector] !== undefined
       },
-      ownKeys (rind) {
-        return rind[__pulp].keys().filter(
-          selector => ValidIVarStarts[selector[0]])
+      ownKeys (pulp) {
+        return pulp.keys().filter(selector => selector[0] !== "_")
       }
-
     })
 
     function AttachRind() {
-      var rind = SpawnFrom(this[__rind_root])
-      var proxy = new Proxy(rind, ProxyHandler)
-      this[__rind] = this[___rind] = rind
-      // BeImmutable(rind)
-      return proxy
+      return (this[__rind] = this[___rind] = new Proxy(this, ProxyHandler))
     }
 
-
-    function NewDelegationHandler(Selector) {
-      return function __Delegation(/* arguments */) {
-        return this.ExecWithAll(Selector, arguments)
-      };
-    }
-
-    function AsProtectedFunction(func) {
-      function __Protected(/* arguments */) {
-        var args = arguments.map(arg =>
-          (arg instanceof _Inner) ? arg[__rind] : arg)
+    function AsProtectedInput(func) {
+      // Due the possibility of an intruder proxying a previously protected func
+      // in order to capture the incoming params, reusing a previously protected
+      // funcs may not be possible. Might need to run this every time, no??? :-(
+      const existing = func[__protectedInput]
+      if (existing) { return existing }
+      function __ProtectedInput(/* arguments */) {
+        const args = arguments.map(arg =>
+          (arg instanceof _Pulp) ? arg[__rind] : arg)
         return Reflect_apply(func, this, args)
       }
-      return SetImmutableProperty(__Protected, __isProtected, true)
+      SetImmutableProperty(func, __$protectedInput, __ProtectedInput) // Make these hidden???
+      SetImmutableProperty(func, __$basis         , func)
+      SetImmutableProperty(__ProtectedInput, __$protectedInput, __ProtectedInput)
+      SetImmutableProperty(__ProtectedInput, __$basis         , func)
+      if (func.selector) {
+        SetImmutableProperty(__ProtectedInput, "$selector", func.selector)
+      }
+      return __ProtectedInput
     }
 
-    argsWithProtectedFuncs = []
-    index = args.length
-    while (index--) {
-      arg = args[index]
-      argsWithProtectedFuncs[index] =
-        (typeof arg !== "function" || arg[__isProtected]) ?
-          arg : AsProtectedFunction(arg)
+    function AsProtectedOutput(method) {
+      // const existing = func[__protectedOutput]
+      // if (existing) { return existing }
+      function __ProtectedOutput(/* arguments */) {
+        const argsWithProtectedInputs = []
+        let next = arguments.length
+        while (next--) {
+          const arg = arguments[next]
+          argsWithProtectedInputs[next] =
+            (typeof arg !== "function" || arg[__protectedInput]) ?
+              arg : AsProtectedInput(arg)
+        }
+        const result = Reflect_apply(method, this, argsWithProtectedInputs)
+        return (result instanceof _Pulp) ? result[__rind] : result
+      }
+      SetImmutableProperty(method           , __$protectedOutput, __ProtectedOutput)
+      SetImmutableProperty(__ProtectedOutput, __$protectedOutput, __ProtectedOutput)
+      SetImmutableProperty(__ProtectedOutput, "$selector"       , method.selector  )
+      return __ProtectedOutput
     }
-    result = Reflect_apply(P[selector], P, argsWithProtectedFuncs)
-    return (result instanceof _Inner) ? result[__rind] : result
+
+    function AsMethodImp(func_name, func_) {
+      const hasSeparateName = arguments.length > 1
+      const name = hasSeparateName ? func_name : func_name.name
+      const func = hasSeparateName ? func_ : func_name
+      if (!func.$methodImp) {
+        const imp = _MethodImp.new(func)
+        SetImmutableProperty(func, "$methodImp", imp)
+        SetImmutableProperty(func, "$protected", imp.$protected)
+      }
+      // SetImmutableProperty(func, "method", this)
 
 
+      const __ProtectedOutput, __selector       , method.selector  )
+    }
 
+    AddMethod(_MethodImp, function _init(func) {
+      this._imp = func
+      this.$protected = AsProtectedOutput(func)
+      this._selectors = null
+    })
+
+    AddMethod(_MethodImp, function _addSelector(selector) {
+      const selectors = this._selectors
+      switch(typeof selectors) {
+        case "string" : this._selectors = [selectors]; break
+        case "object" : selectors.push(selector); break
+        default :       this._selectors = selector; break
+      }
+      return this
+    })
+
+    AddGetterProperty(_MethodImp, function $annotation() {
+      return this._selectors.toString()
+    })
+
+    AddGetterProperty(_MethodImp, function $selectors() {
+      const selectors = this._selectors
+      return IsArray(selectors) ? selectors.slice() : [selectors]
+    })
+
+
+    // AddAccessorMethod
+    // AddAccessorProperty
+
+
+    AddMethod(_Type_root, function _init(name, supertypes, _root) {
+      this._asExec(_Thing, "_init", name)
+
+      this._instanceRoot = _root
+      this._subtypes = NewStash()
+      this._supertypes = ConnectTypes(this, supertypes)
+      this._ancestors = BuildAncestors(this._supertypes)
+      this._methods = NewStash()
+
+      SeedAllMethodsFrom(_root, this._supertypes)
+
+      SetImmutableProperty(_root, __$type     , this)
+      SetImmutableProperty(_root, __$pulp_root, _root)
+      SetImmutableProperty(_root, __$rind_root, root)
+    })
+
+    AddMethod(_Type_root, function new(/* arguments */) {
+      var instance = SpawnFrom(this._instanceRoot)
+      instance._init(...arguments)
+      return instance
+    })
 
 
     function NewUnimplementedHandler(Selector) {
@@ -360,26 +432,6 @@
       };
     }
 
-
-    function NewSuperHandler(Selector) {
-      return function __Super(/* arguments */) {
-        var pulp, method, ancestors, next, type, superMethod
-
-        pulp = this._pulp
-        method = pulp[Selector]
-        ancestors = pulp.AncestorTypes()
-
-        next = ancestors.length
-        while (next--) {
-          type = ancestors[next]
-          superMethod = type._methods[Selector]
-          if (superMethod || superMethod !== method) {
-            return superMethod.apply(pulp, arguments) // do these need to be protected too???
-          }
-        }
-        return pulp._NoSuchMethod(Selector, arguments)
-      }
-    }
 
 
     function _SetMethod_(target, name, handler, isHidden_) {
@@ -391,7 +443,6 @@
     function EnsureDefaultMethodsFor(name) {
       if (_Pulp_root[name]) { return }
       _SetMethod_(_Pulp_root , name, NewUnimplementedHandler(name), true)
-      _SetMethod_(_Super_root, name, NewSuperHandler(name)        , true)
       _SetMethod_(_Rind_root , name, NewDelegationHandler(name)   , true)
     }
 
@@ -419,12 +470,13 @@
       return target
     }
 
+
     // function Within_At_Install(root, selector, pulpMethod) {
     //   if (IsValidMethodSelector(selector) &&
     //       IsntAutoGeneratedSelector(selector)) {
     //         return  Within_At_Install_(root, selector, pulpMethod);
     //   }
-    //   return _SignalError("Selector must be lowecase and not end with $!");
+    //   return SignalError("Selector must be lowecase and not end with $!");
     // }
 
 
@@ -437,14 +489,6 @@
       return (this[__oid] = Symbol(NewUniqueId(this.TypeName())))
     });
 
-    AddLazyProperty(_Pulp_root, "_super", function () {
-      // jshint shadow:true
-      var _super = SpawnFrom(_Super_root);
-      _super._pulp = this
-      // _super._super = _super  // Is this necessary???
-      return SetHiddenProperty(this, "_super", _super)
-    })
-
     SetImmutableProperty(_Pulp_root,  __Pulp, function (knife) { return this })
 
 
@@ -453,65 +497,89 @@
 
 
 
-
-
-    AddMethod(_Primordial_root, function Is(that) {
+    AddMethod(_Pulp_root, function is(that) {
       // return that.__Pulp ? (this.__rind === that) : (this === that);
-      return that instanceof _Primordial ?
+      return that instanceof Rind ?
         (this[___rind] === that) : (this === that)
     })
 
-    //// NOTE THIS METHOD!!! It must be set after the previous. Order matters.
-    _SetMethod_(Primordial_root, "Is", function Is(that) {
-      return that instanceof Primordial ?
-        (this === that[___rind]) : (this === that)
+    AddMethod(_Pulp_root, function type() { return this[__type]; })
+
+    AddMethod(_Pulp_root, function _noSuchProperty(selector, value_) {
+      const verb = arguments.length > 1 ? "set" : "get"
+      const message = `External attempt to ${verb} nonexistent property #${selector}!`
+      return SignalError(this, message)
     })
 
-    AddMethod(_Primordial_root, function Type() { return this[__type]; })
-
-    AddMethod(_Primordial_root, function _NoSuchMethod(selector, args) {
-      return _SignalError(this, "Receiver has no such method #"+ selector +"!")
+    AddMethod(_Pulp_root, function _noSuchMethod(selector, args) {
+      const message = `Other objects implement #${selector}, but the receiver does not!`
+      return SignalError(this, message)
     })
 
-    AddMethod(_Primordial_root, function Exec(selector, args) {
+
+
+    AddMethod(_Primordial_root, function hasMethod(selector) {
+      return this[__type].methodAt(selector) != null
+    })
+
+    AddMethod(_Primordial_root, "equals", _Primordial_root.is)
+
+    AddMethod(_Primordial_root, function _signalError(message) {
+      return SignalError(this, message)
+    })
+
+    AddMethod(_Primordial_root, function _noSuchProperty(selector, value_) {
+      const verb = arguments.length > 1 ? "set" : "get"
+      const message = `External attempt to ${verb} nonexistent property #${selector}!`
+      return this._signalError(message)
+    })
+
+    AddMethod(_Primordial_root, function _noSuchMethod(selector, args) {
+      const message = `Other objects implement #${selector}, but the receiver does not!`
+      return this._signalError(message)
+    })
+
+    AddMethod(_Primordial_root, function execWithAll(selector, args) {
       return Reflect_apply(this[selector], this, args)
     })
 
-
-    AddMethod(_Thing_root, function Equals(that) {
-      // return that.__Pulp ? (this.__rind === that) : (this === that);
-      return that instanceof _Primordial ?
-        (this[___rind] === that) : (this === that)
+    AddMethod(_Primordial_root, function exec(selector, ...args) {
+      return Reflect_apply(this[selector], this, args)
     })
 
-    //// NOTE THIS METHOD!!! It must be set after the previous. Order matters.
-    _SetMethod_(Thing_root, "Equals", function Equals(that) {
-      return that instanceof Primordial ?
-        (this === that[___rind]) : (this === that)
+    AddMethod(_Primordial_root, function _asExecWithAll(type, selector, args) {
+      return Reflect_apply(type.methodAt(selector), this, args)
     })
 
-    AddMethod(_Thing_root, function _As_ExecWithAll(type, selector, args) {
-      // return type[__Pulp](KNIFE)._instanceRoot[selector].apply(this, args)
-      // return Reflect_apply(type[__Pulp](KNIFE)._instanceRoot[selector], this, args)
-      return Reflect_apply(type.MethodAt(selector), this, args)
+    AddMethod(_Primordial_root, function _asExec(type, selector, ...args) {
+      return Reflect_apply(type.methodAt(selector), this, args)
     })
 
-    AddMethod(_Thing_root, function _Error(message) {
-      return _SignalError(this, message)
+    AddMethod(_Primordial_root, function _superExecWithAll(selector, args) {
+      const method = this[selector]
+      const ancestors = this.withAncestorTypes()
+      let next = ancestors.length
+      while (next--) {
+        let type = ancestors[next]
+        let superMethod = type._methods[selector]
+        if (superMethod && superMethod !== method) {
+          return Reflect_apply(superMethod, this, args) // do these need to be protected too???
+        }
+      }
+      return this._noSuchMethod(selector, args)
     })
 
-    AddMethod(_Thing_root, function _ImproperPrivateMethodExecError(selector) {
-      return this._Error(`Private method #${selector} can only be called from within an object's method!`)
-    })
-
-    AddMethod(_Thing_root, function _EnsureUnlocked() {
-      return this.IsLocked() ? this._LockedObjectError() : this
+    AddMethod(_Primordial_root, function _superExec(selector, ...args) {
+      return this._superExecWithAll(selector, args)
     })
 
 
+    AddMethod(_Thing_root, function _ensureUnlocked() {
+      return this.isLocked() ? this._lockedObjectError() : this
+    })
 
-    AddMethod(Thing_root, function AtPutMethod(selector, method) {
-      this._EnsureUnlocked()
+    AddMethod(Thing_root, function atPutMethod(selector, method) {
+      this._ensureUnlocked()
       return AddMethod(this, selector, method)
     });
 
@@ -522,7 +590,7 @@
 
     // Minimum metahierarchy methods
 
-    Thing_root.AtPutMethod("AddMethod", function AddMethod(/* arguments */) {
+    Thing_root.atPutMethod("AddMethod", function AddMethod(/* arguments */) {
       var index = -1;
       var count = arguments.length;
       var method;
@@ -565,7 +633,7 @@
     //
     // // function NewFauxConstructor(instanceRoot) {
     // //   var constructor function () {
-    // //     _SignalError(this, "This function exists only for use with instanceof!");
+    // //     SignalError(this, "This function exists only for use with instanceof!");
     // //   };
     // //   constructor.prototype = instanceRoot;
     // //   return constructor;
@@ -613,12 +681,12 @@
       return _supertypes
     }
 
-    AddMethod(_Type_root, function _Init(name, supertypes, root, _root) {
-      this._AsExec(_Thing, "_Init", name)
+    AddMethod(_Type_root, function _Init(name, supertypes, _root) {
+      this._asExec(_Thing, "_Init", name)
 
       this._instanceRoot = _root
       this._subtypes = NewStash()
-      this._supertypes = ConnectTypes(this, supertypes)
+      // this._supertypes = ConnectTypes(this, supertypes)
       this._ancestors = BuildAncestors(this._supertypes)
       this._methods = NewStash()
 
@@ -680,7 +748,7 @@
 
 
     Primordial.AddMethod(function New() {
-      return _SignalError(Primordial, "Abstract type cannot create instances!");
+      return SignalError(Primordial, "Abstract type cannot create instances!");
     });
 
     Nothing.AddMethod(function New() { return Void;});
@@ -735,7 +803,7 @@
 
       this.AddIMethod(function SignalError(/* arguments */) {
         var message = Array_join(arguments, "");
-        _SignalError(this, message);
+        SignalError(this, message);
         return this;
       });
 
