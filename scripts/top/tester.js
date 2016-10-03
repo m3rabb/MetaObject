@@ -1,35 +1,60 @@
-var over = {parent: 333}
-var obj = Object.create(over)
-obj.vis = 123
-obj.invis = 456
+function Turtle(name, age) {
+  this.name = name
+  this.age = age
 
-var sym = Symbol("__selector")
-obj[sym] = "sel"
+  var handler = {
+      get: (target, name, receiver) => {
+        var validity = receiver === this.shell ? "Valid" : "Invalid";
+        console.log(`${validity} proxy access`)
+        return target[name]
+      }
+  };
 
-var hidden = {
-  writable    : true,
-  enumerable  : false,
-  configurable: true,
+  this.growShell = function () {
+    return (this.shell = new Proxy(this, handler))
+  }
 }
-var syms
-
-console.log(`local keys: ${Object.keys(obj)}`)
-console.log(`all props: ${Object.getOwnPropertyNames(obj)}`)
-syms = Object.getOwnPropertySymbols(obj).map(s => s.toString())
-console.log(`symbols: ${syms}`)
-
-Object.defineProperty(obj, "invis", hidden)
-console.log(`local keys: ${Object.keys(obj)}`)
-console.log(`all props: ${Object.getOwnPropertyNames(obj)}`)
-syms = Object.getOwnPropertySymbols(obj).map(s => s.toString())
-console.log(`symbols: ${syms}`)
 
 
-Object.defineProperty(obj, sym, hidden)
-console.log(`local keys: ${Object.keys(obj)}`)
-console.log(`all props: ${Object.getOwnPropertyNames(obj)}`)
-syms = Object.getOwnPropertySymbols(obj).map(s => s.toString())
-console.log(`symbols: ${syms}`)
+
+
+var t0 = new Turtle("Princess", 13)
+var t1 = t0.growShell()
+var t2 = new Proxy(t0, {})
+var t3 = new Proxy(t1, {})
+
+// var over = {parent: 333}
+// var obj = Object.create(over)
+// obj.vis = 123
+// obj.invis = 456
+//
+// var sym = Symbol("__selector")
+// obj[sym] = "sel"
+//
+// var hidden = {
+//   writable    : true,
+//   enumerable  : false,
+//   configurable: true,
+// }
+// var syms
+//
+// console.log(`local keys: ${Object.keys(obj)}`)
+// console.log(`all props: ${Object.getOwnPropertyNames(obj)}`)
+// syms = Object.getOwnPropertySymbols(obj).map(s => s.toString())
+// console.log(`symbols: ${syms}`)
+//
+// Object.defineProperty(obj, "invis", hidden)
+// console.log(`local keys: ${Object.keys(obj)}`)
+// console.log(`all props: ${Object.getOwnPropertyNames(obj)}`)
+// syms = Object.getOwnPropertySymbols(obj).map(s => s.toString())
+// console.log(`symbols: ${syms}`)
+//
+//
+// Object.defineProperty(obj, sym, hidden)
+// console.log(`local keys: ${Object.keys(obj)}`)
+// console.log(`all props: ${Object.getOwnPropertyNames(obj)}`)
+// syms = Object.getOwnPropertySymbols(obj).map(s => s.toString())
+// console.log(`symbols: ${syms}`)
 
 
 // var pulp = {abc: 123}

@@ -286,7 +286,7 @@
 
     const ProxyHandler = NewStash({
       get (pulp, selector, rind) {
-        if (rind !== pulp[__rind]) { return Top._hijackedRindError(pulp, rind) }
+        if (rind !== pulp[ ]) { return Top._hijackedRindError(pulp, rind) }
         if (selector[0] === "_") { return Top._privateAccessError(pulp, selector) }
         const value = pulp[selector]
         if (value == null) {

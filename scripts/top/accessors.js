@@ -1,409 +1,318 @@
-Top.Extend(function () {
-  var AccessorFactory;
-
-  function CopyObject(source_) {
-    var source, target, selectors, index, selector;
-
-    source = source_ || this;
-    target = SpawnFrom(RootOf(source));
-    selectors = PropertiesOf(source);
-    index = selectors.length;
-
-    while (index--) {
-      selector         = selectors[index];
-      target[selector] = source[selector];
-    }
-    return target;
-  }
-
-  function Dup(value) {
-    if (value != null) {
-      if (that[ThingMarker]) { return value.copy(); }
-      else if (typeof value === "object") {
-        return IsArray(value) ? value.slice() : CopyObject(value);
-      }
-    }
-    return value;
-  }
-
-  this.SetType("Thing", function () {
-    var AccessorDelimiterMatcher = /\s*[ ,]\s*/;
-
-    function AsSelectorList(specsString_accessorSpecs) {
-      return (typeof specsString_accessorSpecs === "string") ?
-        specsString_accessorSpecs.split(AccessorDelimiterMatcher) :
-        specsString_accessorSpecs;
-    }
-
-    this.AddIMethod(function AddAccessor(accessorSignature) {
-      var accessor = AccessorFactory.Make(accessorSignature);
-      this.atPutMethod(selector, accessor);
-    });
-
-    this.AddIMethod(function AddAccessors(signatures_list) {
-
-    });
+Top.Extend(function (_Thing) {
+  _Thing.addIMethod(function addAccessor(accessorSignature) {
+    var accessor = AccessorFactory.make(accessorSignature);
+    this.atPutMethod(selector, accessor);
   });
 
-
-
-  //   2  3  4  5   6 7 8  9  10   11     13 14 15 16     RegExp Grouping
-  //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]     Guide
+  //  1 2  3   4  5  6   7 8  9    10    11 12 13  14 15     RegExp Grouping
+  //  ([-][+][&+][?][#]) ([_][$]accessor) ([-][&+][!][?])    Guide
   //
-  //   ~       [!] [^]([_][$](a)ccessor)    [&] - [?]     getter
-  //      * [&] -  [^]([_] * (a)ccessor)  ~       [?]     setter
-  //      + [&] |  [^]([_] + (a)ccessor)    [&][!][?]     write once
-  //        [&]    [^]([_]   (a)ccessor)    [&][!] -      accessor
+  //    -        [?][#]  ([_][$]accessor)     [&+] . [?]     getter
+  //      [+][&+][?][#]  ([_][$]accessor)   -        [?]     setter
+  //      [+][&+][?][#]  ([_][$]accessor)     [&+][!][?]     accessor
 
-
-  //  ~  = no setter|getter. never on bothsides
-  //  #  = write once
-  //  &  = duplicate before|after access
-  //  !  = focus bias of return behavior. never on bothsides
-  //  ^  = uppercase ivar name
+  //  -  = no setter|getter. never on bothsides
+  //  +  = write once
+  //  &  = duplicate before|after access && for deepcopy
+  //  ?  = check the arguments and error if problem
+  //  #  = use symbol for internal ivar property
   //  _  = underscore prefixed
   //  $  = immutable prefixed
-  //  ?  = check the arguments and error if problem. may overshadow ! focus bias
+  //  !  = alway return value
+  //  ^  = uppercase ivar name
 
   //     = illegal option
   //  [] = optional
-  //  -  = not applicable
-  //  *  = none, one, or both a # and/or $ prefix
-  //  +  =       one, or both a # and/or $ prefix
-  //  |  = not applicable, but never when has ! as a suffix
+  //  .  = not applicable/ignored
+
+
+  // - getter|setter
+  // # immutable // ## deep immutable
+  // ~ non reachable (symbol) ivar
+  // * copy // ** deep copy
+
+  // ~ getter|setter
+  // # immutable // ## deep immutable
+  // @ reachable (symbol) ivar
+  // * copy // ** deep copy
 
 
 
-
-  AccessorFactory = this.SetType("AccessorFactory", function () {
+  AccessorFactory = Type.new(function (AccessorFactory) {
     var SIG_MATCHER =
-      /((~)|(#)|(&)|(!)|(\^))*((_*)(\$?)([a-z])([\w$]*))((~)|(&)|(!)|(\?))*/i;
-      // Visualize SIG_MATCHER in regexper.com via http://bit.ly/1yGt52x
+      ((\-)|(\+)|(&{1,2})|(\?)|(\#))*((_*)(\$?)([a-z][\w$]*))((\-)|(&{1,2})|(!)(\?))*/i
+      // Visualize SIG_MATCHER in regexper.com via http://bit.ly/2cxgIUR
+
+      //  1 2  3   4  5  6   7 8  9    10    11 12 13  14 15     RegExp Grouping
+      //  ([-][+][&+][?][#]) ([_][$]accessor) ([-][&+][!][?])    Guide
+      //
+      //    -        [?][#]  ([_][$]accessor)     [&+] . [?]     getter
+      //      [+][&+][?][#]  ([_][$]accessor)   -        [?]     setter
+      //      [+][&+][?][#]  ([_][$]accessor)     [&+][!][?]     accessor
 
     var AccessorRepo = NewStash();
 
     function AccessorAt(canonicalSignature, absentAction_) {
-      var accessor = AccessorRepo[canonicalSignature];
-      if (accessor) { return accessor; }
-      if (absentAction_) {
-        return (AccessorRepo[canonicalSignature] = absentAction_.call(this));
-      }
-      return null;
+      const accessor = AccessorRepo[canonicalSignature];
+      if (accessor) return accessor
+      return (absentAction_) ?
+        (AccessorRepo[canonicalSignature] = absentAction_.call(this)) : null
     }
 
-    this.AddMethod(function Make(accessorSignature) {
-      return this.New(accessorSignature).Make();
-    });
+    AccessorFactory.addMethod(function make(accessorSignature) {
+      return this.new(accessorSignature).make();
+    })
 
-    this.AddMethod(function New(accessorSignature) {
-      var match = accessorSignature.match(SIG_MATCHER);
-      return match ?
-        this._super.New(accessorSignature, match) :
-        this.AccessorSignatureError(accessorSignature);
-    });
 
-    this.AddIMethod(function _Init(validSignature, match) {
-      //   2  3  4  5   6 7 8  9  10   11     13 14 15 16     RegExp Grouping
-      //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]     Guide
-      this._signature        = validSignature;
-      this._match            = match;
+    AccessorFactory.addMethod(function new(accessorSignature) {
+      return accessorSignature.match(SIG_MATCHER) ?
+        this._superExec("new", accessorSignature, match) :
+        this.accessorSignatureError(accessorSignature);
+    })
 
-      this._prefixes         = match[ 1];
-      this._isNoWriting      = match[ 2] === "~"; // isReadOnly
-      this._isWriteOnce      = match[ 3] === "#";
-      this._isCopyOnWrite    = match[ 4] === "&";
-      this._isForceForWrites = match[ 5] === "!"; // AlwaysAnswerSelfWhenSetter
-      this._isUpperCaseName  = match[ 6] === "^";
-
-      this._accessorName     = match[ 7];
-      this._underscores      = match[ 8];
-      this._isImmutable      = match[ 9] === "$";
-      this._leadChar         = match[10];
-      this._remaining        = match[11];
-
-      this._suffixes         = match[12];
-      this._isNoReading      = match[13] === "~"; // isWriteOnly
-      this._isCopyOnRead     = match[14] === "&";
-      this._isForceForReads  = match[15] === "!"; // AlwaysAnswersValue
-      this._isArgChecking    = match[16] === "?";
-    });
-
-    this.AddMethod(function AccessorSignatureError(accessorSignature) {
-      return this.SignalError("Accessor signature ", accessorSignature, " is improper!");
+    AccessorFactory.addMethod(function accessorSignatureError(accessorSignature) {
+      return this.SignalError(`Accessor signature ${accessorSignature} is improper!`);
     });
 
 
-    this.AddIMethod(function Make() {
-      var isReadOnly       = this._isNoWriting;
-      var isWriteOnly      = this._isNoReading;
-      var isForceForWrites = this._isForceForWrites;
-      var isForceForReads  = this._isForceForReads;
-
-      if (isReadOnly && isWriteOnly) {
-        return this.CannotBeGetterAndSetterSpecError();
-      }
-      if (isForceForWrites && isForceForReads) {
-        return this.CannotForceBothReturnsSpecError();
-      }
-      if (isReadOnly) {
-        //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]
-        //   ~       [!] [^]([_][$](a)ccessor)    [&] - [?]     getter
-        if (this._isWriteOnce || this._isCopyOnWrite) {
-          return this.GetterSpecError();
-        }
-        return this.MakeGetter();
-      }
-      if (isWriteOnly) {
-        //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]
-        //      * [&] -  [^]([_] * (a)ccessor)  ~       [?]     setter
-        if (this._isCopyOnRead || isForceForReads) {
-          return this.SetterSpecError();
-        }
-        return this.MakeSetter();
-      }
-      if (this._isWriteOnce) {
-        //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]
-        //      + [&] |  [^]([_] + (a)ccessor)    [&][!][?]     write once
-        return this.MakeWriteOnceAccessor();
-      }
-      if (isForceForWrites) {
-        return this.CannotForceWriteReturnSpecError();
-      }
-        //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]
-        //        [&]    [^]([_]   (a)ccessor)    [&][!] -      accessor
-      return this.MakeAccessor();
-    });
+    AccessorFactory.addIMethod(function _init(validSignature, match) {
+      //  1 2  3   4  5  6   7 8  9   10     11 12 13  14 15     RegExp Grouping
+      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
 
 
 
-    this.addIMethod(function AccessorAt(canonicalSignature, absentAction_) {
+      this._signature         = validSignature;
+      this._match             = match;
+
+      this._prefixes          = match[ 1];
+      this._isReadOnly        = match[ 2] === "~"; // isReadOnly
+      this._isWriteOnce       = match[ 3] === "#"; // isReadOnly
+      this._setCopyPolicy     = match[ 4].length;
+      this._setReturnSelf     = (match[ 5] === "!") ? "SELF" : undefined;
+
+      this._accessorName      = match[ 7];
+      this._underscores       = match[ 8];
+      this._isFixed           = match[ 9] === "$";
+      this._propertyName      = match[10];
+
+      this._suffixes          = match[11];
+      this._isWriteOnly       = match[12] === "~"; // isWriteOnly
+      this._getCopyPolicy     = match[13].length;
+      this._setReturnValue    = (match[14] === "!") ? "VALUE" : undefined;
+
+      this._setReturnPolicy   = this._setReturnSelf || this._setReturnValue;
+      this._argCheckingPolicy = match[ 6] === "?" || match[15] === "?";
+    })
+
+
+    AccessorFactory.addIMethod(function accessorAt(canonicalSignature, absentAction_) {
       return AccessorAt.call(this, canonicalSignature, absentAction_);
     });
 
-
-    this.addIMethod(function PropertyName() {
-      var leadChar = this._isUpperCaseName ?
-        this._leadChar.toUpperCase() : this._leadChar.toLowerCase();
-      var mutability = (this._isWriteOnce || this._isImmutable) ? "$" : "";
-      var remaining = this._remaining;
-      var propertyName = "_" + mutability + leadChar + remaining;
-      if (propertyName === this._accessorName) {
-        return this.ProtectedPropertyHasSameNameAsAccessorError();
+    AccessorFactory.addIMethod(function make() {
+      if (this._isFixed && this._isWriteOnce) {
+        return this.accessorSpecError(
+          "It's redundant to specify a fixed accessor as write-once!");
       }
-      return propertyName;
-    });
+
+      if (this._isReadOnly) {
+        //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
+        //    ~           [?]  ([_][$]accessor)     [&+]   [?]     getter
+
+        if (this._isWriteOnly) {
+          return this.accessorSpecError(
+            "An accessor can't be pure getter and pure setter at once!");
+        }
+        if (this._isWriteOnce) {
+          return this.accessorSpecError(
+            "An accessor can't be pure getter and write-once at once!");
+        }
+        if (this._setCopyPolicy) {
+          return this.accessorSpecError(
+            "A getter can't specify a setter copying policy!");
+        }
+        if (this._setReturnPolicy) {
+          return this.accessorSpecError(
+            "A getter can't specify a setter return policy!");
+        }
+        return this.makeGetter();
+      }
+
+      if (this._setReturnSelf && this._setReturnValue) {
+        return this.accessorSpecError(
+          "An accessor can't specify more than one setter return policy!");
+      }
+
+      if (this._isWriteOnly) {
+        //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
+        //      [#][&+][!][?]  ([_][$]accessor)   ~        [?]     setter
+
+        if (this._getCopyPolicy) {
+          return this.accessorSpecError(
+            "A setter can't specify a getter copying policy!");
+        }
+        if (this._setReturnValue) {
+          return this.accessorSpecError(
+            "A setter can't be specified to return a value!");
+        }
+        return this.makeSetter()
+      }
+
+      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
+      //      [#][&+][!][?]  ([_][$]accessor)     [&+][!][?]     accessor
+      return this.makeAccessor();
+    })
 
 
-    this.addIMethod(function MakeGetter() {
-      //   2  3  4  5   6 7 8  9  10   11     13 14 15 16
-      //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]
-      //   ~       [!] [^]([_][$](a)ccessor)    [&] - [?]
+    AccessorFactory.addIMethod(function makeGetter() {
+      //  1 2  3   4  5  6   7 8  9   10     11 12 13  14 15     RegExp Grouping
+      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
+      //    ~           [?]  ([_][$]accessor)     [&+]   [?]     getter
       var Signature    = this._signature;
       var PropertyName = this.PropertyName();
-      var pattern      = "~$5" + PropertyName + "$14$16";
+      var pattern      = "~$6" + PropertyName + "$14$16";
       var canonicalSig = Signature.replace(SIG_MATCHER, pattern);
+      // WORK ON THIS PART ABOVE!!!
 
-      return this.AccessorAt(canonicalSig, function () {
-        var a = this._isForceForWrites;
-        var b = this._isCopyOnRead;
-        var c = this._isArgChecking;
+      return this.accessorAt(canonicalSig, function () {
+        const gcp = this._getCopyPolicy;
+        const acp = this._argCheckingPolicy;
 
-        return (a || b || c) ?
-          this.NewGeneralGetter(PropertyName, a, b, c) :
-          this.NewCommonGetter(PropertyName);
+        return (gcp || acp) ?
+          this.newGeneralGetter(PropertyName, acp, gcp) :
+          this.newCommonGetter(PropertyName);
       });
     });
 
-    this.addIMethod(function NewGeneralGetter(
-        _Name, AlwaysAnswerSelfWhenSetter, IsCopyOnRead, IsArgChecking) {
-        //  ~[!]accessor[&][?]
+    AccessorFactory.addIMethod(function newGeneralGetter(
+        _Name, IsArgChecking, CopyPolicy) {
       return function __GeneralGetter() {
-        var value = this[_Name];
-        if (arguments.length) {
-          if (IsArgChecking) { return this.GetterUsedAsSetterError(); }
-          if (AlwaysAnswerSelfWhenSetter) { return this; }
+        if (IsArgChecking && arguments.length) {
+          return this.error("Getter must be called with no args!")
         }
-        return IsCopyOnRead ? Dup(value) : value;
-      };
-    });
+        switch (CopyPolicy) {
+          case 0  : return this[_Name];
+          case 1  : return Dup(this[_Name]);
+          default : return DeepDup(this[_Name]);
+        }
+      }
+    })
 
-    this.addIMethod(function NewCommonGetter(_Name) {
+    AccessorFactory.addIMethod(function newCommonGetter(_Name) {
       return function __CommonGetter() {
         return this[_Name];
-      };
-    });
+      }
+    })
 
 
-    this.addIMethod(function MakeSetter() {
-      //   2  3  4  5   6 7 8  9  10   11     13 14 15 16
-      //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]
-      //      * [&] -  [^]([_] * (a)ccessor)  ~       [?]
-      var Signature    = this._signature;
-      var PropertyName = this.PropertyName();
-      var pattern      = "$4" + PropertyName + "~$16";
-      var canonicalSig = Signature.replace(SIG_MATCHER, pattern);
+    AccessorFactory.addIMethod(function makeSetter() {
+      //  1 2  3   4  5  6   7 8  9   10     11 12 13  14 15     RegExp Grouping
+      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
+      //      [#][&+][!][?]  ([_][$]accessor)   ~        [?]     setter
+      return this.accessorIfAbsent(function () {
+        var iwo = this._isWriteOnce || this._isFixed
+        var scp = this._setCopyPolicy;
+        var acp = this._argCheckingPolicy;
 
-      return this.AccessorAt(canonicalSig, function () {
-        var a = this._isWriteOnce || this._isImmutable;
-        var b = this._isCopyOnWrite;
-        var c = this._isArgChecking;
+        return (iwo || scp || acp) ?
+          this.newGeneralSetter(PropertyName, acp, iwo, scp) :
+          this.newCommonSetter(PropertyName);
+      })
+    })
 
-        return (a || b || c) ?
-          this.NewGeneralSetter(PropertyName, a, b, c) :
-          this.NewCommonSetter(PropertyName);
-      });
-    });
 
-    this.addIMethod(function NewGeneralSetter(
-        _Name, IsWriteOnce, IsCopyOnWrite, IsArgChecking) {
-        //  {#}[&]{$}accessor~[?]
+    AccessorFactory.addIMethod(function newGeneralSetter(
+        _Name, IsArgChecking, IsWriteOnce, CopyPolicy) {
       return function __GeneralSetter(value) {
-        if (arguments.length) {
-          if (IsWriteOnce) {
-            if (_Name in this) {
-              return IsArgChecking ? this.AccessorWriteError() : this;
-            }
-            var _value = IsCopyOnWrite ? Dup(value) : value;
-            return SetImmutableProperty(this, _Name, _value);
-          }
-          this[_Name] = IsCopyOnWrite ? Dup(value) : value;
-          return this;
+        if (IsArgChecking && arguments.length !== 1) {
+          return this.error("Setter must be called with exactly one arg!")
         }
-        return IsArgChecking ? this.SetterUsedAsGetterError() : this;
-      };
-    });
+        if (IsWriteOnce && _Name in this) {
+          return (IsArgChecking) ?
+            this.error("Write-once property is already defined!") : this
+        }
 
-    this.addIMethod(function NewCommonSetter(_Name) {
+        switch (CopyPolicy) {
+          case 0  : this[_Name] = value         ; break;
+          case 1  : this[_Name] = Dup(value)    ; break;
+          default : this[_Name] = DeepDup(value); break;
+        }
+        return this
+        // existing butt capital cupcake# even not stupid @ ellar {= kf dopode baba}
+      }
+    })
+
+    AccessorFactory.addIMethod(function newCommonSetter(_Name) {
       return function __CommonSetter(value) {
-        if (arguments.length) {
-          this[_Name] = value;
+        return arguments.length ? (this[_Name] = value, this) : this
+      }
+    })
+
+    AccessorFactory.addIMethod(function makeAccessor() {
+      //  1 2  3   4  5  6   7 8  9   10     11 12 13  14 15     RegExp Grouping
+      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
+      //      [#][&+][!][?]  ([_][$]accessor)     [&+][!][?]     accessor
+      return this.accessorIfAbsent(function () {
+        var iwo = this._isWriteOnce || this._isFixed
+        var scp = this._setCopyPolicy;
+        var srp = this._setReturnPolicy
+        var gcp = this._getCopyPolicy
+        var acp = this._argCheckingPolicy;
+
+        return (iwo || scp || srp || gcp || acp) ?
+          this.newGeneralSetter(PropertyName, acp, iwo, scp, srp, gcp) :
+          this.newCommonSetter(PropertyName, srp);
+      })
+    })
+
+    AccessorFactory.addIMethod(function newGeneralAccessor(
+        _Name, IsArgChecking, IsWriteOnce,
+        SetCopyPolicy, OnSetReturnSelf, GetCopyPolicy) {
+      return function __GeneralAccessor(value) {
+        switch (arguments.length) {
+          default :
+            if (IsArgChecking) {
+              return this.error("Accessor must be called with no more than one arg!")
+            }
+          case 1 :
+            if (IsWriteOnce && _Name in this) {
+              if (IsArgChecking) {
+                return this.error("Write-once property is already defined!")
+              }
+            }
+            else {
+              switch (SetCopyPolicy) {
+                case 0  : this[_Name] = value         ;        break
+                case 1  : this[_Name] = Dup(value)    ;        break
+                default : this[_Name] = DeepDup(value);        break
+              }
+            }
+            if (OnSetReturnSelf) { return this }
+          case 0 : break
         }
-        return this;
-      };
-    });
-
-
-    this.addIMethod(function MakeWriteOnceAccessor() {
-      //   2  3  4  5   6 7 8  9  10   11     13 14 15 16
-      //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]
-      //      + [&] |  [^]([_] + (a)ccessor)    [&][!][?]
-      var Signature    = this._signature;
-      var PropertyName = this.PropertyName();
-      var pattern      = "$4" + PropertyName + "$14$15$16";
-      var canonicalSig = Signature.replace(SIG_MATCHER, pattern);
-
-      return this.AccessorAt(canonicalSig, function () {
-        var a = this._isCopyOnWrite;
-        var b = this._isCopyOnRead;
-        var c = this._isForceForReads;
-        var d = this._isArgChecking;
-
-        if (a || b || d) {
-          return this.NewGeneralWriteOnceAccessor(PropertyName, a, b, c, d);
+        switch (GetCopyPolicy) {
+          case 0  : return this[_Name];
+          case 1  : return Dup(this[_Name]);
+          default : return DeepDup(this[_Name]);
         }
-        return c ?
-          this.NewValueWriteOnceAccessor(PropertyName, this._accessorName) :
-          this.NewCommonWriteOnceAccessor(PropertyName);
-      });
-    });
-
-    this.addIMethod(function NewGeneralWriteOnceAccessor(
-        _Name, IsCopyOnWrite, IsCopyOnRead, AlwaysAnswersValue, IsArgChecking) {
-        //  {#}[&][!]{$}accessor[&][!][?]
-      return function __GeneralWriteOnceAccessor(value_) {
-        var value;
-        if (arguments.length) {
-          if (_Name in this) {
-            return IsArgChecking ? this.AccessorWriteError() : this;
-          }
-          value = IsCopyOnWrite ? Dup(value_) : value_;
-          SetImmutableProperty(this, _Name, value);
-          if (!AlwaysAnswersValue) { return this; }
-        } else {
-          value = this[_Name];
-        }
-        return IsCopyOnRead ? Dup(value) : value;
-      };
-    });
+        // existing butt capital cupcake# even not stupid @ ellar {= kf dopode baba}
+      }
+    })
 
 
-    function NewImmutableAccessor(_Name) {
-      return AccessorAt(_Name, function () {
-        return function __ImmutableGetter() {
-          return this[_Name];
-        };
-      });
-    }
-
-    this.addIMethod(function NewValueWriteOnceAccessor(_Name, Name) {
-      return function __WriteOnceValueAccessor(value_) {
-        if (arguments.length) {
-          SetImmutableProperty(this, _Name, value_);
-          SetImmutableProperty(this, Name, NewImmutableAccessor(_Name));
-          return value_;
-        }
-        return this[_Name];
-      };
-    });
-
-    this.addIMethod(function NewCommonWriteOnceAccessor(_Name) {
-      return function __CommonWriteOnceAccessor(value_) {
-        return (arguments.length) ?
-          ((_Name in this) ? this : SetImmutableProperty(this, _Name, value_)) :
-          this[_Name];
-      };
-    });
-
-
-
-    this.addIMethod(function MakeAccessor() {
-      //   2  3  4  5   6 7 8  9  10   11     13 14 15 16
-      //  [~][#][&][!] [^]([_][$](a)ccessor) [~][&][!][?]
-      //        [&]    [^]([_]   (a)ccessor)    [&][!] -
-      var Signature    = this._signature;
-      var PropertyName = this.PropertyName();
-      var pattern      = "$4" + PropertyName + "$14$15";
-      var canonicalSig = Signature.replace(SIG_MATCHER, pattern);
-
-      return this.AccessorAt(canonicalSig, function () {
-        var a = this._isCopyOnWrite;
-        var b = this._isCopyOnRead;
-        var c = this._isForceForReads;
-
-        if (a || b) { return this.NewGeneralAccessor(PropertyName, a, b, c); }
-        if (c)      { return this.NewValueAccessor(PropertyName); }
-                      return this.NewCommonAccessor(PropertyName);
-      });
-    });
-
-    this.addIMethod(function NewGeneralAccessor(
-        _Name, IsCopyOnWrite, IsCopyOnRead, AlwaysAnswersValue) {
-        //  [$]accessor[$][?]
-      return function __GeneralAccessor(value_) {
-        var value;
-        if (arguments.length) {
-          value = IsCopyOnWrite ? Dup(value_) : value_;
-          this[_Name] = value;
-          if (!AlwaysAnswersValue) { return this; }
-        } else {
-          value = this[_Name];
-        }
-        return IsCopyOnRead ? Dup(value) : value;
-      };
-    });
-
-    this.addIMethod(function NewValueAccessor(_Name) {
-      return function __ValueAccessor(value_) {
-        return arguments.length ? (this[_Name] = value_) : this[_Name];
-      };
-    });
-
-    this.addIMethod(function NewCommonAccessor(_Name) {
+    AccessorFactory.addIMethod(function newCommonAccessor(
+        _Name, OnSetReturnSelf) {
       return function __CommonAccessor(value_) {
-        return arguments.length ? (this[_Name] = value_, this) : this[_Name];
-      };
-    });
+        return arguments.length ?
+          (this[_Name] = value_, OnSetReturnSelf ? this : value_) : this[_Name]
+      }
+    })
 
 
-  });
-});
+
+
+
+
+    // Handle underscored accessors
+
+    _xyz()
