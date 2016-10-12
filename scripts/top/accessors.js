@@ -1,318 +1,362 @@
 Top.Extend(function (_Thing) {
-  _Thing.addIMethod(function addAccessor(accessorSignature) {
-    var accessor = AccessorFactory.make(accessorSignature);
-    this.atPutMethod(selector, accessor);
-  });
-
-  //  1 2  3   4  5  6   7 8  9    10    11 12 13  14 15     RegExp Grouping
-  //  ([-][+][&+][?][#]) ([_][$]accessor) ([-][&+][!][?])    Guide
-  //
-  //    -        [?][#]  ([_][$]accessor)     [&+] . [?]     getter
-  //      [+][&+][?][#]  ([_][$]accessor)   -        [?]     setter
-  //      [+][&+][?][#]  ([_][$]accessor)     [&+][!][?]     accessor
-
-  //  -  = no setter|getter. never on bothsides
-  //  +  = write once
-  //  &  = duplicate before|after access && for deepcopy
-  //  ?  = check the arguments and error if problem
-  //  #  = use symbol for internal ivar property
-  //  _  = underscore prefixed
-  //  $  = immutable prefixed
-  //  !  = alway return value
-  //  ^  = uppercase ivar name
-
-  //     = illegal option
-  //  [] = optional
-  //  .  = not applicable/ignored
-
-
-  // - getter|setter
-  // # immutable // ## deep immutable
-  // ~ non reachable (symbol) ivar
-  // * copy // ** deep copy
-
-  // ~ getter|setter
-  // # immutable // ## deep immutable
-  // @ reachable (symbol) ivar
-  // * copy // ** deep copy
-
-
+  _Thing.addIMethod(function addAccessor(accessorSignature, options_) {
+    const accessor = AccessorFactory.make(accessorSignature, options_)
+    this.atPutMethod(accessor.selector, accessor)
+  })
 
   AccessorFactory = Type.new(function (AccessorFactory) {
-    var SIG_MATCHER =
-      ((\-)|(\+)|(&{1,2})|(\?)|(\#))*((_*)(\$?)([a-z][\w$]*))((\-)|(&{1,2})|(!)(\?))*/i
-      // Visualize SIG_MATCHER in regexper.com via http://bit.ly/2cxgIUR
+      // Visualize SIG_MATCHER in regexper.com via http://bit.ly/------
 
-      //  1 2  3   4  5  6   7 8  9    10    11 12 13  14 15     RegExp Grouping
-      //  ([-][+][&+][?][#]) ([_][$]accessor) ([-][&+][!][?])    Guide
-      //
-      //    -        [?][#]  ([_][$]accessor)     [&+] . [?]     getter
-      //      [+][&+][?][#]  ([_][$]accessor)   -        [?]     setter
-      //      [+][&+][?][#]  ([_][$]accessor)     [&+][!][?]     accessor
+    //  1 2  3   4   5  6  7   8 9  10   11    12 13 14  15  16 17 RegExp Grouping
+    //  ([~][+][*+][#+][?]) ([_][$]accessor)(:+)(ivar) ([~][*+][#+][!][?])    Guide
+    //
+    //    ~            [?]  ([_][$]accessor)     [*+][#+] . [?]     getter
+    //      [+][*+][#+][?]  ([_][$]accessor)   ~            [?]     setter
+    //      [+][*+][#+][?]  ([_][$]accessor)     [*+][#+][!][?]     accessor
 
-    var AccessorRepo = NewStash();
+    //  ~  = no setter|getter. never on bothsides
+    //  +  = write once
+    //  *  = duplicate before|after access ** for deepcopy
+    //  #  = as immutable before|after access ## for deep immutable
+    //  &  = use private (vs symbol) for internal ivar property
+    //  ?  = check the arguments and error if problem
+    //  _  = privacy prefixed
+    //  $  = fixed property prefixed
+    //  !  = alway return value
 
-    function AccessorAt(canonicalSignature, absentAction_) {
-      const accessor = AccessorRepo[canonicalSignature];
-      if (accessor) return accessor
-      return (absentAction_) ?
-        (AccessorRepo[canonicalSignature] = absentAction_.call(this)) : null
-    }
+    //     = illegal option
+    //  [] = optional
+    //  .  = not applicable/ignored
 
-    AccessorFactory.addMethod(function make(accessorSignature) {
-      return this.new(accessorSignature).make();
+    const SymbolRepo   = NewStash()
+    const AccessorRepo = NewStash()
+
+    AccessorFactory.addOMethod(function symbolAt(name) {
+      return SymbolRepo[name] || (SymbolRepo[name] = Symbol(`@${name}`))
     })
 
 
-    AccessorFactory.addMethod(function new(accessorSignature) {
-      return accessorSignature.match(SIG_MATCHER) ?
-        this._superExec("new", accessorSignature, match) :
-        this.accessorSignatureError(accessorSignature);
+    AccessorFactory.addOMethod(function make(signature_selector, options_) {
+      const [selector, options] = options_ ?
+        [signature_selector, options_] : this.parseSignature(signature_selector)
+      const accessor = this._super("new", selector, options).make()
+      return {selector: selector, accessor: accessor}
     })
 
-    AccessorFactory.addMethod(function accessorSignatureError(accessorSignature) {
+    AccessorFactory.removeOMethod("new")
+
+    AccessorFactory.addOMethod(function accessorSignatureError(accessorSignature) {
       return this.SignalError(`Accessor signature ${accessorSignature} is improper!`);
-    });
+    })
 
+    AccessorFactory.addOMethod(function parseSignature(signature) {
+      const SIGNATURE_MATCHER   = /^([~*#:?+]*)([\w$]+)(:([\w$]+))?([~*#:?!]*)$/
+      const COPY_POLICY_MATCHER = /(^[^#*]*(\*{1,2}|#{1,2})[^#*]*$)?/
 
-    AccessorFactory.addIMethod(function _init(validSignature, match) {
-      //  1 2  3   4  5  6   7 8  9   10     11 12 13  14 15     RegExp Grouping
-      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
+      const match = SIGNATURE_MATCHER.exec(signature)
+      if (!match) { return this.improperAccessorSignatureError(signature) }
 
+      const prefix      = match[1]
+      const selector    = match[2]
+      const ivarName    = match[3] && match[4] || ""
+      const suffix      = match[5]
 
+      const options = {
+        isArgChecking         : signature.indexOf("?") >= 0,
+        isExplicit            : signature.indexOf("~~") >= 0,
+        ivarName              : ivarName,
 
-      this._signature         = validSignature;
-      this._match             = match;
+        isGetter              : prefix.indexOf("~") >= 0,
+        isWriteOnce           : prefix.indexOf("+") >= 0,
+        setCopyPolicy         : prefix.match(COPY_POLICY_MATCHER)[2] || "",
 
-      this._prefixes          = match[ 1];
-      this._isReadOnly        = match[ 2] === "~"; // isReadOnly
-      this._isWriteOnce       = match[ 3] === "#"; // isReadOnly
-      this._setCopyPolicy     = match[ 4].length;
-      this._setReturnSelf     = (match[ 5] === "!") ? "SELF" : undefined;
+        isSetter              : suffix.indexOf("~") >= 0,
+        getCopyPolicy         : suffix.match(COPY_POLICY_MATCHER)[2] || "",
+        alwayReturnValue      : suffix.indexOf("!") >= 0,
+      }
 
-      this._accessorName      = match[ 7];
-      this._underscores       = match[ 8];
-      this._isFixed           = match[ 9] === "$";
-      this._propertyName      = match[10];
-
-      this._suffixes          = match[11];
-      this._isWriteOnly       = match[12] === "~"; // isWriteOnly
-      this._getCopyPolicy     = match[13].length;
-      this._setReturnValue    = (match[14] === "!") ? "VALUE" : undefined;
-
-      this._setReturnPolicy   = this._setReturnSelf || this._setReturnValue;
-      this._argCheckingPolicy = match[ 6] === "?" || match[15] === "?";
+      return [selector, options]
     })
 
 
-    AccessorFactory.addIMethod(function accessorAt(canonicalSignature, absentAction_) {
-      return AccessorAt.call(this, canonicalSignature, absentAction_);
-    });
+    AccessorFactory.addIMethod(function _init(selector, options) {
+      const ACCESSOR_SELECTOR_MATCHER = /_*(\$*)([\w$]+)/
+      const EXPLICIT_ACCESSOR_MATCHER = /_*(\$*)(set|get)(([A-Z])|_*(\$*))([\w$]+)/
+      let name = options.ivarName
+      const match, isFixed, first, descriptor, prefix
 
-    AccessorFactory.addIMethod(function make() {
-      if (this._isFixed && this._isWriteOnce) {
+      if (!name) {
+        if (options.isExplicit) {
+          match = selector.match(EXPLICIT_ACCESSOR_MATCHER)
+          if (!match) { return this.explicitAccessorError(selector) }
+          isFixed = !!(match[1] && match[5])
+          first = (match[4] || "").toLowerCase()
+          descriptor = first + match[6]
+        }
+        else {
+          match = selector.match(ACCESSOR_SELECTOR_MATCHER)
+          if (!match) { return this.accessorSelectorError(selector) }
+          isFixed = !!(match[1])
+          descriptor = match[2]
+        }
+        prefix = (name === "") ? "_" : "@"
+        name = prefix + descriptor
+      }
+      const property = (name[0] === "@") ? this.symbolAt(name) : name
+
+      if (property === selector) {
+        return this.selectorAndIvarShareSameNameError(selector)
+      }
+
+      const isWriteOnce = !!options.isWriteOnce
+      if (isWriteOnce && isFixed) {
         return this.accessorSpecError(
           "It's redundant to specify a fixed accessor as write-once!");
       }
+      this._selector    = selector
+      this._options     = options
+      this._isWriteOnce = isWriteOnce || isFixed
+      this._name        = name
+      this._property    = property
+    })
 
-      if (this._isReadOnly) {
-        //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
-        //    ~           [?]  ([_][$]accessor)     [&+]   [?]     getter
+    //
+    // isSetter;isArgChecking;isWriteOnce;setCopyPolicy;alwayReturnValue
+    // isGetter;getCopyPolicy
+    //
 
-        if (this._isWriteOnly) {
+
+    AccessorFactory.addIMethod(function make() {
+      const options = this._options
+      if (options.isGetter) {
+        //  ([~][+][*+][#+][&][?]) ([_][$]accessor) ([~][*+][#+][!][?])    Guide
+        //
+        //    ~            [&][?]  ([_][$]accessor)     [*+][#+] . [?]     getter
+
+        if (options.isSetter) {
           return this.accessorSpecError(
-            "An accessor can't be pure getter and pure setter at once!");
+            "An accessor can't be pure getter and pure setter at once!")
         }
-        if (this._isWriteOnce) {
+        if (options.isWriteOnce) {
           return this.accessorSpecError(
-            "An accessor can't be pure getter and write-once at once!");
+            "An accessor can't be pure getter and write-once at once!")
         }
-        if (this._setCopyPolicy) {
+        if (options.setCopyPolicy) {
           return this.accessorSpecError(
-            "A getter can't specify a setter copying policy!");
+            "A getter can't specify a setter copying policy!")
         }
-        if (this._setReturnPolicy) {
-          return this.accessorSpecError(
-            "A getter can't specify a setter return policy!");
-        }
-        return this.makeGetter();
+
+        return this.makeGetter()
       }
 
-      if (this._setReturnSelf && this._setReturnValue) {
-        return this.accessorSpecError(
-          "An accessor can't specify more than one setter return policy!");
-      }
+      if (options.isSetter) {
+        //  ([~][+][*+][#+][&][?]) ([_][$]accessor) ([~][*+][#+][!][?])    Guide
+        //
+        //      [+][*+][#+][&][?]  ([_][$]accessor)   ~            [?]     setter
 
-      if (this._isWriteOnly) {
-        //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
-        //      [#][&+][!][?]  ([_][$]accessor)   ~        [?]     setter
-
-        if (this._getCopyPolicy) {
+        if (options.getCopyPolicy) {
           return this.accessorSpecError(
-            "A setter can't specify a getter copying policy!");
+            "A setter can't specify a getter copying policy!")
         }
-        if (this._setReturnValue) {
+        if (options.alwayReturnValue) {
           return this.accessorSpecError(
-            "A setter can't be specified to return a value!");
+            "A setter can't be specified to return a value!")
         }
         return this.makeSetter()
       }
 
-      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
-      //      [#][&+][!][?]  ([_][$]accessor)     [&+][!][?]     accessor
+      //  ([~][+][*+][#+][&][?]) ([_][$]accessor) ([~][*+][#+][!][?])    Guide
+      //
+      //      [+][*+][#+][&][?]  ([_][$]accessor)     [*+][#+][!][?]     accessor
       return this.makeAccessor();
     })
 
 
     AccessorFactory.addIMethod(function makeGetter() {
-      //  1 2  3   4  5  6   7 8  9   10     11 12 13  14 15     RegExp Grouping
-      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
-      //    ~           [?]  ([_][$]accessor)     [&+]   [?]     getter
-      var Signature    = this._signature;
-      var PropertyName = this.PropertyName();
-      var pattern      = "~$6" + PropertyName + "$14$16";
-      var canonicalSig = Signature.replace(SIG_MATCHER, pattern);
-      // WORK ON THIS PART ABOVE!!!
+      //  ([~][+][*+][#+][&][?]) ([_][$]accessor) ([~][*+][#+][!][?])    Guide
+      //
+      //    ~            [&][?]  ([_][$]accessor)     [*+][#+] . [?]     getter
 
-      return this.accessorAt(canonicalSig, function () {
-        const gcp = this._getCopyPolicy;
-        const acp = this._argCheckingPolicy;
+      return this.accessorIfAbsent((property, options) => {
+        const iac = options.isArgChecking
+        const gcp = options.getCopyPolicy
 
-        return (gcp || acp) ?
-          this.newGeneralGetter(PropertyName, acp, gcp) :
-          this.newCommonGetter(PropertyName);
-      });
-    });
+        return (iac || gcp) ?
+          this.newGeneralGetter(property, iac, gcp) :
+          this.newCommonGetter(property)
+      })
+    })
 
     AccessorFactory.addIMethod(function newGeneralGetter(
-        _Name, IsArgChecking, CopyPolicy) {
+        Property, IsArgChecking, CopyPolicy) {
       return function __GeneralGetter() {
         if (IsArgChecking && arguments.length) {
           return this.error("Getter must be called with no args!")
         }
         switch (CopyPolicy) {
-          case 0  : return this[_Name];
-          case 1  : return Dup(this[_Name]);
-          default : return DeepDup(this[_Name]);
+          case "*"  : return Dup(this[Property])
+          case "**" : return DeepDup(this[Property])
+          case "#"  : return AsImmutable(this[Property])
+          case "##" : return AsDeepImmutable(this[Property])
+          default   : return this[Property]
         }
       }
     })
 
-    AccessorFactory.addIMethod(function newCommonGetter(_Name) {
+    AccessorFactory.addIMethod(function newCommonGetter(Property) {
       return function __CommonGetter() {
-        return this[_Name];
+        return this[Property];
       }
     })
 
 
     AccessorFactory.addIMethod(function makeSetter() {
-      //  1 2  3   4  5  6   7 8  9   10     11 12 13  14 15     RegExp Grouping
-      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
-      //      [#][&+][!][?]  ([_][$]accessor)   ~        [?]     setter
-      return this.accessorIfAbsent(function () {
-        var iwo = this._isWriteOnce || this._isFixed
-        var scp = this._setCopyPolicy;
-        var acp = this._argCheckingPolicy;
+      //  ([~][+][*+][#+][&][?]) ([_][$]accessor) ([~][*+][#+][!][?])    Guide
+      //
+      //      [+][*+][#+][&][?]  ([_][$]accessor)   ~            [?]     setter
 
-        return (iwo || scp || acp) ?
-          this.newGeneralSetter(PropertyName, acp, iwo, scp) :
-          this.newCommonSetter(PropertyName);
+      return this.accessorIfAbsent((property, options) => {
+        const iac = options.isArgChecking;
+        const iwo = this._isWriteOnce
+        const scp = options.setCopyPolicy;
+
+        return (iac || iwo || scp) ?
+          this.newGeneralSetter(property, iac, iwo, scp) :
+          this.newCommonSetter(property);
       })
     })
 
-
     AccessorFactory.addIMethod(function newGeneralSetter(
-        _Name, IsArgChecking, IsWriteOnce, CopyPolicy) {
+        Property, IsArgChecking, IsWriteOnce, CopyPolicy) {
       return function __GeneralSetter(value) {
         if (IsArgChecking && arguments.length !== 1) {
           return this.error("Setter must be called with exactly one arg!")
         }
-        if (IsWriteOnce && _Name in this) {
+        if (IsWriteOnce && Property in this) {
           return (IsArgChecking) ?
             this.error("Write-once property is already defined!") : this
         }
 
         switch (CopyPolicy) {
-          case 0  : this[_Name] = value         ; break;
-          case 1  : this[_Name] = Dup(value)    ; break;
-          default : this[_Name] = DeepDup(value); break;
+          case "*"  : this[Property] = Dup(value)            ; break
+          case "**" : this[Property] = DeepDup(value)        ; break
+          case "#"  : this[Property] = AsImmutable(value)    ; break
+          case "##" : this[Property] = AsDeepImmutable(value); break
+          default   : this[Property] = value                 ; break
         }
         return this
         // existing butt capital cupcake# even not stupid @ ellar {= kf dopode baba}
       }
     })
 
-    AccessorFactory.addIMethod(function newCommonSetter(_Name) {
+    AccessorFactory.addIMethod(function newCommonSetter(Property) {
       return function __CommonSetter(value) {
-        return arguments.length ? (this[_Name] = value, this) : this
+        return arguments.length ? (this[Property] = value, this) : this
       }
     })
 
-    AccessorFactory.addIMethod(function makeAccessor() {
-      //  1 2  3   4  5  6   7 8  9   10     11 12 13  14 15     RegExp Grouping
-      //  ([~][#][&+][!][?]) ([_][$]accessor) ([~][&+][!][?])    Guide
-      //      [#][&+][!][?]  ([_][$]accessor)     [&+][!][?]     accessor
-      return this.accessorIfAbsent(function () {
-        var iwo = this._isWriteOnce || this._isFixed
-        var scp = this._setCopyPolicy;
-        var srp = this._setReturnPolicy
-        var gcp = this._getCopyPolicy
-        var acp = this._argCheckingPolicy;
 
-        return (iwo || scp || srp || gcp || acp) ?
-          this.newGeneralSetter(PropertyName, acp, iwo, scp, srp, gcp) :
-          this.newCommonSetter(PropertyName, srp);
+    AccessorFactory.addIMethod(function makeAccessor() {
+      //  ([~][+][*+][#+][&][?]) ([_][$]accessor) ([~][*+][#+][!][?])    Guide
+      //
+      //      [+][*+][#+][&][?]  ([_][$]accessor)     [*+][#+][!][?]     accessor
+      return this.accessorIfAbsent((property, options) => {
+        const iac = options.isArgChecking
+        const iwo = this._isWriteOnce
+        const scp = options.setCopyPolicy
+        const srp = !options.alwayReturnValue // setReturnPolicy
+        const gcp = options.getCopyPolicy
+
+        return (iac || iwo || scp || arv || gcp) ?
+          this.newGeneralAccessor(property, iac, iwo, scp, srp, gcp) :
+          this.newCommonAccessor(property, srp);
       })
     })
 
     AccessorFactory.addIMethod(function newGeneralAccessor(
-        _Name, IsArgChecking, IsWriteOnce,
+        Property, IsArgChecking, IsWriteOnce,
         SetCopyPolicy, OnSetReturnSelf, GetCopyPolicy) {
-      return function __GeneralAccessor(value) {
+      return function __GeneralAccessor(value_) {
         switch (arguments.length) {
-          default :
+          default : // More than 1 arg
             if (IsArgChecking) {
               return this.error("Accessor must be called with no more than one arg!")
             }
           case 1 :
-            if (IsWriteOnce && _Name in this) {
+            if (IsWriteOnce && Property in this) {
               if (IsArgChecking) {
                 return this.error("Write-once property is already defined!")
               }
             }
             else {
-              switch (SetCopyPolicy) {
-                case 0  : this[_Name] = value         ;        break
-                case 1  : this[_Name] = Dup(value)    ;        break
-                default : this[_Name] = DeepDup(value);        break
+              switch (CopyPolicy) {
+                case "*"  : this[Property] = Dup(value_)            ; break
+                case "**" : this[Property] = DeepDup(value_)        ; break
+                case "#"  : this[Property] = AsImmutable(value_)    ; break
+                case "##" : this[Property] = AsDeepImmutable(value_); break
+                default   : this[Property] = value_                 ; break
               }
             }
             if (OnSetReturnSelf) { return this }
           case 0 : break
         }
-        switch (GetCopyPolicy) {
-          case 0  : return this[_Name];
-          case 1  : return Dup(this[_Name]);
-          default : return DeepDup(this[_Name]);
+        switch (CopyPolicy) {
+          case "*"  : return Dup(this[Property])
+          case "**" : return DeepDup(this[Property])
+          case "#"  : return AsImmutable(this[Property])
+          case "##" : return AsDeepImmutable(this[Property])
+          default   : return this[Property]
         }
         // existing butt capital cupcake# even not stupid @ ellar {= kf dopode baba}
       }
     })
 
-
     AccessorFactory.addIMethod(function newCommonAccessor(
-        _Name, OnSetReturnSelf) {
+        Property, OnSetReturnSelf) {
       return function __CommonAccessor(value_) {
         return arguments.length ?
-          (this[_Name] = value_, OnSetReturnSelf ? this : value_) : this[_Name]
+          (this[Property] = value_, OnSetReturnSelf ? this : value_) :
+          this[Property]
       }
     })
 
 
 
+    AccessorFactory.addIMethod(function accessorIfAbsent(absentAction) {
+      const options = this._options
+      const iac = options.isArgChecking ? "?" : ""
+      const iwo = this._isWriteOnce ? "+" : ""
+      const srp = options.alwayReturnValue ? "!" : ""
+      const scp = options.setCopyPolicy
+      const gcp = options.getCopyPolicy
+
+      const canonicalSignature =
+        (options.isGetter ?              `~${name}${gcp}${iac}` :
+          (options.isSetter ? `${iwo}${scp}${name}~${iac}` :
+                              `${iwo}${scp}${name}${gcp}${srp}${iac}`))
+
+      return AccessorRepo[canonicalSignature] ||
+        (AccessorRepo[canonicalSignature] =
+          absentAction.call(this, this._property, options))
+    })
+
+  //  1 2  3   4   5  6  7   8 9  10   11    12 13 14  15  16 17 RegExp Grouping
+  //  ([~][+][*+][#+][?]) ([_][$]accessor)(:+)(ivar) ([~][*+][#+][!][?])    Guide
+  //
+  //    ~            [?]  ([_][$]accessor)     [*+][#+] . [?]     getter
+  //      [+][*+][#+][?]  ([_][$]accessor)   ~            [?]     setter
+  //      [+][*+][#+][?]  ([_][$]accessor)     [*+][#+][!][?]     accessor
 
 
 
-    // Handle underscored accessors
+name ##+setName
+setName
 
-    _xyz()
+_setName _name
+
+~+**##?_name~**##!?
+
+match(//g)
+
+
+//  ([~][+][*+][#+][&][?]) ([_][$]accessor) ([~][*+][#+][!][?])    Guide
