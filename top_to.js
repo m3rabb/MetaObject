@@ -5,17 +5,18 @@
     const RootOf             = Object.getPrototypeOf
     const SpawnFrom          = Object.create
     const IsArray            = Array.isArray
-    const Array_join         = Array.prototype.join
     const Math_floor         = Math.floor
     const Math_random        = Math.random
     const DefineProperty     = Object.defineProperty
     const PropertiesOf       = Object.keys
-    const BeImmutable        = Object.freeze
-    const VisiblePropertiesOf = Reflect.ownKeys
+    const ShallowFreeze      = Object.freeze
+    const AllPropertiesOf    = Reflect.ownKeys
+    const AllNames           = Object.getOwnPropertyNames
+    const AllSymbols         = Object.getOwnPropertySymbols
     const Object_prototype   = Object.prototype
     const IsLocalProperty    = Object_prototype.hasOwnProperty
     const PropertyDescriptor = Object.getOwnPropertyDescriptor
-    const Reflect_apply      = Reflect.apply
+    const Apply              = Reflect.apply
 
     // var ParenthesesMatcher   = /\(|\)/
     // var SelectorMatcher      = /[\w\$_!&]+/gi
@@ -49,6 +50,7 @@
     const       Type_root       = SpawnFrom(Inner_root)
     const       Method_root     = SpawnFrom(Inner_root)
     const       Context_root    = SpawnFrom(Inner_root)
+    const       Name_root       = SpawnFrom(Inner_root)
 
     function ConstructorError(constructor) {
       SignalError(constructor.name,
@@ -61,13 +63,19 @@
     Implementation.prototype = Implementation_root
     Inner.prototype          = Inner_root
 
+    ShallowFreeze(Base_root)
+    ShallowFreeze(Stash_root)
+    ShallowFreeze(Implementation_root)
+    ShallowFreeze(Inner_root)
+    ShallowFreeze(Implementation)
+    ShallowFreeze(Inner)
 
 
 
-    const _$OUTER           = Symbol("_$OUTER")
-    const _$OUTER$_         = Symbol("_$OUTER$_")
-    const _$ROOT            = Symbol("_$ROOT")
-    const _$O_METHODS = Symbol("_$O_METHODS")
+    const _$OUTER         = Symbol("_$OUTER")
+    const _$OUTER$_       = Symbol("_$OUTER$_")
+    const _$ROOT          = Symbol("_$ROOT")
+    const _$O_METHODS     = Symbol("_$O_METHODS")
     const _$OUTER_HANDLER = Symbol("_$OUTER_HANDLER")
 
 
@@ -164,15 +172,58 @@
     //   return inner._noSuchProperty(selector))
     // }
 
-    function OnGet(inner, name, outer) {
-      if (name[0] === "_") { return Top._outerPrivateRead(inner, name) }
-      return value[_$OUTER] || inner[name]
+
+    function WrapHandler(Handler) {
+      return function (...args) {
+        const wrappedArgs = []
+        let next = arguments.length
+        while (next--) {
+          const arg = args[next]
+          wrappedArgs[next] = (typeof arg === "function") ? Block.new(arg) : arg
+        const result = Apply(Handler, this, args)
+        return result && result[_$OUTER] || result
+      }
     }
 
-    function OnMutableSet(inner, name, value, outer) {
-      const firstChar = name[0]
-      if (firstChar === "_") { return Top._outerPrivateWrite(inner, name, value) }
-      if (firstChar === "$") { return Top._outerFixedWrite(inner, name, value) }
+    // func|handler|action|exec|absent|present
+
+
+    INTER
+    INNER
+    OUTER
+
+    TrustedFunc.new(function)
+
+
+
+
+    function OnGet(inner, selector, outer) {
+      switch (selector[0]) {
+        case "_" :
+          return Top._outerPrivateRead(inner, selector)
+        case undefined :
+          if (selector === INTER) { InnerWeakMap.set(outer, this) }
+          else if (inner[PUBLIC_SYMBOLS][selector]) { break }
+          return undefined
+        default : break
+      }
+      const value = inner[selector]
+      return value && value[INNER] === SECRET ? value[OUTER] : value
+      // return (value instanceof Inner) ? value[OUTER] : value
+      // return value && value[OUTER] || value
+    }
+
+    function OnMutableSet(inner, selector, value, outer) {
+      switch (selector[0]) {
+        case "_" :
+          return Top._outerPrivateWrite(inner, selector, value) || false
+        case undefined :
+          inner[PUBLIC_SYMBOLS][selector] = true
+        default : break
+      }
+      if (inner[name] !== undefined) {
+        return Top._outerOverwrite(inner, name, value) || false
+      }
       inner[name] = value
       return true
     }
@@ -181,14 +232,27 @@
       return Top._outerImmutableWrite(inner, name, value) || false
     }
 
-    function OnHas(inner, name) {
-      if (name[0] === "_") { return Top._outerPrivateAccess(inner, name) }
-      return name in inner
-    },
+    function OnHas(inner, selector) {
+      switch (selector[0]) {
+        case "_" :
+          return Top._outerPrivateAccess(inner, selector) || false
+        case undefined :
+          if (inner[PUBLIC_SYMBOLS][selector]) { break }
+          return false
+        default : break
+      }
+      return selector in inner
+    }
+
 
     function OnOwnKeys(inner) {
-      return VisiblePropertiesOf(inner).filter(name => name[0] !== "_")
+      const allowable = inner[PUBLIC_SYMBOLS]
+      const names = AllNames(inner).filter(name => name[0] !== "_")
+      const symbols = AllSymbols(inner).filter(symbol => allowable[symbol])
+      return names.concat(symbols)
     }
+
+
 
     const MutableOuterHandler = NewStash({
       get : OnGet,
@@ -232,8 +296,8 @@
 
 
 
-    function AtPutMethod(target, name, func) {
-      target[name] = func
+    function AtPutMethod(target, selector, func) {
+      target[selector] = func
     }
 
     function PutMethod(target, namedFunc) {
@@ -309,7 +373,7 @@
 
     PutMethod(Thing_root, function _init(name_) {
       // this._super._Init(arguments);
-      if (name_ !== undefined) { this.$name = name_ }
+      if (name_ !== undefined) { this.name = name_ }
     })
 
     PutMethod(Thing_root, function is(other) {
@@ -322,33 +386,38 @@
     //   return (target instanceof Inner) ? target : InnerWeakMap.get(target)
     // }
 
+    // function GetInner(target) {
+    //   if (target[INNER] === SECRET) { return target }
+    //   // if (target instanceof Inner) { return target }
+    //   (target[INTER])
+    //   // Test to see if this is better done via OnHas a la (INTER in target)!!!
+    //   return InnerWeakMap.get(target)
+    // }
+
     function GetInner(target) {
-      if (target instanceof Inner) { return target }
-      target[_$INTER]()
-      return InnerWeakMap.get(target)
+      return (target[INTER] === SECRET) ? target : InnerWeakMap.get(target)
     }
 
-    PutMethod(Thing_root, _$INTER, function () {
-      if (!this instanceof Inner) {
-        return Top.error(`_$INTER method Hijacked to inter foreign object!`)
-      }
-      const outer = this[_$OUTER$_]
-      if (outer) { InnerWeakMap.set(outer, this) }
-      // returns undefined to make sure that its return value isn't depended upon
-      // If this method is man-in-the-middled via proxy its return value could be changed
-    })
+    // PutMethod(Thing_root, _$INTER, function () {
+    //   // Is this check necessary???
+    //   if (!this instanceof Inner) {
+    //     return Top.error(`_$INTER method Hijacked to inter foreign object!`)
+    //   }
+    //   const outer = this[_$OUTER$_]
+    //   if (outer) { InnerWeakMap.set(outer, this) }
+    //   // returns undefined to make sure that its return value isn't depended upon
+    //   // If this method is man-in-the-middled via proxy its return value could be changed
+    // })
+
+    PutMethod(NosyBlock_root, function _init(func) {
+      this._func = func
+    }oldman yassa 4545\\\\)
 
 
-
-
-
-    Type.new("RemoteControlBat", Mammal, Flying, RemoteControllable, => {})
-
-    Type.new(Mammal, Flying, RemoteControllable, RemoteControlBat => {})
 
 
     function ConnectTypes(_type, supertypes) {
-      const typeOID = _type.$oid
+      const typeOID = _type.oid
       return supertypes.map(supertype => {
         const _supertype = GetInner(supertype)
         _supertype._subtypes[typeOID] = _type
@@ -356,6 +425,7 @@
       })
     }
 
+    // fix this!!! _ancestors is no longer a type property
     function BuildAncestors(_supertypes) {
       const count = _supertypes.length
       if (count === 0) { return [] }
@@ -365,16 +435,16 @@
       if (count === 1) { return ancestors }
 
       const visited = NewStash()
-      ancestors.forEach(_type => (visited[_type.$oid] = _type))
+      ancestors.forEach(_type => (visited[_type.oid] = _type))
 
       let next = 1
       do {
         _supertype = _supertypes[next]
-        const oid = _supertype.$oid
+        const oid = _supertype.oid
         if (!visited[oid]) {
           ancestors.push(visited[oid] = _supertype)
           _supertype._ancestors.forEach(_type => {
-            const oid = _type.$oid
+            const oid = _type.oid
             if (!visited[oid]) { ancestors.push(visited[oid] = _type) }
           })
         }
@@ -417,12 +487,6 @@
       }
     }
 
-    Type.new("", [Plastic, Robotic, Flying, Mammal], function (ToyBat) )
-    Type.new([, ,])
-
-    Mammal, F
-
-    Type.new(function (RobotBat, Will))
 
     // Type bootstrapping
 
@@ -438,7 +502,7 @@
       this._methods      = NewStash()
 
       _root.$type   = this
-      _root.$types  = BeImmutable([this].concat(_ancestors))
+      _root.$types  = ShallowFreeze([this].concat(_ancestors))
       _root[_$ROOT] = _root
       SeedRootMethodHandlers(_root, _types)
     })
@@ -449,12 +513,14 @@
       return instance
     })
 
+
     _Type_root._instanceRoot = _Type_root
-    Thing     = _Type_root.new("Thing"  , [],      Thing_root)
-    Type      = _Type_root.new("Type"   , [Thing], Type_root)
-    Nothing   =  Type.new(     "Nothing", [],      Nothing_root)
-    Method    =  Type.new(     "Method" , [Thing], Method_root)
-    Context   =  Type.new(     "Context", [Thing], Context_root)
+    const Thing     = _Type_root.new("Thing"  , [],      Thing_root)
+    const Type      = _Type_root.new("Type"   , [Thing], Type_root)
+    const Nothing   =  Type.new(     "Nothing", [],      Nothing_root)
+    const Method    =  Type.new(     "Method" , [Thing], Method_root)
+    const Context   =  Type.new(     "Context", [Thing], Context_root)
+    const Name      =  Type.new(     "Name"   , [Thing], Name_root)
 
     PutMethod(Method_root, function _init(func_name, func_) {
       const isFuncArg = (typeof func_name === "function")
@@ -472,9 +538,11 @@
       // this.imp = WrapFunction(func)
     })
 
-    PutMethod(Type_root, function addSMethod(method__func_name, func_) {
-      const method = method__func_name.$type.is(Method) ?
-        method__func_name : Method.new(method__func_name, func_)
+    // Fix $type!!!
+    PutMethod(Type_root, function addSMethod(method_func__name, func__) {
+      const method = method_func__name.$type.is(Method) ?
+        method_func__name : Method.$new(method_func__name, func__)
+
       const selector = method.selector
       this._methods[selector] = this._instanceRoot[selector] = method
       ReseedSubtypesMethodHandler(selector, this)
@@ -483,6 +551,7 @@
 
     // Method bootstrapping
 
+    // ???
     Method_root[_$OUTER_HANDLER] = ImmutableOuterHandler
 
     Thing.addSMethod(_$INTER, Thing_root._instanceRoot[_$INTER])
@@ -500,9 +569,11 @@
     Nothing.addSMethod(Thing_root.is)
     Nothing.addSMethod(Thing_root._noSuchProperty)
 
+
+    // Fix $type!!!
     Thing.addSMethod(function addOMethod(method__func_name, func_) {
       const method = method__func_name.$type.is(Method) ?
-        method__func_name : Method.new(method__func_name, func_)
+        method__func_name : Method.$new(method__func_name, func_)
       const selector = method.selector
       const methods = (this[_$O_METHODS] || this[_$O_METHODS] = NewStash())
       methods[selector] = this[selector] = method
@@ -512,13 +583,24 @@
     Thing.addSMethod("equals", Thing_root.is)
 
     Thing.addSMethod(function exec(selector, ...args) {
-      return Reflect_apply(this[selector], this, args)
+      // Must check that selector is not private!!!
+      return Apply(this[selector], this, args)
     })
 
     Thing.addSMethod(function _asExec(type, selector, ...args) {
-      return Reflect_apply(type.handlerAt(selector), this, args)
+      // Must check that type is a valid supertype!!!
+      // It might be enough to check whether or not type is extensible!!!
+      return Apply(type.handlerAt(selector), this, args)
     })
 
+    // Might need a security check to make sure target object is a
+    // subtype of the given type to prevent unauthorized param access!!!
+    Thing.addSMethod(function _asExec(type, selector, ...args) {
+      // using _handlerAt vs handlerAt might be enough
+      return Apply(type._handlerAt(selector), this, args)
+    })
+
+    // Fix $type!!!
     Thing.addSMethod(function _superExec(selector, ...args) {
       const handler = this[selector]
       const types = this.$types
@@ -526,20 +608,20 @@
       let   next = 0
       while (next < count) {
         let type = types[next++]
-        let superMethod = type._methods[selector]
-        if (superMethod && superMethod !== method) {
-          return Reflect_apply(superMethod, this, args) // do these need to be protected too???
+        let superHandler = type._methods[selector]
+        if (superHandler && superHandler !== handler) {
+          return Apply(superHandler, this, args) // do these need to be protected too???
         }
       }
-      return this._noSuchMethod(selector, args)
+      return this._noSuchProperty(selector, args)
     })
 
     Thing.addSMethod(function hasMethod(selector) {
       !!return this.$type.methodAt(selector)
     })
 
-    Thing.addSMethod(function hasProperty(name) {
-      return (name[0] === "_") ? undefined : (name in this)
+    Thing.addSMethod(function hasProperty(selector) {
+      return (selector[0] === "_") ? undefined : (selector in this)
     })
 
     Thing.addSMethod(function isImmutable() { return !!this[_$isImmutable]}) }
@@ -562,8 +644,6 @@
       return this.error("Method should be implemented by this or subtype!");
     });
 
-    _as(Thing).new()
-    _super
 
 
     //// Ella's typing
@@ -622,40 +702,97 @@
 
     // Top.access(function ())
 
-
-    AddMethod(_Thing_root, function checkMutability() {
-      return this.isImmutable() ? this.error("Object isn't mutable!") : this
+    Type.AddSMethod(function $new(...args) {
+      return this.new(...args).be$
     })
 
+    Type.AddSAccessor(function be$() {
+      ShallowFreeze(this)
+      ShallowFreeze(this.name)
+      ShallowFreeze(this._instanceRoot)
+      // this._supertypes <-- this array is already immutable!!!
+      ShallowFreeze(this._subtypes)
+      ShallowFreeze(this._methods)
+    })
 
-    this._super.New
-    this._asExec()
-    this._as(Thing)._init()
-
-    this._as(Thing)._init()
-    this._super.add()
-
-    get (func, selector, outer) {
-      func[_$super](selector)
+    function BeDeeplyImmutable(target) {
+      if (typeof target === "object" && !IsFrozen(target)) {
+        DeepFreeze(target)
+      }
+      return target
     }
 
-
-
-    function _super(supertype) {
-      const type = this.$type
-      const ancestors = _type[_$ancestor]
-      ancestors.forEach(ancestor => {
-        const root = ancestor._instanceRoot
-        if ()
-      })
+    function DeepFreeze(object) {
+      ShallowFreeze(object)
+      const selectors = AllPropertiesOf(object)
+      const next = selectors.length
+      while (next--) {
+        const value = object[selectors[next]]
+        if (typeof value === "object" && !IsFrozen(value)) {
+          DeepFreeze(value)
+        }
+      }
+      return object
     }
+
+    filter selectors for protected functions
+    if so, need to have outer heirarchy to store different handlers
+
+
+
+    AddMethod(_Thing_root, function checkMutability() {
+      return this.is$ ? this.error("Object isn't mutable!") : this
+    })
+
+    _as(Thing).new()
+    _super
+
+
+
+
+    Type.new("RemoteControlBat", Mammal, Flying, RemoteControllable, => {})
+
+    Type.new(Mammal, Flying, RemoteControllable, RemoteControlBat => {})
+
+
+    Type.new("", [Plastic, Robotic, Flying, Mammal], function (ToyBat) )
+    Type.new([, ,])
+
+    Mammal, F
+
+    Type.new(function (RobotBat, Will))
+
+
+
 
 
     bat
       _super --> func
         bat
 
+    Top.newContext(function Animals() {
+      this.overtype(function (Collection) {
 
+      })
+    })
+
+    Top.newType
+
+    Dog_outer_root
+      (age)
+      dog1_o
+        _$INNER
+
+    Dog_inner_root
+     dog1_i
+       _$INNER
+       age
+
+
+
+
+
+    Type.new(Mammal, Flying, RemoteControllable, RemoteControlBat => {})
 
 
     Thing.addSMethod(function _outerPrivateAccess(selector) {
