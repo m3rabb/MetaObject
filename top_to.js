@@ -5,14 +5,14 @@
     const RootOf             = Object.getPrototypeOf
     const SpawnFrom          = Object.create
     const IsArray            = Array.isArray
-    const Math_floor         = Math.floor
-    const Math_random        = Math.random
+    const Floor              = Math.floor
+    const RandomUnitValue    = Math.random
     const DefineProperty     = Object.defineProperty
-    const PropertiesOf       = Object.keys
-    const ShallowFreeze      = Object.freeze
-    const AllPropertiesOf    = Reflect.ownKeys
+    const LocalProperties    = Object.keys
+    const AllProperties      = Reflect.ownKeys
     const AllNames           = Object.getOwnPropertyNames
     const AllSymbols         = Object.getOwnPropertySymbols
+    const ShallowFreeze      = Object.freeze
     const Object_prototype   = Object.prototype
     const IsLocalProperty    = Object_prototype.hasOwnProperty
     const PropertyDescriptor = Object.getOwnPropertyDescriptor
@@ -25,9 +25,10 @@
 
     // const _ = SpawnFrom(null)
 
-    const PulpHandler = SpawnFrom({
-      get (_base_root, name, inner) {
-        return inner._noSuchProperty(name)
+    const ImplementationHandler = {
+      __proto__ : null,
+      get (_base_root, name, target) {
+        return target._noSuchProperty(name)
       },
       // set (_base_root, selector, value, inner) {
       //   if (inner[_$isImmutable]) {
@@ -36,14 +37,14 @@
       //   inner[selector] = value
       //   return true
       // }
-    })
+    }
 
 
     const Base_root             = SpawnFrom(null)
     const   Stash_root          = SpawnFrom(Base_root)
 
-    const   Implementation_root = SpawnFrom(Base_root)
-    const     Inner_root        = new Proxy(Implementation_root, PulpHandler)
+    const   Implementation_root = new Proxy(Base_root, ImplementationHandler)
+    const     Inner_root        = SpawnFrom(Implementation_root)
 
     const       Nothing_root    = SpawnFrom(Inner_root)
     const       Thing_root      = SpawnFrom(Inner_root)
@@ -71,12 +72,13 @@
     ShallowFreeze(Inner)
 
 
-
-    const _$OUTER         = Symbol("_$OUTER")
-    const _$OUTER$_       = Symbol("_$OUTER$_")
-    const _$ROOT          = Symbol("_$ROOT")
-    const _$O_METHODS     = Symbol("_$O_METHODS")
-    const _$OUTER_HANDLER = Symbol("_$OUTER_HANDLER")
+    const INNER              = Symbol("INNER")
+    const INTER              = Symbol("INTER")
+    const OUTER              = Symbol("OUTER")
+    const _OUTER_            = Symbol("_OUTER_")
+    const SECRET             = Symbol("SECRET")
+    const INSTANCE_METHODS   = Symbol("INSTANCE_METHODS")
+    const INSTANCE_SYMBOLS   = Symbol("INSTANCE_SYMBOLS")
 
 
 
@@ -117,7 +119,7 @@
         case 1  : min = 0       ; max = max_min_        ; break
         default : min = max_min_; max = max__           ; break
       }
-      return Math_floor(Math_random() * (max - min + 1)) + min
+      return Floor(RandomUnitValue() * (max - min + 1)) + min
     }
 
     function NewUniqueId(prefix_, seedDate__, seedValue__) {
@@ -129,7 +131,7 @@
       return prefix + zeros + id
     }
 
-
+    // Note: Doesn't handle symbols for init
     function NewStash(spec_) {
       const stash = SpawnFrom(Stash_root)
       if (spec_) {
@@ -163,136 +165,51 @@
     }
 
 
-    // function OnGet(inner, selector, outer) {
-    //   if (selector[0] === "_") { return Top._outerPrivateRead(inner, selector) }
-    //   if (selector in inner) {  // Perhaps limit this to undefined vs null for better performance!!!
-    //     const value = inner[selector]
-    //     return value[_$OUTER] || value
-    //   }
-    //   return inner._noSuchProperty(selector))
-    // }
 
-
-    function WrapHandler(Handler) {
-      return function (...args) {
-        const wrappedArgs = []
-        let next = arguments.length
-        while (next--) {
-          const arg = args[next]
-          wrappedArgs[next] = (typeof arg === "function") ? Block.new(arg) : arg
-        const result = Apply(Handler, this, args)
-        return result && result[_$OUTER] || result
-      }
-    }
-
-    // func|handler|action|exec|absent|present
-
-
-    INTER
-    INNER
-    OUTER
-
-    TrustedFunc.new(function)
-
-
-
-
-    function OnGet(inner, selector, outer) {
-      switch (selector[0]) {
-        case "_" :
-          return Top._outerPrivateRead(inner, selector)
-        case undefined :
-          if (selector === INTER) { InnerWeakMap.set(outer, this) }
-          else if (inner[PUBLIC_SYMBOLS][selector]) { break }
-          return undefined
-        default : break
-      }
-      const value = inner[selector]
-      return value && value[INNER] === SECRET ? value[OUTER] : value
-      // return (value instanceof Inner) ? value[OUTER] : value
-      // return value && value[OUTER] || value
-    }
-
-    function OnMutableSet(inner, selector, value, outer) {
-      switch (selector[0]) {
-        case "_" :
-          return Top._outerPrivateWrite(inner, selector, value) || false
-        case undefined :
-          inner[PUBLIC_SYMBOLS][selector] = true
-        default : break
-      }
-      if (inner[name] !== undefined) {
-        return Top._outerOverwrite(inner, name, value) || false
-      }
-      inner[name] = value
-      return true
-    }
-
-    function OnImmutableSet(inner, name, value, outer) {
-      return Top._outerImmutableWrite(inner, name, value) || false
-    }
-
-    function OnHas(inner, selector) {
-      switch (selector[0]) {
-        case "_" :
-          return Top._outerPrivateAccess(inner, selector) || false
-        case undefined :
-          if (inner[PUBLIC_SYMBOLS][selector]) { break }
-          return false
-        default : break
-      }
-      return selector in inner
-    }
-
-
-    function OnOwnKeys(inner) {
-      const allowable = inner[PUBLIC_SYMBOLS]
-      const names = AllNames(inner).filter(name => name[0] !== "_")
-      const symbols = AllSymbols(inner).filter(symbol => allowable[symbol])
-      return names.concat(symbols)
-    }
-
-
-
-    const MutableOuterHandler = NewStash({
-      get : OnGet,
-      set : OnMutableSet,
-      has : OnHas,
-      ownKeys : OnOwnKeys,
-    })
-
-    const ImmutableOuterHandler = NewStash({
-      get : OnGet,
-      set : OnImmutableSet,
-      has : OnHas,
-      ownKeys : OnOwnKeys,
-    })
-
-      // getPrototypeOf
-      // setPrototypeOf
-      // Symbol.hasInstance
-    })
-
-    function WrapInner(inner) {
-      return (inner[_$OUTER] = inner[_$OUTER$_] =
-                new Proxy(inner, this[_$OUTER_HANDLER]))
-    }
-
-
-    const LockedConfiguration = NewStash({
+    const LockedConfiguration = {
+      __proto__   : null,
       writable    : false,
       enumerable  : true,
       configurable: false,
-    })
+    }
 
-
-    function SetPropertyGet(target, name, getBehavior) {
-      const configuration = SpawnFrom(LockedConfiguration)
-      configuration.get = getBehavior
-      return DefineProperty(target, name, configuration)
+    const LazyPropertyConfiguration = {
+      __proto__   : null,
+      writable    : true,
+      enumerable  : false,
+      configurable: true,
     }
 
 
+
+    function SetPropertyGet(target, getBehavior_name, getBehavior_) {
+      const [name, installer] = (typeof getBehavior_name === "function") ?
+        [getBehavior_name.name, getBehavior_name] :
+        [getBehavior_name, getBehavior_]
+      return DefineProperty(target, name, {
+        __proto__ : LockedConfiguration,
+          get     : getBehavior
+      })
+    }
+
+    function AddLazyProperty(target, namedInstaller_name, installer_) {
+      const [name, installer] = (typeof namedInstaller_name === "function") ?
+        [namedInstaller_name.name, namedInstaller_name] :
+        [namedInstaller_name, installer_]
+      return DefineProperty(target, name, {
+        __proto__ : LazyPropertyConfiguration,
+          get     : installer
+      })
+    }
+
+
+    AddLazyProperty(Inner_root, OUTER, function () {
+      return this[OUTER] = this[_OUTER_] = BakeThing(this)
+    })
+
+    AddLazyProperty(Inner_root, function oid() {
+      return (this.oid = Symbol(NewUniqueId(this.typeName))
+    })
 
 
 
@@ -304,116 +221,287 @@
       target[namedFunc.name] = namedFunc
     }
 
-    // Non-WeakMap implementation
-    // function GetInner(target) {
-    //   const oid = target.$oid
-    //   const inner = InnerMap[oid]
-    //   if (inner !== target) {
-    //     if (inner === undefined) {
-    //       return Top.error("The target's oid doesn't match that of any interred object!")
-    //     }
-    //     if (inner[_$OUTER$_] !== target) {
-    //       return inner.error(`The inner's oid has been hijacked the by the target!`)
-    //     }
-    //   }
-    //   return inner
-    // }
 
-
-
-    // function GetInner(target) {
-    //   return (this._$INNER === _$PROOF) ? target : InnerWeakMap.get(target)
-    // }
-
-    // function GetInner(target) {
-    //   const oid = target.$oid
-    //   const inner = InnerWeakMap.get(target)
-    //   if (inner !== target) {
-    //     if (inner === undefined) {
-    //       return Top.error("The target's oid doesn't match that of any interred object!")
-    //     }
-    //     if (inner[_$OUTER$_] !== target) {
-    //       return inner.error(`The inner's oid has been hijacked the by the target!`)
-    //     }
-    //   }
-    //   return inner
-    // }
-
-    // Non-WeakMap implementation
-    // PutMethod(Thing_root, _$INTER, function () {
-    //   if (this._$PROOF !== _$SECRET) {
-    //     return Top.error(`_$INTER method Hijacked to inter foreign object!`)
-    //   }
-    //   const oid = this.$oid
-    //   InnerMap[oid] = this
-    //   // returns undefined to make sure that its return value isn't depended upon
-    //   // If this method is man-in-the-middled via proxy its return value could be changed
-    // })
-
-    // PutMethod(Thing_root, _$INTER, function () {
-    //   if (this._$PROOF !== _$SECRET) {
-    //     return Top.error(`_$INTER method Hijacked to inter foreign object!`)
-    //   }
-    //   InnerWeakMap[this.$oid] = this
-    //   // returns undefined to make sure that its return value isn't depended upon
-    //   // If this method is man-in-the-middled via proxy its return value could be changed
-    // })
-
-    // // _$INNER make this property non-enum!!!
-    //
-    // PutMethod(Thing_root, _$INTER, function () {
-    //   if (this._$INNER !== _$PROOF) {
-    //     return Top.error(`_$INTER method Hijacked to inter foreign object!`)
-    //   }
-    //   const outer = this[_$OUTER$_]
-    //   if (outer) { InnerWeakMap.set(outer, this) }
-    //   // returns undefined to make sure that its return value isn't depended upon
-    //   // If this method is man-in-the-middled via proxy its return value could be changed
-    // })
-
+    // Change name into an instance of Name!!!
     PutMethod(Thing_root, function _init(name_) {
       // this._super._Init(arguments);
       if (name_ !== undefined) { this.name = name_ }
     })
 
     PutMethod(Thing_root, function is(other) {
-      return (this === other || this[_$OUTER$_] === other)
+      return (this === other || this[_OUTER_] === other)
     })
 
-    const InnerWeakMap = new WeakMap()
+    const InterMap = new WeakMap()
 
-    // function GetInner(target) {
-    //   return (target instanceof Inner) ? target : InnerWeakMap.get(target)
-    // }
-
-    // function GetInner(target) {
-    //   if (target[INNER] === SECRET) { return target }
-    //   // if (target instanceof Inner) { return target }
-    //   (target[INTER])
-    //   // Test to see if this is better done via OnHas a la (INTER in target)!!!
-    //   return InnerWeakMap.get(target)
-    // }
-
-    function GetInner(target) {
-      return (target[INTER] === SECRET) ? target : InnerWeakMap.get(target)
+    const BaseThingEnkrustment = {
+      __proto__ : null,
+      has (inner, selector) {
+        switch (selector[0]) {
+          case "_" :
+            return inner._externalPrivateRead(selector) || false
+          case undefined :
+            if (inner[INSTANCE_SYMBOLS][selector]) { break }
+            return false
+        }
+        return selector in inner
+      },
+      ownKeys (inner) {
+        const known = inner[INSTANCE_SYMBOLS]
+        const names = AllNames(inner).filter(name => name[0] !== "_")
+        const symbols = AllSymbols(inner).filter(symbol => known[symbol])
+        return names.concat(symbols)
+      },
+      getPrototypeOf (inner) {
+        return null
+      },
+      setPrototypeOf (inner, target) {
+        return false
+      },
+      // Symbol.hasInstance
+      // isExtensible()
+      // preventExtensions()
+      // getOwnPropertyDescriptor: function(target, prop)
+      // defineProperty: function(target, property, descriptor)
+      // deleteProperty: function(target, property)
     }
 
-    // PutMethod(Thing_root, _$INTER, function () {
-    //   // Is this check necessary???
-    //   if (!this instanceof Inner) {
-    //     return Top.error(`_$INTER method Hijacked to inter foreign object!`)
-    //   }
-    //   const outer = this[_$OUTER$_]
-    //   if (outer) { InnerWeakMap.set(outer, this) }
-    //   // returns undefined to make sure that its return value isn't depended upon
-    //   // If this method is man-in-the-middled via proxy its return value could be changed
-    // })
+    function Enkrust(selector, krust, crumb, value) {
+      crumb[selector] = value
+      switch (typeof value) {
+        default :
+          return (krust[selector] = value)
+        case "function" :
+          (value[INTER])
+          return (krust[selector] = InterMap.get(value) ?
+            value : BakeUntrusted(value))
+        case "object" :
+          return (krust[selector] = (value[INTER] === SECRET) ? value[OUTER] :
+            (InterMap.get(value) ? value : BakeUntrusted(value)))
+      }
+    }
 
-    PutMethod(NosyBlock_root, function _init(func) {
-      this._func = func
-    }oldman yassa 4545\\\\)
+    function BakeThing(thing) {
+      const Krust = { __proto__ : KrustRoot }
+      const Core  = { __proto__ : thing[ROOT] }
+      let Map
+      return new Proxy(thing, {
+        __proto__ : BaseThingEnkrustment,
+        get : (inner, selector, outer) => {
+          switch (selector[0]) {
+            case "_" :
+              return inner._externalPrivateRead(selector)
+            case undefined :
+              if (selector === INTER) {
+                Map = Map || InterMap.set(outer, inner)
+              }
+              else if (inner[INSTANCE_SYMBOLS][selector]) { break }
+              return undefined
+          }
+          const value = inner[selector]
+          return value === Core[selector] ?
+            Krust[selector] : Enkrust(selector, Krust, Core, value)
+        },
+        set : (inner, selector, value, outer) => {
+          switch (selector[0]) {
+            case "_" :
+              return inner._externalPrivateWrite(selector, value) || false
+            case undefined :
+              inner[INSTANCE_SYMBOLS][selector] = true; break
+          }
+          if (inner[selector] !== undefined) {
+            return inner._externalOverwrite(selector, value) || false
+          }
+          inner[selector] = Enkrust(selector, Krust, Core, value)
+          return true
+        }
+      })
+    }
+
+    const UntrustedEnkrustment = {
+      __proto__ : null,
+      apply : (func, receiver, args) => {
+        const $receiver = (receiver[INTER] === SECRET) ? receiver[OUTER] :
+          (InterMap.get(receiver) ? receiver : BakeUntrusted(receiver))
+        const $args = []
+        let next = args.length
+        while (next--) {
+          let arg = args[next]
+          switch (typeof arg) {
+            default :
+              $args[next] = arg; break
+            case "function" :
+              (arg[INTER])
+              $args[next] = InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
+            case "object" :
+              $args[next] = (arg[INTER] === SECRET) ? arg[OUTER] :
+                (InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
+          }
+        }
+        const result = Apply(func, $receiver, $args)
+        switch (typeof result) {
+          default :
+            return result
+          case "function" :
+            (result[INTER])
+            return InterMap.get(result) ? result : BakeUntrusted(result))
+          case "object" :
+            return (result[INTER] === SECRET) ? result[OUTER] :
+              (InterMap.get(result) ? result : BakeUntrusted(result))
+        }
+      },
+      construct : (target, args, constructor) => {
+        this.apply(constructor, target, args)
+        return target
+      }
+    }
+
+    function BakeUntrusted(object) {
+      const Purple = { __proto__ : null }
+      const Red    = { __proto__ : null }
+      let _InteredMap
+      return new Proxy(object, {
+        __proto__ : UntrustedEnkrustment,
+        get : (red, selector, purple) => {
+          if (selector === INTER) {
+            _InteredMap = _InteredMap || InterMap.set(purple, red)
+            return undefined
+          }
+          const value = red[selector]
+          return value === Red[selector] ?
+            Purple[selector] : Enkrust(selector, Purple, Red, value)
+        },
+        set : (red, selector, value, purple) => {
+          if (selector === INTER) { return false }
+          red[selector] = Enkrust(selector, Purple, Red, value)
+          return true
+        }
+      }
+        // getOwnPropertyDescriptor()
+        // defineProperty()
+      })
+    }
+
+    const BaseMethodHandlerEnkrustment = {
+      __proto__ : null,
+      set : (func, selector, value, outer) => {
+        if (selector === INTER) { return false }
+        func[selector] = value
+        return true
+      },
+      construct : (target, args, constructor) => {
+        return null // Void
+      }
+      // getOwnPropertyDescriptor()
+      // defineProperty()
+    }
+
+    const MethodHandlerEnkrustment = {
+      __proto__ : BaseMethodHandlerEnkrustment,
+      apply : (func, inner, args) => {
+        const $args = []
+        let next = args.length
+        while (next--) {
+          let arg = args[next]
+          switch (typeof arg) {
+            default :
+              $args[next] = arg; break
+            case "function" :
+              (arg[INTER])
+              $args[next] = InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
+            case "object" :
+              $args[next] = (arg[INTER] === SECRET) ? arg :
+                (InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
+          }
+        }
+        const result = Apply(func, inner, $args)
+        switch (typeof result) {
+          default :
+            return result
+          case "function" :
+            (result[INTER])
+            return InterMap.get(result) ? result : BakeUntrusted(result))
+          case "object" :
+            return (result[INTER] === SECRET) ? result[OUTER] :
+              (InterMap.get(result) ? result : BakeUntrusted(result))
+        }
+      }
+    }
+
+    const GetterHandlerEnkrustment = {
+      __proto__ : MethodHandlerEnkrustment,
+      apply : (func, inner, args) => {
+        const result = func.call(inner)
+        switch (typeof result) {
+          default :
+            return result
+          case "function" :
+            (result[INTER])
+            return InterMap.get(result) ? result : BakeUntrusted(result))
+          case "object" :
+            return (result[INTER] === SECRET) ? result[OUTER] :
+              (InterMap.get(result) ? result : BakeUntrusted(result))
+        }
+      }
+    }
+
+    const SetterHandlerEnkrustment = {
+      __proto__ : MethodHandlerEnkrustment,
+      apply : (func, inner, args) => {
+        let arg = args[0]
+        switch (typeof arg) {
+          case "function" :
+            (arg[INTER])
+            arg = InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
+          case "object" :
+            arg = (arg[INTER] === SECRET) ? arg :
+              (InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
+        }
+        const result = func.call(inner, arg)
+        switch (typeof result) {
+          default :
+            return result
+          case "function" :
+            (result[INTER])
+            return InterMap.get(result) ? result : BakeUntrusted(result))
+          case "object" :
+            return (result[INTER] === SECRET) ? result[OUTER] :
+              (InterMap.get(result) ? result : BakeUntrusted(result))
+        }
+      }
+    }
+
+    function BakeMethodHandler(handler, enkrustmentBase) {
+      let Map
+      return new Proxy(BeImmutable(handler), {
+        __proto__ : enkrustmentBase,
+        get : (func, selector, outer) => {
+          if (selector === INTER) {
+            Map = Map || InterMap.set(outer, inner)
+            return undefined
+          }
+          return func[selector]
+        }
+      })
+    }
+
+    function BakeGeneralHandler(handler) {
+      return BakeMethodHandler(handler, GetterHandlerEnkrustment)
+    }
+
+    function BakeGetterHandler(handler) {
+      return BakeMethodHandler(handler, GetterHandlerEnkrustment)
+    }
+
+    function BakeSetterHandler(handler) {
+      return BakeMethodHandler(handler, SetterHandlerEnkrustment)
+    }
 
 
+
+    function GetInner(target) {
+      return (target[INTER] === SECRET) ? target : InterMap.get(target)
+    }
 
 
     function ConnectTypes(_type, supertypes) {
@@ -425,65 +513,54 @@
       })
     }
 
-    // fix this!!! _ancestors is no longer a type property
+    // _supertypes each type to the left overrides types to the right
+    // ancestors each type to the right overrides types to the left
     function BuildAncestors(_supertypes) {
-      const count = _supertypes.length
-      if (count === 0) { return [] }
+      let next = _supertypes.length
+      if (next === 0) { return [] }
 
-      let _supertype = _supertypes[0]
-      const ancestors = [_supertype].push(..._supertype._ancestors)
-      if (count === 1) { return ancestors }
+      let _supertype = _supertypes[--next]
+      const ancestors = _supertype.ancestry.slice()
+      if (next === 0) { return ancestors }
 
-      const visited = NewStash()
+      const visited = { __proto__ : null }
       ancestors.forEach(_type => (visited[_type.oid] = _type))
 
-      let next = 1
       do {
-        _supertype = _supertypes[next]
-        const oid = _supertype.oid
+        _supertype = _supertypes[--next]
+        let oid = _supertype.oid
         if (!visited[oid]) {
-          ancestors.push(visited[oid] = _supertype)
-          _supertype._ancestors.forEach(_type => {
+          _supertype.ancestry.forEach(_type => {
             const oid = _type.oid
-            if (!visited[oid]) { ancestors.push(visited[oid] = _type) }
+            if (!visited[oid]) { ancestors.push((visited[oid] = _type)) }
           })
         }
-      } while (++next < count)
+      } while (next)
       return ancestors
     }
 
-    function SeedRootMethodHandlers(_root, _ancestors) {
-      let next = _ancestors.length
-      while (next--) {
-        const methods = _ancestors[next]._methods
+    function SeedInstanceRootMethodHandlers(_root, _ancestors) {
+      const count = _ancestors.length
+      let next = 0
+      while (next < count) {
+        const methods = _ancestors[next++].methods
         for (const selector in methods) {
           _root[selector] = methods[selector].handler
         }
       }
     }
 
-    function ReseedTypeMethodHandler(selector, _type) {
-      if (!_type._methods[selector]) {
-        const _ancestors = _type._ancestors
-        const count = _ancestors.length
-        let next = 0
-        while (next < count) {
-          const method = _ancestors[next]._methods[selector]
-          if (method) {
-            _type._instanceRoot[selector] = method.handler
-            return ReseedSubtypesMethodHandler(selector, _type)
-          }
-        }
-        delete _type._instanceRoot[selector]
-        return ReseedSubtypesMethodHandler(selector, _type) // Is this necessary???
+    function ReseedSubtypesMethodHandler(type, selector, handler) {
+      const subtypes = type.subtypes
+      for (const oid in subtypes) {
+        ReseedTypeMethodHandler(subtypes[oid], selector, handler)
       }
     }
 
-    function ReseedSubtypesMethodHandler(selector, _type) {
-      const _subtypes = _type._subtypes
-      for (const oid in _subtypes) {
-        const _subtype = _subtypes[oid]
-        ReseedTypeMethodHandler(selector, _subtype)
+    function ReseedTypeMethodHandler(type, selector, handler) {
+      if (type.methods[selector] == undefined) {
+        type._instanceRoot[selector] = handler
+        ReseedSubtypesMethodHandler(type, selector, handler)
       }
     }
 
@@ -493,18 +570,24 @@
     PutMethod(Type_root, function _init(name, supertypes, _root_) {
       const _supertypes  = ConnectTypes(this, supertypes)
       const _ancestors   = BuildAncestors(_supertypes)
-      const _root        = _root_ || SpawnFrom(Inner_root)
+      const _root        = _root_ || { __proto__ : Inner_root }
 
-      this.$name         =  name // this._asExec(Thing, "_init", name)
+      this.name          =  name // this._asExec(Thing, "_init", name)
       this._instanceRoot = _root
-      this._supertypes   = _supertypes
-      this._subtypes     = NewStash()
-      this._methods      = NewStash()
+      this.supertypes    = _supertypes
+      this.subtypes      = { __proto__ : null }
+      this.methods       = { __proto__ : null }
+      // this.context       = null
 
-      _root.$type   = this
-      _root.$types  = ShallowFreeze([this].concat(_ancestors))
-      _root[_$ROOT] = _root
-      SeedRootMethodHandlers(_root, _types)
+      _root.type     = this
+      _root[ROOT]    = _root
+      SeedInstanceRootMethodHandlers(_root, _ancestors)
+      _root.ancestry = ShallowFreeze(_ancestors.push(this))
+    })
+
+    Type.addSGetter(function copy() {
+      // Fix to make name a copy!!!
+      const type = Type.new(this.name, this.supertypes)
     })
 
     PutMethod(Type_root, function new(...args) {
@@ -515,12 +598,12 @@
 
 
     _Type_root._instanceRoot = _Type_root
-    const Thing     = _Type_root.new("Thing"  , [],      Thing_root)
-    const Type      = _Type_root.new("Type"   , [Thing], Type_root)
-    const Nothing   =  Type.new(     "Nothing", [],      Nothing_root)
-    const Method    =  Type.new(     "Method" , [Thing], Method_root)
-    const Context   =  Type.new(     "Context", [Thing], Context_root)
-    const Name      =  Type.new(     "Name"   , [Thing], Name_root)
+    const Thing   = _Type_root.new("Thing"  , []     , Thing_root)
+    const Type    = _Type_root.new("Type"   , [Thing], Type_root)
+    const Nothing =       Type.new("Nothing", []     , Nothing_root)
+    const Method  =       Type.new("Method" , [Thing], Method_root)
+    const Context =       Type.new("Context", [Thing], Context_root)
+    const Name    =       Type.new("Name"   , [Thing], Name_root)
 
     PutMethod(Method_root, function _init(func_name, func_) {
       const isFuncArg = (typeof func_name === "function")
@@ -538,29 +621,27 @@
       // this.imp = WrapFunction(func)
     })
 
-    // Fix $type!!!
     PutMethod(Type_root, function addSMethod(method_func__name, func__) {
-      const method = method_func__name.$type.is(Method) ?
-        method_func__name : Method.$new(method_func__name, func__)
-
+      const type = method_func__name.type
+      const method = type && type.is(Method) ?
+        method_func__name : Method.new(method_func__name, func__)
       const selector = method.selector
-      this._methods[selector] = this._instanceRoot[selector] = method
-      ReseedSubtypesMethodHandler(selector, this)
+      const handler = method.handler
+      this.methods[selector] = method
+      this._instanceRoot[selector] = handler
+      ReseedSubtypesMethodHandler(this, selector, handler)
       return this
     })
 
     // Method bootstrapping
 
-    // ???
-    Method_root[_$OUTER_HANDLER] = ImmutableOuterHandler
-
-    Thing.addSMethod(_$INTER, Thing_root._instanceRoot[_$INTER])
-    Thing.addSMethod(Thing_root._instanceRoot._init)
-    Thing.addSMethod(Thing_root._instanceRoot.is)
-    Type.addSMethod(Type_root._instanceRoot._init)
-    Type.addSMethod(Type_root._instanceRoot.new)
-    Type.addSMethod(Type_root._instanceRoot.addSMethod)
-    Method.addSMethod(Method_root._instanceRoot._init)
+    Thing.addSMethod(INTER, Thing_root._instanceRoot[INTER])
+    Thing.addSMethod(       Thing_root._instanceRoot._init)
+    Thing.addSMethod(       Thing_root._instanceRoot.is)
+    Type.addSMethod(         Type_root._instanceRoot._init)
+    Type.addSMethod(         Type_root._instanceRoot.new)
+    Type.addSMethod(         Type_root._instanceRoot.addSMethod)
+    Method.addSMethod(     Method_root._instanceRoot._init)
 
     Thing.addSMethod(function _noSuchProperty(name) {
       return this.error(`No such property: ${name}!`)
@@ -570,13 +651,15 @@
     Nothing.addSMethod(Thing_root._noSuchProperty)
 
 
-    // Fix $type!!!
-    Thing.addSMethod(function addOMethod(method__func_name, func_) {
-      const method = method__func_name.$type.is(Method) ?
-        method__func_name : Method.$new(method__func_name, func_)
+    Thing.addSMethod(function addOMethod(method_func__name, func_) {
+      const type = method_func__name.type
+      const method = type && type.is(Method) ?
+        method_func__name : Method.new(method_func__name, func__)
       const selector = method.selector
-      const methods = (this[_$O_METHODS] || this[_$O_METHODS] = NewStash())
-      methods[selector] = this[selector] = method
+      const methods = (this[INSTANCE_METHODS] ||
+        this[INSTANCE_METHODS] = { __proto__ : null })
+      methods[selector] = method
+      this[selector] = method.handler
       return this
     })
 
@@ -588,27 +671,28 @@
     })
 
     Thing.addSMethod(function _asExec(type, selector, ...args) {
+
       // Must check that type is a valid supertype!!!
       // It might be enough to check whether or not type is extensible!!!
-      return Apply(type.handlerAt(selector), this, args)
+      return type.isExtensible ?
+        Apply(type.handlerAt(selector), this, args) :
+        this.error(`Can't call _asExec with a nonextensible type!`)
     })
-
-    // Might need a security check to make sure target object is a
-    // subtype of the given type to prevent unauthorized param access!!!
     Thing.addSMethod(function _asExec(type, selector, ...args) {
+      // Might need a security check to make sure target object is a
+      // subtype of the given type to prevent unauthorized param access!!!
+
       // using _handlerAt vs handlerAt might be enough
-      return Apply(type._handlerAt(selector), this, args)
+      return Apply(type._instanceRoot[selector], this, args)
     })
 
-    // Fix $type!!!
     Thing.addSMethod(function _superExec(selector, ...args) {
       const handler = this[selector]
-      const types = this.$types
-      const count = types.length
-      let   next = 0
-      while (next < count) {
-        let type = types[next++]
-        let superHandler = type._methods[selector]
+      const ancestry = this.ancestry
+      let next = ancestry.length
+      while (next--) {
+        let type = ancestry[next]
+        let superHandler = type.methods[selector]
         if (superHandler && superHandler !== handler) {
           return Apply(superHandler, this, args) // do these need to be protected too???
         }
@@ -616,8 +700,8 @@
       return this._noSuchProperty(selector, args)
     })
 
-    Thing.addSMethod(function hasMethod(selector) {
-      !!return this.$type.methodAt(selector)
+    Thing.addSMethod(function understands(selector) {
+      !!return this.type.handlerAt(selector)
     })
 
     Thing.addSMethod(function hasProperty(selector) {
@@ -628,19 +712,19 @@
 
     Thing.addSMethod(function isMutable() { return !this[_$isImmutable]}) }
 
-    Thing.addSMethod(function ShouldNotImplementError() {
+    Thing.addSMethod(function shouldNotImplementError() {
       return this.error("Method should not be implemented!");
     });
 
-    Thing.addSMethod(function NotYetImplementedError() {
+    Thing.addSMethod(function notYetImplementedError() {
       return this.error("Method not yet implemented!");
     });
 
-    Thing.addSMethod(function NotYetTestedError() {
+    Thing.addSMethod(function notYetTestedError() {
       return this.error("Method not yet tested!");
     });
 
-    Thing.addSMethod(function SubtypeResponsibilityError() {
+    Thing.addSMethod(function subtypeResponsibilityError() {
       return this.error("Method should be implemented by this or subtype!");
     });
 
@@ -649,6 +733,23 @@
     //// Ella's typing
     // Type=add _addSelector publicEqualitySelector...supertypes
     // getElementsByClassName('className')(marker )RANDOM_MAX SeedAllMethodsFrom KIT KAT
+
+    hack 2244 bazooka. ~a function Qs rc radar ConnectSubtype_ToSuperty EnsureDefaultMethodsFor BaseMethodHandlerEnkrustment
+    console.warn(function (a confirm('olè! ');  document ZERO_PADDING 222
+    2U2USD enter 64 prefix $45  appendix a40 function  {
+
+    }
+
+
+
+
+
+
+
+
+    ) {
+
+    });
 
     const FUNC_PROLOG_MATCHER   = /^(function\s*(\s[\w$]+)?\(([\w$\s,]*)\)|(\(([\w$\s,]*)\)|([\w$]+))\s*=>)/
     const PARAMS_MATCHER = /[\w$]+/g
@@ -662,25 +763,32 @@
 
 
     Type.AddOMethod(function new(...args) {
-      const argTypes = NewStash()
-      const improperArgs = args.forEach(arg => {
+      const argTypes = { __proto__ : null }
+      let improperArgs = args.filter(arg => {
         const type = typeof arg
-        if (argTypes[type]) { return true }
-        argTypes[type] = arg
+        return argTypes[type] || (argTypes[type] = arg, false)
       })
-      if (improperArgs) {
+      if (improperArgs.length) {
         return this.error(
           "Args must contain name and/or function, and optional supertype(s)!")
       }
       let name            = argTypes.string
       let supertypes      = argTypes.object
       let extensionAction = argTypes.function
-
+      // Add check to ensure all supertypers are extensible!!!
       supertypes = supertypes ?
         (IsArray(supertypes) ?
           (supertypes.length ? supertypes : [Thing]) :
           [supertypes]) :
         [Thing]
+      improperArgs = supertypes.filter(type => type.isImmutable)
+      if (improperArgs) {
+        return this.error(`Supertypes ${improperArgs} cannot be immutable!`)
+      }
+      improperArgs = supertypes.filter(type => type.isSealed)
+      if (improperArgs) {
+        return this.error(`Supertypes ${improperArgs} must be extensible!`)
+      }
       if (!name) {
         if (!extensionAction) {
           return this.error(
@@ -724,7 +832,7 @@
 
     function DeepFreeze(object) {
       ShallowFreeze(object)
-      const selectors = AllPropertiesOf(object)
+      const selectors = AllProperties(object)
       const next = selectors.length
       while (next--) {
         const value = object[selectors[next]]
@@ -760,33 +868,20 @@
 
     Mammal, F
 
-    Type.new(function (RobotBat, Will))
+    Type.new(function (Bat, Flying, Mammal))
+    Type.new(function (RemoteControlBat, RemoteControllable, Plastic, Bat))
 
+    Krust.newContext(function Animals(Collection, $Object) {
 
+    })
+
+i like to eat! =Ellacrazy type RemoteControlBat null KITKAT
 
 
 
     bat
       _super --> func
         bat
-
-    Top.newContext(function Animals() {
-      this.overtype(function (Collection) {
-
-      })
-    })
-
-    Top.newType
-
-    Dog_outer_root
-      (age)
-      dog1_o
-        _$INNER
-
-    Dog_inner_root
-     dog1_i
-       _$INNER
-       age
 
 
 

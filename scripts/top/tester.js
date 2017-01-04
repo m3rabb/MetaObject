@@ -1,5 +1,15 @@
 // http://www.answers.com/Q/What_is_the_inside_of_a_loaf_of_bread_called?#slide=1
 
+o1 = {a: 1, b: 1, c: 1}
+o2 = {__proto__ : o1, b: 2}
+o3 = {__proto__ : o2, c: 3}
+
+o4 = {}
+for (name in o3) {
+  o4[name] = o3[name]
+}
+
+
 const WeakKrustMap = new WeakMap()
 
 const SpawnFrom = Object.create
@@ -7,7 +17,7 @@ const SpawnFrom = Object.create
 const INNER = Symbol("INNER")
 const INTER = Symbol("INTER")
 const OUTER = Symbol("OUTER")
-const _OUTER = Symbol("_OUTER")
+const _OUTER_ = Symbol("_OUTER_")
 const TOP_SECRET = Symbol("TOP_SECRET")
 const NONE = Symbol("NONE FOR YOU!")
 
@@ -41,145 +51,10 @@ Cell_root.breed = function () {
   return child
 }
 
-Object.defineProperty(root, OUTER, {
-  writable     : true,
-  enumerable   : false,
-  configurable : false,
-  get          : function () {
-    return this[OUTER] = this[_OUTER] = new Proxy(this, KrustHandler)
-  }
-})
-
-const KrustHandler = {
-  get (inner, selector, outer) {
-    switch (selector[0]) {
-      case "_" :
-        return NONE
-      case undefined :
-        // if (selector === OUTER) { return outer }
-        if (selector === INTER) { WeakKrustMap.set(outer, this) }
-        return undefined
-      default :
-        const value = inner[selector]
-        switch (typeof value) {
-          case "function" :
-            return WeakKrustMap.get(value) ? value : WrapFunc(value)
-          case "object" :
-            return (value[INTER] === SECRET) ? value[OUTER] :
-              (WeakKrustMap.get(value) ?
-                value : new Proxy(value, OutputHandler))
-            // return (value instanceof Inner) ? value[OUTER] : value
-            // return value && value[OUTER] || value
-        }
-      default :
-        const value = inner[selector]
-        switch (typeof value) {
-          case "function" :
-            return value[OUTER] || WrapFunc(value)
-          case "object" :
-            return (value[INTER] === SECRET) ? value[OUTER] :
-              (WeakKrustMap.get(value) ?
-                value : new Proxy(value, OutputHandler))
-
-        if (value) {
-          return value[OUTER] || (typeof value === "function" ?
-            WrapFunc(value) : value)
-          if (outer)
-        }
-        value && value
-          case "function" :
-            return WeakKrustMap.get(value) ? value : WrapFunc(value)
-          case "object" :
-            return (value[INTER] === SECRET) ? value[OUTER] :
-              (WeakKrustMap.get(value) ?
-                value : new Proxy(value, OutputHandler))
-            // return (value instanceof Inner) ? value[OUTER] : value
-            // return value && value[OUTER] || value
-        }
-    }
-  }
-}
-
-function WrapParam(target) {
-  const Krumb = SpawnFrom(null)
-  const Krust = SpawnFrom(null)
-  const paramHandler = SpawnFrom()
-  paramHandler.get = function (object, selector) {
-    const current = object[selector]
-    switch (typeof current) {
-      default         : return current
-      case "function" :
-        return (current === Krumb[selector]) ?
-          Krust[selector] : WrapFunc(current)
-      case "object"   :
-        if (current[INTER] === SECRET) { return current }
-        if (current === Krumb[selector]) { return Krust[selector] }
-        Krumb[selector] = current
-        return (Krust[selector] =
-          WeakKrustMap.get(current) ? current : WrapParam(current))
-    }
-  }
-  paramHandler.set = function (object, selector, value) {
-    if (value && value[INTER] === SECRET) {
-      const current = object[selector]
-      object[selector] = (current && current[INTER] === SECRET) ?
-        value : value[OUTER]
-    }
-    else {
-      object[selector] = value
-    }
-    return true
-  }
-  return new Proxy(target, paramHandler)
-}
-
-
-      const wrapped = new Proxy(current, ObjHandler)
-      return value && (value[INNER] === SECRET) ? value[OUTER] : value
-      // return (value instanceof Inner) ? value[OUTER] : value
-      // return value && value[OUTER] || value
-    }
-  }
-}
 
 
 
-function WrapFunc(Func) {
-  return function (...args) {
-    const wrappedArgs = WrappedArgs(args)
-    const result = Func.apply(this, wrappedArgs)
-    switch (typeof result) {
-      default         : return result
-      case "function" : return Block.new(arg)
-      case "object" :
-        return (arg[INTER] === SECRET) ?
-          arg[OUTER] :
-          (WeakKrustMap.get(arg) ?
-            arg : Wrapper.new(arg))
 
-    }
-  }
-}
-
-function WrappedArgs(args) {
-  const wrappedArgs = []
-  let next = args.length
-  while (next--) {
-    const arg = args[next]
-    switch (typeof arg) {
-      default :
-        wrappedArgs[next] = arg; break
-      case "object" :
-        wrappedArgs[next] = (arg[INTER] === SECRET) ?
-          arg[OUTER] :
-          (WeakKrustMap.get(arg) ?
-            arg : Wrapper.new(arg)); break
-      case "function" :
-        wrappedArgs[next] = Block.new(arg); break
-    }
-  }
-  return wrappedArgs
-}
 
 
 const SpyHandler = {
