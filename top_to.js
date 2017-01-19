@@ -13,6 +13,7 @@
     const AllNames           = Object.getOwnPropertyNames
     const AllSymbols         = Object.getOwnPropertySymbols
     const ShallowFreeze      = Object.freeze
+    const IsFrozen           = Object.isFrozen
     const Object_prototype   = Object.prototype
     const IsLocalProperty    = Object_prototype.hasOwnProperty
     const PropertyDescriptor = Object.getOwnPropertyDescriptor
@@ -122,10 +123,11 @@
       return Floor(RandomUnitValue() * (max - min + 1)) + min
     }
 
-    function NewUniqueId(prefix_, seedDate__, seedValue__) {
-      const prefix = prefix_ || ""
-      const seedDate = seedDate__ || Date.now()
-      const seedValue = seedValue__ || RandomInt(RANDOM_MAX)
+    function NewUniqueId(
+      prefix    = "",
+      seedDate  = Date.now(),
+      seedValue = RandomInt(RANDOM_MAX)
+    ) {
       const id = (seedDate * seedValue).toString(36)
       const zeros = ZERO_PADDING.slice(0, MAX_UNIQUE_ID_LENGTH - id.length)
       return prefix + zeros + id
@@ -133,7 +135,7 @@
 
     // Note: Doesn't handle symbols for init
     function NewStash(spec_) {
-      const stash = SpawnFrom(Stash_root)
+      const stash = { __proto__ : Stash_root }
       if (spec_) {
         if (HandleInheritancePoisoning && spec_ instanceof Object) {
           for (const name in spec_) {
@@ -182,24 +184,27 @@
 
 
 
-    function SetPropertyGet(target, getBehavior_name, getBehavior_) {
-      const [name, installer] = (typeof getBehavior_name === "function") ?
-        [getBehavior_name.name, getBehavior_name] :
-        [getBehavior_name, getBehavior_]
+    function SetPropertyGetter(target, getter_name, getter_) {
+      const [name, getter] = (typeof getter_name === "function") ?
+        [getter_name.name, getter_name] :
+        [getter_name     , getter_    ]
+
       return DefineProperty(target, name, {
         __proto__ : LockedConfiguration,
-          get     : getBehavior
+          get     : getter
       })
     }
 
     function AddLazyProperty(target, namedInstaller_name, installer_) {
       const [name, installer] = (typeof namedInstaller_name === "function") ?
         [namedInstaller_name.name, namedInstaller_name] :
-        [namedInstaller_name, installer_]
-      return DefineProperty(target, name, {
+        [namedInstaller_name     , installer_         ]
+      const configuration = {
         __proto__ : LazyPropertyConfiguration,
           get     : installer
-      })
+      }
+
+      return DefineProperty(target, name, configuration)
     }
 
 
@@ -234,27 +239,65 @@
 
     const InterMap = new WeakMap()
 
-    const BaseThingEnkrustment = {
+    // Ensure the object passed to the outside is wrapped
+    function PassOut(value) {
+      switch (typeof value) {
+        default         : return value  // Primitives don't need wrapping
+        case "function" : break
+        case "object"   : break
+      }
+      if (value[CONTEXT] === CONTEXT.secret) {
+        return value[OUTER]
+      }
+      return InterMap.get(value) ? value : WrapObject(value, true)
+      // const inner = InterMap.get(value)
+      // if (inner) {
+      //   // If wrapped object is a passed in mutable object, then make a copy
+      //   value.isImmutable ? value : WrapObject(Copy(inner), true)
+      // }
+      // // The object was generated internally
+      // WrapObject(value, true)
+    }
+
+    // Ensure that object passed in from the outside is wrapped
+    function PassIn(value) {
+      switch (typeof value) {
+        default         : return value  // Primitives don't need wrapping
+        case "function" : break
+        case "object"   : break
+      }
+      return (value[CONTEXT] === CONTEXT.secret) ?
+        value[OUTER] : // value // Formerly, didn't wrap incoming things, but
+                                // wrapping ensures immutable property access
+        (InterMap.get(value) ?
+          value :
+          WrapObject(value, IsFrozen(value)))
+    }
+
+    const BaseThingEnwrapture = {
       __proto__ : null,
+
+      set : (inner, selector, value, outer) => {
+        return inner._externalWrite(selector, value) || false
+      },
+
       has (inner, selector) {
         switch (selector[0]) {
-          case "_" :
-            return inner._externalPrivateRead(selector) || false
-          case undefined :
-            if (inner[INSTANCE_SYMBOLS][selector]) { break }
-            return false
+          case "_"       : return inner._externalPrivateRead(selector) || false
+          case undefined : return undefined
         }
         return selector in inner
       },
+
       ownKeys (inner) {
-        const known = inner[INSTANCE_SYMBOLS]
         const names = AllNames(inner).filter(name => name[0] !== "_")
-        const symbols = AllSymbols(inner).filter(symbol => known[symbol])
-        return names.concat(symbols)
+        return names.concat(ALLOWED_SYMBOLS)
       },
+
       getPrototypeOf (inner) {
         return null
       },
+
       setPrototypeOf (inner, target) {
         return false
       },
@@ -266,121 +309,84 @@
       // deleteProperty: function(target, property)
     }
 
-    function Enkrust(selector, krust, crumb, value) {
-      crumb[selector] = value
-      switch (typeof value) {
-        default :
-          return (krust[selector] = value)
-        case "function" :
-          (value[INTER])
-          return (krust[selector] = InterMap.get(value) ?
-            value : BakeUntrusted(value))
-        case "object" :
-          return (krust[selector] = (value[INTER] === SECRET) ? value[OUTER] :
-            (InterMap.get(value) ? value : BakeUntrusted(value)))
-      }
-    }
+    function WrapThing(inner) {
+      const Wrapped = { __proto__ : OuterRoot }
 
-    function BakeThing(thing) {
-      const Krust = { __proto__ : KrustRoot }
-      const Core  = { __proto__ : thing[ROOT] }
-      let Map
-      return new Proxy(thing, {
-        __proto__ : BaseThingEnkrustment,
+
+      const handlers = {
+        __proto__ : BaseThingEnwrapture,
+
         get : (inner, selector, outer) => {
+          if (selector in Wrapped) {
+            return Wrapped[selector]
+          }
+
           switch (selector[0]) {
-            case "_" :
-              return inner._externalPrivateRead(selector)
-            case undefined :
-              if (selector === INTER) {
-                Map = Map || InterMap.set(outer, inner)
-              }
-              else if (inner[INSTANCE_SYMBOLS][selector]) { break }
-              return undefined
+            case "_"       : return inner._externalPrivateRead(selector)
+            case undefined : return undefined
           }
-          const value = inner[selector]
-          return value === Core[selector] ?
-            Krust[selector] : Enkrust(selector, Krust, Core, value)
-        },
-        set : (inner, selector, value, outer) => {
-          switch (selector[0]) {
-            case "_" :
-              return inner._externalPrivateWrite(selector, value) || false
-            case undefined :
-              inner[INSTANCE_SYMBOLS][selector] = true; break
-          }
-          if (inner[selector] !== undefined) {
-            return inner._externalOverwrite(selector, value) || false
-          }
-          inner[selector] = Enkrust(selector, Krust, Core, value)
-          return true
+
+          return (Wrapped[selector] = PassOut(inner[selector]))
         }
-      })
+      }
+      const outer = new Proxy(inner, handlers)
+      inner[IDENTITY] = inner[OUTER] = outer
+      Wrapped[IMMUTABLE_COPY] = outer
+      InterMap.set(outer, inner)
+      return outer
     }
 
-    const UntrustedEnkrustment = {
+    const BaseObjectEnwrapture = {
       __proto__ : null,
-      apply : (func, receiver, args) => {
-        const $receiver = (receiver[INTER] === SECRET) ? receiver[OUTER] :
-          (InterMap.get(receiver) ? receiver : BakeUntrusted(receiver))
-        const $args = []
-        let next = args.length
-        while (next--) {
-          let arg = args[next]
-          switch (typeof arg) {
-            default :
-              $args[next] = arg; break
-            case "function" :
-              (arg[INTER])
-              $args[next] = InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
-            case "object" :
-              $args[next] = (arg[INTER] === SECRET) ? arg[OUTER] :
-                (InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
-          }
-        }
-        const result = Apply(func, $receiver, $args)
-        switch (typeof result) {
-          default :
-            return result
-          case "function" :
-            (result[INTER])
-            return InterMap.get(result) ? result : BakeUntrusted(result))
-          case "object" :
-            return (result[INTER] === SECRET) ? result[OUTER] :
-              (InterMap.get(result) ? result : BakeUntrusted(result))
-        }
+
+      set : (inner, selector, value, outer) => {
+        return false
       },
+
+      apply : (func, receiver, args) => {
+        // Be mindful if the args should go back to using PassIn instead!!!
+        return PassOut(func.apply(PassIn(receiver), args.map(PassIn)))
+      },
+
       construct : (target, args, constructor) => {
+        // Revisit!!!
         this.apply(constructor, target, args)
         return target
       }
+
+      // getOwnPropertyDescriptor()
+      // defineProperty()
     }
 
-    function BakeUntrusted(object) {
-      const Purple = { __proto__ : null }
-      const Red    = { __proto__ : null }
-      let _InteredMap
-      return new Proxy(object, {
-        __proto__ : UntrustedEnkrustment,
-        get : (red, selector, purple) => {
-          if (selector === INTER) {
-            _InteredMap = _InteredMap || InterMap.set(purple, red)
-            return undefined
-          }
-          const value = red[selector]
-          return value === Red[selector] ?
-            Purple[selector] : Enkrust(selector, Purple, Red, value)
-        },
-        set : (red, selector, value, purple) => {
-          if (selector === INTER) { return false }
-          red[selector] = Enkrust(selector, Purple, Red, value)
+    AddLazyProperty(BaseObjectEnwrapture, IMMUTABLE_COPY, function () {
+      return this[OUTER] = this[_OUTER_] = BakeThing(this)
+    })
+
+    function WrapObject(object, immutable) {
+      const Wrapped  = { __proto__ : null }
+
+      const handlers = {
+        __proto__ : BaseObjectEnwrapture,
+
+        get : (inner, selector, outer) => {
+          return (selector in Wrapped) ?
+            Wrapped[selector] :
+            (Wrapped[selector] = PassIn(inner[selector]))
+        }
+      }
+
+      if (!immutable) {
+        handlers.set = function (inner, selector, value, outer) {
+          (Wrapped[selector] = PassIn((inner[selector] = value)))
           return true
         }
       }
-        // getOwnPropertyDescriptor()
-        // defineProperty()
-      })
+
+      const outer = new Proxy(object, handlers)
+      InterMap.set(outer, object)
+      return outer
     }
+
 
     const BaseMethodHandlerEnkrustment = {
       __proto__ : null,
@@ -399,104 +405,103 @@
     const MethodHandlerEnkrustment = {
       __proto__ : BaseMethodHandlerEnkrustment,
       apply : (func, inner, args) => {
-        const $args = []
-        let next = args.length
-        while (next--) {
-          let arg = args[next]
-          switch (typeof arg) {
-            default :
-              $args[next] = arg; break
-            case "function" :
-              (arg[INTER])
-              $args[next] = InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
-            case "object" :
-              $args[next] = (arg[INTER] === SECRET) ? arg :
-                (InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
-          }
-        }
-        const result = Apply(func, inner, $args)
-        switch (typeof result) {
-          default :
-            return result
-          case "function" :
-            (result[INTER])
-            return InterMap.get(result) ? result : BakeUntrusted(result))
-          case "object" :
-            return (result[INTER] === SECRET) ? result[OUTER] :
-              (InterMap.get(result) ? result : BakeUntrusted(result))
-        }
+        return PassOut(func.apply(inner, args.map(PassIn)))
       }
     }
 
     const GetterHandlerEnkrustment = {
       __proto__ : MethodHandlerEnkrustment,
       apply : (func, inner, args) => {
-        const result = func.call(inner)
-        switch (typeof result) {
-          default :
-            return result
-          case "function" :
-            (result[INTER])
-            return InterMap.get(result) ? result : BakeUntrusted(result))
-          case "object" :
-            return (result[INTER] === SECRET) ? result[OUTER] :
-              (InterMap.get(result) ? result : BakeUntrusted(result))
-        }
+        return PassOut(func.call(inner))
       }
     }
 
     const SetterHandlerEnkrustment = {
       __proto__ : MethodHandlerEnkrustment,
       apply : (func, inner, args) => {
-        let arg = args[0]
-        switch (typeof arg) {
-          case "function" :
-            (arg[INTER])
-            arg = InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
-          case "object" :
-            arg = (arg[INTER] === SECRET) ? arg :
-              (InterMap.get(arg) ? arg : BakeUntrusted(arg)); break
-        }
-        const result = func.call(inner, arg)
-        switch (typeof result) {
-          default :
-            return result
-          case "function" :
-            (result[INTER])
-            return InterMap.get(result) ? result : BakeUntrusted(result))
-          case "object" :
-            return (result[INTER] === SECRET) ? result[OUTER] :
-              (InterMap.get(result) ? result : BakeUntrusted(result))
-        }
+        return PassOut(func.call(inner, PassIn(args[0])))
       }
     }
 
-    function BakeMethodHandler(handler, enkrustmentBase) {
-      let Map
-      return new Proxy(BeImmutable(handler), {
-        __proto__ : enkrustmentBase,
-        get : (func, selector, outer) => {
-          if (selector === INTER) {
-            Map = Map || InterMap.set(outer, inner)
-            return undefined
-          }
-          return func[selector]
-        }
-      })
-    }
-
     function BakeGeneralHandler(handler) {
-      return BakeMethodHandler(handler, GetterHandlerEnkrustment)
+      return new Proxy(BeImmutable(handler), GetterHandlerEnkrustment)
     }
 
     function BakeGetterHandler(handler) {
-      return BakeMethodHandler(handler, GetterHandlerEnkrustment)
+      return new Proxy(BeImmutable(handler), GetterHandlerEnkrustment)
     }
 
     function BakeSetterHandler(handler) {
-      return BakeMethodHandler(handler, SetterHandlerEnkrustment)
+      return new Proxy(BeImmutable(handler), SetterHandlerEnkrustment)
     }
 
+
+    PutGetter(Thing_root, function _asMutable() {
+      return this[IMMUTABLE] ? this._mutableCopy : this
+    })
+
+    // target.set("x", 10)
+    // target.set("x", "r", "3", 10)
+    // target.set(["x", "r", "3"], 10)
+    // target.set({address: "123 Main St", zip: "60600"})
+    // target.set(_copy => {
+    //
+    // })
+
+
+    function _Set(target, ...name_path_spec_action, value = undefined) {
+      // NOTE: this is mutable
+      switch (name_path_spec_action.length) {
+        case 0 : return this
+        case 2 : return _SetIn(target, name_path_spec_action, value)
+      }
+      switch (typeof name_path_spec_action[0]) {
+        case "string" :
+          target[name_path_spec_action] = value_
+          return target
+
+        case "object" :
+          if (name_spec_action === null) { return this }
+          if (IsArray(name_path_spec_action)) {
+            return _SetIn(target, name_path_spec_action, value)
+          }
+          for (const name in name_spec_action) {
+            // target[name] = name_spec_action[name]
+          }
+          return target
+
+        case "function" :
+          const result = name_spec_action.call(this, target)
+          return result === undefined ? target : result
+
+        case "undefined" :
+          return target
+
+        default :
+          return target.error("Improper arguments for setting!")
+      }
+    }
+
+    PutGetter(Thing_root, function _mutableCopy() {
+      const copy  = this.type()
+      const names = this[KNOWN_PROPERTIES] || LocalProperties(this)
+      const next  = names.length
+
+      while (next--) {
+        const name = names[next]
+        copy[name] = this[name]
+      }
+      return copy
+    })
+
+
+    PutMethod(Thing_root, function _set(name_spec_action, value_) {
+      return _Set(this._asMutable, name_spec_action, value_)
+    })
+
+    PutMethod(Thing_root, function set(name_spec_action, value_) {
+      return _Set(this._mutableCopy, name_spec_action, value_).beImmutable
+    }
 
 
     function GetInner(target) {
