@@ -19,6 +19,9 @@ new type it doesnt infect all of the other types
 ===
 
 
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
+
+
 a type should be definable as non-extensible to prevent improper use of inherited private methods
 
 

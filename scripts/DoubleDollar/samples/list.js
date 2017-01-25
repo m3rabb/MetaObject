@@ -2,314 +2,732 @@
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
 
-
-
-//   Method name conventions
-//   set   public method on immutable receiver
-//  _set   private method on immutable receiver
-// __set   private method on DEMANDS a mutable receiver
-
-
-// function Fill(target, offset, source, startEdge, endEdge, direction) {
-//   // Note: doesn't work for shifting in same array!!!
-//   let targetIndex = offset
-//   let [sourceIndex, limit] = (direction > 0) ?
-//     [startEdge, endEdge] : [endEdge - 1, startEdge - 1]
-//
-//   while (sourceIndex !== limit) {
-//     target[targetIndex++] = source[sourceIndex]
-//     sourceIndex += direction
-//   }
-//   return targetIndex
-// }
-
-function CopyArray(source) {
-  let target = []
-  let next   = target.count
-  while (next--) { target[next] = source[next] }
-  return target
-}
-function FillValueOverSpan(target, value, startEdge, endEdge) {
-  for (let index = startEdge; index < endEdge; index++) {
-    target[index] = value
-  }
-}
-
-function FillAtFromSpan(target, offset, source, startEdge, endEdge) {
-  let targetIndex, sourceIndex
-  let size = endEdge - startEdge
-
-  if (offset < startEdge || target !== source) {
-    targetIndex = offset
-    sourceIndex = startEdge
-    while (startEdge !== endEdge) {
-      target[targetIndex++] = source[sourceIndex++]
-    }
-  }
-  else if (offset !== startEdge) {
-    // Handles shifting property so no improper overwriting
-    targetIndex = offset + size
-    sourceIndex = endEdge
-    while (endEdge !== startEdge) {
-      target[--targetIndex] = source[--sourceIndex]
-    }
-  }
-  return offset + size
-}
-
-function FillAtFrom(target, offset, source, direction) {
-  let size        = source.length
-  let sourceIndex = size
-  let targetIndex = offset + (direction > 0 ? sourceIndex : - 1)
-
-  while (sourceIndex--) {
-    targetIndex -= direction
-    target[targetIndex] = source[sourceIndex]
-  }
-  return size
-}
-
-
-//          lf   lo   le         i         re   ro   rf
-//   A                |                     |    :--->:
-//   B                |                     :-------->:
-//   C                |          :----------|-------->:    check trim
-//   D                |          :----------:              check trim
-//   E                |          :----:  S  |              check trim
-
-//   F                :----------:       S  |              check trim
-//   G      :<--------|----------:       S  |              check trim
-//   H      :<--------:                     |
-//   I      :<---:    |                     |
-
-//   J                :---------------------:
-//   K                :---------------------|-------->:
-//   L      :<--------|---------------------:
-//   M      :<--------|---------------------|-------->:
-
-function _fillFromOver_(
-  elements, source, startEdge, endEdge = startEdge, direction = FORWARD
-) {
-  const isImmutable  = this[IMMUTABLE]
-  const elements     = this._elements
-  const elementsSize = elements.length,
-  const sourceSize   = source.length
-  const target       = isImmutable ? [] : elements
-  let count, fillEdge, isEndBeforeStart
-
-  if (sourceSize === 0) { return elements }
-
-  if (0 < startEdge) {                  //  A,B,C,D,E
-    if (isImmutable) {                  //      A         B,C,D,E
-      fillEdge = (startEdge > targetSize) ? targetSize : startEdge
-      FillAtFromSpan(target, 0, elements, 0, fillEdge)
-    }
-    count = startEdge + sourceSize
-
-    if (endEdge < targetSize) {         //  E
-      count = FillAtFromSpan(target, count, elements, endEdge, targetSize)
-    }
-
-    FillAtFrom(target, startEdge, source, direction)
-  }
-  else {   // startEdge <= 0
-    if (endEdge < targetSize) {         //  F,G,H,I
-      isEndBeforeStart = (endEdge < 0)  //           I                 F,G,H
-      count = isEndBeforeStart ? (fillEdge = sourceSize - endEdge) : sourceSize
-
-      if (isImmutable || count !== endEdge) {
-        count = FillAtFromSpan(target, count, elements, endEdge, targetSize)
-      }
-      if (isEndBeforeStart)             //  I
-        FillValueOverSpan(target, undefined, sourceSize, fillEdge)
-      }
-    }
-    else { // endEdge >= targetSize     //  J,K,L,M
-      if (isImmutable && IsFrozen(source)) { return source }
-    }
-    FillAtFrom(target, 0, source, direction)
-  }
-  target.length = count  // reconcile by trims any undeleted slots
-  return target
-}
-
-
-function ForEach(object, action) {
-  if (object.isThing) {
-    object.forEach(action)
-  }
-  else if (IsArray(object)) {
-    for (let index = 0, count = object.length; index < count; index++) {
-      action(object[index], index)
-    }
-  }
-  else {
-    let keys = LocalProperties(object).sort()
-    for (let index = 0, count = keys.length; index < count; index++) {
-      const key = keys[index]
-      action({ key: key, value: object[key] }, index)
-    }
-  }
-  return object
-}
-
-function AsElements(object) {
-  if (object.isThing)  { return object.elements }
-  if (IsArray(object)) { return object }
-
-  let elements = []
-  if (typeof object === "string") {
-    for (let index = 0, count = object.length; index < count; index++) {
-      elements[index] = object[index]
-    }
-  }
-
-  let keys = LocalProperties(object).sort()
-    for (let index = 0, count = keys.length; index < count; index++) {
-      const key = keys[index]
-      elements[index] = { key: key, value: object[key] }
-    }
-  }
-  return elements
-}
-
-switch (typeof elements_) {
-  case "object" : break
-  default : return this.error("Parameter must be a collection!") || this
-}
-
-
 DD.set((_context) => {
   _context.newType(List => {
-    List.addSMethods(function __init(elements_) {
-      this._elements = []
-      elements_ && this.addAll(elements_)
-    })
-
-    List.addSMethod(function __addLast_(element) {
-      this._elements[elements.length] = element
-      return this
-    })
-
-    List.addSMethod(function __addAllLast_(elements) {
-      elements[elements.length] = element
-
-      this._fillFromOver_(existElements, newElements, edge)
-elements, source, startEdge, endEdge = startEdge, direction = FORWARD
-      return this._set("_elements", elements)
-    })
-
-    List.addSMethod(function addLast(element) {
-      return (arguments.length) ?
-        this.set(this.__addLast_, element) :
-        this.error("Requires argument!")
-    })
-
-    List.addSMethod(function addAllLast(elements) {
-      return (arguments.length) ?
-        this.set(this.__addAllLast_, element) :
-        this.error("Requires argument!")
-    })
-
-    List.addSAlias("add"   , "addLast")
-    List.addSAlias("addAll", "addAllLast")
 
 
-
-    _List.addSMethod(function addAll_(elements) {
-      const list = this._asMutable
-
-
-    })
-
-    _List.addSMethod(function _withAll(elements_) {
-      this._elements = []
-      this.addAll(elements_)
-    })
+    List.addSMethods([
+      function __init(elements_) {
+        this._elements = []
+        elements_ && this.addAll(elements_)
+      },
 
 
-  })
+      function __putAllWithin(source, lo, hi, fillDirection, viaLaterValues) {
+        const target = this._elements
 
-  // target.set(func, ...args)
-  // target.set("x", 10)
-  // target.set("x", "r", "3", 10)
-  // target.set(["x", "r", "3"], 10)
-  // target.set({address: "123 Main St", zip: "60600"})
-  // target.set(_copy => {
-  //
-  // })
+        let [tIndex, limit] =
+              (fillDirection > 0) ? [lo, hi] : [hi - 1] : [lo - 1]
+        let [sIndex, sIncrement] =
+              viaLaterValues ? [source.length - 1, BACKWARD] : [0, FORWARD]
+
+        while (tIndex !== limit) {
+          target[tIndex] = source[sIndex]
+          tIndex += fillDirection
+          sIndex += sIncrement
+        }
+      },
+
+      function __echoWithin(value, lo, hi) {
+        const elements = this._elements
+
+        for (let index = lo; index < hi; index++) {
+          elements[index] = value
+        }
+      },
+
+      function __echoFillWithin(source, lo, hi, fillDirection, viaLaterValues) {
+        const target = this._elements
+        const sHiIndex = source.length - 1
+
+        let [tIndex, tLimit] = (fillDirection > 0) ?
+              [lo, hi] : [hi - 1, lo - 1]
+        let [sStart, sLimit, sIncrement] = viaLaterValues ?
+              [sHiIndex, 0, BACKWARD] : [0, sHiIndex, FORWARD]
+
+        sIndex = sStart
+        while (tIndex !== tLimit) {
+          target[tIndex] = source[sIndex]
+          tIndex += fillDirection
+          sIndex = (sIndex !== sLimit) ? sIndex + sIncrement : sStart
+        }
+      },
+
+
+      function __subFromShiftTo(sourceEdge, targetEdge) {
+        const elements = this._elements
+        const endEdge  = elements.length
+        const size     = endEdge - sourceEdge
+        let   tIndex, sIndex
+
+        if (targetEdge === sourceEdge) { return }
+
+        if (targetEdge < sourceEdge) {
+          sIndex = sourceEdge
+          tIndex = targetEdge
+
+          while (sIndex < endEdge) {
+            elements[tIndex++] = elements[sIndex++]
+          }
+          elements.length -= size
+        }
+        else {
+          sIndex = endEdge
+          tIndex = targetEdge + size
+
+          while (sIndex > sourceEdge) {
+            elements[--tIndex] = elements[--sIndex]
+          }
+        }
+      },
+
+      //          lf   lo   le         i         re   ro   rf
+      //   A                |                     |    :--->:
+      //   B                |                     :-------->:
+      //   C                |          :----------|-------->:    check trim
+      //   D                |          :----------:              check trim
+      //   E                |          :----:  S  |
+      //
+      //   F                :----------:       S  |
+      //   G      :<--------|----------:       S  |
+      //   H      :<-----S--:                     |
+      //   I      :<---: S  |                     |
+      //
+      //   J                :---------------------:
+      //   K                :---------------------|-------->:
+      //   L      :<--------|---------------------:
+      //   M      :<--------|---------------------|-------->:
+
+      function __doWithin(
+        selector, source,
+        [lo, hi = lo, fillDirection = FORWARD, wraps = false],
+        modifier
+      ) {
+        const target     = this._elements
+        const targetSize = target.length
+        const stretches  = (modifier === FAN)
+        const fillSize   = stretches ? source.length : hi - lo
+
+        let left, right, stretchAmount, spanBeforeTarget
+
+        if (fillSize === 0) { return }
+
+        if (lo > 0) {  //  A,B,C,D,E
+          left  = lo
+          right = left + fillSize
+
+          if (stretches) {
+            if (hi >= targetSize) {  // A,B,C,D
+              if (right < targetSize) { target.length = right } // clip capacity
+            } else {                 // E
+              if (right !== hi) { this.__subFromShiftTo(hi, right) }
+            }
+          }
+        }
+        else {   // lo <= 0
+          left = 0
+
+          if (hi < targetSize) {  // F,G,H
+            if (hi >= 0) {
+              right = fillSize
+
+              if (right !== hi) { this.__subFromShiftTo(hi, right) }
+            }
+            else { //  hi < 0     // I
+              right = fillSize - hi
+
+              this.__subFromShiftTo(hi, right)
+              this.__echoWithin(undefined, fillSize, right)
+            }
+          }
+          else { // hi >= targetSize //  J,K,L,M
+            right = fillSize
+
+            if (right < targetSize) { target.length = right } // clip capacity
+          }
+        }
+        this[selector](source, left, right, fillDirection, modifier)
+      },
+
+
+      // 6               edge      [6,6]       |
+      // [6]             span      [6,SIZE]    |-->
+      // [6,]            span      [6,SIZE]    |-->
+      // [6,,]           span      [6,SIZE]    |-->
+      // [6,null]        span      [6,SIZE]    |-->
+      // [6,undefined]   span      [6,SIZE]    |-->
+
+      // mode, start, [[end], direction], [wraps]
+      // mode, [start, [[end], direction], [wraps]]
+      // mode, {start, end, direction, wraps}
+
+      function _loHiSpanFor(spanMode, spanArgs) {
+        let [arg0, ...args] = spanArgs
+        let isNumber, remaining, remainingCount, size, last
+        let start, end, direction, wraps
+
+        if ((isNumber = (typeof arg0 === "number"))) {
+          start = arg0, remaining = args
+        }
+        else if (IsArray(arg0)) {
+          [start, ...remaining] = arg0
+        }
+        else {
+          {start, end, direction, wrap} = arg0
+          remaining = [end, direction, wrap || false]
+        }
+
+        remainingCount = remaining.length
+        size           = this._elements.length
+
+        if (!(start >= 0)) {
+          start = (spanMode === LINEAR) ?  // LINEAR vs RELATIVE
+            (start == null ? size : start) : ((start || 0) + size)
+        }                                    // handles undefine
+
+        if (isNumber && !remainingCount) {
+          return [start, start, FORWARD, wraps] // edge
+        }
+
+        last  = remaining[remainingCount - 1]
+        wraps = (typeof last === "boolean") ? (remainingCount--, last) : false
+        end   = remaining[0]
+
+        if (!(end >= 0)) {
+          end = (spanMode === LINEAR) ?   // handles undefined
+            (end == null ? size : end) : ((end || 0) + size)
+        }
+
+        direction = remaining[1] ||
+          ((spanMode === LINEAR || start <= end) ? FORWARD : BACKWARD)
+
+        return (start <= end) ?
+          [start, end, direction, wraps] : [end, start, direction, wraps]
+      },
 
 
 
-  GroceryList.addSMethod(function __init(name, price) {
-    this.name  = name
-    this.price = price
-  })
+      function _setDoWithin(...args) {
+        return this._set(this.__doWithin, ...args)
+      },
 
-  GroceryList.addSMethod(function _init(elements_) {
-    this._head = this._tail = Node()
-    this.size = 0
-  })
 
-  LinkedList.addSAccessor(function isEmpty() {
-    return (this.size === 0)
-  })
 
-  LinkedList.addSMethod(function addFirst(element) {
-    return this._set(function () {
-      this._head = Node(element, this._head.next)
-      _list.size++
-    })
-  })
-
-  LinkedList.addSMethod(function addLast(element) {
-    return this.new(_list => {
-      _list._head = Node(element, this._head.next)
-      _list.size++
-    })
-
-    this._tail = this._tail.next = _Node.New(element, null);
-    this._size++;
-    return this;
-  });
-
-  LinkedList.addSMethod(function removeFirst(absentAction_, presentAction_) {
-    var head, first, element;
-    head = this._head;
-    if (head === this._tail) {
-      return absentAction_ ? absentAction_.call(this) : null;
-    }
-    first = head.next;
-    element = first.element;
-    head.next = first.next;
-    this._size--;
-    return presentAction_ ? presentAction_.call(this, element) : element;
-  });
-
-  LinkedList.addSMethod(function removeLast(absentAction_, presentAction_) {
-    var tail, prior, next, element;
-    tail = this._tail;
-    prior = this._head;
-    if (prior === tail) {
-      return absentAction_ ? absentAction_.call(this) : null;
-    }
-    while ((next = prior.next) !== tail) {
-      prior = next;
-    }
-    this._tail = prior;
-    element = tail.element;
-    this._size--;
-    return presentAction_ ? presentAction_.call(this, element) : element;
-  });
-
-  LinkedList.addSMethod(function forEach(action) {
-    if (action) {
-      let current = this._head
-      let tail    = this._tail
-      while ((current = current.next) !== tail) {
-        action.call(this, current.element)
+      function putAt(value, indexer) {
+        return (typeof indexer === "number") ?
+          this.putAtIndex(value, indexer) :
+          this.putOver(value, indexer)
       }
-    }
-    return this
+
+      function putAtEach(Value, indexers) {
+        return this._set(function () {
+          Each(indexers, (indexer) => this.putAt(Value, indexer))
+        })
+      },
+
+      function putEachAtEach(values, indexers) {
+        return this._set(function () {
+          const Keys = AsArray(indexers)
+
+          Each(values, (value, sharedIndex) => {
+            this.putAt(value, Keys[sharedIndex])
+          })
+        })
+
+      },
+
+
+      function putAtIndex(value, index) {
+        return this._set(function () {
+          const elements = this._elements
+          let   arrayIndex
+
+          if (index < 0) {
+            arrayIndex = elements.length + index
+            if (arrayIndex < 0) {
+              this.__subFromShiftTo(0, -arrayIndex)
+              arrayIndex = 0
+            }
+          } else {
+            arrayIndex = index
+          }
+
+          elements[arrayIndex] = value
+        })
+      },
+
+      function putWithin(value, ...edge_spanArgs) {
+        const span = this._loHiSpanFor(LINEAR, edge_spanArgs)
+
+        return this._setDoWithin("__putAllWithin", [value], span, FAN)
+      },
+
+      function putOver(value, ...edge_spanArgs) {
+        const span = this._loHiSpanFor(RELATIVE, edge_spanArgs)
+
+        return this._setDoWithin("__putAllWithin", [value], span, FAN)
+      },
+
+
+      function fanWithin(values, ...edge_spanArgs) {
+        const source = AsArray(values)
+        const span   = this._loHiSpanFor(LINEAR, edge_spanArgs)
+
+        return this._setDoWithin("__putAllWithin", source, span, FAN)
+      },
+
+      function fanOver(values, ...edge_spanArgs) {
+        const source = AsArray(values)
+        const span   = this._loHiSpanFor(RELATIVE, edge_spanArgs)
+
+        return this._setDoWithin("__putAllWithin", source, span, FAN)
+      },
+
+
+      function echoWithin(value, ...spanArgs) {
+        const source = AsArray(values)
+        const span   = this._loHiSpanFor(LINEAR, spanArgs)
+
+        return this._setDoWithin("__echoWithin", source, span)
+      },
+
+      function echoOver(value, ...spanArgs) {
+        const source = AsArray(values)
+        const span   = this._loHiSpanFor(RELATIVE, spanArgs)
+
+        return this._setDoWithin("__echoWithin", source, span)
+      },
+
+
+      function _contractedSpanFor(spanMode, spanArgs, source) {
+        const span     = this._loHiSpanFor(spanMode, spanArgs)
+        const [lo, hi, fillDirection, wraps] = span
+        const spanSize = (hi - lo)
+        const delta    = source.length - spanSize
+
+        return (delta >= 0) ? span :
+         ((fillDirection > 0) ?
+            [lo        , hi + delta, fillDirection, wraps] :
+            [lo + delta,         hi, fillDirection, wraps])
+      },
+
+      function fillWithin(values, ...spanArgs, viaLaterValues = false) {
+        let source = AsArray(values)
+        let span   = this._contractedSpanFor(LINEAR, spanArgs, source)
+
+        return this._setDoWithin("__putAllWithin", source, span, viaLaterValues)
+      },
+
+      function fillOver(values, ...spanArgs, viaLaterValues = false) {
+        const source = AsArray(values)
+        const span   = this._contractedSpanFor(RELATIVE, spanArgs, source)
+
+        return this._setDoWithin("__putAllWithin", source, span, viaLaterValues)
+      },
+
+
+      function echoFillWithin(values, ...spanArgs, viaLaterValues = false) {
+        const source = AsArray(values)
+        const span   = this._loHiSpanFor(LINEAR, spanArgs)
+
+        return this._setDoWithin(
+          "__echoFillWithin", source, span, viaLaterValues)
+      },
+
+      function echoFillOver(values, ...spanArgs, viaLaterValues = false) {
+        const source = AsArray(values)
+        const span   = this._loHiSpanFor(RELATIVE, spanArgs)
+
+        return this._setDoWithin(
+          "__echoFillWithin", source, span, viaLaterValues)
+      },
+
+
+      function _expandedSpanFor(edgeMode, edge, source) {
+        const sourceSize = source.length
+        const anchorEdge = (edge >= 0) ?
+                edge : (edge || 0) + this._elements.length
+        return (edgeMode === UNTIL) ?
+          [anchorEdge - sourceSize, anchorEdge             , FORWARD, false] :
+          [anchorEdge             , anchorEdge + sourceSize, FORWARD, false]
+      },
+
+      function layPast(values, edge, viaLaterValues = false) {
+        const source = AsArray(values)
+        const span   = this._expandedSpanFor(PAST_EDGE, edge, source)
+
+        return this._setDoWithin("__putAllWithin", source, span, viaLaterValues)
+      },
+
+      function layUntil(values, edge, viaLaterValues = false) {
+        const source = AsArray(values)
+        const span   = this._expandedSpanFor(UNTIL_EDGE, edge, source)
+
+        return this._setDoWithin("__putAllWithin", source, span, viaLaterValues)
+      },
+
+
+      function putAtIndex(value, index) {
+        return this._set(function () {
+          const elements = this._elements
+          let   arrayIndex
+
+          if (index < 0) {
+            arrayIndex = elements.length + index
+            if (arrayIndex < 0) {
+              this.__subFromShiftTo(0, -arrayIndex)
+              arrayIndex = 0
+            }
+          } else {
+            arrayIndex = index
+          }
+
+          elements[arrayIndex] = value
+        })
+      },
+
+
+
+      function addFirst(value) {
+        return this._set(function () {
+          this.__subFromShiftTo(0, 1)
+          this._elements[0] = value
+        })
+      },
+
+      function addLast(value) {
+        return this._set(function () {
+          const elements = this._elements
+          elements[elements.length] = value
+        }
+      },
+
+      function addFirstAll(values) {
+        this.fanWithin(values, 0)
+      },
+
+      function addLastAll(values) {
+        this.fanWithin(values, undefined)
+      },
+
+
+      function _match(Conditional, startEdge, endEdge, absentAction_) {
+        let Answer
+
+        function matchAction(value, index) {
+          if (Condition.call(this.$, value, index)) {
+            throw (Answer = {element: value, value: value, key: index, index: index});
+          }
+        }
+
+        try {
+          this._withinEach(startEdge, endEdge, matchAction)
+        }
+        catch (ex) {
+          if (ex === Answer) { return Answer }
+          throw ex
+        }
+        return absentAction_ && absentAction_.call(this.$)
+      },
+
+      function atIndex(index, absentValue_) {
+        const element = this._elements[index]
+        return (element !== undefined) ? element : absentValue_
+      },
+
+      function within(span_edge, edge_) {
+        const [startEdge, endEdge] = arguments.length > 1 ?
+          [span_edge, edge_] : [span_edge.start, span_edge.end]
+        const subelements = ArrayWithin(this._elements, startEdge, endEdge)
+        return this._new(this.__addAllLast, subelements)
+      },
+
+      function at(indexer, absentAction_) {
+        if (typeof indexer === "number") {
+          const element = this.atIndex(indexer)
+          return (element !== undefined) ? element :
+            absentAction_ && absentAction_.call(this.$, indexer)
+        }
+        return this.within(indexer)
+      },
+
+      function size(/* GETTER */) {  //
+        return this._elements.length
+      },
+
+      function elements(/* GETTER */) {
+        return this
+      },
+
+      function isEmpty(/* GETTER */) {
+        return (this._elements.length === 0)
+      },
+
+
+
+
+
+
+      function __removeFirst(value_, absentAction__) {
+        this.__subFromShiftTo(count, 0)
+      },
+
+      function __removeLast(value_, ) {
+        this._elements.length -= count
+      },
+
+      function __removeBefore(value, absentAction_) {
+        this._elements.length -= count
+      },
+
+      function __removeAfter(value, absentAction_) {
+        this._elements.length -= count
+      },
+
+      function __removeEvery(value) {
+
+      },
+
+
+
+      function __removeIndex(index) {
+
+      },
+
+      function __removeOver(relativeSpanner) {
+
+      },
+
+      function __removeWithin(absoluteSpanner) {
+
+      },
+
+      function __removeFrom(edge) {
+
+      },
+
+      function __removeTo(edge) {
+
+      },
+
+      function _withinEach(startEdge, endEdge, action) {
+        const elements = this._elements
+        let   index    = startEdge
+
+        while (index < endEdge) {
+          action.call(this.$, element[index], index++)
+        }
+        return this
+      },
+
+      function _withinMap(startEdge, endEdge, Action) {
+        return this._new(copy => {
+          const elements = copy._elements
+          this._withinEach(startEdge, endEdge, function (element, index) {
+            elements[index] = Action.call(this.$, element, index)
+          })
+        })
+      },
+
+      function _indexers_func2args(span_edge, func_edge, func_) {
+        let hasArgError, startEdge, endEdge, action
+
+        switch (arguments.length) {
+          case 3 :
+            [startEdge, endEdge, action] = [span_edge, func_edge, func_]
+            break
+          case 2 :
+            [startEdge, endEdge] = (typeof span_edge === "number") ?
+              [span_edge.start, span_edge.end] : [span_edge, span_edge]
+            action = func_edge
+            break
+          default :
+            hasArgError = true
+          break
+        }
+        hasArgError = hasArgError || (typeof startEdge !== "number")
+        hasArgError = hasArgError || (typeof endEdge   !== "number")
+        hasArgError = hasArgError || (typeof action    !== "function")
+
+        if (hasError) { return this.error("Improper arguments!") }
+
+        return [startEdge, endEdge, action]
+      },
+
+      function withinEach(span_edge, func_edge, func_) {
+        const args = this._indexers_func2args(span_edge, func_edge, func_)
+        return this._withinEach(args)
+      },
+
+      function withinMap(span_edge, func_edge, func_) {
+        const args = this._indexers_func2args(span_edge, func_edge, func_)
+        return this._withinMap(args)
+      },
+
+      allSuchThat
+
+      overDo
+      overMap
+
+      removeAllSuchThat
+      all
+
+      function xyz(count, func = count) {
+        return [count, func]
+      }
+
+
+      overeach
+
+      allSuchThat
+
+
+
+
+
+
+
+
+      function __removeLastSlots(count) {
+        this.__subFromShiftTo(count, 0)
+      },
+
+      function __removeAllFrom(count) {
+        this.__subFromShiftTo(count, 0)
+      },
+
+      function __removeLast(value_) {
+        this._elements.length -= count
+      },
+
+      function addLast(element) {
+        return (arguments.length) ?
+          this._set(this.__addLast, element) :
+          this.error("Requires argument!")
+      },
+
+      function addLastAll(elements) {
+        return (arguments.length) ?
+          this._set(this.__addAllLast, element) :
+          this.error("Requires argument!")
+      },
+
+      ["add"   , "addLast"],
+
+      ["addAll", "addAllLast"],
+
+      // target._set(func)
+      // target._set(func, ...argToPass)
+      // target._set(Dict)
+      // target._set(Object)
+      // target._set([props], value)
+      // target._set(List, value)
+      // target._set("prop", value)
+      // target._set("prop1", "prop2", "prop3", value)
+
+      function _set(...params) {
+        const param = params[0]
+        let   func, args, path, value
+        switch(typeof param) {
+          case "function" :
+            [func, ...args] = params
+            return this._setFromContext(func, args)
+
+          case "object" :
+            if (IsArray(param)) {
+              [args, func] = params
+              return this._setFromContext(func, args)
+            }
+            else if (param.isList) {
+              [args, func] = params
+              return this._setFromContext(func, AsArray(args))
+            }
+            else {
+              return this._setFromSpec(param)
+            }
+
+          case "string" :
+            [...path, value] = params
+            return this._setIn(path, value)
+        }
+      },
+
+      function _setFromContext(contextFunc, args) {
+        const isImmutable = this[IMMUTABLE]
+        const target = isImmutable ? this._mutableCopy() : this
+
+        if (args.length) { contextFunc.apply(target, args) }
+        else             { contextFunc.call(target, target) }
+
+        return isImmutable ? target.beImmutable : target
+      },
+
+      //   Method name conventions
+      //   set   public method on immutable receiver
+      //  _set   private method on immutable receiver
+      // __set   private method on DEMANDS a mutable receiver
+
+
+      // target._set(func)
+      // target._set(func, ...argToPass)
+      // target._set(Object|Dict)
+      // target._set("prop", value)
+      // target._set("prop1", "prop2", "prop3", value)
+
+      // target._set([props], value)  // maybe not???
+      // target._set(List, value)     // maybe not???
+
+      //
+      // target._new(func)            this._new(list => {})
+      // target._new(func, ...args)   this._new(list => {}, )
+      //                              this._new(this.__fanArrayWithin, subelements, 0)
+      // target._new([args]|List, func)    this._new([1, 2, 3], list => {})
+      // target._new([args]|List, func, ...args)  this._new([1, 3], this.insertFrom, 1, 2)
+      // target._new(List, func)
+
+      // target._new(Object|Dict)
+      // target._new("prop", value)
+      // target._new("prop1", "prop2", "prop3", value)
+
+
+
+      // function _newFromContext(contextFunc, args) {
+      //   const target = this._mutableNew(args)
+      //   contextFunc.call(target, target)
+      //   return this[IMMUTABLE] ? target.beImmutable : target
+      // },
+      //
+      // function _copyFromContext(contextFunc, args) {
+      //   const isImmutable = this[IMMUTABLE]
+      //   const target = this._mutableCopy()
+      //   const result = args.length ?
+      //     contextFunc.apply(target, args) :
+      //     contextFunc.call(target, target)
+      //   return isImmutable ? result.beImmutable : result
+      //
+      //   const isImmutable = this[IMMUTABLE]
+      //   const target = this._mutableCopy()
+      //
+      //   if (args.length) { contextFunc.apply(target, args) }
+      //   else             { contextFunc.call(target, target) }
+      //
+      //   return isImmutable ? target.beImmutable : target
+      // },
+
+
+
+
+
+
   })
-})
+
+
+
+
+
+
+
+  _set
+  _new
+   set // inside the func only can use public methods on the 'set' obj
+   new // inside the func only can use public methods on the 'new' obj
