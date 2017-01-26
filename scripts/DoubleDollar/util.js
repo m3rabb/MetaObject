@@ -63,26 +63,6 @@ function AddLazyProperty(target, namedInstaller_name, installer_) {
   })
 }
 
-function Each(object, action) {
-  if (object.isThing) {
-    object.each(action)
-  }
-  else if (IsArray(object)) {
-    for (let index = 0, count = object.length; index < count; index++) {
-      action(object[index], index)
-    }
-  }
-  else {
-    let keys = LocalProperties(object).sort()
-    for (let index = 0, count = keys.length; index < count; index++) {
-      const key = keys[index]
-      action({ key: key, value: object[key] }, index)
-    }
-  }
-  return object
-}
-
-
 // function AsSpan(firstArg, ...remainingArgs) {
 //   let startEdge, restArgs, numbersCount, lastArg, wraps
 //
@@ -150,6 +130,25 @@ function Each(object, action) {
 
 
 
+
+function Each(object, action) {
+  if (object.isThing) {
+    object.each(action)
+  }
+  else if (IsArray(object) || typeof object === "string") {
+    for (let index = 0, count = object.length; index < count; index++) {
+      action(object[index], index)
+    }
+  }
+  else {
+    let keys = LocalProperties(object).sort()
+    for (let index = 0, count = keys.length; index < count; index++) {
+      const key = keys[index]
+      action({ key: key, value: object[key] }, index)
+    }
+  }
+  return object
+}
 
 function AsArray(object) {
   if (object.isThing)  { return object.asArray }

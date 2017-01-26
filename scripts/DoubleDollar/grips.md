@@ -3,16 +3,16 @@
 
 mode
 match
-	primary
-		grip
-		the/some/every/all
-		eqm
-	secondary
-		grip
-		the/some/every/all
-		eqm
+  primary
+    grip
+    the/some/every/all
+    eqm
+  secondary
+    grip
+    the/some/every/all
+    eqm
 put
-	one/many
+  one/many
 
 putValue AtTheKey
 
@@ -29,7 +29,7 @@ echo  repeatedly replace at each slot in the span
 fill  another kind of repeating? perhaps fanning over repeatedly
 
 spread/splay/lay/fill/replace
-putAll --> fill
+putAll --> fill/fan/lay
 atAll  --> echo
 
 insertAt(index) === putAt(index)
@@ -62,19 +62,19 @@ where
 
 allSuchThat
 
-	Replacing/Over
-	One/Some/Any/Value/The
-	All/Each/
-	First/Last/Some/Every
+  Replacing/Over
+  One/Some/Any/Value/The
+  All/Each/
+  First/Last/Some/Every
 
-	at/atKey/atIndex/atValue/atElement
-	over/within
+  at/atKey/atIndex/atValue/atElement
+  over/within
   from/to
-	across
+  across
 
-	all - as a group  e.g. removeAll
+  all - as a group  e.g. removeAll
         or getter #allFrom
-	every - all values
+  every - all values
   each - each for looping
 
   atEach --> over
@@ -157,71 +157,102 @@ fill      span    FillWithin      FillWithin  underflow
 lay       span    PutAllWithin    FillWithin  overflow
 echoFill  span    EchoFillWithin              exact
 
+
+until/prior
+past/beyond/behind
+
+
 past|until
 earlier|later
 biasLaterValues
 __putAllBiasHea__
 
 List
-add
-  generic
-    add(element)
-    addAll(element)
-  index
-    addFirst(element)
-    addLast(element)
-    addAllFirst(elements)
-    addAllLast(elements)
-  element
-    addBefore(element, targetElement)
-    addAfter(element, targetElement)
-    addAllBefore(elements, targetElement)
-    addAllAfter(elements, targetElement)
+  access
+    generic
+      at(index|span, absentAction_)
+      atEach(span|indexes)
 
-put
-  generic
-    putAt(value, indexer)                    // 1 to 1
-    putAtEach(value, indexers)               // 1 to N discretes
-    putEachAtEach(values, indexers)          // N ( discrete 1 to 1 )
+    index
+      atIndex(index, absentValue_)
+      over(relativeSpan)
+      within(linearSpan)
 
-  index
-    putAtIndex(index)                        // 1 to 1 slot
-    putWithin(value, edge|baseSpan, edge_)  // 1 to 1 span (reduced 1-sized)
-    putOver(value, edge|span)                // 1 to 1 span (reduced 1-sized)
+      first
+      last
 
-    fanWithin(values, edge|baseSpan, edge_)// 1 span to 1 span (value-sized)
-    fanOver(values, edge|span)               // 1 span to 1 span (value-sized)
+      subPast(edge, viaLaterValues_)
+      subUntil(edge, viaLaterValues_)
+      initial(count)
+      final(count)
 
-    echoWithin(value, baseSpan, edge_)       // 1 to many slots (key-sized)
-    echoOver(value, span)                    // 1 to many slots (key-sized)
-
-    fillOver(values, span, fromLaterValues_)  // 1 span to 1 span (key-sized)
-    fillWithin(values, echo_, span)           // 1 span to 1 span (key-sized)
-
-    echoFillWithin(values, echo_, span)        // 1 span to 1 span (key-sized)
-    echoFillOver(values, echo_, span)          // 1 span to 1 span (key-sized)
-
-    layPast(values, edge, fromLaterValues_)  // 1 span to 1 span (variable)
-    layUntil(values, edge, fromLaterValues_) // 1 span to 1 span (variable)
+    element
+      elements
+      indexOf(value, absentAction_)
+      indexOfFirst(value, absentAction_)
+      indexOfLast(value, absentAction_)
+      indexOfEvery(value)
+      spanOver(values)
 
 
+      firstWhere|detect|find(conditional, absentAction_)
+      everyWhere|select(conditional)
 
-    until/behind
-    /beyond/past
-    prior/
+      eachDo|
+      overDo
+      withinDo(span_edge, func_edge, func_, improperAction_)
+      withinMap|collect(span_edge, func_edge, func_, improperAction_)
+      reduce,inject,
 
-    layBeyond
+  put
+    generic
+      putAt(value, indexer)                    // 1 to 1
+      putAtEach(value, indexers)               // 1 to N discretes
+      putEachAtEach(values, indexers)          // N ( discrete 1 to 1 )
 
-  value
-    putAtFirst(newElement, existingElement, absentAction_)
-    putAtLast(newElement, existingElement, absentAction_)
-    putAtEvery(newElement, existingElement, absentAction_)
+    index
+      putAtIndex(index)                        // 1 to 1 slot
+      putWithin(value, edge|baseSpan, edge_)  // 1 to 1 span (reduced 1-sized)
+      putOver(value, edge|span)                // 1 to 1 span (reduced 1-sized)
 
-    fanOverFirst(newElements, existingElements, absentAction_)
-    fanOverLast(newElements, existingElements, absentAction_)
-    fanOverEvery(newElements, existingElements, absentAction_)
+      fanWithin(values, edge|baseSpan, edge_)// 1 span to 1 span (value-sized)
+      fanOver(values, edge|span)               // 1 span to 1 span (value-sized)
 
-NOTE: a key difference between echoWithin and putAtEach is that echoWithin will not create new slots beyond target bounds, where putAtEach will!!!
+      echoWithin(value, baseSpan, edge_)       // 1 to many slots (key-sized)
+      echoOver(value, span)                    // 1 to many slots (key-sized)
+
+      fillOver(values, span, fromLaterValues_)  // 1 span to 1 span (key-sized)
+      fillWithin(values, echo_, span)           // 1 span to 1 span (key-sized)
+
+      echoFillWithin(values, echo_, span)        // 1 span to 1 span (key-sized)
+      echoFillOver(values, echo_, span)          // 1 span to 1 span (key-sized)
+
+      layPast(values, edge, fromLaterValues_)  // 1 span to 1 span (variable)
+      layUntil(values, edge, fromLaterValues_) // 1 span to 1 span (variable)
+
+  add
+    generic
+      add(element)
+      addAll(element)
+    index
+      addFirst(element)
+      addLast(element)
+      addAllFirst(elements)
+      addAllLast(elements)
+    element
+      addBefore(element, targetElement)
+      addAfter(element, targetElement)
+      addAllBefore(elements, targetElement)
+      addAllAfter(elements, targetElement)
+
+    value
+      putAtFirst(newElement, existingElement, absentAction_)
+      putAtLast(newElement, existingElement, absentAction_)
+      putAtEvery(newElement, existingElement, absentAction_)
+
+      fanOverFirst(newElements, existingElements, absentAction_)
+      fanOverLast(newElements, existingElements, absentAction_)
+      fanOverEvery(newElements, existingElements, absentAction_)
 
 remove
   generic
@@ -250,45 +281,11 @@ remove
     removeLastSub(values, absentAction_)
     removeEverySub(values)
 
-		removeFirstWhere(conditional, absentAction_)
-		removeLastWhere(conditional, absentAction_)
+    removeFirstWhere(conditional, absentAction_)
+    removeLastWhere(conditional, absentAction_)
     removeEveryWhere|reject(conditional)
 
-access
-  generic
-    at(index|span, absentAction_)
-    atEach(span|indexes)
 
-  index
-    atIndex(index, absentValue_)
-    over(relativeSpan)
-    within(edge|absoluteSpan, edge_, improperAction_)
-
-    first
-    last
-
-    subPast(edge)
-    subUntil(edge)
-    initial(count)
-    final(count)
-
-  element
-    elements
-    indexAt(value, absentAction_)
-    indexAtFirst(value, absentAction_)
-    indexAtLast(value, absentAction_)
-    indexAtEvery(value)
-    spanOver(values)
-
-
-    firstWhere|detect|find(conditional, absentAction_)
-    everyWhere|select(conditional)
-
-    withinEach(span_edge, func_edge, func_, improperAction_)
-    withinMap|collect(span_edge, func_edge, func_, improperAction_)
-
-
-    reduce,inject,
 
 OrderedDict
   add

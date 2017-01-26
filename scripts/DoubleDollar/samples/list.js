@@ -100,15 +100,17 @@ DD.set((_context) => {
 
       function __doWithin(
         selector, source,
-        [lo, hi = lo, fillDirection = FORWARD, wraps = false],
+        [lo, hi, fillDirection = FORWARD, wraps = false],
         modifier
       ) {
         const target     = this._elements
         const targetSize = target.length
-        const stretches  = (modifier === FAN)
-        const fillSize   = stretches ? source.length : hi - lo
+        const spanSize   = (hi - lo)
+        const fillSize   = (modifier === STRETCHES) ? source.length : spanSize
 
         let left, right, stretchAmount, spanBeforeTarget
+
+        if (wraps) { return this.error("Wrapping is not implemented yet!")}
 
         if (fillSize === 0) { return }
 
@@ -116,11 +118,11 @@ DD.set((_context) => {
           left  = lo
           right = left + fillSize
 
-          if (stretches) {
+          if (fillSize !== spanSize) {
             if (hi >= targetSize) {  // A,B,C,D
               if (right < targetSize) { target.length = right } // clip capacity
             } else {                 // E
-              if (right !== hi) { this.__subFromShiftTo(hi, right) }
+              this.__subFromShiftTo(hi, right)
             }
           }
         }
@@ -151,22 +153,20 @@ DD.set((_context) => {
 
 
       // 6               edge      [6,6]       |
-      // [6]             span      [6,SIZE]    |-->
-      // [6,]            span      [6,SIZE]    |-->
-      // [6,,]           span      [6,SIZE]    |-->
+      // [6]             edge      [6,6]    |-->
       // [6,null]        span      [6,SIZE]    |-->
-      // [6,undefined]   span      [6,SIZE]    |-->
 
-      // mode, start, [[end], direction], [wraps]
-      // mode, [start, [[end], direction], [wraps]]
+      // mode, start, [end, [,direction [,wraps]]]
+      // mode, [ start, [end, [,direction [,wraps]]] ]
       // mode, {start, end, direction, wraps}
 
-      function _loHiSpanFor(spanMode, spanArgs) {
-        let [arg0, ...args] = spanArgs
-        let isNumber, remaining, remainingCount, size, last
-        let start, end, direction, wraps
 
-        if ((isNumber = (typeof arg0 === "number"))) {
+      function _normalizedSpanFor(spanMode, spanArgs) {
+        const [arg0, ...args] = spanArgs
+        const size = this._elements.length
+        let remaining, start, end, direction, wraps
+
+        if (typeof arg0 === "number")) {
           start = arg0, remaining = args
         }
         else if (IsArray(arg0)) {
@@ -174,32 +174,27 @@ DD.set((_context) => {
         }
         else {
           {start, end, direction, wrap} = arg0
-          remaining = [end, direction, wrap || false]
+          remaining = [end, direction, wrap]
         }
-
-        remainingCount = remaining.length
-        size           = this._elements.length
 
         if (!(start >= 0)) {
-          start = (spanMode === LINEAR) ?  // LINEAR vs RELATIVE
-            (start == null ? size : start) : ((start || 0) + size)
-        }                                    // handles undefine
-
-        if (isNumber && !remainingCount) {
-          return [start, start, FORWARD, wraps] // edge
+          start = (start === null) ? size :
+            ((spanMode === LINEAR) ? start : start + size) // RELATIVE
         }
 
-        last  = remaining[remainingCount - 1]
-        wraps = (typeof last === "boolean") ? (remainingCount--, last) : false
-        end   = remaining[0]
+        if (!remaining.length) { return [start, start, FORWARD, wraps] } // edge
+
+        end = remaining[0]
 
         if (!(end >= 0)) {
-          end = (spanMode === LINEAR) ?   // handles undefined
-            (end == null ? size : end) : ((end || 0) + size)
+          end = (end === null) ? size :
+            ((spanMode === LINEAR) ? end : end + size) // RELATIVE
         }
 
         direction = remaining[1] ||
           ((spanMode === LINEAR || start <= end) ? FORWARD : BACKWARD)
+
+        wraps = remaining[2] || false
 
         return (start <= end) ?
           [start, end, direction, wraps] : [end, start, direction, wraps]
@@ -210,6 +205,361 @@ DD.set((_context) => {
       function _setDoWithin(...args) {
         return this._set(this.__doWithin, ...args)
       },
+
+
+
+      function toString() {
+        return `List(${this._elements})`
+      },
+
+
+      { GETTER : [
+
+        function size() {  //
+          return this._elements.length
+        },
+
+        function isEmpty() {
+          return (this._elements.length === 0)
+        },
+
+        function elements() {
+          return this.copy()
+        },
+        normalizedSpan
+
+        { values : "elements" },
+
+        function keys() {
+          return this.map((value, index) => index)
+        },
+
+        // Is explicit check fo immutability necessary???
+        function span() {
+          const span = [0, this._elements.length]
+          return this[IMMUTABLE] ? Freeze(span) : span
+        },
+
+        function slots() {
+          const isImmutable = this[IMMUTABLE]
+          return this.map((value, index) => {
+            let slot = {index: index, element: value, key: index, value: value}
+
+            return isImmutable ? BeImmutable(slot) : slot
+          })
+        },
+
+      ] },
+
+
+
+
+      function at(indexer, absentAction_) {
+        if (typeof indexer === "number") {
+          return this.atIndex(indexer, absentAction_)
+        }
+        const values = this.over(indexer)
+        return values.size ? values :
+          absentAction_ && absentAction_.call(this.$, indexer)
+      },
+
+      function atEach(indexers) {
+        return this.new((result) => {
+          Each(indexers, (indexer, next) => {
+            result.putAt(this.at(indexer), next)
+          })
+        })
+      },
+
+
+      function atIndex(index, absentAction_) {
+        const elements  = this._elements
+        const size      = elements.length
+        const slotIndex = (index >= 0) ? index : size - index
+
+        return (slotIndex >= 0 && slotIndex < size) ?
+          elements[slotIndex] :
+          absentAction_ && absentAction_.call(this.$, index)
+      },
+
+      { GETTER : [
+        function first(/* GETTER */) {
+          return this._elements[0]
+        },
+
+        function last(/* GETTER */) {
+          const elements = this._elements
+          return elements[elements.length - 1]
+        },
+      ] },
+
+
+
+
+      // function _boundedSpanFor(spanMode, spanArgs) {
+      //   const size  = this._elements.length
+      //   const span  = this._normalizedSpanFor(spanMode, spanArgs)
+      //   const [lo, hi, direction, wraps] = span
+      //
+      //   if (lo < 0)    { span[0] = 0    }
+      //   if (hi > size) { span[1] = size }
+      //
+      //   return span
+      // },
+
+      function _withinDo(normalizedSpan, action) {
+        const [low, high, direction = FORWARD, wraps = false] = normalizedSpan
+        const source = this._elements
+        const lo     = (low > 0)     ? low  : 0
+        const hi     = (high < size) ? high : size
+        let   noWrap, preIndex, preLimit, result
+
+        if (wraps) {
+          const size = target.length
+          let [preIndex, preLimit, sIndex, limit] =
+            (direction > 0) ?
+              [lo    , ((noWrap = (lo < hi)) ? hi : size)    , 0   , hi]
+              [hi - 1, ((noWrap = (hi > lo)) ? lo : 0   ) - 1, size, lo]
+
+          while (preIndex !== preLimit) {
+            result = action.call(this.$, source[preIndex], preIndex)
+            if (result !== undefined) { return result }
+            preIndex += direction
+          }
+
+          if (noWrap) { return this }
+        }
+        else {
+          [sIndex, limit] = (direction > 0) ? [lo, hi] : [hi - 1, lo - 1]
+        }
+
+        while (sIndex !== limit) {
+          result = action.call(this.$, source[sIndex], sIndex)
+          if (result !== undefined) { return result }
+          sIndex += direction
+        }
+
+        return this
+      },
+
+      function _withinMap(normalizedSpan, Action) {
+        return this._new((result) => {
+          const target = result._elements
+
+          this._withinDo(normalizedSpan, (value, index) => {
+            target[index] = Action.call(this.$, value, index)
+          })
+        })
+      },
+      
+
+      function _within(normalizedSpan) {
+        return this._withinMap(normalizedSpan, (value) => value)
+      },
+
+
+      function within(lo, hi, direction = FORWARD, wraps = false) {
+        return this._within(this._normalizedSpanFor(LINEAR, spanArgs))
+      },
+
+      function over(...spanArgs) {
+        return this._within(this._normalizedSpanFor(RELATIVE, spanArgs))
+      },
+
+      function subPast(edge, viaLaterValues = false) {
+        const size      = this.size
+        const left      = (edge >= 0) ? edge : size - edge
+        const direction = viaLaterValues ? BACKWARD : FORWARD
+
+        return this._within([left, size, direction])
+      },
+
+      function subUntil(edge, viaLaterValues = false) {
+        const right     = (edge >= 0) ? edge : this.size - edge
+        const direction = viaLaterValues ? BACKWARD : FORWARD
+
+        return this._within([0, right, direction])
+      },
+
+      function initial(count, viaLaterValues = false) {
+        const size      = this.size
+        const right     = (count <= size) ? count : size
+        const direction = viaLaterValues ? BACKWARD : FORWARD
+
+        return this._within([0, right, direction])
+      },
+
+      function final(count, viaLaterValues = false) {
+        const size      = this.size
+        const left      = (count <= size) ? size - count : 0
+        const direction = viaLaterValues ? BACKWARD : FORWARD
+
+        return this._within([left, size, direction])
+      },
+
+
+
+
+
+
+
+      function eachDo(action) {
+        return this._withinDo(this.span, action)
+      },
+
+      function withinDo(...spanArgs, action) {
+        const span = this._normalizedSpanFor(LINEAR, spanArgs)
+
+        return this._withinDo(span, action)
+      },
+
+      function overDo(...spanArgs, action) {
+        const span = this._normalizedSpanFor(RELATIVE, spanArgs)
+
+        return this._withinDo(span, action)
+      },
+
+      function map(action) {
+        return this._withinMap([0, size], action)
+      },
+
+      function withinMap(...spanArgs, action) {
+        const span = this._normalizedSpanFor(LINEAR, spanArgs)
+
+        return this._withinMap(span, action)
+      },
+
+      function overMap(...spanArgs, action) {
+        const span = this._normalizedSpanFor(RELATIVE, spanArgs)
+
+        return this._withinMap(span, action)
+      },
+
+      action()
+      function reduce(seed_, action) {
+        let result
+        return this.new((result) => {
+          this.eachDo((value, index) => {
+            if (!Conditional.call(this.$, value, index)) { result.add(value) }
+          })
+        })
+      },
+
+      // function _withinMatch(normalizedSpan, Conditional, absentAction_) {
+      //   let Slot
+      //
+      //   function matchAction(value, index) {
+      //     if (Condition.call(this.$, value, index)) {
+      //       Slot = {index: index, element: value, key: index, value: value}
+      //       throw Slot
+      //     }
+      //   }
+      //
+      //   try {
+      //     this._withinDo(normalizedSpan, matchAction)
+      //   }
+      //   catch (ex) {
+      //     if (ex === Answer) { return Answer }
+      //     else               { throw  ex     }
+      //   }
+      //
+      //   return absentAction_ && absentAction_.call(this.$)
+      // },
+
+      function _withinMatch(span, Conditional, absentAction_) {
+        const slot = this._withinDo(span, function () {
+          if (Condition.call(this.$, value, index)) {
+            return { index : index, element : value }
+          }
+        })
+        return slot || { absent : absentAction_ && absentAction_.call(this.$) }
+        }
+      },
+
+      function _withinMatchAll(span, Conditional) {
+        const slot = this._withinDo(span, function () {
+          if (Condition.call(this.$, value, index)) {
+            return { index : index, element : value }
+          }
+        })
+        return slot || { absent : absentAction_ && absentAction_.call(this.$) }
+        }
+      },
+
+
+      function indexOfFirst(value, absentAction_) {
+        const valueMatcher = (existing => existing === value)
+        const {index, absent} =
+          this._withinMatch(this.span, valueMatcher, absentAction_)
+
+        return index || absent
+      },
+
+      function indexOfLast(value, absentAction_) {
+        const valueMatcher = (existing => existing === value)
+        const {index, absent} =
+          this._withinMatch([this.size, 0], valueMatcher, absentAction_)
+
+        return index || absent
+      },
+
+      function indexOfEvery(value) {
+        return this.new((result) => {
+          this.eachDo((existing, index) => {
+            if (existing === value) { result.add(value) }
+          })
+        })
+      },
+
+      { indexOf: "indexOfFirst" },
+
+
+
+      function firstWhere(conditional, absentAction_) {
+        const {element, absent} =
+          this._withinMatch(this.span, conditional, absentAction_)
+
+        return element || absent
+      },
+
+      function lastWhere(conditional, absentAction_) {
+        const {element, absent} =
+          this._withinMatch([this.size, 0], conditional, absentAction_)
+
+        return element || absent
+      },
+
+
+      function everyWhere(Conditional) {
+        return this.new((result) => {
+          this.eachDo((value, index) => {
+            if (Conditional.call(this.$, value, index)) { result.add(value) }
+          })
+        })
+      },
+
+      function everyNotWhere(Conditional) {
+        return this.new((result) => {
+          this.eachDo((value, index) => {
+            if (!Conditional.call(this.$, value, index)) { result.add(value) }
+          })
+        })
+      },
+
+
+      { ALIAS : {
+        do      : "eachDo",
+        collect : "map",
+        detect  : "firstWhere",
+        find    : "firstWhere",
+        select  : "everyWhere",
+        reject  : "everyNotWhere"
+        inject  : "reduce",
+      } }
+
+
+
+
 
 
 
@@ -227,80 +577,70 @@ DD.set((_context) => {
 
       function putEachAtEach(values, indexers) {
         return this._set(function () {
-          const Keys = AsArray(indexers)
+          const Values = AsArray(indexers)
 
-          Each(values, (value, sharedIndex) => {
-            this.putAt(value, Keys[sharedIndex])
-          })
+          Each(indexers, (indexer, next) => this.putAt(Values[next], indexer))
         })
-
       },
-
 
       function putAtIndex(value, index) {
         return this._set(function () {
-          const elements = this._elements
-          let   arrayIndex
+          const elements  = this._elements
+          const slotIndex = (index >= 0) ? index : elements.length - index
 
-          if (index < 0) {
-            arrayIndex = elements.length + index
-            if (arrayIndex < 0) {
-              this.__subFromShiftTo(0, -arrayIndex)
-              arrayIndex = 0
-            }
-          } else {
-            arrayIndex = index
+          if (slotIndex >= 0) {
+            elements[slotIndex] = value
           }
-
-          elements[arrayIndex] = value
+          else {
+            this.__subFromShiftTo(0, -slotIndex)
+            elements[0] = value
+          }
         })
       },
 
       function putWithin(value, ...edge_spanArgs) {
-        const span = this._loHiSpanFor(LINEAR, edge_spanArgs)
+        const span = this._normalizedSpanFor(LINEAR, edge_spanArgs)
 
-        return this._setDoWithin("__putAllWithin", [value], span, FAN)
+        return this._setDoWithin("__putAllWithin", [value], span, STRETCHES)
       },
 
       function putOver(value, ...edge_spanArgs) {
-        const span = this._loHiSpanFor(RELATIVE, edge_spanArgs)
+        const span = this._normalizedSpanFor(RELATIVE, edge_spanArgs)
 
-        return this._setDoWithin("__putAllWithin", [value], span, FAN)
+        return this._setDoWithin("__putAllWithin", [value], span, STRETCHES)
       },
 
 
       function fanWithin(values, ...edge_spanArgs) {
         const source = AsArray(values)
-        const span   = this._loHiSpanFor(LINEAR, edge_spanArgs)
+        const span   = this._normalizedSpanFor(LINEAR, edge_spanArgs)
 
-        return this._setDoWithin("__putAllWithin", source, span, FAN)
+        return this._setDoWithin("__putAllWithin", source, span, STRETCHES)
       },
 
       function fanOver(values, ...edge_spanArgs) {
         const source = AsArray(values)
-        const span   = this._loHiSpanFor(RELATIVE, edge_spanArgs)
+        const span   = this._normalizedSpanFor(RELATIVE, edge_spanArgs)
 
-        return this._setDoWithin("__putAllWithin", source, span, FAN)
+        return this._setDoWithin("__putAllWithin", source, span, STRETCHES)
       },
 
 
       function echoWithin(value, ...spanArgs) {
-        const source = AsArray(values)
-        const span   = this._loHiSpanFor(LINEAR, spanArgs)
+        const span = this._normalizedSpanFor(LINEAR, spanArgs)
 
-        return this._setDoWithin("__echoWithin", source, span)
+        return this._setDoWithin("__echoWithin", value, span)
       },
 
       function echoOver(value, ...spanArgs) {
-        const source = AsArray(values)
-        const span   = this._loHiSpanFor(RELATIVE, spanArgs)
+        const span = this._normalizedSpanFor(RELATIVE, spanArgs)
 
-        return this._setDoWithin("__echoWithin", source, span)
+        return this._setDoWithin("__echoWithin", value, span)
       },
 
 
       function _contractedSpanFor(spanMode, spanArgs, source) {
-        const span     = this._loHiSpanFor(spanMode, spanArgs)
+        const span     = this._normalizedSpanFor(spanMode, spanArgs)
         const [lo, hi, fillDirection, wraps] = span
         const spanSize = (hi - lo)
         const delta    = source.length - spanSize
@@ -310,6 +650,7 @@ DD.set((_context) => {
             [lo        , hi + delta, fillDirection, wraps] :
             [lo + delta,         hi, fillDirection, wraps])
       },
+
 
       function fillWithin(values, ...spanArgs, viaLaterValues = false) {
         let source = AsArray(values)
@@ -328,7 +669,7 @@ DD.set((_context) => {
 
       function echoFillWithin(values, ...spanArgs, viaLaterValues = false) {
         const source = AsArray(values)
-        const span   = this._loHiSpanFor(LINEAR, spanArgs)
+        const span   = this._normalizedSpanFor(LINEAR, spanArgs)
 
         return this._setDoWithin(
           "__echoFillWithin", source, span, viaLaterValues)
@@ -336,7 +677,7 @@ DD.set((_context) => {
 
       function echoFillOver(values, ...spanArgs, viaLaterValues = false) {
         const source = AsArray(values)
-        const span   = this._loHiSpanFor(RELATIVE, spanArgs)
+        const span   = this._normalizedSpanFor(RELATIVE, spanArgs)
 
         return this._setDoWithin(
           "__echoFillWithin", source, span, viaLaterValues)
@@ -348,8 +689,8 @@ DD.set((_context) => {
         const anchorEdge = (edge >= 0) ?
                 edge : (edge || 0) + this._elements.length
         return (edgeMode === UNTIL) ?
-          [anchorEdge - sourceSize, anchorEdge             , FORWARD, false] :
-          [anchorEdge             , anchorEdge + sourceSize, FORWARD, false]
+          [anchorEdge - sourceSize, anchorEdge             ] :
+          [anchorEdge             , anchorEdge + sourceSize]
       },
 
       function layPast(values, edge, viaLaterValues = false) {
@@ -364,26 +705,6 @@ DD.set((_context) => {
         const span   = this._expandedSpanFor(UNTIL_EDGE, edge, source)
 
         return this._setDoWithin("__putAllWithin", source, span, viaLaterValues)
-      },
-
-
-      function putAtIndex(value, index) {
-        return this._set(function () {
-          const elements = this._elements
-          let   arrayIndex
-
-          if (index < 0) {
-            arrayIndex = elements.length + index
-            if (arrayIndex < 0) {
-              this.__subFromShiftTo(0, -arrayIndex)
-              arrayIndex = 0
-            }
-          } else {
-            arrayIndex = index
-          }
-
-          elements[arrayIndex] = value
-        })
       },
 
 
@@ -407,61 +728,35 @@ DD.set((_context) => {
       },
 
       function addLastAll(values) {
-        this.fanWithin(values, undefined)
+        this.fanWithin(values, null)
       },
 
 
-      function _match(Conditional, startEdge, endEdge, absentAction_) {
-        let Answer
-
-        function matchAction(value, index) {
-          if (Condition.call(this.$, value, index)) {
-            throw (Answer = {element: value, value: value, key: index, index: index});
-          }
-        }
-
-        try {
-          this._withinEach(startEdge, endEdge, matchAction)
-        }
-        catch (ex) {
-          if (ex === Answer) { return Answer }
-          throw ex
-        }
-        return absentAction_ && absentAction_.call(this.$)
+      function addBefore(value, targetValue) {
+        this.error("Not implemented yet!")
       },
 
-      function atIndex(index, absentValue_) {
-        const element = this._elements[index]
-        return (element !== undefined) ? element : absentValue_
+      function addAfter(value, targetValue) {
+        this.error("Not implemented yet!")
       },
 
-      function within(span_edge, edge_) {
-        const [startEdge, endEdge] = arguments.length > 1 ?
-          [span_edge, edge_] : [span_edge.start, span_edge.end]
-        const subelements = ArrayWithin(this._elements, startEdge, endEdge)
-        return this._new(this.__addAllLast, subelements)
+      function addAllBefore(values, targetValue) {
+        this.error("Not implemented yet!")
       },
 
-      function at(indexer, absentAction_) {
-        if (typeof indexer === "number") {
-          const element = this.atIndex(indexer)
-          return (element !== undefined) ? element :
-            absentAction_ && absentAction_.call(this.$, indexer)
-        }
-        return this.within(indexer)
+      function addAllAfter(values, targetValue) {
+        this.error("Not implemented yet!")
       },
 
-      function size(/* GETTER */) {  //
-        return this._elements.length
-      },
+      {
+        add    : "addLast",
+        addAll : "addAllLast",
+      }
 
-      function elements(/* GETTER */) {
-        return this
-      },
 
-      function isEmpty(/* GETTER */) {
-        return (this._elements.length === 0)
-      },
+
+
+
 
 
 
@@ -510,59 +805,9 @@ DD.set((_context) => {
 
       },
 
-      function _withinEach(startEdge, endEdge, action) {
-        const elements = this._elements
-        let   index    = startEdge
 
-        while (index < endEdge) {
-          action.call(this.$, element[index], index++)
-        }
-        return this
-      },
 
-      function _withinMap(startEdge, endEdge, Action) {
-        return this._new(copy => {
-          const elements = copy._elements
-          this._withinEach(startEdge, endEdge, function (element, index) {
-            elements[index] = Action.call(this.$, element, index)
-          })
-        })
-      },
 
-      function _indexers_func2args(span_edge, func_edge, func_) {
-        let hasArgError, startEdge, endEdge, action
-
-        switch (arguments.length) {
-          case 3 :
-            [startEdge, endEdge, action] = [span_edge, func_edge, func_]
-            break
-          case 2 :
-            [startEdge, endEdge] = (typeof span_edge === "number") ?
-              [span_edge.start, span_edge.end] : [span_edge, span_edge]
-            action = func_edge
-            break
-          default :
-            hasArgError = true
-          break
-        }
-        hasArgError = hasArgError || (typeof startEdge !== "number")
-        hasArgError = hasArgError || (typeof endEdge   !== "number")
-        hasArgError = hasArgError || (typeof action    !== "function")
-
-        if (hasError) { return this.error("Improper arguments!") }
-
-        return [startEdge, endEdge, action]
-      },
-
-      function withinEach(span_edge, func_edge, func_) {
-        const args = this._indexers_func2args(span_edge, func_edge, func_)
-        return this._withinEach(args)
-      },
-
-      function withinMap(span_edge, func_edge, func_) {
-        const args = this._indexers_func2args(span_edge, func_edge, func_)
-        return this._withinMap(args)
-      },
 
       allSuchThat
 
@@ -584,17 +829,6 @@ DD.set((_context) => {
 
 
 
-
-
-
-
-      function __removeLastSlots(count) {
-        this.__subFromShiftTo(count, 0)
-      },
-
-      function __removeAllFrom(count) {
-        this.__subFromShiftTo(count, 0)
-      },
 
       function __removeLast(value_) {
         this._elements.length -= count
