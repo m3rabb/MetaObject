@@ -89,6 +89,18 @@ About to take steps to remove the vulnerability/dependency of direct access to s
 - Outside of a context one accesses its properties, including contained types, as outer objects, which themselves make outer objects.
 
 
+asNew           new empty mutable
+asCopy          new mutable copy
+asNonCopy       self if mutable, new empty mutable otherwise
+
+copy            copy of same mutability
+List(elements)  new immutable set from elements
+List()          new empty mutable
+
+_new            new
+_set            set
+_copy           copy
+
 #unique-name
 name.type
 

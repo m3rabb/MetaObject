@@ -162,8 +162,14 @@ until/prior
 past/beyond/behind
 
 
+_set
+_new
+_copy
+_nonCopy
+
+
 past|until
-earlier|later
+earlier|later     --> viaLaterValues
 biasLaterValues
 __putAllBiasHea__
 
@@ -191,10 +197,16 @@ List
       indexOf(value, absentAction_)
       indexOfFirst(value, absentAction_)
       indexOfLast(value, absentAction_)
-      indexOfEvery(value)
-      spanOver(values)
+      indexesOfEvery(value)
 
+      spanOf(sub)
+      spanOfFirst(sub)
+      spanOfLast(sub)
+      spansOfEvery(sub)
 
+      countOf(value)
+
+      valueWhere
       firstWhere|detect|find(conditional, absentAction_)
       everyWhere|select(conditional)
 
@@ -259,11 +271,12 @@ remove
     empty
     removeAll
     removeAt
+    removeAtEach(span|indexes)
+
   index
     removeAtIndex(index, (index, absentValue_))
     removeOver(relativeSpan)
     removeWithin(edge|absoluteSpan, edge_, improperAction_)
-    removeAtEach(span|indexes)
 
     removePast(edge)
     removeUntil(edge)

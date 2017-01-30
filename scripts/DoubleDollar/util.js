@@ -150,6 +150,14 @@ function Each(object, action) {
   return object
 }
 
+function EqualArrays(a, b) {
+  if (a === b) { return true }
+  let count = a.length
+  if (b.length !== count) { return false }
+  while (count--) { if (a[count] !== b[count]) { return false } }
+  return true
+}
+
 function AsArray(object) {
   if (object.isThing)  { return object.asArray }
   if (IsArray(object)) { return object }
