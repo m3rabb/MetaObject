@@ -158,6 +158,11 @@ function EqualArrays(a, b) {
   return true
 }
 
+function Size(list) {
+  let size = list.size
+  return (size !== undefined) ? size : list.length
+}
+
 function AsArray(object) {
   if (object.isThing)  { return object.asArray }
   if (IsArray(object)) { return object }

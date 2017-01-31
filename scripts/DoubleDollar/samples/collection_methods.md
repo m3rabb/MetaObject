@@ -52,16 +52,16 @@ Accessing
       final(count = 1, viaLaterValues = false)
 
     index|span @ value(s)
-      indexOf(value, searchDirection = FORWARD)
+      indexOf(value, searchDirection_)
       indexOfFirst(value)
       indexOfLast(value)
-*      indexesOfEvery(value, searchDirection = FORWARD)
+      indexesOfEvery(value, searchDirection_)
 
-      spanOf(sub, searchDirection = FORWARD)
+      spanOf(sub, searchDirection_)
       spanOfFirst(sub)
       spanOfLast(sub)
-*      spansOfEvery(sub, searchDirection = FORWARD)
-
+*      spansOfEvery(sub, searchDirection_)
+      spansAcrossEvery(sub, searchDirection_)
     other
       countOf(value)
       contains(value)
@@ -75,17 +75,13 @@ Accessing
       everyWhere(span_, conditional)
       everyNotWhere(span_, conditional)
 
-*     spanWhere(span_, condition, absent_)
-*     spansWhere(span_, condition)
-*     countSpansWhere(span_, condition)
-
-*     subWhere(span_, condition, absent_)
-*     everySubWhere(span_, condition)
 
 
   Enumeration
     withinDo(normSpan, action)
     withinMap(normSpan, Action)
+    withinSubsDo(normSpan, subSize, action)
+    withinSubsMap(normSpan, subSize, action)
 
     eachDo(span_, action)
     map(span_, action)
@@ -94,17 +90,19 @@ Accessing
     reduce(span_, action, seed_)
 
     do      : "eachDo",
+    overDo  : "eachDo",
     collect : "map",
     detect  : "firstWhere",
     find    : "firstWhere",
     select  : "everyWhere",
     reject  : "everyNotWhere"
     inject  : "reduce",
-*   where   : "valueWhere"
+    where   : "valueWhere"
 
 Put
   Generic
     atPut(index_span, value)
+*   atFan()
     atEachPut(indexers, value)
     atEachPutEach(indexers, values)
 
@@ -114,19 +112,20 @@ Put
     overFan(edge_span, values)
 
     overEcho(span, value)
-    overFill(span, values, takeDirection = FORWARD)
-    overEchoFill(span, values, takeDirection = FORWARD)
-    pastLay(edge, values, takeDirection = FORWARD)
-    untilLay(edge, values, takeDirection = FORWARD)
+    overFill(span, values, takeDirection_)
+    overEchoFill(span, values, takeDirection_)
+    pastLay(edge, values, takeDirection_)
+    untilLay(edge, values, takeDirection_)
 
   value PUT value
-*  putAtFirst(newElement, existingElement, absentAction_)
-*  putAtLast(newElement, existingElement, absentAction_)
-*  putAtEvery(newElement, existingElement, absentAction_)
+   atFirstPut(matchElement, newElement)
+   atLastPut(matchElement, newElement)
+   atEveryPut(matchElement, newElement)
 
-*  fanOverFirst(newElements, existingElements, absentAction_)
-*  fanOverLast(newElements, existingElements, absentAction_)
-*  fanOverEvery
+   overSubFan(matchSub, newSub, searchDirection_, takeDirection_)
+   overFirstFan(matchSub, newSub, takeDirection_)
+   overLastFan(matchSub, newSub, takeDirection_)
+*   overEveryFan(matchSub, newSub, searchDirection_, takeDirection_)
 
 *   reverse
 *   reverseCopy
@@ -145,16 +144,23 @@ Add
   addAll : "addAllLast",
 
 
+
 Remove
   removeAtIndex(index)
   removeWithin(lo, hi = lo)
   removeOver(span)
+
   removePast(edge)
   removeUntil(edge)
   removeInitial(count = 1)
   removeFinal(count = 1)
-  remove(value, searchDirection = FORWARD)
+
+  remove(value, searchDirection_)
   removeFirst(value_)
   removeLast(value_)
-  removeEvery(value)
-  removeSub(sub)
+*  removeEvery(value)
+
+  removeSub(sub, searchDirection_)
+  removeFirstSub(sub)
+  removeLastSub(sub)
+  removeEverySub(sub, searchDirection_)

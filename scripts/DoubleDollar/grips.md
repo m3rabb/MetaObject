@@ -463,18 +463,13 @@ putUpTo
   allSuchThat
 
 Not sure if these ones are necessary or good!!!
-  putFrom(element, edge)
-  putUpTo(element, edge)
-  putAllFrom(elements, edge)
-  putAllUpTo(elements, edge)
-  fanFrom(elements, edge)
-  fanTo(elements, edge)
-  fillWithin(values, span_edge, edge_, echo_)  // 1 span to 1 span (key-sized)
-  fillOver(values, span, echo_)                // 1 span to 1 span (key-sized)
+  *     spanWhere(span_, condition, absent_)
+  *     spansWhere(span_, condition)
+  *     countSubsWhere(span_, condition)
 
+  *     subWhere(span_, condition, absent_)
+  *     everySubWhere(span_, condition)
 
-  fillWithin(values, span_edge, edge_, echo_)  // 1 span to 1 span (key-sized)
-  fillOver(values, span, echo_)                // 1 span to 1 span (key-sized)
 
 
   spread/splay/lay/fill/replace

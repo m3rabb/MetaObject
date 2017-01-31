@@ -15,10 +15,11 @@ DD.set((_context) => {
 
       function __withinFill(lo, hi, fillDirection, source, takeDirection) {
         const target = this._elements
+        let sIndex, tIndex, limit
 
-        let [tIndex, limit] =
-              (fillDirection > 0) ? [lo, hi] : [hi - 1] : [lo - 1]
-        let sIndex = takeDirection ? source.length - 1, 0
+        ;[tIndex, limit] = (fillDirection > 0) ? [lo, hi] : [hi - 1] : [lo - 1]
+        ;[takeDirection, sIndex] = (takeDirection > 0) ?
+          [FWD, 0] : [BWD, source.length - 1]
 
         while (tIndex !== limit) {
           target[tIndex] = source[sIndex]
@@ -159,23 +160,67 @@ DD.set((_context) => {
       // mode, {start, end, direction, wraps}
 
 
-      function _normalize(span_startEdge, endEdge_) {
-        let start, end, direction, size
+      function _normalize(place, bounded = true) {
+        let start, end, dir, direction, lo, hi
+        let size = this._elements.length
 
-        if (typeof span_startEdge === "number") {
-          start = span_startEdge
-          end = (endEdge_ === undefined) ? start : endEdge_
-        } else {
-          [start, end = start, direction] = span_startEdge
-          if (direction) { return span }
+        switch (typeof place) {
+          case "boolean" :                // direction
+            return [0, size, place ? FWD : BWD]
+          case "number"  :                // relative index
+            start = place, end = place + 1
+            if (start === end) { [        // direction ([-]Infinity)
+              return [0, size, (place > 0) ? FWD : BWD]
+            }
+            break
+          case "object"  :
+            [start, end, dir] = place
+            if (dir) {                    // linear span|edge
+              [lo, hi, direction, wraps] = place
+            }
+            else if (end === undefined) { // linear index
+              [lo, hi, direction] = [place, place + 1, NON]
+            }
+            break                         // relative span|edge
+          default : return undefined
         }
 
-        size  = this._elements.length
-        start = (start >= 0) ? start : (start === null) ? size : end + size
-        end   = (end   >= 0) ? end   : (end   === null) ? size : end + size
+        if (lo === undefined) {
+          start = (start >= 0) ? (start === null ? size : start) : start + size
+          end   = (end   >= 0) ? (end   === null ? size : end  ) : end   + size
 
-        return (start <= end) ? [start, end, FORWARD] : [end, start, BACKWARD]
+          [lo, hi, direction] = (start < end) ?
+            [start, end, FWD] :
+            [end, start, (start > end) ? BWD : NON]
+        }
+
+        return (bounded) ?
+          [(lo < 0) ? 0 : lo, (hi > size) ? size : hi, direction, wraps] :
+          (dir) ? this : [lo, hi, direction]
       },
+
+      // function _normalize(span_startEdge, endEdge_) {
+      //   let start, end, direction, size
+      //
+      //   switch (typeof span_startEdge) {
+      //     case "number" :
+      //       start = span_startEdge
+      //       end = (endEdge_ === undefined) ? start : endEdge_
+      //       break
+      //     case "object" :
+      //       [start, end = start, direction] = span_startEdge
+      //       if (direction) { return span } else { break }
+      //     default :
+      //       return undefined
+      //   }
+      //
+      //   size  = this._elements.length
+      //   start = (start >= 0) ? start : (start === null) ? size : end + size
+      //   end   = (end   >= 0) ? end   : (end   === null) ? size : end + size
+      //
+      //   return (start <= end) ? [start, end, FWD] : [end, start, BWD]
+      // },
+
 
       // function _boundedSpanFor(spanMode, spanArgs) {
       //   const size  = this._elements.length
@@ -202,13 +247,29 @@ DD.set((_context) => {
       //   }
       // },
 
-      function _normalizeArgs(...args) {
-        let [first, ...remaining] = args
-        if (typeof first !== "object") { return [this.span, ...args] }
-        if (args.length === 1) {
-          [first, ...remaining] = first
-          if (typeof first !== "object") { return [this.span, ...args] }
-        }
+      // function _normalizeArgs(...args) {
+      //   let [first, ...remaining] = args
+      //   if (typeof first !== "object") { return [this.span, ...args] }
+      //   if (args.length === 1) {
+      //     [first, ...remaining] = first
+      //     if (typeof first !== "object") { return [this.span, ...args] }
+      //   }
+      //   return [this._normalize(first), ...remaining]
+      // },
+
+      function _configureArgs(...args) {
+        do {
+          let [first, ...remaining] = args
+
+          switch (typeof first) {
+            case "function"  : return [this.span, ...args]
+            case "string"    : return [this.span, ...args]
+            case "undefined" : return [[0, 0, FWD], ...args]
+          }
+
+          if (args.length === 1) { args = first; continue }
+        } while (false)
+
         return [this._normalize(first), ...remaining]
       },
 
@@ -239,12 +300,12 @@ DD.set((_context) => {
 
         // Is explicit check fo immutability necessary???
         function span() {
-          const span = [0, this._elements.length, FORWARD]
+          const span = [0, this._elements.length, FWD]
           return this[IMMUTABLE] ? Freeze(span) : span
         },
 
         function inverseSpan() {
-          return [0, this._elements.length, BACKWARD]
+          return [0, this._elements.length, BWD]
         },
 
         function slots() {
@@ -265,14 +326,14 @@ DD.set((_context) => {
 
 
 
-      function at(index_span, absent_) {
-        if (typeof index_span === "number") {
-          return this.atIndex(index_span, absent_)
+      function at(place, absent_) {
+        if (typeof place === "number") {
+          return this.atIndex(place, absent_)
         }
-        const values = this.over(index_span)
+        const values = this.over(place)
         return values.size ? values :
           (typeof absent_ !== "function") ?
-            absent_ : absent_.call(this.$, index_span)
+            absent_ : absent_.call(this.$, place)
       },
 
       function atEach(indexers) {
@@ -307,18 +368,14 @@ DD.set((_context) => {
 
 
 
-      function withinDo(normSpan, action) {
-        let [lo, hi, direction = FORWARD, wraps = false] = normSpan
+      function _withinDo(innerSpan, action) {
         let target = this._elements
         let size   = target.length
-
-        let noWrap, preIndex, preLimit, result
-
-        lo = (lo > 0)    ? lo : 0
-        hi = (hi < size) ? hi : size
+        let preIndex, preLimit, sIndex, sLimit, noWrap, result
+        let [lo, hi, direction, wraps] = innerSpan
 
         if (wraps) {
-          let [preIndex, preLimit, sIndex, limit] =
+          [preIndex, preLimit, sIndex, sLimit] =
             (direction > 0) ?
               [lo    , ((noWrap = (lo < hi)) ? hi : size)    , 0   , hi]
               [hi - 1, ((noWrap = (hi > lo)) ? lo : 0   ) - 1, size, lo]
@@ -332,10 +389,10 @@ DD.set((_context) => {
           if (noWrap) { return this }
         }
         else {
-          [sIndex, limit] = (direction > 0) ? [lo, hi] : [hi - 1, lo - 1]
+          [sIndex, sLimit] = (direction > 0) ? [lo, hi] : [hi - 1, lo - 1]
         }
 
-        while (sIndex !== limit) {
+        while (sIndex !== sLimit) {
           result = action.call(this.$, target[sIndex], sIndex)
           if (result !== undefined) { return result }
           sIndex += direction
@@ -344,35 +401,46 @@ DD.set((_context) => {
         return this
       },
 
-      function withinMap(normSpan, Action) {
+      function eachDo(place_, action) {
+        return action ?
+          this._withinDo(this._normalize(place_), action) :
+          this._withinDo(this.span, action = place_)
+      },
+
+      function map(place_, action) {
+        return action ?
+          this._withinMap(this._normalize(place_), action) :
+          this._withinMap(this.span, action = place_)
+      },
+
+      function _withinMap(innerSpan, Action) {
         return this.new((result) => {
           const target = result._elements
 
-          this.withinDo(normSpan, (value, index) => {
+          this._withinDo(innerSpan, (value, index) => {
             target[index] = Action.call(this.$, value, index)
           })
         })
       },
 
 
-      function _withinSubsDo(normSpan, subSize, action, subsAsArrays) {
-        let [lo, hi, direction = FORWARD, wraps = false] = normSpan
+      function _withinSubsDo(innerSpan, subSize, action, subsAsArrays) {
         let target = this._elements
         let tSize  = target.length
-
-        lo = (lo > 0)     ? lo : 0
-        hi = (hi < tSize) ? hi : tSize
+        let [lo, hi, direction, wraps] = innerSpan
 
         if (wraps) {
-          return this.error("Wrapping on span enumeration is not yet implemented!")
+          return this.error(
+            "Wrapping on span enumeration is not yet implemented!")
         }
+
         [next, tLimit] = (direction > 0) ?
           [lo, hi - subSize + 1] : [hi - subSize, lo - 1]
 
         while (next !== tLimit) {
           let tIndex = next + subSize
           let sIndex = subSize
-          let span   = [next, tIndex, FORWARD]
+          let span   = [next, tIndex, FWD]
           let sub    = []
 
           while (sIndex--) { sub[sIndex--] = target[tIndex--] }
@@ -386,128 +454,123 @@ DD.set((_context) => {
         return this
       },
 
-      function _withinSubsMap(normSpan, subSize, action, subsAsArrays) {
+      function _withinSubsMap(innerSpan, subSize, action, subsAsArrays) {
         return this.new((result) => {
           let target = result._elements
           let count  = 0
 
-          this._withinSubsDo(normSpan, subSize, (sub, span) => {
+          this._withinSubsDo(innerSpan, subSize, (sub, span) => {
             target[count++] = Action.call(this.$, sub, span)
           }, subsAsArrays)
         })
       },
 
-      function withinSubsDo(normSpan, subSize, action) {
-        return this._withinSubsDo(normSpan, subSize, action, false)
-      },
-
-      function withinSubsMap(normSpan, subSize, action) {
-        return this._withinSubsMap(normSpan, subSize, action, false)
-      },
+      // function withinSubsDo(normSpanner, subSize, action) {
+      //   return this._withinSubsDo(normSpanner, subSize, action, false)
+      // },
+      //
+      // function withinSubsMap(normSpanner, subSize, action) {
+      //   return this._withinSubsMap(normSpanner, subSize, action, false)
+      // },
 
 
 
       // function within(...args) {
       //   let first = args[0]
-      //   let [lo, hi = lo, direction = FORWARD, wrap] =
+      //   let [lo, hi = lo, direction = FWD, wrap] =
       //         (typeof arg0 === "number") ? args : first
       //   let normSpan = [lo, hi, direction, wrap]
       //
       //   return (this[IMMUTABLE] &&
-      //     (lo === 0 && hi === this.size && direction === FORWARD && !wrap) ?
+      //     (lo === 0 && hi === this.size && direction === FWD && !wrap) ?
       //       this : this.withinMap(normSpan, (value) => value))
       // },
 
-      function within(lo, hi = lo, direction, wrap) {
-        if (typeof lo !== "number") { [lo, hi = lo, direction, wrap] = lo }
-        let normSpan = [lo, hi, direction || FORWARD, wrap]
+
+      // function within(lo, hi = lo, direction, wrap) {
+      //   if (typeof lo !== "number") { [lo, hi = lo, direction, wrap] = lo }
+      //   let normSpan = [lo, hi, direction || FWD, wrap]
+      //
+      //   return (this[IMMUTABLE] &&
+      //     (lo === 0 && hi === this.size && direction === FWD && !wrap) ?
+      //       this : this.withinMap(normSpan, (value) => value))
+      // },
+
+      function _within(lo, hi, direction, wraps) {
+        return this._withinMap([lo, hi, direction, wraps], (value) => value))
+      },
+
+
+      function over(place_start, end, direction, wraps) {
+        const args = (place_start.length) ? place_start :
+          [place_start, end, direction, wraps]
+        const innerSpan = this._normalize(args)
+        const [lo, hi, direction, wraps] = innerSpan
 
         return (this[IMMUTABLE] &&
-          (lo === 0 && hi === this.size && direction === FORWARD && !wrap) ?
-            this : this.withinMap(normSpan, (value) => value))
+          (lo === 0 && hi === this.size && direction === FWD && !wrap) ?
+            this : this._withinMap(innerSpan, (value) => value))
       },
 
-      function over(lo, hi = lo) {
-        const span = (typeof lo === "number") ? [lo, hi] : lo
-
-        return this.within(this._normalize(span))
-      },
-
-      function copy(span_) {
-        if (!span_ && this[IMMUTABLE]) { return this }
-
-        return this.within(span_ ? this._normalize(span_) : this.span)
-      },
+      // function copy(span_) {
+      //   if (!span_ && this[IMMUTABLE]) { return this }
+      //
+      //   return this.within(span_ ? this._normalize(span_) : this.span)
+      // },
 
 
       function subPast(edge) {
-        return this.within(this._normalize(edge, null))
+        return this.over(edge, null)
       },
 
       function subUntil(edge) {
-        return this.within(this._normalize(0, edge))
+        return this.over(0, edge)
       },
 
       function initial(count = 1) {
-        return this.within(0, count)
+        return this.over(0, count)
       },
 
       function final(count = 1, viaLaterValues = false) {
         const size = this.size
 
-        return this.within(size - count, size)
+        return this.over(size - count, size)
       },
 
 
-      function eachDo(span_, action) {
-        return action ?
-          this.withinDo(this._normalize(span_), action) :
-          this.withinDo(this.span, action = span_)
-      },
 
-      function map(span_, action) {
-        return action ?
-          this.withinMap(this._normalize(span_), action) :
-          this.withinMap(this.span, action = span_)
-      },
 
-      function eachSend(span_, method_selector, ...args) {
-        let [normSpan, Method, Args] =
-          this._normalizeArgs(span_, method_selector, args)
+      function eachSend(place_, method_selector, ...args) {
+        let [innerSpan, Method, Args] =
+          this._configureArgs(place_, method_selector, args)
 
         return (typeof Method === "function") ?
-          this.withinDo(normSpan, (value) => { Method.apply(value, Args))
-          this.withinDo(normSpan, (value) => { value[Method](...Args))
+          this._withinDo(innerSpan, (value) => { Method.apply(value, Args))
+          this._withinDo(innerSpan, (value) => { value[Method](...Args))
       },
 
-      function mapSend(span_, method_selector, ...args) {
-        let [normSpan, Method, Args] =
-          this._normalizeArgs(span_, method_selector, args)
+
+      function mapSend(place_, method_selector, ...args) {
+        let [innerSpan, Method, Args] =
+          this._configureArgs(place_, method_selector, args)
 
         return (typeof Method === "function") ?
-          this.withinMap(normSpan, (value) => { Method.apply(value, Args))
-          this.withinMap(normSpan, (value) => { value[Method](...Args))
+          this._withinMap(innerSpan, (value) => { Method.apply(value, Args))
+          this._withinMap(innerSpan, (value) => { value[Method](...Args))
       },
 
 
 
-      function reduce(...span___action__seed_) {
-        let args = this._normalizeArgs(span___action__seed_)
-        let [normSpan, Action, Accumulator] = args
+      function reduce(...place___action__seed_) {
+        let args = this._configureArgs(place___action__seed_)
+        let [innerSpan, Action, Accumulator] = args
 
         if (args.length === 2) {
-          const [lo, hi, direction] = normSpan
-
-          if (direction > 0) {
-            Accumulator = this.at(lo)
-            normSpan = [lo + 1, hi, direction]
-          } else {
-            Accumulator = this.at(hi - 1)
-            normSpan = [lo, hi - 1, direction]
-          }
+          Accumulator = (direction > 0) ?
+            this.at(innerSpan[0]++) : this.at(--innerSpan[1])
         }
 
-        this.withinDo(normSpan, function (value, index) {
+        this._withinDo(innerSpan, function (value, index) {
           Accumulator = Action.call(this.$, Accumulator, value, index)
         })
 
@@ -536,9 +599,9 @@ DD.set((_context) => {
       // },
 
       function _byOverFind(grip, ...args) {
-        const [span, Conditional, absent_] = this._normalizeArgs(args)
+        const [innerSpan, Conditional, absent_] = this._configureArgs(args)
 
-        const found = this.withinDo(span, function (value, index) {
+        const found = this._withinDo(innerSpan, function (value, index) {
           if (Condition.call(this.$, value, index)) {
             return { index: index, value: value } // element: value, key: index,
           }
@@ -548,10 +611,10 @@ DD.set((_context) => {
       },
 
       function _byOverFindAll(Grip, ...args) {
-        const [normSpan, Conditional] = this._normalizeArgs(args)
+        const [innerSpan, Conditional] = this._configureArgs(args)
 
         return this.new((result) => {
-          this.withinDo(normSpan, (value, index) => {
+          this._withinDo(innerSpan, (value, index) => {
             if (Conditional.call(this.$, value, index)) {
               const slot =
                 { index: index, value: value } // element: value, key: index,
@@ -561,10 +624,12 @@ DD.set((_context) => {
         })
       },
 
-      function _byOverFindSub(grip, ...args) {
-        const [normSpan, Conditional, absent_] = this._normalizeArgs(args)
 
-        const found = this._withinSubsDo(normSpan, subSize, function (sub, span) {
+      function _byOverFindSub(grip, place, ...args) {
+        const [innerSpan, subSize Conditional, absent_] =
+          this._configureArgs(place, args)
+
+        const found = this._withinSubsDo(innerSpan, subSize, (sub, span) => {
           if (Condition.call(this.$, sub, index)) {
             return { span: span, sub: sub }
           }
@@ -573,28 +638,13 @@ DD.set((_context) => {
           (typeof absent_ !== "function") ? absent_ : absent_.call(this.$)
       },
 
-      function _byOverFindAllSubs(Grip, ...args) {
-        const [normSpan, Conditional] = this._normalizeArgs(args)
+      function spanOf(sub, place = FORWARD) {
+        const sSub      = AsArray(sub)
+        const size      = sSub.length
+        const condition = (tSub) => EqualArrays(tSub, sSub)
 
-        return this.new((result) => {
-          this._withinSubsDo(normSpan, (sub, span) => {
-            if (Conditional.call(this.$, value, index)) {
-              const slots = { span: span, sub: sub }
-              result.add(slots[Grip])
-            }
-          }, true)
-        })
+        return this._byOverFindSub("span", place, size, condition)
       },
-
-      function spanOf(sub, searchDirection = FORWARD) {
-        const span      = (searchDirection > 0) ? [0, null] : [null, 0]
-        const sArray    = AsArray(sub)
-        const sSize     = sArray.length
-
-        return this._byOverFindSub(
-          "span", span, sSize, (tArray) => EqualArrays(tArray, sArray))
-      },
-
 
       function spanOfFirst(sub) {
         return this.spanOf(sub, FORWARD)
@@ -605,56 +655,79 @@ DD.set((_context) => {
       },
 
 
-      function indexWhere(span_, condition, absent_) {
-        return this._byOverFind("index", span_, condition, absent_)
+      function _byOverFindAllSubs(Grip, ...args) {
+        const [innerSpan, subSize, Conditional] =
+          this._configureArgs(args)
+
+        return this.new((result) => {
+          this._withinSubsDo(innerSpan, subSize, (sub, span) => {
+            if (Conditional.call(this.$, value, index)) {
+              const slots = { span: span, sub: sub }
+              result.add(slots[Grip])
+            }
+          }, true)
+        })
       },
 
-      function indexesWhere(span_, condition) {
-        return this._byOverFindAll("index", span_, condition)
+      function spansAcrossEvery(sub, place = FORWARD) {
+        const sSub      = AsArray(sub)
+        const size      = sSub.length
+        const condition = (tSub) => EqualArrays(tSub, sSub)
+
+        return this._byOverFindAllSubs("span", place, size, condition)
       },
 
-      function indexOf(value, searchDirection = FORWARD) {
-        const span      = (searchDirection > 0) ? [0, null] : [null, 0]
-        const condition = (existing) => value === existing
-        return this._byOverFind("index", span, condition)
+
+      function indexWhere(place_, condition, absent_) {
+        return this._byOverFind("index", place_, condition, absent_)
+      },
+
+      function indexesWhere(place_, condition) {
+        return this._byOverFindAll("index", place_, condition)
+      },
+
+      function indexOf(value, place = FORWARD) {
+        const condition = (existing) => value === existing)
+        return this._byOverFind("index", place, condition)
       },
 
       function indexOfFirst(value) {
-        return this.indexOf(value, FORWARD)
+        return this.indexOf(value, FWD)
       },
 
       function indexOfLast(value) {
-        return this.indexOf(value, BACKWARD)
+        return this.indexOf(value, BWD)
       },
 
 
-      function indexesOfEvery(value) {
-        return this._byOverFindAll("index", (existing) => value === existing))
+      function indexesOfEvery(value, place = FORWARD) {
+        const condition = (existing) => value === existing)
+        return this._byOverFindAll("index", place, condition)
       },
 
-      function valueWhere(span_, condition, absent_) {
-        return this._byOverFind("value", span_, condition, absent_)
+      function valueWhere(place_, condition, absent_) {
+        return this._byOverFind("value", place_, condition, absent_)
       },
 
-      function everyWhere(span_, conditional) {
-        return this._byOverFindAll("value", span_, conditional)
+      function everyWhere(place_, conditional) {
+        return this._byOverFindAll("value", place_, conditional)
       },
 
-      function everyNotWhere(span_, conditional) {
-        let [normSpan, Conditional] = this._normalizeArgs(span_, conditional)
+      function everyNotWhere(place_, conditional) {
+        let [innerSpan, Conditional] = this._configureArgs(place_, conditional)
 
         return this.new((result) => {
-          this.withinDo(normSpan, (value, index) => {
+          this.withinDo(innerSpan, (value, index) => {
             if (!Conditional.call(this.$, value, index)) { result.add(value) }
           })
         })
       },
 
-      function countWhere(span_, conditional) {
-        let [normSpan, Conditional] = this._normalizeArgs(span_, conditional)
+      function countWhere(place_, conditional) {
+        let [innerSpan, Conditional] = this._configureArgs(place_, conditional)
 
         let count = 0
-        this.withinDo(normSpan, (value, index) => {
+        this.withinDo(innerSpan, (value, index) => {
           if (Condition.call(this.$, value, index)) { count++ }
         })
         return count
@@ -676,35 +749,42 @@ DD.set((_context) => {
         select  : "everyWhere",
         reject  : "everyNotWhere"
         inject  : "reduce",
+        where   : "valueWhere"
       } },
 
 
 
-      function atPut(index_span, value) {
-        return (typeof index_span === "number") ?
-          this.atIndexPut(index_span, value) :
-          this.overPut(index_span, value)
+      function atPut(place, value) {
+        return (typeof place === "number") ?
+          this.atIndexPut(place, value) :
+          this.overPut(place, value)
+      }
+
+      function atFan(place, values) {
+        return this.overFan(place, value)
       }
 
       // LOOK check use of set vs _set!!!
-      function atEachPut(indexers, value) {
+      function atEachPut(places, value) {
         return this.set(function () {
-          Each(indexers, (index_span) => this.putAt(index_span, value))
+          Each(places, (place) => this.atPut(place, value))
         })
       },
 
-      function atEachPutEach(indexers, values) {
+      function atEachPutEach(places, Values) {
         return this.set(function () {
-          const Values = AsArray(indexers)
-
-          Each(indexers, (indexer, next) => this.atPut(Values[next], indexer))
+          Each(places, (place, next) => this.atPut(place, Values[next]))
         })
       },
 
       function atIndexPut(index, value) {
         return this._set(function () {
           const elements  = this._elements
-          const slotIndex = (index >= 0) ? index : (elements.length - index)
+          const slotIndex
+
+          if   (index >= 0) { slotIndex = index }
+          else (index <  0) { slotIndex = elements.length - index }
+          else              { return this }
 
           if (slotIndex >= 0) {
             elements[slotIndex] = value
@@ -717,28 +797,28 @@ DD.set((_context) => {
       },
 
 
-      function overPut(edge_span, value) {
-        const normSpan = this._normalize(edge_span)
+      function overPut(place, value) {
+        const normSpan = this._normalize(place, false)
 
         return this._withinSetBy(normSpan, [value], "__withinFill", STRETCHES)
       },
 
-      function overFan(edge_span, values) {
+      function overFan(place, values) {
         const source   = AsArray(values)
-        const normSpan = this._normalize(edge_span)
+        const normSpan = this._normalize(place, false)
 
         return this._withinSetBy(normSpan, source, "__withinFill", STRETCHES)
       },
 
-      function overEcho(span, value) {
-        const normSpan = this._normalize(span)
+      function overEcho(place, value) {
+        const normSpan = this._normalize(place, false)
 
         return this._withinSetBy(normSpan, value, "__withinEcho")
       },
 
 
-      function _contractedSpanTo(span, fillSize) {
-        const normSpan = this._normalize(span)
+      function _contractedSpanTo(place, fillSize) {
+        const normSpan = this._normalize(place, false)
         const [lo, hi, fillDirection, wraps] = normSpan
         const spanSize = (hi - lo)
         const delta    = fillSize - spanSize
@@ -749,25 +829,26 @@ DD.set((_context) => {
             [lo + delta,         hi, fillDirection, wraps]
       },
 
-      function overFill(span, values, takeDirection = FORWARD) {
+      function overFill(place, values, takeDirection = FORWARD) {
         const source   = AsArray(values)
-        const normSpan = this._contractSpanTo(span, source.length)
+        const normSpan = this._contractSpanTo(place, source.length)
 
         return this._withinSetBy(
           normSpan, source, "__withinFill", takeDirection)
       },
 
-      function overEchoFill(span, values, takeDirection = FORWARD) {
+      function overEchoFill(place, values, takeDirection = FORWARD) {
         const source   = AsArray(values)
-        const normSpan = this._normalize(span)
+        const normSpan = this._normalize(place, false)
 
         return this._withinSetBy(
           normSpan, source, "__withinEchoFill", takeDirection)
       },
 
-
+      // LOOK
       function _expandFromBy(edge, anchorLocation, fillSize) {
-        const normSpan = this._normalize(edge)
+        const span      = edge.length ? edge : [edge]
+        const normSpan = this._normalize(place, false)
 
         (anchorLocation === UNTIL_EDGE) ?
           (normSpan[0] -= fillSize) : (normSpan[1] += fillSize)
@@ -788,6 +869,46 @@ DD.set((_context) => {
 
         return this._withinSetBy(
           normSpan, source, "__withinFill", takeDirection)
+      },
+
+
+      function atFirstPut(matchValue, newValue) {
+        return this.atIndexPut(this.indexOf(matchValue, FORWARD), newValue)
+      },
+
+      function atLastPut(matchValue, newValue) {
+        return this.atIndexPut(this.indexOf(matchValue, BACKWARD), newValue)
+      },
+
+      function atEveryPut(matchValue, newValue, searchDirection = FORWARD) {
+        return this._set((result) => {
+          let target = result._elements
+          let count = 0
+
+          this.overDo(searchDirection, function (value, index) {
+            if (value === matchValue) {
+              target[index] = newValue
+              count++
+            }
+          })
+          if (count === 0) { return this }
+        })
+      },
+
+      function overSubFan(
+        matchSub, newSub, searchDirection = FORWARD, takeDirection = FORWARD
+      ) {
+        const innerSpan = this.spanOf(matchSub, searchDirection)
+        innerSpan[3] = takeDirection
+        return this._withinSetBy(innerSpan, newSub, "__withinFill", STRETCHES)
+      },
+
+      function overFirstFan(matchSub, newSub, takeDirection = FORWARD) {
+        return this.overSubFan(normSpan, newElement, FORWARD, takeDirection)
+      },
+
+      function overLastFan(matchSub, newSub, takeDirection = FORWARD) {
+        return this.overSubFan(normSpan, newElement, BACKWARD, takeDirection)
       },
 
 
@@ -814,23 +935,23 @@ DD.set((_context) => {
         return this.overFan(null, values)
       },
 
-      function addBefore(value, targetValue) {
-        const insertionEdge = this.indexOfFirst(value)
+      function addBefore(value, targetValue, searchDirection = FORWARD) {
+        const insertionEdge = this.indexOf(value, searchDirection)
         return (index >= 0) ? this.overPut(insertionEdge, value) : this
       },
 
-      function addAfter(value, targetValue) {
-        const insertionEdge = this.indexOfFirst(value) + 1
+      function addAfter(value, targetValue, searchDirection = FORWARD) {
+        const insertionEdge = this.indexOf(value, searchDirection) + 1
         return (index >= 0) ? this.overPut(insertionEdge, value) : this
       },
 
-      function addAllBefore(values, targetValue) {
-        const insertionEdge = this.indexOfFirst(value)
+      function addAllBefore(values, targetValue, searchDirection = FORWARD) {
+        const insertionEdge = this.indexOf(value, searchDirection)
         return (index >= 0) ? this.overFan(insertionEdge, values) : this
       },
 
-      function addAllAfter(values, targetValue) {
-        const insertionEdge = this.indexOfFirst(value) + 1
+      function addAllAfter(values, targetValue, searchDirection = FORWARD) {
+        const insertionEdge = this.indexOf(value, searchDirection) + 1
         return (index >= 0) ? this.overFan(insertionEdge, values) : this
       },
 
@@ -879,7 +1000,7 @@ DD.set((_context) => {
           this._set((result) => { result._elements.length -= delta }) : this
       },
 
-      function remove(value, searchDirection = FORWARD) {
+      function remove(value, searchDirection = FWD) {
         return this.removeAtIndex(this.indexOf(value, searchDirection))
       },
 
@@ -907,9 +1028,9 @@ DD.set((_context) => {
       },
 
       function removeSub(sub) {
-        const normSpan = this.spanOfSub(sub)
+        const innerSpan = this.spanOfSub(sub)
 
-        return (normSpan) ? this.removeWithin(normSpan) :
+        return (innerSpan) ? this.removeWithin(innerSpan) :
           (typeof absent_ !== "function") ? absent_ :
             absent_.call(this.$, value)
       }
