@@ -37,36 +37,20 @@ Accessing
       at(index_span, absent_)
       atEach(indexers)
 
-  Index|Span
-    value|sub @ index|span
+    value @ index|span
       atIndex(index, absent_)
       first
       last
 
-      within(lo, hi = lo, direction, wrap)
-      over(lo, hi = lo)
-
-      subPast(edge)
-      subUntil(edge)
-      initial(count = 1)
-      final(count = 1, viaLaterValues = false)
-
     index|span @ value(s)
-      indexOf(value, searchDirection_)
+      indexOf(value, scanDir_)
       indexOfFirst(value)
       indexOfLast(value)
-      indexesOfEvery(value, searchDirection_)
+      indexOfEvery(value, scanDir_)
 
-      spanOf(sub, searchDirection_)
-      spanOfFirst(sub)
-      spanOfLast(sub)
-*      spansOfEvery(sub, searchDirection_)
-      spansAcrossEvery(sub, searchDirection_)
-    other
       countOf(value)
       contains(value)
 
-    via condition
       indexWhere(span_, condition, absent_)
       indexesWhere(span_, condition)
       countWhere(span_, conditional)
@@ -75,13 +59,9 @@ Accessing
       everyWhere(span_, conditional)
       everyNotWhere(span_, conditional)
 
-
-
   Enumeration
     withinDo(normSpan, action)
     withinMap(normSpan, Action)
-    withinSubsDo(normSpan, subSize, action)
-    withinSubsMap(normSpan, subSize, action)
 
     eachDo(span_, action)
     map(span_, action)
@@ -92,8 +72,8 @@ Accessing
     do      : "eachDo",
     overDo  : "eachDo",
     collect : "map",
-    detect  : "firstWhere",
-    find    : "firstWhere",
+    detect  : "valueWhere",
+    find    : "valueWhere",
     select  : "everyWhere",
     reject  : "everyNotWhere"
     inject  : "reduce",
@@ -102,30 +82,21 @@ Accessing
 Put
   Generic
     atPut(index_span, value)
-*   atFan()
+    atFan()
     atEachPut(indexers, value)
     atEachPutEach(indexers, values)
 
   index|span PUT value(s)
     atIndexPut(index, value)
-    overPut(edge_span, value)
-    overFan(edge_span, values)
+    withinPut(edge_span, value)
 
-    overEcho(span, value)
-    overFill(span, values, takeDirection_)
-    overEchoFill(span, values, takeDirection_)
-    pastLay(edge, values, takeDirection_)
-    untilLay(edge, values, takeDirection_)
+    withinEcho(span, value)
 
   value PUT value
    atFirstPut(matchElement, newElement)
    atLastPut(matchElement, newElement)
    atEveryPut(matchElement, newElement)
 
-   overSubFan(matchSub, newSub, searchDirection_, takeDirection_)
-   overFirstFan(matchSub, newSub, takeDirection_)
-   overLastFan(matchSub, newSub, takeDirection_)
-*   overEveryFan(matchSub, newSub, searchDirection_, takeDirection_)
 
 *   reverse
 *   reverseCopy
@@ -133,15 +104,165 @@ Put
 Add
   addFirst(value)
   addLast(value)
-  addFirstAll(values)
-  addLastAll(values)
   addBefore(value, targetValue)
   addAfter(value, targetValue)
-  addAllBefore(values, targetValue)
-  addAllAfter(values, targetValue)
 
   add    : "addLast",
-  addAll : "addAllLast",
+
+  plural
+    within(lo, hi = lo, direction, wrap)
+    beyond(edge, scanDir_)
+    until(edge, scanDir_)
+    initial(count = 1, scanDir_)
+    final(count = 1, scanDir_)
+
+    _overDo(justSpan, subSize, directions, action)
+
+*    overDo(span_, subSize, directions_, action)    sub|overlaps
+    overMap(span_, subSize, directions_, action)   match
+
+*    spanOf(matchSub, directives_)                   scan|match
+    spanOfFirst(matchSub, directive_)               match
+    spanOfLast(matchSub, directive_)                match
+
+*    spanOfEvery(matchSub, options_)                 scan|match|overlaps
+*    countOver(matchSub, options_)                   scan|match|overlaps
+
+    withinFan(span, sub, directive_)               fill
+    withinFill(span, sub, directive_)              fill
+    withinEchoFill(span, sub, directive_)          fill
+    beyondLay(edge, sub, directive_)                fill
+    untilLay(edge, sub, directive_)                 fill
+
+    overFan(matchSub, newSub, directives_)          scan|match|fill
+    overFirstFan(matchSub, newSub)
+    overLastFan(matchSub, newSub)
+*    overEveryFan(matchSub, newSub, directives_)    scan|match|fill
+
+    addAll()
+    addFirstAll(values, directive_)                 fill
+    addLastAll(values, directive_)                  fill
+
+    addAllBefore(values, targetValue, directive_)   scan|match|fill
+    addAllAfter(values, targetValue, directive_)    scan|match|fill
+
+    addAll : "addAllLast",
+
+    List("but but but not wow").overFirstFan(
+      List("but", List("near"), BACKWARD
+
+
+      function _overDo(justSpan, size, directives_, action) {
+        let subDirection = FWD
+        let asList       = false
+        let overlaps     = true
+
+        switch (directives_) {
+          default         :                                    break
+          case "function" : action        = directives_;       break
+          case "boolean"  : overlaps      = directives_      ; break
+          case "number"   : scanDirection = directives_      ; break
+          case "object"   :
+            { SUB      : subDirection = FWD,
+              AS_LIST  : asList       = false,
+              OVERLAPS : overlaps     = true, } = directives_; break
+            // subDirection = directives.SUB || FWD
+            // asList       = directives.AS_LIST || false
+            // overlaps     = directives.OVERLAPS || true
+        }
+
+        const target = this._elements
+        const [lo, hi, scanDirection, wraps] = justSpan
+
+        if (wraps) {
+          return this.error(
+            "Wrapping on span enumeration is not yet implemented!")
+        }
+
+        let [start, limit, startInc, endInc] = (scanDirection < 0) ?
+              [hi, lo, BWD, -size] : [lo, hi, FWD, size]
+
+        if (!overlaps) { startInc *= size }
+
+        let [sStart, sLimit] = (subDirection < 0) ? [size - 1, -1] : [0, size]
+
+        do {
+          do {
+            let end       = start + endInc
+            let remaining = (limit - end) * scanDirection
+
+            if (remaining < 0) { break }
+
+            let [tIndex, nextSpan] = (scanDirection < 0) ?
+                  [end  , [end, start, subDirection]] :
+                  [start, [start, end, subDirection]]
+
+            let sub = []
+            let sIndex = sStart
+
+            while (sIndex !== sLimit) {
+              sub[sIndex] = target[tIndex++]
+              sIndex += subDirection
+            }
+
+            let nextSub = asList ? List(sub) : sub
+            let result  = action.call(this.$, nextSub, nextSpan)
+
+            if (result !== undefined) { return result }
+
+            start += startInc
+          } while (true)
+
+          if (remaining === 0) { break }
+
+          size += count
+          end = limit
+        } while (true)
+
+        return undefined
+      },
+
+      function overDo(...span___subSize__directives___action) {
+        const [justSpan, subSize, directives_, action] =
+          this._normalizeArgs(span___subSize__directives___action)
+
+        return this._overDo(justSpan, subSize, directives_, action)
+      },
+
+      function overMap(...span___subSize__directives___action) {
+        const [justSpan, subSize, directives_, Action] = 
+          this._normalizeArgs(span___subSize__directives___action)
+
+        return this.new((result) => {
+          this._overDo(justSpan, subSize, directives_, (sub, span) => {
+            result.add(Action.call(this.$, sub, span))
+          })
+        })
+      },
+
+
+scan|match
+
+    function spanOf(matchSub, directives_) {
+      const source     = AsArray(matchSub)
+      const subSize    = source.length
+      const condition  = (nextSub) => EqualArrays(nextSub, source)
+      const directives = this._normalizeDirectives(SCAN, directives_)
+
+
+      const justSpan = this._normalizeArgs(directives.SCAN)
+
+      const found = this._overDo(justSpan, subSize, (sub, index) => {
+      if (Condition.call(this.$, value, index)) {
+        return { index: index, value: value } // element: value, key: index,
+      }
+    })
+    return found ? found[grip] :
+      (typeof absent_ !== "function") ? absent_ : absent_.call(this.$)
+
+
+
+
 
 
 
@@ -155,12 +276,12 @@ Remove
   removeInitial(count = 1)
   removeFinal(count = 1)
 
-  remove(value, searchDirection_)
+  remove(value, scanDir_)
   removeFirst(value_)
   removeLast(value_)
 *  removeEvery(value)
 
-  removeSub(sub, searchDirection_)
+  removeSub(sub, scanDir_)
   removeFirstSub(sub)
   removeLastSub(sub)
-  removeEverySub(sub, searchDirection_)
+  removeEverySub(sub, scanDir_)

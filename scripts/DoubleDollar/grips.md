@@ -72,6 +72,19 @@ allSuchThat
   from/to
   across
 
+  within --> place
+  over   --> elements/values
+
+  span|realm|bounds|region|area|place|site|spot|position|location
+
+  scan|match|fill  take|place
+
+  directions
+    FWD     1
+    BWD    -1
+    NON     0
+    STRETCH null
+
   all - as a group  e.g. removeAll
         or getter #allFrom
   every - all values

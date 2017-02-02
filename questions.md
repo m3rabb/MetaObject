@@ -7,3 +7,7 @@ https://www.sitepoint.com/using-the-new-es6-collections-map-set-weakmap-weakset/
 - Should objects only access each other via their protected wrapping?
 
 - Should we detect "this" assignments and returns via AST analysis?
+
+
+if self is immutable and an operation will cause a mutation to it, it makes a
+new copy 

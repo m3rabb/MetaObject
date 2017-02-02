@@ -88,13 +88,20 @@ About to take steps to remove the vulnerability/dependency of direct access to s
 - Within contexts, one can access types inherited from super contexts, other these types are copies with inner access.
 - Outside of a context one accesses its properties, including contained types, as outer objects, which themselves make outer objects.
 
+same
+equals
+identical
+
+asFact
+
+
 
 asNew           new empty mutable
 asCopy          new mutable copy
 asNonCopy       self if mutable, new empty mutable otherwise
 
 copy            copy of same mutability
-List(elements)  new immutable set from elements
+List(elements)  new immutable made from elements
 List()          new empty mutable
 
 _new            new
@@ -104,11 +111,29 @@ _copy           copy
 #unique-name
 name.type
 
-uuid/uri
+NameRec
+theOneCalled
+theOneNamed
+
+explictId
+implicitId
+id
+uuid/uri/cuid
+ids[]
 oid
 type iid
 given-name
 #name
+
+#idea
+name
+.type
+
+name
+unique
+count
+
+
 
 Rynd
 Krust.Collections.Ordered

@@ -1,0 +1,6 @@
+- spans
+- collections naming consistency
+- hijacking method declaration
+- privacy wrapping
+- immutability
+- return from looping
