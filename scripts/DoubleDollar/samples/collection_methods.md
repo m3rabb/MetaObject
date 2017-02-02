@@ -116,17 +116,17 @@ Add
     initial(count = 1, scanDir_)
     final(count = 1, scanDir_)
 
-    _overDo(justSpan, subSize, directions, action)
+    _overDo(justSpan, subSize, directives_, action)  sub|overlaps|subsAsLists
 
-*    overDo(span_, subSize, directions_, action)    sub|overlaps
-    overMap(span_, subSize, directions_, action)   match
+    overDo(span_, subSize, directives_, action)    sub|overlaps
+    overMap(span_, subSize, directives_, action)   match
 
 *    spanOf(matchSub, directives_)                   scan|match
-    spanOfFirst(matchSub, directive_)               match
-    spanOfLast(matchSub, directive_)                match
+    spanOfFirst(matchSub, directive_)               sub
+    spanOfLast(matchSub, directive_)                sub
 
-*    spanOfEvery(matchSub, options_)                 scan|match|overlaps
-*    countOver(matchSub, options_)                   scan|match|overlaps
+*    spanOfEvery(matchSub, options_)                 scan|sub|overlaps
+*    countOver(matchSub, options_)                   scan|sub|overlaps
 
     withinFan(span, sub, directive_)               fill
     withinFill(span, sub, directive_)              fill
@@ -134,17 +134,17 @@ Add
     beyondLay(edge, sub, directive_)                fill
     untilLay(edge, sub, directive_)                 fill
 
-    overFan(matchSub, newSub, directives_)          scan|match|fill
+    overFan(matchSub, newSub, directives_)          scan|sub|fill
     overFirstFan(matchSub, newSub)
     overLastFan(matchSub, newSub)
-*    overEveryFan(matchSub, newSub, directives_)    scan|match|fill
+*    overEveryFan(matchSub, newSub, directives_)    scan|sub|fill
 
     addAll()
     addFirstAll(values, directive_)                 fill
     addLastAll(values, directive_)                  fill
 
-    addAllBefore(values, targetValue, directive_)   scan|match|fill
-    addAllAfter(values, targetValue, directive_)    scan|match|fill
+    addAllBefore(values, targetValue, directive_)   scan|sub|fill
+    addAllAfter(values, targetValue, directive_)    scan|sub|fill
 
     addAll : "addAllLast",
 
@@ -152,96 +152,7 @@ Add
       List("but", List("near"), BACKWARD
 
 
-      function _overDo(justSpan, size, directives_, action) {
-        let subDirection = FWD
-        let asList       = false
-        let overlaps     = true
 
-        switch (directives_) {
-          default         :                                    break
-          case "function" : action        = directives_;       break
-          case "boolean"  : overlaps      = directives_      ; break
-          case "number"   : scanDirection = directives_      ; break
-          case "object"   :
-            { SUB      : subDirection = FWD,
-              AS_LIST  : asList       = false,
-              OVERLAPS : overlaps     = true, } = directives_; break
-            // subDirection = directives.SUB || FWD
-            // asList       = directives.AS_LIST || false
-            // overlaps     = directives.OVERLAPS || true
-        }
-
-        const target = this._elements
-        const [lo, hi, scanDirection, wraps] = justSpan
-
-        if (wraps) {
-          return this.error(
-            "Wrapping on span enumeration is not yet implemented!")
-        }
-
-        let [start, limit, startInc, endInc] = (scanDirection < 0) ?
-              [hi, lo, BWD, -size] : [lo, hi, FWD, size]
-
-        if (!overlaps) { startInc *= size }
-
-        let [sStart, sLimit] = (subDirection < 0) ? [size - 1, -1] : [0, size]
-
-        do {
-          do {
-            let end       = start + endInc
-            let remaining = (limit - end) * scanDirection
-
-            if (remaining < 0) { break }
-
-            let [tIndex, nextSpan] = (scanDirection < 0) ?
-                  [end  , [end, start, subDirection]] :
-                  [start, [start, end, subDirection]]
-
-            let sub = []
-            let sIndex = sStart
-
-            while (sIndex !== sLimit) {
-              sub[sIndex] = target[tIndex++]
-              sIndex += subDirection
-            }
-
-            let nextSub = asList ? List(sub) : sub
-            let result  = action.call(this.$, nextSub, nextSpan)
-
-            if (result !== undefined) { return result }
-
-            start += startInc
-          } while (true)
-
-          if (remaining === 0) { break }
-
-          size += count
-          end = limit
-        } while (true)
-
-        return undefined
-      },
-
-      function overDo(...span___subSize__directives___action) {
-        const [justSpan, subSize, directives_, action] =
-          this._normalizeArgs(span___subSize__directives___action)
-
-        return this._overDo(justSpan, subSize, directives_, action)
-      },
-
-      function overMap(...span___subSize__directives___action) {
-        const [justSpan, subSize, directives_, Action] = 
-          this._normalizeArgs(span___subSize__directives___action)
-
-        return this.new((result) => {
-          this._overDo(justSpan, subSize, directives_, (sub, span) => {
-            result.add(Action.call(this.$, sub, span))
-          })
-        })
-      },
-
-
-scan|match
 
     function spanOf(matchSub, directives_) {
       const source     = AsArray(matchSub)

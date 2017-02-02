@@ -233,19 +233,6 @@ DD.set((_context) => {
 
 
 
-
-      // function _boundedSpanFor(spanMode, spanArgs) {
-      //   const size  = this._elements.length
-      //   const span  = this._normalizedSpanFor(spanMode, spanArgs)
-      //   const [lo, hi, direction, wraps] = span
-      //
-      //   if (lo < 0)    { span[0] = 0    }
-      //   if (hi > size) { span[1] = size }
-      //
-      //   return span
-      // },
-
-
       function _normalizeArgs(...args) {
         do {
           let [first, ...remaining] = args
@@ -428,84 +415,93 @@ DD.set((_context) => {
       },
 
 
-      function _overDo(
-        justSpan, subSize, action, {asLists = false, overlaps = true}
-      ) {
-        let target = this._elements
-        let tSize  = target.length
-        let [lo, hi, scanDirection, wraps] = justSpan
+      function _overDo(justSpan, size, directives_, action) {
+        let subDirection = FWD
+        let subsAsLists  = false
+        let overlaps     = true
+
+        switch (directives_) {
+          default         :                                    break
+          case "function" : action        = directives_;       break
+          case "boolean"  : overlaps      = directives_      ; break
+          case "number"   : scanDirection = directives_      ; break
+          case "object"   :
+            { SUB      : subDirection = FWD,
+              AS_LISTS : subsAsLists  = false,
+              OVERLAPS : overlaps     = true, } = directives_; break
+            // subDirection = directives.SUB || FWD
+            // subsAsLists  = directives.AS_LIST || false
+            // overlaps     = directives.OVERLAPS || true
+        }
+
+        const target = this._elements
+        const [lo, hi, scanDirection, wraps] = justSpan
 
         if (wraps) {
           return this.error(
             "Wrapping on span enumeration is not yet implemented!")
         }
 
-        [next, tLimit, inc] = (scanDirection < 0) ?
-          [hi - subSize, lo - 1          , -1] :
-          [lo          , hi - subSize + 1,  1]
+        let [start, limit, startInc, endInc] = (scanDirection < 0) ?
+              [hi, lo, BWD, -size] : [lo, hi, FWD, size]
 
-        while (next !== tLimit) {
-          let tIndex = next + subSize
-          let sIndex = subSize
-          let span   = [next, tIndex, FWD]
-          let sub    = []
+        if (!overlaps) { startInc *= size }
 
-          while (sIndex--) { sub[sIndex--] = target[tIndex--] }
+        let [sStart, sLimit] = (subDirection < 0) ? [size - 1, -1] : [0, size]
 
-          const nextSub = asLists ? List(sub) : sub
-          const result  = action.call(this.$, nextSub, span)
-          if (result !== undefined) { return result }
-          next += inc
-        }
+        do {
+          do {
+            let end       = start + endInc
+            let remaining = (limit - end) * scanDirection
+
+            if (remaining < 0) { break }
+
+            let [tIndex, nextSpan] = (scanDirection < 0) ?
+                  [end  , [end, start, subDirection]] :
+                  [start, [start, end, subDirection]]
+
+            let sub = []
+            let sIndex = sStart
+
+            while (sIndex !== sLimit) {
+              sub[sIndex] = target[tIndex++]
+              sIndex += subDirection
+            }
+
+            let nextSub = subsAsLists ? List(sub) : sub
+            let result  = action.call(this.$, nextSub, nextSpan)
+
+            if (result !== undefined) { return result }
+
+            start += startInc
+          } while (true)
+
+          if (remaining === 0) { break }
+
+          size += count
+          end = limit
+        } while (true)
 
         return undefined
       },
 
-      // LOOK Might not need this method
-      function _overMap(justSpan, subSize, action, subsAsLists = false) {
-        return this.new((result) => {
-          let target = result._elements
-          let count  = 0
+      function overDo(...span___subSize__directives___action) {
+        const [justSpan, subSize, directives_, action] =
+          this._normalizeArgs(span___subSize__directives___action)
 
-          this._overDo(justSpan, subSize, (sub, span) => {
-            target[count++] = Action.call(this.$, sub, span)
-          }, subsAsLists)
+        return this._overDo(justSpan, subSize, directives_, action)
+      },
+
+      function overMap(...span___subSize__directives___action) {
+        const [justSpan, subSize, directives_, Action] =
+          this._normalizeArgs(span___subSize__directives___action)
+
+        return this.new((result) => {
+          this._overDo(justSpan, subSize, directives_, (sub, span) => {
+            result.add(Action.call(this.$, sub, span))
+          })
         })
       },
-
-      function overDo(span_, subSize, action) {
-        let args = this._normalizeArgs(span_, subSize, action)
-        return this._overDo(...args, true)
-      },
-
-      function overMap(span_, subSize, action) {
-        let args = this._normalizeArgs(span_, subSize, action)
-        return this._overMap(...args, true)
-      },
-
-
-
-      // function within(...args) {
-      //   let first = args[0]
-      //   let [lo, hi = lo, direction = FWD, wrap] =
-      //         (typeof arg0 === "number") ? args : first
-      //   let normSpan = [lo, hi, direction, wrap]
-      //
-      //   return (this[IMMUTABLE] &&
-      //     (lo === 0 && hi === this.size && direction === FWD && !wrap) ?
-      //       this : this.withinMap(normSpan, (value) => value))
-      // },
-
-
-      // function within(lo, hi = lo, direction, wrap) {
-      //   if (typeof lo !== "number") { [lo, hi = lo, direction, wrap] = lo }
-      //   let normSpan = [lo, hi, direction || FWD, wrap]
-      //
-      //   return (this[IMMUTABLE] &&
-      //     (lo === 0 && hi === this.size && direction === FWD && !wrap) ?
-      //       this : this.withinMap(normSpan, (value) => value))
-      // },
-
 
 
 
@@ -837,15 +833,6 @@ DD.set((_context) => {
 
         return normSpan
       },
-      //
-      // function _expandFromBy(edge, anchorLocation, fillSize) {
-      //   const span = this._normalizeSpan([edge], UNBOUNDED)
-      //
-      //   (anchorLocation === UNTIL_EDGE) ?
-      //     (span[LO] -= fillSize) : (span[HI] += fillSize)
-      //   return span
-      // },
-
 
       function withinFill(span, values, fillDir = FORWARD) {
         const source    = AsArray(values)
