@@ -98,8 +98,6 @@ Put
    atEveryPut(matchElement, newElement)
 
 
-*   reverse
-*   reverseCopy
 
 Add
   addFirst(value)
@@ -116,35 +114,35 @@ Add
     initial(count = 1, scanDir_)
     final(count = 1, scanDir_)
 
-    _overDo(justSpan, subSize, directives_, action)  sub|overlaps|subsAsLists
+    _overDo(directives, subSize, action)           scan|sub|overlaps|subsAsLists
 
-    overDo(span_, subSize, directives_, action)    sub|overlaps
-    overMap(span_, subSize, directives_, action)   match
+    overDo(directives_, subSize, action)           scan|sub|overlaps
+    overMap(directives_, subSize, action)          scan|sub|overlaps
 
-*    spanOf(matchSub, directives_)                   scan|match
-    spanOfFirst(matchSub, directive_)               sub
-    spanOfLast(matchSub, directive_)                sub
+    spanOf(matchSub, directives_)                  scan|match
+    spanOfFirst(matchSub)
+    spanOfLast(matchSub)
 
-*    spanOfEvery(matchSub, options_)                 scan|sub|overlaps
-*    countOver(matchSub, options_)                   scan|sub|overlaps
+    spanOfEvery(matchSub, directives_)             scan|sub|overlaps
+    countOver(matchSub, directives_)               scan|sub|overlaps
 
-    withinFan(span, sub, directive_)               fill
-    withinFill(span, sub, directive_)              fill
-    withinEchoFill(span, sub, directive_)          fill
-    beyondLay(edge, sub, directive_)                fill
-    untilLay(edge, sub, directive_)                 fill
+    withinFan(span, values, fillDir_)              fill
+    withinFill(span, values, fillDir_)             fill
+    withinEchoFill(span, values, fillDir_)         fill
+    beyondLay(edge, sub, fillDir_)                 fill
+    untilLay(edgs, sub, fillDir_)                  fill
 
-    overFan(matchSub, newSub, directives_)          scan|sub|fill
-    overFirstFan(matchSub, newSub)
-    overLastFan(matchSub, newSub)
-*    overEveryFan(matchSub, newSub, directives_)    scan|sub|fill
+    overFan(sub, values, directives_)              scan|sub|fill
+    overFirstFan(sub, values)
+    overLastFan(sub, values)
+    overEveryFan(sub, values, directives_)         scan|sub|fill
 
-    addAll()
-    addFirstAll(values, directive_)                 fill
-    addLastAll(values, directive_)                  fill
+    addAll(values, directive_)                     fill
+    addFirstAll(values, directive_)                fill
+    addLastAll(values, directive_)                 fill
 
-    addAllBefore(values, targetValue, directive_)   scan|sub|fill
-    addAllAfter(values, targetValue, directive_)    scan|sub|fill
+    addAllBefore(values, targetValue, directive_)  scan|sub|fill
+    addAllAfter(values, targetValue, directive_)   scan|sub|fill
 
     addAll : "addAllLast",
 
@@ -153,46 +151,36 @@ Add
 
 
 
-
-    function spanOf(matchSub, directives_) {
-      const source     = AsArray(matchSub)
-      const subSize    = source.length
-      const condition  = (nextSub) => EqualArrays(nextSub, source)
-      const directives = this._normalizeDirectives(SCAN, directives_)
-
-
-      const justSpan = this._normalizeArgs(directives.SCAN)
-
-      const found = this._overDo(justSpan, subSize, (sub, index) => {
-      if (Condition.call(this.$, value, index)) {
-        return { index: index, value: value } // element: value, key: index,
-      }
-    })
-    return found ? found[grip] :
-      (typeof absent_ !== "function") ? absent_ : absent_.call(this.$)
-
-
-
-
-
-
-
 Remove
-  removeAtIndex(index)
-  removeWithin(lo, hi = lo)
-  removeOver(span)
+    removeAt(index_span)
+    removeAtEach(indexers)
 
-  removePast(edge)
-  removeUntil(edge)
-  removeInitial(count = 1)
-  removeFinal(count = 1)
+    removeAtIndex(index)
+    removeWithin(lo, hi = lo)
+    removeFirst
+    removeLast
 
-  remove(value, scanDir_)
-  removeFirst(value_)
-  removeLast(value_)
-*  removeEvery(value)
+    removeBeyond(edge)
+    removeUntil(edge)
+    removeInitial(count = 1)
+    removeFinal(count = 1)
 
-  removeSub(sub, scanDir_)
-  removeFirstSub(sub)
-  removeLastSub(sub)
-  removeEverySub(sub, scanDir_)
+    removeWhere(span_, condition, absent_)
+    removeEveryWhere(span_, conditional)
+
+    remove(value, scanDir_)
+    removeFirst(value_)
+    removeLast(value_)
+    removeEvery(value)
+
+    removeOver(span, directive_)    scan|sub
+    removeOverFirst(span, directive_)    scan|sub
+    removeOverLast(span, directive_)    scan|sub
+    removeOverEvery(span, directive_)    scan|sub
+
+    empty
+    removeAll
+
+
+    reversed
+    reverse()

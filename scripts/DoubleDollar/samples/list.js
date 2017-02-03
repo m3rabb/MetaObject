@@ -9,7 +9,7 @@ DD.set((_context) => {
     const HI        =  1
     const START     =  0
     const END       =  1
-    const DIRECTION =  2
+    const DIR       =  2
     const WRAPS     =  3
 
     const FWD       =  1
@@ -18,11 +18,10 @@ DD.set((_context) => {
     const STRETCH   =  null
     const UNBOUNDED =  false
 
-    const FORWARD   =  1
-    const BACKWARD  = -1
+    const FORWARD   =  Infinity
+    const BACKWARD  = -Infinity
 
     const SCAN      = "SCAN"
-    const MATCH     = "MATCH"
     const FILL      = "FILL"
 
     const INDEX     = "INDEX"
@@ -31,7 +30,7 @@ DD.set((_context) => {
     const SUB       = "SUB"
 
 
-    const DefaultDirections = { SCAN: FORWARD, MATCH: FORWARD, FILL: FORWARD }
+    const DefaultDirectives = { SCAN: FORWARD, SUB: FORWARD, FILL: FORWARD }
 
     const UNTIL_EDGE  = Symbol("UNTIL_EDGE")
     const BEYOND_EDGE = Symbol("BEYOND_EDGE")
@@ -45,23 +44,23 @@ DD.set((_context) => {
       },
 
 
-      function __fillWithin(source, lo, hi, scanDir, fillDir, sIndex_) {
+      function __fillWithin(source, lo, hi, scanDir, fillDir_, sIndex__) {
         const target = this._elements
 
-        let [tIndex, tLimit, fillInc, takeInc] = (scanDir < 0) ?
-          [hi - 1, lo - 1, BWD, (fillDir < 0) ? FWD : BWD] :
-          [lo    , hi    , FWD, (fillDir < 0) ? BWD : FWD]
+        let [tIndex, tLimit, tInc, sInc                      ] = (scanDir < 0) ?
+            [hi - 1, lo - 1, BWD , (fillDir_ < 0 ? FWD : BWD)] :
+            [lo    , hi    , FWD , (fillDir_ < 0 ? BWD : FWD)]
 
-        let sIndex = (takeInc > 0) ? sIndex_ || 0 :
-          (sIndex_ === undefined) ? source.length - 1 : sIndex_
+        let sIndex = (sIndex__ !== undefined) ? sIndex__ :
+                        (sInc > 0) ? 0 : source.length - 1
 
         while (tIndex !== tLimit) {
           target[tIndex] = source[sIndex]
-          tIndex += fillInc
-          sIndex += takeInc
+          tIndex += tInc
+          sIndex += sInc
         }
 
-        return sIndex
+        return tIndex
       },
 
       function __echoWithin(value, lo, hi) {
@@ -70,20 +69,20 @@ DD.set((_context) => {
         }
       },
 
-      function __echoFillWithin(source, lo, hi, scanDir, fillDir) {
+      function __echoFillWithin(source, lo, hi, scanDir, fillDir_) {
         const target = this._elements
 
-        let [tIndex, tLimit, fillInc, takeInc] = (scanDir < 0) ?
-          [hi - 1, lo - 1, BWD, (fillDir < 0) ? FWD : BWD] :
-          [lo    , hi    , FWD, (fillDir < 0) ? BWD : FWD]
+        let [tIndex, tLimit, tInc, sInc] = (scanDir < 0) ?
+        [hi - 1, lo - 1, BWD, (fillDir_ < 0) ? FWD : BWD] :
+        [lo    , hi    , FWD, (fillDir_ < 0) ? BWD : FWD]
 
-        let [sStart, sLimit] = (takeInc > 0) ? [0 : sSize] : [sSize - 1, -1]
+        let [sStart, sLimit] = (sInc > 0) ? [0 : sSize] : [sSize - 1, -1]
 
         sIndex = sStart
         while (tIndex !== tLimit) {
           target[tIndex] = source[sIndex]
-          tIndex += fillInc
-          sIndex = (sIndex !== sLimit) ? sIndex + takeInc : sStart
+          tIndex += tInc
+          sIndex = (sIndex !== sLimit) ? sIndex + sInc : sStart
         }
       },
 
@@ -101,7 +100,7 @@ DD.set((_context) => {
           tIndex = targetEdge
 
           while (sIndex < endEdge) { target[tIndex++] = target[sIndex++] }
-          target.length -= size
+          target.length -= size // NOTE: Doesn't check for a negative length!!!
         }
         else {
           sIndex = endEdge
@@ -129,14 +128,14 @@ DD.set((_context) => {
       //   M      :<--------|---------------------|-------->:
 
       function _withinSetBy(
-        [lo, hi, scanDirection, wraps = false], source, selector, modifier
+        [lo, hi, scanDir, wraps = false], source, selector, fillDir_
       ) {
-        this._set(function () {
+        return this._set(function () {
           const target     = this._elements
           const targetSize = target.length
           const spanSize   = (hi - lo)
           const sourceSize = source.length
-          const fillSize   = (scanDirection === STRETCH) ? sourceSize : spanSize
+          const fillSize   = (scanDir === STRETCH) ? sourceSize : spanSize
           let   left, right
 
           if (wraps) { return this.error("Wrapping is not implemented yet!")}
@@ -178,7 +177,7 @@ DD.set((_context) => {
             }
           }
 
-          this[selector](source, left, right, scanDirection, modifier)
+          this[selector](source, left, right, scanDir, fillDir_)
         })
       }
 
@@ -189,26 +188,30 @@ DD.set((_context) => {
       //   [1,,,]       linear index
       //   [7,2,-1]     linear span
 
-      function _normalizeSpan(span, bounded = true) {
-        let start, end, direction, lo, hi
+      function _asNormalizedSpan(specifier, bounded = true) {
+        let start, end, dir, lo, hi
         let size = this._elements.length
 
+        if (specifier.toFixed) {                   // direction
+          return [0, size, (specifier < 0) ? BWD : FWD]
+        }
+
         switch (span.length) {
-          case undefined :                     // direction
-            return [0, size, (span < 0) ? BWD : FWD]
-          case 1 :                             // relative edge
-            ;[start, end, direction] = [span, span, NON]
-            break
+          case undefined :                         // scanDirective
+            return [0, size, (specifier.SCAN < 0) ? BWD : FWD]
+          case 1 :                                 // relative edge
+            ;[start, end, dir] = [specifier, specifier, NON]
+            ;break
           case 2 :
-            ;[start, end = start + 1] = span  // relative span|edge|index
-            break
+            ;[start, end = start + 1] = specifier  // relative span|edge|index
+            ;break
           case 4 :
-            wraps = span[WRAPS]
+            wraps = specifier[WRAPS]
             // INTENTIONAL FALL THRU
           case 3 :
-            ;[lo, hi = lo, direction] = span  // linear span|edge|index
-            direction = direction ? (direction < 0 ? BWD : FWD) : NON
-            break
+            ;[lo, hi = lo, dir] = specifier        // linear span|edge|index
+            dir = dir ? (dir < 0 ? BWD : FWD) : NON
+            ;break
           default : return undefined
         }
 
@@ -216,47 +219,41 @@ DD.set((_context) => {
           start = (start >= 0) ? (start === null ? size : start) : start + size
           end   = (end   >= 0) ? (end   === null ? size : end  ) : end   + size
 
-          ;[lo, hi, direction] = (start < end) ?
+          ;[lo, hi, dir] = (start < end) ?
             [start, end, FWD] :
             [end, start, (start > end ? BWD : NON)]
         }
 
-        if (bounded) {
-          (lo < 0) && (lo = 0); (hi > size) && (hi = size)
-        }
-        else (bounded === STRETCH) {
-          direction = STRETCH
-        }
+        if   (bounded) { (lo < 0) && (lo = 0); (hi > size) && (hi = size) }
+        else (bounded === STRETCH) { direction = STRETCH }
 
-        return (wraps) ? [lo, hi, direction, wraps] : [lo, hi, direction]
+        return (wraps) ? [lo, hi, dir, wraps] : [lo, hi, dir]
       },
 
 
 
-      function _normalizeArgs(...args) {
+      function _justifyArgs(...args) {
         do {
           let [first, ...remaining] = args
 
           switch (typeof first) {
             case "function"  : return [this.span, ...args]
             case "string"    : return [this.span, ...args]
-            case "undefined" : return undefined  // [[0, 0, NON], ...args]
+            case "undefined" :
+              if (!args.length) { return undefined } // [[0, 0, NON], ...args]
+              args = remaining
+              ;continue
           }
 
           if (args.length === 1) { args = first; continue }
         } while (false)
 
-        return [this._normalizeSpan(first), ...remaining]
+        return [this._asNormalizedSpan(first), ...remaining]
       },
 
-      function _normalizeDirectives(directiveName, directives) {
-        switch (typeof directives) {
-          default :       return DefaultDirections
-          case "object" : return directives
-          case "number" : return
-           { __proto__ : DefaultDirections, [directiveName] : directives }
-        }
-      },
+
+
+
 
 
 
@@ -319,13 +316,12 @@ DD.set((_context) => {
               absent_ : absent_.call(this.$, index_span)
         }
         return this.atIndex(index_span, absent_)
-
       },
 
       function atEach(indexes_spans) {
         return this.new((result) => {
           Each(indexes_spans, (index_span) => {
-            result.atPut(this.at(index_span))
+            result.add( this.at(index_span) )
           })
         })
       },
@@ -346,27 +342,29 @@ DD.set((_context) => {
       },
 
       { GETTER : [
-        function first(/* GETTER */) {
+
+        function first() {
           return this._elements[0]
         },
 
-        function last(/* GETTER */) {
+        function last() {
           const target = this._elements
           return target[elements.length - 1]
         },
+
       ] },
 
 
 
-      function _withinDo(justSpan, action) {
+      function _withinDo(readSpan, action) {
         let target = this._elements
         let size   = target.length
         let preIndex, preLimit, sIndex, sLimit, noWrap, result
-        let [lo, hi, scanDirection, wraps] = justSpan
+        let [lo, hi, dir, wraps] = readSpan
 
         if (wraps) {
           [preIndex, preLimit, sIndex, sLimit, inc] =
-            (scanDirection < 0) ?
+            (dir < 0) ?
               [hi - 1, ((noWrap = (hi > lo)) ? lo : 0   ) - 1, size, lo, -1] :
               [lo    , ((noWrap = (lo < hi)) ? hi : size)    , 0   , hi,  1]
 
@@ -379,8 +377,7 @@ DD.set((_context) => {
           if (noWrap) { return this }
         }
         else {
-          [sIndex, sLimit, inc] = (scanDirection < 0) ?
-            [hi - 1, lo - 1, -1] : [lo, hi, 1]
+          [sIndex, sLimit, inc] = (dir < 0) ? [hi - 1, lo - 1, -1] : [lo, hi, 1]
         }
 
         while (sIndex !== sLimit) {
@@ -392,80 +389,67 @@ DD.set((_context) => {
         return undefined
       },
 
-      function eachDo(span_, action) {
-        return action ?
-          this._withinDo(this._normalizeSpan(span_), action) :
-          this._withinDo(this.span, action = span_)
+      function withinDo(span, action) {
+        this._withinDo(this._asNormalizedSpan(span), action)
       },
 
-      function map(span_, action) {
+      function eachDo(scanDirective_, action) {
         return action ?
-          this._withinMap(this._normalizeSpan(span_), action) :
-          this._withinMap(this.span, action = span_)
+          this._withinDo(this._asNormalizedSpan(scanDirective_), action) :
+          this._withinDo(this.span, action = scanDirective_)
       },
 
-      function _withinMap(justSpan, Action) {
+      function map(scanDirective_, action) {
+        return action ?
+          this._withinMap(this._asNormalizedSpan(scanDirective_), action) :
+          this._withinMap(this.span, action = scanDirective_)
+      },
+
+      function _withinMap(readSpan, Action) {
         return this.new((result) => {
           const target = result._elements
 
-          this._withinDo(justSpan, (value, index) => {
+          this._withinDo(readSpan, (value, index) => {
             target[index] = Action.call(this.$, value, index)
           })
         })
       },
 
 
-      function _overDo(justSpan, size, directives_, action) {
-        let subDirection = FWD
-        let subsAsLists  = false
-        let overlaps     = true
-
-        switch (directives_) {
-          default         :                                    break
-          case "function" : action        = directives_;       break
-          case "boolean"  : overlaps      = directives_      ; break
-          case "number"   : scanDirection = directives_      ; break
-          case "object"   :
-            { SUB      : subDirection = FWD,
-              AS_LISTS : subsAsLists  = false,
-              OVERLAPS : overlaps     = true, } = directives_; break
-            // subDirection = directives.SUB || FWD
-            // subsAsLists  = directives.AS_LIST || false
-            // overlaps     = directives.OVERLAPS || true
-        }
-
+      function _overDo(directives, overlaps, size, subsAsLists, action) {
         const target = this._elements
-        const [lo, hi, scanDirection, wraps] = justSpan
+        const subDir = directives.SUB
+        let   [lo, hi, scanDir, wraps] = this._asNormalizedSpan(directives)
 
         if (wraps) {
-          return this.error(
-            "Wrapping on span enumeration is not yet implemented!")
+          return this.error("Wrapping on span enumeration is not yet implemented!")
         }
 
-        let [start, limit, startInc, endInc] = (scanDirection < 0) ?
+        let [start, limit, startInc, endInc] = (scanDir < 0) ?
               [hi, lo, BWD, -size] : [lo, hi, FWD, size]
 
         if (!overlaps) { startInc *= size }
 
-        let [sStart, sLimit] = (subDirection < 0) ? [size - 1, -1] : [0, size]
+        let [sStart, sLimit, sInc] = (subDir < 0) ?
+              [size - 1, -1, BWD] : [0, size, FWD]
 
         do {
           do {
             let end       = start + endInc
-            let remaining = (limit - end) * scanDirection
+            let remaining = (limit - end) * scanDir
 
             if (remaining < 0) { break }
 
-            let [tIndex, nextSpan] = (scanDirection < 0) ?
-                  [end  , [end, start, subDirection]] :
-                  [start, [start, end, subDirection]]
+            let [tIndex, nextSpan] = (scanDir < 0) ?
+                  [end  , [end, start, sInc]] :
+                  [start, [start, end, sInc]]
 
             let sub = []
             let sIndex = sStart
 
             while (sIndex !== sLimit) {
               sub[sIndex] = target[tIndex++]
-              sIndex += subDirection
+              sIndex += sInc
             }
 
             let nextSub = subsAsLists ? List(sub) : sub
@@ -485,39 +469,45 @@ DD.set((_context) => {
         return undefined
       },
 
-      function overDo(...span___subSize__directives___action) {
-        const [justSpan, subSize, directives_, action] =
-          this._normalizeArgs(span___subSize__directives___action)
+      function overDo(directives_, subSize, action) {
+        // NOTE: Can't use _justifyArgs here because next arg is a number!!!
+        if (action === undefined) {
+          [directives_, subSize, action] = [DEF, directives_, subSize]
+        }
+        const directives__overlaps = NormalizeDirectives(directives_, true)
 
-        return this._overDo(justSpan, subSize, directives_, action)
+        return this._overDo(...directives__overlaps, subSize, true, action)
       },
 
-      function overMap(...span___subSize__directives___action) {
-        const [justSpan, subSize, directives_, Action] =
-          this._normalizeArgs(span___subSize__directives___action)
+      function overMap(directives_, subSize, action) {
+        // NOTE: Can't use _justifyArgs here because next arg is a number!!!
+        if (action === undefined) {
+          [directives_, subSize, action] = [DEF, directives_, subSize]
+        }
+        const directives__overlaps = NormalizeDirectives(directives_, true)
 
         return this.new((result) => {
-          this._overDo(justSpan, subSize, directives_, (sub, span) => {
-            result.add(Action.call(this.$, sub, span))
+          this._overDo(...directives__overlaps, subSize, true, (sublist, span) => {
+            result.add( Action.call(this.$, sublist, span) )
           })
         })
       },
 
 
 
-      function within(span_start, ...end__scanDirection__doWrap) {
+      function within(span_start, ...end__direction__wrap) {
         const span = (span_start.length) ? span_start :
-          [span_start, ...end__scanDirection__doWrapp]
-        const justSpan = this._normalizeSpan(span)
+          [span_start, ...end__direction__wrap]
+        const readSpan = this._asNormalizedSpan(span)
 
         if (this[IMMUTABLE] {
-          const [lo, hi, direction, wraps] = justSpan
-          if (lo === 0 && hi === this.size && direction === FWD && !wrap) {
+          const [lo, hi, dir, wraps] = readSpan
+          if (lo === 0 && hi === this.size && dir === FWD && !wrap) {
             return this
           }
         }
 
-        return this._withinMap(justSpan, (value) => value))
+        return this._withinMap(readSpan, (value) => value))
       },
 
 
@@ -528,11 +518,11 @@ DD.set((_context) => {
       //   return this.within(span_ ? this._normalize(span_) : this.span)
       // },
 
-      function _within(start, end, scanDir, _wraps) {
-        const justSpan = this._normalizeSpan([start, end])
+      function _within(start, end, scanDirective, _wraps) {
+        const readSpan = this._asNormalizedSpan([start, end])
 
-        justSpan[DIRECTION] = (scanDir.toFixed) ? scanDir : scanDir.SCAN || FWD
-        return this._withinMap(justSpan, (value) => value))
+        readSpan[DIR] = (AsDirection(SCAN, scanDirective) < 0) ? BWD : FWD
+        return this._withinMap(readSpan, (value) => value))
       },
 
       function beyond(edge, scanDirective = FORWARD) {
@@ -554,38 +544,38 @@ DD.set((_context) => {
 
 
 
-      function eachSend(span_, method_selector, ...args) {
-        let [justSpan, Method, Args] =
-          this._normalizeArgs(span_, method_selector, args)
+      function eachSend(scanDirective_, method_selector, ...args) {
+        let [readSpan, Method, Args] =
+          this._justifyArgs(scanDirective_, method_selector, args)
 
         return (typeof Method === "function") ?
-          this._withinDo(justSpan, (value) => { Method.apply(value, Args))
-          this._withinDo(justSpan, (value) => { value[Method](...Args))
+          this._withinDo(readSpan, (value) => { Method.apply(value, Args))
+          this._withinDo(readSpan, (value) => { value[Method](...Args))
       },
 
 
-      function mapSend(span_, method_selector, ...args) {
-        let [justSpan, Method, Args] =
-          this._normalizeArgs(span_, method_selector, args)
+      function mapSend(scanDirective_, method_selector, ...args) {
+        let [readSpan, Method, Args] =
+          this._justifyArgs(scanDirective_, method_selector, args)
 
         return (typeof Method === "function") ?
-          this._withinMap(justSpan, (value) => { Method.apply(value, Args))
-          this._withinMap(justSpan, (value) => { value[Method](...Args))
+          this._withinMap(readSpan, (value) => { Method.apply(value, Args))
+          this._withinMap(readSpan, (value) => { value[Method](...Args))
       },
 
 
 
-      function reduce(...span___action__seed_) {
-        let args = this._normalizeArgs(...span___action__seed_)
-        let [justSpan, Action, Accumulator] = args
-        let scanDirection = span[DIRECTION]
+      function reduce(...scanDirective___action__seed_) {
+        let args = this._justifyArgs(scanDirective___action__seed_)
+        let [readSpan, Action, Accumulator] = args
+        let scanDir = readSpan[DIR]
 
         if (args.length === 2) {
-          Accumulator = (scanDirection < 0) ?
-            this._atIndex(--span[HI]) : this._atIndex(span[LO]++)
+          Accumulator = (scanDir < 0) ?
+            this._atIndex(--readSpan[HI]) : this._atIndex(readSpan[LO]++)
         }
 
-        this._withinDo(justSpan, function (value, index) {
+        this._withinDo(readSpan, function (value, index) {
           Accumulator = Action.call(this.$, Accumulator, value, index)
         })
 
@@ -594,10 +584,10 @@ DD.set((_context) => {
 
 
       function _byWithinFind(grip, ...args) {
-        const [justSpan, Conditional, absent_] = this._normalizeArgs(...args)
+        const [readSpan, Conditional, absent_] = this._justifyArgs(args)
 
-        const found = this._withinDo(justSpan, function (value, index) {
-          if (Condition.call(this.$, value, index)) {
+        const found = this._withinDo(readSpan, function (value, index) {
+          if (Conditional.call(this.$, value, index)) {
             return { index: index, value: value } // element: value, key: index,
           }
         })
@@ -605,34 +595,34 @@ DD.set((_context) => {
           (typeof absent_ !== "function") ? absent_ : absent_.call(this.$)
       },
 
-      function _byWithinFindAll(Grip, ...args) {
-        const [justSpan, Conditional] = this._normalizeArgs(...args)
+      function _byWithinFindEvery(Grip, ...args) {
+        const [readSpan, Conditional] = this._justifyArgs(args)
 
         return this.new((result) => {
-          this._withinDo(justSpan, (value, index) => {
+          this._withinDo(readSpan, (value, index) => {
             if (Conditional.call(this.$, value, index)) {
               const slot =
                 { index: index, value: value } // element: value, key: index,
-              result.add(slot[Grip])
+              result.add( slot[Grip] )
             }
           })
         })
       },
 
-      function indexWhere(span_, condition, absent_) {
-        return this._byWithinFind(INDEX, span_, condition, absent_)
+      function indexWhere(scanDirective_, condition, absent_) {
+        return this._byWithinFind(INDEX, scanDirective_, condition, absent_)
       },
 
-      function indexesWhere(span_, condition) {
-        return this._byWithinFindAll(INDEX, span_, condition)
+      function indexesWhere(scanDirective_, condition) {
+        return this._byWithinFindEvery(INDEX, scanDirective_, condition)
       },
 
 
-      function indexOf(value, scanDir = FORWARD) {
+      function indexOf(value, scanDirective = FORWARD) {
         const condition = (existing) => value === existing)
-        const direction = (scanDir.toFixed) ? scanDir : scanDir.SCAN || FWD
+        const readSpan  = this._asNormalizedSpan(scanDirective)
 
-        return this._byWithinFind(INDEX, direction, condition)
+        return this._byWithinFind(INDEX, readSpan, condition)
       },
 
       function indexOfFirst(value) {
@@ -643,37 +633,38 @@ DD.set((_context) => {
         return this.indexOf(value, BACKWARD)
       },
 
-      function indexOfEvery(value, scanDir = FORWARD) {
+      function indexOfEvery(value, scanDirective = FORWARD) {
         const condition = (existing) => value === existing)
-        const direction = (scanDir.toFixed) ? scanDir : scanDir.SCAN || FWD
 
-        return this._byWithinFindAll(INDEX, direction, condition)
+        return this._byWithinFindEvery(INDEX, scanDirective, condition)
       },
 
-      function valueWhere(span_, condition, absent_) {
-        return this._byWithinFind(VALUE, span_, condition, absent_)
+      function valueWhere(scanDirective_, condition, absent_) {
+        return this._byWithinFind(VALUE, scanDirective_, condition, absent_)
       },
 
-      function everyWhere(span_, conditional) {
-        return this._byWithinFindAll(VALUE, span_, conditional)
+      function everyWhere(scanDirective_, conditional) {
+        return this._byWithinFindEvery(VALUE, scanDirective_, conditional)
       },
 
-      function everyNotWhere(span_, conditional) {
-        let [justSpan, Conditional] = this._normalizeArgs(span_, conditional)
+      function everyNotWhere(scanDirective_, conditional) {
+        let [readSpan, Conditional] =
+          this._justifyArgs(scanDirective_, conditional)
 
         return this.new((result) => {
-          this._withinDo(justSpan, (value, index) => {
-            if (!Conditional.call(this.$, value, index)) { result.add(value) }
+          this._withinDo(readSpan, (value, index) => {
+            if (!Conditional.call(this.$, value, index)) { result.add( value ) }
           })
         })
       },
 
-      function countWhere(span_, conditional) {
-        let [justSpan, Conditional] = this._normalizeArgs(span_, conditional)
+      function countWhere(scanDirective_, conditional) {
+        let [readSpan, Conditional] =
+          this._justifyArgs(scanDirective_, conditional)
 
         let count = 0
-        this._withinDo(justSpan, (value, index) => {
-          if (Condition.call(this.$, value, index)) { count++ }
+        this._withinDo(readSpan, (value, index) => {
+          if (Conditional.call(this.$, value, index)) { count++ }
         })
         return count
       },
@@ -699,59 +690,46 @@ DD.set((_context) => {
 
 
 
-      function _byWithinFindSub(grip, span, ...args) {
-        const [justSpan, subSize Conditional, absent_] =
-          this._normalizeArgs(span, args)
+      function spanOf(sub, directives_) {
+        const matchSub   = AsArray(sub)
+        const subSize    = matchSub.length
+        const directives = NormalizeDirectives(directives_)
 
-        const found = this._overDo(justSpan, subSize, (sub, span) => {
-          if (Condition.call(this.$, sub, index)) {
-            return { span: span, sub: sub }
-          }
-        })
-        return found ? found[grip] :
-          (typeof absent_ !== "function") ? absent_ : absent_.call(this.$)
-      },
-
-      function spanOf(sub, directions_) {
-        const sSub      = AsArray(sub)
-        const size      = sSub.length
-        const condition = (tSub) => EqualArrays(tSub, sSub)
-
-        return this._byWithinOverFind(SPAN, span, size, condition)
-
-      },
-
-      function spanOfFirst(sub) {
-        return this.spanOf(sub, FORWARD)
-      },
-
-      function spanOfLast(sub) {
-        return this.spanOf(sub, BACKWARD)
-      },
-
-      // LOOK: Should this be consolidated???
-      function _byWithinFindAllSubs(Grip, ...args) {
-        const [scanDir, subSize, Conditional] = this._normalizeArgs(...args)
-        const direction = (scanDir.toFixed) ? scanDir : scanDir.SCAN || FWD
-        const justSpan  = this.normalizeSpan(direction)
-
-        return this.new((result) => {
-          this._overDo(justSpan, subSize, (sub, span) => {
-            if (Conditional.call(this.$, value, index)) {
-              const slots = { span: span, sub: sub }
-              result.add(slots[Grip])
-            }
-          })
+        return this._overDo(directives, true, subSize, false, (sub, span) => {
+          if (EqualArrays(sub, matchSub)) { return span }
         })
       },
 
-      function spanOfAcrossEvery(sub, scanDir = FORWARD) {
-        const sSub      = AsArray(sub)
-        const size      = sSub.length
-        const condition = (tSub) => EqualArrays(tSub, sSub)
-
-        return this._byWithinFindAllSubs(SPAN, scanDir, size, condition)
+      function spanOfFirst(sub, subDirection = FORWARD) {
+        return this.spanOf(sub, {SCAN : FORWARD, SUB : subDirection})
       },
+
+      function spanOfLast(sub, subDirection = FORWAR) {
+        return this.spanOf(sub, {SCAN : BACKWARD, SUB : subDirection})
+      },
+
+      function _spanOfEvery(sub, directives, overlaps = false) {
+        const matchSub   = AsArray(sub)
+        const subSize    = matchSub.length
+
+        return this._new((result) => {
+          return this._overDo(directives, overlaps, subSize, false,
+            (next, span) => {
+              if (EqualArrays(next, matchSub)) { result.add( span ) }
+            })
+        })
+      },
+
+      function spanOfEvery(sub, directives_) {
+        const directives__overlaps = NormalizeDirectives(directives_, false)
+
+        return this._spanOfEvery(sub, ...directives__overlaps)
+      },
+
+      function countOver(sub, directives_) {
+        return this.spanOfEvery(sub, directives_).size
+      },
+
 
 
 
@@ -803,69 +781,71 @@ DD.set((_context) => {
 
 
       function withinPut(span, value) {
-        const normSpan = this._normalizeSpan(span, STRETCH)
-        return this._withinSetBy(normSpan, [value], "__fillWithin")
+        const writeSpan = this._asNormalizedSpan(span, STRETCH)
+        return this._withinSetBy(writeSpan, [value], "__fillWithin")
       },
 
-      function withinFan(span, values, fillDir = FORWARD) {
+      function withinFan(span, values, fillDirective = FORWARD) {
         const source    = AsArray(values)
-        const normSpan  = this._normalizeSpan(span, STRETCH)
-        const direction = (fillDir.toFixed) ? fillDir : fillDir.FILL || FWD
+        const writeSpan = this._asNormalizedSpan(span, STRETCH)
+        const direction = AsDirection(FILL, fillDirective)
 
-        return this._withinSetBy(normSpan, source, "__fillWithin", direction)
+        return this._withinSetBy(writeSpan, source, "__fillWithin", direction)
       },
 
       function withinEcho(span, value) {
-        const normSpan = this._normalizeSpan(span, UNBOUNDED)
+        const writeSpan = this._asNormalizedSpan(span, UNBOUNDED)
 
-        return this._withinSetBy(normSpan, value, "__withinEcho")
+        return this._withinSetBy(writeSpan, value, "__echoWithin")
       },
 
 
       function _contractSpanTo(span, fillSize) {
-        const normSpan = this._normalizeSpan(span, UNBOUNDED)
-        const [lo, hi, scanDirection] = normSpan
-        const spanSize = (hi - lo)
-        const delta    = fillSize - spanSize
+        const writeSpan     = this._asNormalizedSpan(span, UNBOUNDED)
+        const [lo, hi, dir] = writeSpan
+        const spanSize      = (hi - lo)
+        const delta         = spanSize - fillSize
 
-        (delta < 0) &&
-          normSpan[(scanDirection < 0) ? LO : HI] += delta * scanDirection
+        if (delta > 0) {
+          if (dir < 0) { writeSpan[LO] += delta }
+          else         { writeSpan[HI] -= delta }
+        }
 
-        return normSpan
+        return writeSpan
       },
 
-      function withinFill(span, values, fillDir = FORWARD) {
+      function withinFill(span, values, fillDirective = FORWARD) {
         const source    = AsArray(values)
-        const normSpan  = this._contractSpanTo(span, source.length)
-        const direction = (fillDir.toFixed) ? fillDir : fillDir.FILL || FWD
+        const writeSpan = this._contractSpanTo(span, source.length)
+        const fillDir   = AsDirection(FILL, fillDirective)
 
-        return this._withinSetBy(normSpan, source, "__fillWithin", direction)
+        return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
       },
 
-      function withinEchoFill(span, values, fillDir = FORWARD) {
+      function withinEchoFill(span, values, fillDirective = FORWARD) {
         const source    = AsArray(values)
-        const normSpan  = this._normalizeSpan(span, UNBOUNDED)
-        const direction = (fillDir.toFixed) ? fillDir : fillDir.FILL || FWD
+        const writeSpan = this._asNormalizedSpan(span, UNBOUNDED)
+        const fillDir   = AsDirection(FILL, fillDirective)
 
-        return this._withinSetBy(
-          normSpan, source, "__withinEchoFill", direction)
+        return this._withinSetBy(writeSpan, source, "__echoFillWithin", fillDir)
       },
 
-      function beyondLay(edge, values, fillDir = FORWARD) {
+      function beyondLay(edge, values, fillDirective = FORWARD) {
         const source    = AsArray(values)
-        const normSpan  = this._contractSpanTo([edge, BEYOND], source.length)
-        const direction = (fillDir.toFixed) ? fillDir : fillDir.FILL || FWD
+        const writeSpan = this._contractSpanTo([edge, BEYOND], source.length)
+        const fillDir   = AsDirection(FILL, fillDirective)
 
-        return this._withinSetBy(normSpan, source, "__fillWithin", direction)
+        return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
       },
 
-      function untilLay(edge, values, fillDir = FORWARD) {
+      function untilLay(edge, values, fillDirective = FORWARD) {
         const source    = AsArray(values)
-        const normSpan  = this._contractSpanTo([-BEYOND, edge], source.length)
-        const direction = (fillDir.toFixed) ? fillDir : fillDir.FILL || FWD
+        const writeSpan = this._contractSpanTo([-BEYOND, edge], source.length)
+        const fillDir   = AsDirection(FILL, fillDirective)
 
-        return this._withinSetBy(normSpan, source, "__fillWithin", direction)
+        return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
       },
+
 
 
       function atFirstPut(matchValue, newValue) {
@@ -891,17 +871,19 @@ DD.set((_context) => {
         })
       },
 
+
       function overFan(sub, values, directives_) {
-        const directives = this._normalizeDirectives(SCAN, directives_)
+        const directives = NormalizeDirectives(directives_)
         const source     = AsArray(values)
         const span       = this.spanOf(sub, directives)
+        if (!span) { return undefined }
 
-        span[DIRECTION] = STRETCH
+        span[DIR]  = STRETCH
         return this._withinSetBy(span, source, "__fillWithin", directives.FILL)
       },
 
-      // function overFirstFan(sub, values, match_fill_dir_) {
-      //   let directives = this._normalizeDirectives(MATCH, match_fill_dir_)
+      // function overFirstFan(sub, values, sub_fill_dir_) {
+      //   let directives = NormalizeDirectives(SUB, sub_fill_dir_)
       //   directives = { __proto__ : directives, SCAN : FORWARD }
       //   return this.overFan(sub, values, directives)
       // },
@@ -912,6 +894,63 @@ DD.set((_context) => {
 
       function overLastFan(sub, values) {
         return this.overFan(sub, values, BACKWARD)
+      },
+
+
+      function __fanAcrossWithinAll(filler, original, spans, fillDir_) {
+          const target     = this._elements
+          const fillerSize = filler.length
+          const limit      = original.length   // final original edge
+          let   next       = 0                 // edge traversing original
+          let   start      = 0                 // target insertion edge
+          let   target     = []
+
+          spans.eachDo(([left, right]) => {
+            let skipSize = left - next        // skipped elements from original
+            let end      = start + skipSize   // target trailing edge
+
+            start = this.__fillWithin(original, start, end, FWD, fillDir_, next)
+            end   = start + fillerSize
+
+            start = this.__fillWithin(filler, start, end, FWD, fillDir_)
+            next  = right
+          })
+
+          if ((skipSize = limit - next)) {
+            end = start + skipSize
+            this.__fillWithin(original, start, end, FWD, fillDir_, next)
+          }
+        })
+      },
+
+      function overEveryFan(sub, values, directives_) {
+        const directives   = NormalizeDirectives(directives_)
+        const original     = this._elements
+        const matchSub     = AsArray(sub)
+        const matchSize    = matchSub.length
+        const filler       = AsArray(values)
+        const fillerSize   = original.length
+        const fillDir      = directives.FILL
+
+        return this._nonCopy((result) => {
+          if (matchSize === fillerSize && this === result) {
+            this._overDo(directives, false, matchSize, false,
+              (nextSub, [left, right, dir]) => {
+                if (EqualArrays(nextSub, matchSub)) {
+                  this.__fillWithin(filler, left, right, FORWARD, fillDir)
+                }
+              })
+
+            return this
+          }
+
+          const spans = this._spanOfEvery(matchSub, directives, false)
+
+          if (spans.size === 0)    { return this }
+          if (directives.SCAN < 0) { spans = spans.reversed }
+
+          this.__fanAcrossWithinAll(filler, original, spans, fillDir)
+        })
       },
 
 
@@ -930,23 +969,23 @@ DD.set((_context) => {
         }
       },
 
-      function addFirstAll(values, fillDir = FORWARD) {
-        return this.withinFan([0], values, fillDir)
+      function addFirstAll(values, fillDirective = FORWARD) {
+        return this.withinFan([0], values, fillDirective)
       },
 
-      function addLastAll(values, fillDir = FORWARD) {
-        return this.withinFan([null], values, fillDir)
+      function addLastAll(values, fillDirective = FORWARD) {
+        return this.withinFan([null], values, fillDirective)
       },
 
-      function addBefore(value, matchValue, scanDir = FORWARD) {
-        const index = this.indexOf(matchValue, scanDir)
+      function addBefore(value, matchValue, scanDirective = FORWARD) {
+        const index = this.indexOf(matchValue, scanDirective)
         if (index === undefined) { return this }
 
         return this.withinPut([index], value)
       },
 
-      function addAfter(value, matchValue, scanDir = FORWARD) {
-        const index = this.indexOf(matchValue, scanDir)
+      function addAfter(value, matchValue, scanDirective = FORWARD) {
+        const index = this.indexOf(matchValue, scanDirective)
         if (index === undefined) { return this }
 
         return this.withinPut([++index], value)
@@ -955,16 +994,12 @@ DD.set((_context) => {
 
       function addAllBefore(values, sub, directives_) {
         const span = this.spanOf(sub, directives_)
-        if (span === undefined) { return this }
-
-        return this.withinFan([span[LO]], values, directives_)
+        return (span) ? this.withinFan([span[LO]], values, directives_) : this
       },
 
       function addAllAfter(values, sub, directives_) {
         const span = this.spanOf(sub, directives_)
-        if (span === undefined) { return this }
-
-        return this.withinFan([span[HI]], values, directives_)
+        return (span) ? this.withinFan([span[HI]], values, directives_) : this
       },
 
       { ALIAS : {
@@ -973,49 +1008,93 @@ DD.set((_context) => {
       } },
 
 
-
-
-      function removeAtIndex(index) {
-        return (typeof index !== "number") ? this :
-          this.removeWithin(index, index + 1)
+      function removeAt(index_span) {
+        return (index_span.length) ?
+          this.removeWithin(index_span) : this.removeAtIndex(index_span
       },
 
-      // LOOK!!!
-      function removeWithin(lo, hi = lo) {
-        if (typeof lo !== "number") { [lo, hi = lo] = lo }
+      function removeAtEach(indexes_spans) {
+        return this.set((result) => {
+          Each(indexes_spans, (index_span) => { result.removeAt( index_span ) })
+        })
+      },
 
-        lo = (lo > 0)    ? lo : 0
-        hi = (hi < size) ? hi : size
+      function removeEach(values) {
+        return this.set((result) => {
+          Each(values, (value) => { result.remove( value ) })
+        })
+      },
 
+
+      function _removeAtIndex(validIndex) {
+        return this._set(this.__subFromShiftTo, validIndex + 1, validIndex)
+      },
+
+      function removeAtIndex(index) {
+        const size      = this._elements.length
+        const slotIndex = (index < 0) ? size - index : index
+
+        return (slotIndex >= 0 && slotIndex < size) ?
+          this._set(this.__subFromShiftTo, slotIndex + 1, slotIndex) : this
+      },
+
+
+      function _removeWithin([lo, hi]) {
         return (lo === hi) ? this : this._set(this.__subFromShiftTo, hi, lo)
       },
 
-      // LOOK!!!
-      function removeOver(span) {
-        return this.removeWithin(this._normalizeSpan(span))
+      function removeWithin(span_start, ...end__direction__wrap) {
+        const span = (span_start.length) ? span_start :
+          [span_start, ...end__direction__wrap]
+
+        return this._removeWithin(this._asNormalizedSpan(span))
       },
 
+
       function removeBeyond(edge) {
-        return this.removeWithin(this._normalizeSpan([edge, null]))
+        return this._removeWithin(this._asNormalizedSpan([edge, null]))
       },
 
       function removeUntil(edge) {
-        return this.removeWithin(this._normalizeSpan([0, edge]))
+        return this._removeWithin(this._asNormalizedSpan([0, edge]))
       },
 
       function removeInitial(count = 1) {
-        return this.removeWithin(0, count)
+        return this._removeWithin(this._asNormalizedSpan([0, count]))
       },
 
       function removeFinal(count = 1) {
-        const size  = this.size
-        const delta = (count < size) ? count : size
-        return count ?
-          this._set((result) => { result._elements.length -= delta }) : this
+        return this._removeWithin(this._asNormalizedSpan([-count, null]))
       },
 
-      function remove(value, searchDirection = FORWARD) {
-        return this.removeAtIndex(this.indexOf(value, searchDirection))
+      function removeWhere(scanDirective_, Condition) {
+        const modified = this.eachDo(scanDirective_, function (value, index) {
+          if (Conditional.call(this.$, value, index)) {
+            return this._set(this._removeAtIndex(index))
+          }
+        })
+        return modified || this
+      },
+
+      function removeEveryWhere(scanDirective_, condition) {
+        return this._new((result) => {
+          const originalValues =
+          const [readSpan, test] =
+            this._justifyArgs(scanDirective_, condition)
+          const indexes = this.indexesWhere(readSpan, test)
+
+          if (indexes.size === 0) { return this }
+
+          const mapDir  = readSpan[DIR]
+          const spans   = indexes.map(mapDir, (index) => [index, index + 1])
+
+          this.__fanAcrossWithinAll([], this._elements, spans)
+        })
+      },
+
+
+      function remove(value, scanDirective = FORWARD) {
+        return this.removeAtIndex(this.indexOf(value, scanDirective))
       },
 
       function removeFirst(value_) {
@@ -1028,26 +1107,61 @@ DD.set((_context) => {
           this.removeAtIndex(this.indexOfLast(value_)) : this.removeFinal()
       },
 
-      function removeEvery(value) {
-        this._nonCopy((result, isImmutable) => {
-          const remaining = []
+      function removeEvery(value, scanDirective = FORWARD) {
+        const condition = (existing) ==> value === existing
+        return this.removeEveryWhere(scanDirective, condition)
+      },
 
-          this.eachDo((existing, index) => {
-            if (existing !== value) { remaining[index] = existing }
-          })
-          if (remaining.length === this.size) { return this }
+      function removeOver(sub, directives_) {
+        const span = this.spanOf(sub, directives_)
+        return (span) ? this._removeWithin(span) : this
+      },
 
-          result._elements = remaining
+      function removeOverFirst(sub, subDirection = FORWARD) {
+        return this.removeOver(sub, {SCAN : FORWARD, SUB : subDirection})
+      },
+
+      function removeOverLast(sub, subDirection = FORWARD) {
+        return this.removeOver(sub, {SCAN : BACKWARD, SUB : subDirection})
+      },
+
+      function removeOverEvery(matchSub, directives_) {
+        return overEveryFan(matchSub, [], directives_)
+      },
+
+      function removeAll() {
+        return this._nonCopy((result) => { result._elements = [] })
+      },
+
+      { GETTER : [
+
+        function empty() {
+          return this._new((result) => {})
+        },
+
+      ] },
+
+
+      function reverse() {
+        return this._nonCopy((result) => {
+          result._elements = Reverser(this.elements)
         })
       },
 
-      function removeSub(sub) {
-        const span = this.spanOfSub(sub)
+      { GETTER : [
 
-        return (span) ? this._removeWithin(span) :
-          (typeof absent_ !== "function") ? absent_ :
-            absent_.call(this.$, value)
-      }
+        function reversed() {
+          return this._new((result) => {
+            result._elements = Reverser(this.elements)
+          })
+        },
+
+      ] },
+
+
+
+
+
 
 
 

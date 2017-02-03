@@ -79,6 +79,11 @@ allSuchThat
 
   scan|match|fill  take|place
 
+  directives  = scanDirective | subDirective | fillDirective
+  scanDirective = direction | span | {SCAN: direction}
+  relative span  = direction | span
+
+
   directions
     FWD     1
     BWD    -1

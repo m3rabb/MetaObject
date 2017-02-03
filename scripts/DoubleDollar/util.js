@@ -129,6 +129,54 @@ function AddLazyProperty(target, namedInstaller_name, installer_) {
 // }
 
 
+function AsDirection(name, directives) {
+  return (directives.toFixed) ? directives : directives[name] || FORWARD
+}
+
+function AsDir(name, directives) {
+  const direction = (directives.toFixed) ? directives : directives[name]
+  return (direction < 0) : BWD : FWD
+}
+
+function NormalizeDirectives(directives, defaultOverlaps_) {
+  switch (typeof directives) {
+    default :
+      return DefaultDirectives
+    case "boolean" :
+      return { directives : DefaultDirectives, overlaps : directives }
+    case "string"  :
+
+    case "object"  :
+      if (directives.length === undefined) {
+        return (defaultOverlaps_ === undefined) ? directives :
+           [directives, directives.OVERLAPS || defaultOverlaps_]
+      }
+      // INTENTIONAL FALL THRU
+    case "number" :
+      var normDirectives = { __proto__ : DefaultDirectives, SCAN : directives }
+  }
+  return (defaultOverlaps_ === undefined) ? normDirectives :
+           [normDirectives, defaultOverlaps_]
+}
+
+function Reverser(source) {
+  let target = []
+  let tIndex = 0
+  let sIndex = source.length
+
+  while (sIndex--) { target[tIndex++] = source[sIndex] }
+
+  return target
+}
+
+if (typeof directives_ === "boolean") {
+  directives = DefaultDirectives
+  overlaps   = directives_
+}
+else {
+  directives = NormalizeDirectives(directives_)
+  overlaps   = directives.OVERLAPS || true
+}
 
 
 function Each(object, action) {
