@@ -22,44 +22,82 @@ toString()
   asCopy
   asNonCopy
 
+Conversion
+  toString()
+  asString
 
 Accessing
-  Generic
+  General
     size
-    isEmpty
+    slots
     elements
+    values
     keys
+    indexes
     span
     inverseSpan
-    slots
+    reversed
+    isEmpty
 
-    values @ index|span
-      at(index_span, absent_)
-      atEach(indexers)
+  Generic
+    at(index_span, absent_)
+    atEach(indexers)
+    reverse()
 
-    value @ index|span
-      atIndex(index, absent_)
-      first
-      last
+  By Index
+    atIndex(index, absent_)
+    first
+    last
 
-    index|span @ value(s)
+  By Span
+    within(lo, hi = lo, direction, wrap)
+    beyond(edge, scanDir_)
+    until(edge, scanDir_)
+    initial(count = 1, scanDir_)
+    final(count = 1, scanDir_)
+
+  By Value
+    Answer Index
       indexOf(value, scanDir_)
       indexOfFirst(value)
       indexOfLast(value)
       indexOfEvery(value, scanDir_)
 
+    Answer Count
       countOf(value)
+      countOfWhere(span_, conditional)
       contains(value)
 
-      indexWhere(span_, condition, absent_)
-      indexesWhere(span_, condition)
-      countWhere(span_, conditional)
+  By Value Condition
+    Answer Index
+      indexOfWhere(span_, condition, absent_)
+      indexesOfWhere(span_, condition)
 
+    Answer Value
       valueWhere(span_, condition, absent_)
       everyWhere(span_, conditional)
-      everyNotWhere(span_, conditional)
+      everyWhereNot(span_, conditional)
 
-  Enumeration
+    where   : "valueWhere"
+    detect  : "valueWhere",
+    find    : "valueWhere",
+    select  : "everyWhere",
+    reject  : "everyWhereNot"
+
+  By Sub
+    Answer Span
+      spanOf(matchSub, directives_)                  scan|match
+      spanOfFirst(matchSub)
+      spanOfLast(matchSub)
+      spanOfEvery(matchSub, directives_)             scan|sub|overlaps
+
+    Answer Count
+      countOfSeq(matchSub, directives_)               scan|sub|overlaps
+      containsSeq(sub)
+
+
+Enumeration
+  By Value
     withinDo(normSpan, action)
     withinMap(normSpan, Action)
 
@@ -67,120 +105,99 @@ Accessing
     map(span_, action)
     eachSend(span_, method_selector, ...args)
     mapSend(span_, method_selector, ...args)
+
     reduce(span_, action, seed_)
 
     do      : "eachDo",
-    overDo  : "eachDo",
     collect : "map",
-    detect  : "valueWhere",
-    find    : "valueWhere",
-    select  : "everyWhere",
-    reject  : "everyNotWhere"
     inject  : "reduce",
-    where   : "valueWhere"
 
-Put
-  Generic
-    atPut(index_span, value)
-    atFan()
-    atEachPut(indexers, value)
-    atEachPutEach(indexers, values)
-
-  index|span PUT value(s)
-    atIndexPut(index, value)
-    withinPut(edge_span, value)
-
-    withinEcho(span, value)
-
-  value PUT value
-   atFirstPut(matchElement, newElement)
-   atLastPut(matchElement, newElement)
-   atEveryPut(matchElement, newElement)
-
-
-
-Add
-  addFirst(value)
-  addLast(value)
-  addBefore(value, targetValue)
-  addAfter(value, targetValue)
-
-  add    : "addLast",
-
-  plural
-    within(lo, hi = lo, direction, wrap)
-    beyond(edge, scanDir_)
-    until(edge, scanDir_)
-    initial(count = 1, scanDir_)
-    final(count = 1, scanDir_)
-
-    _overDo(directives, subSize, action)           scan|sub|overlaps|subsAsLists
+  By Sub
+    _ Do(directives, subSize, action)           scan|sub|overlaps|subsAsLists
 
     overDo(directives_, subSize, action)           scan|sub|overlaps
     overMap(directives_, subSize, action)          scan|sub|overlaps
 
-    spanOf(matchSub, directives_)                  scan|match
-    spanOfFirst(matchSub)
-    spanOfLast(matchSub)
+Put
+  Generic
+    atPut(index_span, value)
+    atEachPut(indexers, value)
+    atEachPutEach(indexers, values)
+    atFan()
 
-    spanOfEvery(matchSub, directives_)             scan|sub|overlaps
-    countOver(matchSub, directives_)               scan|sub|overlaps
+  By Index
+    atIndexPut(index, value)
+
+  By Span
+    withinPut(edge_span, value)
+    withinEcho(span, value)
 
     withinFan(span, values, fillDir_)              fill
     withinFill(span, values, fillDir_)             fill
     withinEchoFill(span, values, fillDir_)         fill
+
     beyondLay(edge, sub, fillDir_)                 fill
     untilLay(edgs, sub, fillDir_)                  fill
 
+  By Value
+   atValuePut
+   atFirstPut(matchElement, newElement)
+   atLastPut(matchElement, newElement)
+   atEveryPut(matchElement, newElement)
+
+  By Sub
     overFan(sub, values, directives_)              scan|sub|fill
     overFirstFan(sub, values)
     overLastFan(sub, values)
     overEveryFan(sub, values, directives_)         scan|sub|fill
 
-    addAll(values, directive_)                     fill
+Add
+  Generic
+    add    : "addLast",
+    addAll : "addAllLast",                   fill
+
+  By Value
+    addFirst(value)
+    addLast(value)
+    addBefore(value, targetValue)
+    addAfter(value, targetValue)
+
+  By Sub
     addFirstAll(values, directive_)                fill
     addLastAll(values, directive_)                 fill
-
     addAllBefore(values, targetValue, directive_)  scan|sub|fill
     addAllAfter(values, targetValue, directive_)   scan|sub|fill
 
-    addAll : "addAllLast",
-
-    List("but but but not wow").overFirstFan(
-      List("but", List("near"), BACKWARD
-
-
-
 Remove
+  Generic
     removeAt(index_span)
     removeAtEach(indexers)
+    removeEach(values)
+    removeAll()
+    empty
 
+  By Index
     removeAtIndex(index)
-    removeWithin(lo, hi = lo)
-    removeFirst
-    removeLast
 
+  By Span
+    removeWithin(lo, hi = lo)
     removeBeyond(edge)
     removeUntil(edge)
     removeInitial(count = 1)
     removeFinal(count = 1)
 
-    removeWhere(span_, condition, absent_)
-    removeEveryWhere(span_, conditional)
-
+  By Value
     remove(value, scanDir_)
     removeFirst(value_)
     removeLast(value_)
     removeEvery(value)
 
+    removeWhere(span_, condition, absent_)
+    removeEveryWhere(span_, conditional)
+    removeEveryWhereNot(span_, conditional)
+
+  By Span
     removeOver(span, directive_)    scan|sub
     removeOverFirst(span, directive_)    scan|sub
     removeOverLast(span, directive_)    scan|sub
     removeOverEvery(span, directive_)    scan|sub
-
-    empty
-    removeAll
-
-
-    reversed
-    reverse()

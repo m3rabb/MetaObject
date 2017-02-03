@@ -1,0 +1,90 @@
+toString()
+
+* copy(span_)
+  asNew
+  asCopy
+  asNonCopy
+
+
+Accessing
+  Generic
+    size
+    isEmpty
+    elements
+    keys
+    slots
+
+    values @ index|span
+      at(index_span, absent_)
+      atEach(indexers)
+
+
+      countOf(value)
+      contains(value)
+
+      countWhere(span_, conditional)
+
+      valueWhere(span_, condition, absent_)
+      everyWhere(span_, conditional)
+      everyNotWhere(span_, conditional)
+
+  Enumeration
+
+    eachDo(span_, action)
+    map(span_, action)
+    eachSend(span_, method_selector, ...args)
+    mapSend(span_, method_selector, ...args)
+    reduce(span_, action, seed_)
+
+    do      : "eachDo",
+    collect : "map",
+    detect  : "valueWhere",
+    find    : "valueWhere",
+    select  : "everyWhere",
+    reject  : "everyNotWhere"
+    inject  : "reduce",
+    where   : "valueWhere"
+
+Put
+  Generic
+    atPut(index_span, value)
+    atEachPut(indexers, value)
+    atEachPutEach(indexers, values)
+
+
+  value PUT value
+   atValuePut(matchElement, newElement)
+   atEveryPut(matchElement, newElement)
+
+
+
+Add
+
+  add
+
+  plural
+
+    _overDo(directives, subSize, action)           scan|sub|overlaps|subsAsLists
+
+    overDo(directives_, subSize, action)           scan|sub|overlaps
+    overMap(directives_, subSize, action)          scan|sub|overlaps
+    countOver(matchSub, directives_)               scan|sub|overlaps
+
+
+    addAll(values, directive_)                     fill
+
+
+Remove
+    removeAt(index_span)
+    removeAtEach(indexers)
+
+    removeAtKey
+
+    removeWhere(span_, condition, absent_)
+    removeEveryWhere(span_, conditional)
+
+    remove(value, scanDir_)
+    removeEvery(value)
+
+    empty
+    removeAll
