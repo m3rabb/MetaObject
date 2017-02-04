@@ -596,11 +596,9 @@ Krust.set((context) => {
 
 
       function _overDo(distinct, directives, subSize, action) {
-        const target = this._elements
-
-        let [subDir, lo, hi, scanDir, wraps] = (directives == null) ?
-          [FWD                  ,    0, target.length, FWD, false      ] :
-          [directives.sub || FWD, ...this._asNormalizedSpan(directives)]
+        const target   = this._elements
+        const readSpan = this._asNormalizedSpan(directives)
+        const subDir   = directives && directives.sub || FWD
 
         if (wraps) { return this.error(
             "Wrapping on seq enumerations is not yet implemented!") }
@@ -731,42 +729,42 @@ Krust.set((context) => {
         return this._withinSetBy(writeSpan, value, "__echoWithin")
       },
 
-      function withinFan(span, values, fillDirective = FORWARD) {
+      function withinFan(span, values, fillDirective_) {
         const source    = AsArray(values)
         const writeSpan = this._asNormalizedSpan(span, STRETCH)
-        const fillDir   = AsDirection(FILL, fillDirective)
+        const fillDir   = AsDirection(FILL, fillDirective_)
 
         return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
       },
 
-      function withinFill(span, values, fillDirective = FORWARD) {
+      function withinFill(span, values, fillDirective_) {
         const source    = AsArray(values)
         const writeSpan = this._contractSpanTo(span, source.length)
-        const fillDir   = AsDirection(FILL, fillDirective)
+        const fillDir   = AsDirection(FILL, fillDirective_)
 
         return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
       },
 
-      function withinEchoFill(span, values, fillDirective = FORWARD) {
+      function withinEchoFill(span, values, fillDirective_) {
         const source    = AsArray(values)
         const writeSpan = this._asNormalizedSpan(span, UNBOUNDED)
-        const fillDir   = AsDirection(FILL, fillDirective)
+        const fillDir   = AsDirection(FILL, fillDirective_)
 
         return this._withinSetBy(writeSpan, source, "__echoFillWithin", fillDir)
       },
 
-      function beyondLay(edge, values, fillDirective = FORWARD) {
+      function beyondLay(edge, values, fillDirective_) {
         const source    = AsArray(values)
         const writeSpan = this._contractSpanTo([edge, BEYOND], source.length)
-        const fillDir   = AsDirection(FILL, fillDirective)
+        const fillDir   = AsDirection(FILL, fillDirective_)
 
         return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
       },
 
-      function untilLay(edge, values, fillDirective = FORWARD) {
+      function untilLay(edge, values, fillDirective_) {
         const source    = AsArray(values)
         const writeSpan = this._contractSpanTo([-BEYOND, edge], source.length)
-        const fillDir   = AsDirection(FILL, fillDirective)
+        const fillDir   = AsDirection(FILL, fillDirective_)
 
         return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
       },
@@ -997,12 +995,12 @@ Krust.set((context) => {
 
       //// ADD : a Sequence at a Position
 
-      function addFirstAll(values, fillDirective = FORWARD) {
-        return this.withinFan([0], values, fillDirective)
+      function addFirstAll(values, fillDirective_) {
+        return this.withinFan([0], values, fillDirective_)
       },
 
-      function addLastAll(values, fillDirective = FORWARD) {
-        return this.withinFan([null], values, fillDirective)
+      function addLastAll(values, fillDirective_) {
+        return this.withinFan([null], values, fillDirective_)
       },
 
       function addAllBefore(values, sub, directives_) {
