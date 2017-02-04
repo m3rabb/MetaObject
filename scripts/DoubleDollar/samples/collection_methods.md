@@ -61,7 +61,7 @@ Accessing
       indexOf(value, scanDirective_)
       indexOfFirst(value)
       indexOfLast(value)
-      indexOfEvery(value, scanDirective_)
+      indexesOfEvery(value, scanDirective_)
 
     Answer Count
       countOf(value)
@@ -78,18 +78,11 @@ Accessing
       everyWhere(scanDirective_, conditional)
       everyWhereNot(scanDirective_, conditional)
 
-    where   : "valueWhere"
-    detect  : "valueWhere",
-    find    : "valueWhere",
-    select  : "everyWhere",
-    reject  : "everyWhereNot"
-
-    Answer Sub
-*      subWhere
-      firstSubWhere
-      lastSubWhere
-*      distinctWhere
-*      indistinctWhere
+      where   : "valueWhere"
+      detect  : "valueWhere",
+      find    : "valueWhere",
+      select  : "everyWhere",
+      reject  : "everyWhereNot"
 
   By Sub
     Answer Span
@@ -103,6 +96,17 @@ Accessing
       countOfDistinct(matchSub, directives_)      scan|sub
       countOfIndistinct(matchSub, directives_)      scan|sub
       containsSub(sub)
+
+  By Sub condition
+    Answer Span
+      spanWhere(directives_, subSize, condition)
+      distinctSpansWhere(directives_, subSize, condition)
+      indistinctSpansWhere(directives_, subSize, condition)
+
+    Answer Sub
+      subWhere(directives_, subSize, condition)
+      distinctWhere(directives_, subSize, condition)
+      indistinctWhere(directives_, subSize, condition)
 
 Enumeration
   By Value
@@ -126,8 +130,6 @@ Enumeration
     indistinctDo(directives_, subSize, action)       scan|sub
     distinctMap(directives_, subSize, action)       scan|sub
     indistinctMap(directives_, subSize, action)       scan|sub
-
-
 
 
 Put

@@ -240,7 +240,7 @@ Krust.set((context) => {
 
       function indexOf(value, scanDirective = FORWARD) {
         const condition = (existing) => value === existing)
-        return this._byWithinFind(INDEX, scanDirective, condition)
+        return this._byFind(INDEX, scanDirective, condition)
       },
 
       function indexOfFirst(value) {
@@ -251,10 +251,10 @@ Krust.set((context) => {
         return this.indexOf(value, BACKWARD)
       },
 
-      function indexOfEvery(value, scanDirective = FORWARD) {
+      function indexesOfEvery(value, scanDirective = FORWARD) {
         const condition = (existing) => value === existing)
 
-        return this._byWithinFindEvery(INDEX, scanDirective, condition)
+        return this._byFindEvery(INDEX, scanDirective, condition)
       },
 
 
@@ -290,18 +290,18 @@ Krust.set((context) => {
 
 
 
-      //// ACCESS : answer the Index satisfying a Condition
+      //// ACCESS : answer an Index satisfying a Condition
 
       function indexOfWhere(scanDirective_, condition, absent_) {
-        return this._byWithinFind(INDEX, scanDirective_, condition, absent_)
+        return this._byFind(INDEX, scanDirective_, condition, absent_)
       },
 
       function indexesOfWhere(scanDirective_, condition) {
-        return this._byWithinFindEvery(INDEX, scanDirective_, condition)
+        return this._byFindEvery(INDEX, scanDirective_, condition)
       },
 
 
-      function _byWithinFind(grip, ...args) {
+      function _byFind(grip, ...args) {
         const [readSpan, Conditional, absent_] = this._justifyArgs(args)
 
         const found = this._withinDo(readSpan, function (value, index) {
@@ -313,7 +313,7 @@ Krust.set((context) => {
           (typeof absent_ !== "function") ? absent_ : absent_.call(this.$)
       },
 
-      function _byWithinFindEvery(Grip, ...args) {
+      function _byFindEvery(Grip, ...args) {
         const [readSpan, Conditional] = this._justifyArgs(args)
 
         return this.new((result) => {
@@ -328,14 +328,14 @@ Krust.set((context) => {
 
 
 
-      //// ACCESS : answer a value satisfying a Condition
+      //// ACCESS : answer a Value satisfying a Condition
 
       function valueWhere(scanDirective_, condition, absent_) {
-        return this._byWithinFind(VALUE, scanDirective_, condition, absent_)
+        return this._byFind(VALUE, scanDirective_, condition, absent_)
       },
 
       function everyWhere(scanDirective_, conditional) {
-        return this._byWithinFindEvery(VALUE, scanDirective_, conditional)
+        return this._byFindEvery(VALUE, scanDirective_, conditional)
       },
 
       function everyWhereNot(scanDirective_, conditional) {
@@ -352,7 +352,7 @@ Krust.set((context) => {
         reject  : "everyWhereNot"
       } },
 
-      undefined|number|bool|span|
+
 
       //// ACCESS : answering the Span of a Subsequence
 
@@ -393,6 +393,21 @@ Krust.set((context) => {
         })
       },
 
+      // function _byFindEverySub(grip, distinct, directives_, subSize, condition) {
+      //   if (!condition) {
+      //     [directives_, subSize, condition] = [null, directives_, subSize]
+      //   }
+      //
+      //   return this.new((result) => {
+      //     this._overDo(directives_, distinct, subSize, (sub, span) => {
+      //       if (Conditional.call(this.$, sub, span)) {
+      //         result.add( (grip === SUB) ? sub : span )
+      //       }
+      //     })
+      //   })
+      // },
+
+
 
 
       //// ACCESS : answering the Count of a Subsequence
@@ -413,6 +428,61 @@ Krust.set((context) => {
         return (this.spanOf(sub, directives_) != null)
       },
 
+
+
+      //// ACCESS : answer a Span satisfying a Condition
+
+      function spanWhere(directives_, subSize, condition) {
+        return this._byFindSub(
+          SPAN, ...Justify(directives_, subSize, condition))
+      },
+
+      function distinctSpansWhere(directives_, subSize, condition) {
+        return this._byFindEverySub(
+            SPAN, true, ...Justify(directives_, subSize, condition))
+      },
+
+      function indistinctSpansWhere(directives_, subSize, condition) {
+        return this._byFindEverySub(
+          SPAN, false, ...Justify(directives_, subSize, condition))
+      },
+
+
+      function _byFindSub(grip, directives, subSize, condition) {
+        return this._overDo(directives, false, subSize, (sub, span) => {
+          if (Condition.call(this.$, sub, span)) {
+            return (grip === SUB) ? sub : span
+          }
+        })
+      },
+
+      function _byFindEverySub(grip, distinct, directives, subSize, condition) {
+        return this.new((result) => {
+          this._overDo(directives, distinct, subSize, (sub, span) => {
+            if (Conditional.call(this.$, sub, span)) {
+              result.add( (grip === SUB) ? sub : span )
+            }
+          })
+        })
+      },
+
+
+
+      //// ACCESS : answer a Subsequence satisfying a Condition
+
+      function subWhere(directives_, subSize, condition) {
+        return this._byFindSub(SUB, ...Justify(directives_, subSize, condition))
+      },
+
+      function distinctWhere(directives_, subSize, condition) {
+        return this._byFindEverySub(
+          SUB, true, ...Justify(directives_, subSize, condition))
+      },
+
+      function indistinctWhere(directives_, subSize, condition) {
+        return this._byFindEverySub(
+          SUB, false, ...Justify(directives_, subSize, condition))
+      },
 
 
 
