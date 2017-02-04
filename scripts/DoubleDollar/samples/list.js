@@ -209,102 +209,47 @@ Krust.set((context) => {
         return this._withinMap(readSpan, (value) => value))
       },
 
-      function beyond(edge, scanDirective = FORWARD) {
-        this._within(edge, null, scanDirective)
+      function beyond(edge, scanDirective_) {
+        this._within(edge, null, scanDirective_)
       },
 
-      function until(edge, scanDirective = FORWARD) {
-        return this._within(0, edge, scanDirective)
+      function until(edge, scanDirective_) {
+        return this._within(0, edge, scanDirective_)
       },
 
-      function initial(count = 1, scanDirective = FORWARD) {
-        return this._within(0, count, scanDirective)
+      function initial(count = 1, scanDirective_) {
+        return this._within(0, count, scanDirective_)
       },
 
-      function final(count = 1, scanDirective = FORWARD) {
+      function final(count = 1, scanDirective_) {
         const size = this.size
-        return this.within(size - count, size, scanDirective)
+        return this._within(size - count, size, scanDirective_)
       },
 
 
       function _within(start, end, scanDirective, _wraps) {
         const readSpan = this._asNormalizedSpan([start, end])
 
-        readSpan[DIR] = AsDirection(SCAN, scanDirective)
+        readSpan[DIR] = (scanDirective == null) ? FWD :
+          AsDirection(SCAN, scanDirective)
         return this._withinMap(readSpan, (value) => value))
-      },
-
-
-
-      //// ACCESS : answer the Index at a Value
-
-      function indexOf(value, scanDirective = FORWARD) {
-        const condition = (existing) => value === existing)
-        return this._byFind(INDEX, scanDirective, condition)
-      },
-
-      function indexOfFirst(value) {
-        return this.indexOf(value, FORWARD)
-      },
-
-      function indexOfLast(value) {
-        return this.indexOf(value, BACKWARD)
-      },
-
-      function indexesOfEvery(value, scanDirective = FORWARD) {
-        const condition = (existing) => value === existing)
-
-        return this._byFindEvery(INDEX, scanDirective, condition)
-      },
-
-
-
-      //// ACCESS : answer the Count of a Value
-
-      function countOf(value) {
-        return this.countOfWhere((existing) => (existing === value))
-      },
-
-
-
-      //// ACCESS : answer the Count satisfying a Condition
-
-      function countOfWhere(scanDirective_, conditional) {
-        let [readSpan, Conditional] =
-          this._justifyArgs(scanDirective_, conditional)
-
-        let count = 0
-        this._withinDo(readSpan, (value, index) => {
-          if (Conditional.call(this.$, value, index)) { count++ }
-        })
-        return count
-      },
-
-
-
-      //// ACCESS : answer the presence (or not) of a Value
-
-      function contains(value) {
-        return (this.indexOf(value) >= 0)
       },
 
 
 
       //// ACCESS : answer an Index satisfying a Condition
 
-      function indexOfWhere(scanDirective_, condition, absent_) {
-        return this._byFind(INDEX, scanDirective_, condition, absent_)
+      function indexOfWhere(scanDirective_, test, absent_) {
+        return this._byFind(INDEX, ...Justify(scanDirective_, test, absent_))
       },
 
       function indexesOfWhere(scanDirective_, condition) {
-        return this._byFindEvery(INDEX, scanDirective_, condition)
+        return this._byFindEvery(INDEX, ...Justify(scanDirective_, condition))
       },
 
 
-      function _byFind(grip, ...args) {
-        const [readSpan, Conditional, absent_] = this._justifyArgs(args)
-
-        const found = this._withinDo(readSpan, function (value, index) {
+      function _byFind(grip, scanDirective, Condition, absent_) {
+        const found = this.withinDo(scanDirective, (value, index) => {
           if (Conditional.call(this.$, value, index)) {
             return { index: index, value: value } // element: value, key: index,
           }
@@ -313,11 +258,9 @@ Krust.set((context) => {
           (typeof absent_ !== "function") ? absent_ : absent_.call(this.$)
       },
 
-      function _byFindEvery(Grip, ...args) {
-        const [readSpan, Conditional] = this._justifyArgs(args)
-
+      function _byFindEvery(Grip, scanDirective, Condition) {
         return this.new((result) => {
-          this._withinDo(readSpan, (value, index) => {
+          this.withinDo(scanDirective, (value, index) => {
             if (Conditional.call(this.$, value, index)) {
               const slot = { index: index, value: value }
               result.add( slot[Grip] )        // element: value, key: index,
@@ -330,17 +273,20 @@ Krust.set((context) => {
 
       //// ACCESS : answer a Value satisfying a Condition
 
-      function valueWhere(scanDirective_, condition, absent_) {
-        return this._byFind(VALUE, scanDirective_, condition, absent_)
+      function valueWhere(directive_, condition, absent_) {
+        return this._byFind(VALUE, JustifyWithAll(directive_, test, absent_))
       },
 
+
+
       function everyWhere(scanDirective_, conditional) {
-        return this._byFindEvery(VALUE, scanDirective_, conditional)
+        return this._byFindEvery(VALUE, ...Justify(scanDirective_, condition))
       },
 
       function everyWhereNot(scanDirective_, conditional) {
+        const [scanDirective, action] = Justify(scanDirective_, condition)
         const inverseCondition =
-          (value, index) => !condition.call(this.$, value, index)
+          (value, index) => !action.call(this.$, value, index)
         return this.everyWhere(scanDirective_, inverseCondition)
       },
 
@@ -354,78 +300,53 @@ Krust.set((context) => {
 
 
 
-      //// ACCESS : answering the Span of a Subsequence
+      //// ACCESS : answer the Count satisfying a Condition
 
-      function spanOf(sub, directives = FORWARD) {
-        const matchSub   = AsArray(sub)
-        const subSize    = matchSub.length
-
-        return this._overDo(directives, false, subSize, (sub, span) => {
-          if (EqualArrays(sub, matchSub)) { return span }
+      function countOfWhere(scanDirective_, conditional) {
+        let [scanDirective, Conditional] = Justify(scanDirective_, conditional)
+        let count = 0
+        this.withinDo(scanDirective, (value, index) => {
+          if (Conditional.call(this.$, value, index)) { count++ }
         })
-      },
-
-      function spanOfFirst(sub, subDirection = FORWARD) {
-        return this.spanOf(sub, {scan: FORWARD, sub: subDirection})
-      },
-
-      function spanOfLast(sub, subDirection = FORWARD) {
-        return this.spanOf(sub, {scan: BACKWARD, sub: subDirection})
-      },
-
-      function spansOfDistinct(sub, directives = FORWARD) {
-        return this._spansOfEvery(sub, directives, false)
-      },
-
-      function spansOfIndistinct(sub, directives = FORWARD) {
-        return this._spansOfEvery(sub, directives, true)
-      },
-
-
-      function _spansOfEvery(sub, directives, distinct) {
-        const matchSub   = AsArray(sub)
-        const subSize    = matchSub.length
-
-        return this._new((result) => {
-          return this._overDo(directives, distinct, subSize, (next, span) => {
-            if (EqualArrays(next, matchSub)) { result.add( span ) }
-          })
-        })
-      },
-
-      // function _byFindEverySub(grip, distinct, directives_, subSize, condition) {
-      //   if (!condition) {
-      //     [directives_, subSize, condition] = [null, directives_, subSize]
-      //   }
-      //
-      //   return this.new((result) => {
-      //     this._overDo(directives_, distinct, subSize, (sub, span) => {
-      //       if (Conditional.call(this.$, sub, span)) {
-      //         result.add( (grip === SUB) ? sub : span )
-      //       }
-      //     })
-      //   })
-      // },
-
-
-
-
-      //// ACCESS : answering the Count of a Subsequence
-
-      function countOfDistinct(sub, directives = FORWARD) {
-        return this._spansOfEvery(sub, directives, false).size
-      },
-
-      function countOfIndistinct(sub, directives = FORWARD) {
-        return this._spansOfEvery(sub, directives, true).size
+        return count
       },
 
 
 
-      //// ACCESS : answer the presence (or not) of a Subsequence
+      //// ACCESS : answer the Index at a Value
 
-      function containsSub(sub, directives_) {
-        return (this.spanOf(sub, directives_) != null)
+      function indexOf(value, scanDirective_) {
+        const condition = (existing) => value === existing)
+        return this._byFind(INDEX, scanDirective_, condition)
+      },
+
+      function indexOfFirst(value) {
+        return this.indexOf(value, FORWARD)
+      },
+
+      function indexOfLast(value) {
+        return this.indexOf(value, BACKWARD)
+      },
+
+      function indexesOfEvery(value, scanDirective_) {
+        const condition = (existing) => value === existing)
+        return this._byFindEvery(INDEX, scanDirective_, condition)
+      },
+
+
+
+      //// ACCESS : answer the Count of a Value
+
+      function countOf(value) {
+        return this.countOfWhere((existing) => (existing === value))
+      },
+
+
+
+      //// ACCESS : answer the presence (or not) of a Value
+
+      function contains(value) {
+        return (this.indexOf(value) >= 0)
       },
 
 
@@ -449,7 +370,7 @@ Krust.set((context) => {
 
 
       function _byFindSub(grip, directives, subSize, condition) {
-        return this._overDo(directives, false, subSize, (sub, span) => {
+        return this._overDo(false, directives, subSize, (sub, span) => {
           if (Condition.call(this.$, sub, span)) {
             return (grip === SUB) ? sub : span
           }
@@ -458,7 +379,7 @@ Krust.set((context) => {
 
       function _byFindEverySub(grip, distinct, directives, subSize, condition) {
         return this.new((result) => {
-          this._overDo(directives, distinct, subSize, (sub, span) => {
+          this._overDo(distinct, directives, subSize, (sub, span) => {
             if (Conditional.call(this.$, sub, span)) {
               result.add( (grip === SUB) ? sub : span )
             }
@@ -486,80 +407,80 @@ Krust.set((context) => {
 
 
 
+      //// ACCESS : answering the Span of a Subsequence
+
+      function spanOf(sub, directives_) {
+        const matchSub   = AsArray(sub)
+        const subSize    = matchSub.length
+
+        return this._overDo(false, directives_, subSize, (sub, span) => {
+          if (EqualArrays(sub, matchSub)) { return span }
+        })
+      },
+
+      function spanOfFirst(sub, subDirection_) {
+        return this.spanOf(sub, {scan: FORWARD, sub: subDirection_})
+      },
+
+      function spanOfLast(sub, subDirection_) {
+        return this.spanOf(sub, {scan: BACKWARD, sub: subDirection_})
+      },
+
+      function spansOfDistinct(sub, directive_) {
+        return this._spansOfEvery(true, sub, directive_)
+      },
+
+      function spansOfIndistinct(sub, directives_) {
+        return this._spansOfEvery(false, sub, directives_)
+      },
+
+
+      function _spansOfEvery(distinct, sub, directives_) {
+        const matchSub   = AsArray(sub)
+        const subSize    = matchSub.length
+
+        return this.new((result) => {
+          this._overDo(distinct, directives_, subSize, (sub, span) => {
+            if (EqualArrays(sub, matchSub)) {
+              result.add( (grip === SUB) ? sub : span )
+            }
+          })
+        })
+      },
+
+
+
+      //// ACCESS : answering the Count of a Subsequence
+
+      function countOfDistinct(sub, directives_) {
+        return this._spansOfEvery(true, sub, directives_).size
+      },
+
+      function countOfIndistinct(sub, directives_) {
+        return this._spansOfEvery(false, sub, directives_).size
+      },
+
+
+
+      //// ACCESS : answer the presence (or not) of a Subsequence
+
+      function containsSub(sub, directives_) {
+        return (this.spanOf(sub, directives_) != null)
+      },
+
+
+
+
       //// ENUMERATION METHODS ////
 
       //// ENUMERATION : by Value & Index
 
       function withinDo(scanDirective, action) {
-        this._withinDo(this._asNormalizedSpan(scanDirective), action)
-      },
-
-      function withinMap(scanDirective, action) {
-        this._withinMap(this._asNormalizedSpan(scanDirective), action)
-      },
-
-      function withinReduce(scanDirective, Accumulator_, Reducer) {
-        const readSpan = this._asNormalizedSpan(scanDirective)
-
-        if (action === undefined) {
-          Reducer = Accumulator_
-          Accumulator_ = (readSpan[DIR] < 0) ?
-            this._atIndex(--readSpan[HI]) : this._atIndex(readSpan[LO]++)]
-        }
-
-        this._withinDo(readSpan, function (value, index) {
-          Accumulator_ = Reducer.call(this.$, Accumulator_, value, index)
-        })
-
-        return Accumulator_
-      },
-
-      function eachDo(scanDirective_, action) {
-        return action ?
-          this._withinDo(this._asNormalizedSpan(scanDirective_), action) :
-          this._withinDo(this.span, action = scanDirective_)
-      },
-
-      function map(scanDirective_, action) {
-        return action ?
-          this._withinMap(this._asNormalizedSpan(scanDirective_), action) :
-          this._withinMap(this.span, action = scanDirective_)
-      },
-
-      function eachSend(scanDirective_, method_selector, ...args) {
-        let [readSpan, Method, Args] =
-          this._justifyArgs(scanDirective_, method_selector, args)
-
-        return (typeof Method === "function") ?
-          this._withinDo(readSpan, (value) => { Method.apply(value, Args))
-          this._withinDo(readSpan, (value) => { value[Method](...Args))
-      },
-
-      function mapSend(scanDirective_, method_selector, ...args) {
-        let [readSpan, Method, Args] =
-          this._justifyArgs(scanDirective_, method_selector, args)
-
-        return (typeof Method === "function") ?
-          this._withinMap(readSpan, (value) => { Method.apply(value, Args))
-          this._withinMap(readSpan, (value) => { value[Method](...Args))
-      },
-
-      function reduce(accumulator_, reducer) {
-        return this.withinReduce(FORWARD, accumulator_, reducer)
-      },
-
-      { ALIAS : {
-        do      : "eachDo",
-        collect : "map",
-        inject  : "reduce",
-      } },
-
-
-      function _withinDo(readSpan, action) {
         let target = this._elements
         let size   = target.length
         let preIndex, preLimit, sIndex, sLimit, noWrap, result
-        let [lo, hi, dir, wraps] = readSpan
+        let [lo, hi, dir, wraps] = (scanDirective == null) ?
+          [0, size, FWD, false] : this._asNormalizedSpan(scanDirective)
 
         if (wraps) {
           [preIndex, preLimit, sIndex, sLimit, inc] =
@@ -588,64 +509,111 @@ Krust.set((context) => {
         return undefined
       },
 
-      function _withinMap(readSpan, Action) {
+      function withinMap(scanDirective, Action) {
         return this.new((result) => {
           const target = result._elements
 
-          this._withinDo(readSpan, (value, index) => {
+          this.withinDo(scanDirective, (value, index) => {
             target[index] = Action.call(this.$, value, index)
           })
         })
       },
+
+      function withinReduce(directive, Accumulator_, Reducer) {
+        if (Reducer === undefined) {
+          Reducer   = Accumulator_
+          directive = (directive == null) ?
+            this.span : this._asNormalizedSpan(directive)
+          let index = (directive[DIR] < 0) ? --directive[HI] : directive[LO]++
+          Accumulator_ = this._atIndex(index)
+        }
+
+        this._withinDo(directive, function (value, index) {
+          Accumulator_ = Reducer.call(this.$, Accumulator_, value, index)
+        })
+
+        return Accumulator_
+      },
+
+      function eachDo(scanDirective_, action) {
+        return action ?
+          this.withinDo(scanDirective_, action) :
+          this.withinDo(null, action = scanDirective_)
+      },
+
+      function map(scanDirective_, action) {
+        return action ?
+          this._withinMap(scanDirective_, action) :
+          this._withinMap(null, action = scanDirective_)
+      },
+
+      function eachSend(...scanDirective___method_selector__args_) {
+        const [directive, action, ...args] =
+          JustifyWithAll(...scanDirective___method_selector__args_)
+
+        return (typeof action === "function") ?
+          this.withinDo(directive, (value) => { action.apply(value, args)) }
+          this.withinDo(directive, (value) => { value[action](...args))    }
+      },
+
+      function mapSend(...scanDirective___method_selector__args_) {
+        const [directive, action, ...args] =
+          JustifyWithAll(...scanDirective___method_selector__args_)
+
+        return (typeof action === "function") ?
+          this.withinMap(directive, (value) => { action.apply(value, args)) }
+          this.withinMap(directive, (value) => { value[action](...args))    }
+      },
+
+      function reduce(accumulator_, reducer) {
+        return this.withinReduce(null, accumulator_, reducer)
+      },
+
+      { ALIAS : {
+        do      : "eachDo",
+        collect : "map",
+        inject  : "reduce",
+      } },
+
 
 
 
       //// ENUMERATION : by Subsequence & Span
 
       function distinctDo(directives_, subSize, action) {
-        return (action) ?
-          this._overDo(directives, true, subSize, action) :
-          this._overDo(FORWARD, true, directives_, subSize)
+        return this._overDo(true, ...Justify(directives_, subSize, action))
       },
 
       function indistinctDo(directives_, subSize, action) {
-        return (action) ?
-          this._overDo(directives, false, subSize, action) :
-          this._overDo(FORWARD, false, directives_, subSize)
+        return this._overDo(false, ...Justify(directives_, subSize, action))
       },
 
       function distinctMap(directives_, subSize, action) {
-        return (action) ?
-          this._overMap(directives, true, subSize, action) :
-          this._overMap(FORWARD, true, directives_, subSize)
+        return this._overMap(true, ...Justify(directives_, subSize, action))
       },
 
       function indistinctMap(directives_, subSize, action) {
-        return (action) ?
-          this._overMap(directives, false, subSize, action) :
-          this._overMap(FORWARD, false, directives_, subSize)
+        return this._overMap(false, ...Justify(directives_, subSize, action))
       },
 
-      // NOTE: Can't use _justifyArgs for previous methods because the
-      // next arg is a number!!!
 
-
-      function _overDo(directives, distinct, size, action) {
+      function _overDo(distinct, directives, subSize, action) {
         const target = this._elements
-        const subDir = directives.sub || FWD
-        let   [lo, hi, scanDir, wraps] = this._asNormalizedSpan(directives)
 
-        if (wraps) {
-          return this.error("Wrapping on span enumeration is not yet implemented!")
-        }
+        let [subDir, lo, hi, scanDir, wraps] = (directives == null) ?
+          [FWD                  ,    0, target.length, FWD, false      ] :
+          [directives.sub || FWD, ...this._asNormalizedSpan(directives)]
+
+        if (wraps) { return this.error(
+            "Wrapping on seq enumerations is not yet implemented!") }
 
         let [start, limit, startInc, endInc] = (scanDir < 0) ?
-              [hi, lo, BWD, -size] : [lo, hi, FWD, size]
+              [hi, lo, BWD, -subSize] : [lo, hi, FWD, subSize]
 
-        if (distinct) { startInc *= size }
+        if (distinct) { startInc *= subSize }
 
         let [sStart, sLimit, sInc] = (subDir < 0) ?
-              [size - 1, -1, BWD] : [0, size, FWD]
+              [subSize - 1, -1, BWD] : [0, subSize, FWD]
 
         do {
           do {
@@ -674,7 +642,7 @@ Krust.set((context) => {
 
           if (remaining === 0) { break }
 
-          size += count
+          subSize += count
           end = limit
         } while (true)
 
@@ -682,9 +650,9 @@ Krust.set((context) => {
       },
 
 
-      function _overMap(directives, distinct, subSize, action) {
+      function _overMap(distinct, directives, subSize, Action) {
         return this.new((result) => {
-          this._overDo(directives, distinct, subSize, (sublist, span) => {
+          this._overDo(distinct, directives, subSize, (sublist, span) => {
             result.add( Action.call(this.$, sublist, span) )
           })
         })
@@ -699,7 +667,7 @@ Krust.set((context) => {
 
       // NOTE: Consider adding 'put' directives put: fan|fill|lay !!!
       function atPut(position, value) {
-        return (index_span.length) ?
+        return (position.length) ?
           this.withinPut(position, value) :
           this.atIndexPut(position, value)
       },
@@ -755,6 +723,7 @@ Krust.set((context) => {
 
       function withinPut(span, value) {
         const writeSpan = this._asNormalizedSpan(span, STRETCH)
+
         return this._withinSetBy(writeSpan, [value], "__fillWithin")
       },
 
@@ -947,7 +916,7 @@ Krust.set((context) => {
       //   return this.fanOver(values, sub, {scan: FORWARD, sub: subDirection})
       // },
 
-      function fanOverLast(values, sub) {
+      function fanOverFirst(values, sub) {
         return this.fanOver(values, sub, FORWARD)
       },
 
@@ -955,7 +924,7 @@ Krust.set((context) => {
         return this.fanOver(values, sub, BACKWARD)
       },
 
-      function fanOverDistinct(values, subSeq, directives = FORWARD) {
+      function fanOverEvery(values, subSeq, directives_ = FORWARD) {
         const original     = this._elements
         const matchSub     = AsArray(subSeq)
         const matchSize    = matchSub.length
@@ -965,7 +934,7 @@ Krust.set((context) => {
 
         return this._nonCopy((result) => {
           if (matchSize === fillerSize && this === result) {
-            this._overDo(directives, true, matchSize, (sub, [lo, hi, dir]) => {
+            this._overDo(true, directives_, matchSize, (sub, [lo, hi, dir]) => {
               if (EqualArrays(sub, matchSub)) {
                 this.__fillWithin(filler, lo, hi, FORWARD, fillDir)
               }
@@ -973,10 +942,10 @@ Krust.set((context) => {
             return this
           }
 
-          const spans = this._spansOfEvery(matchSub, directives, false)
+          const spans = this._spansOfEvery(true, matchSub, directives_)
 
           if (spans.size === 0)    { return this }
-          if (directives.scan < 0) { spans = spans.reversed }
+          if (AsDirection(SCAN, directives_) < 0) { spans = spans.reversed }
 
           this.__fanAcrossWithinAll(filler, original, spans, fillDir)
         })
@@ -1012,8 +981,8 @@ Krust.set((context) => {
         }
       },
 
-      function addBefore(value, matchValue, scanDirective = FORWARD) {
-        const index = this.indexOf(matchValue, scanDirective)
+      function addBefore(value, matchValue, scanDirective_) {
+        const index = this.indexOf(matchValue, scanDirective_)
         if (index === undefined) { return this }
 
         return this.withinPut([index], value)
@@ -1107,28 +1076,58 @@ Krust.set((context) => {
         const span = (span_start.length) ? span_start :
           [span_start, ...end__direction__wrap]
 
-        return this._removeWithin(this._asNormalizedSpan(span))
+        return this._removeWithin(span)
       },
 
       function removeBeyond(edge) {
-        return this._removeWithin(this._asNormalizedSpan([edge, null]))
+        return this._removeWithin([edge, null])
       },
 
       function removeUntil(edge) {
-        return this._removeWithin(this._asNormalizedSpan([0, edge]))
+        return this._removeWithin([0, edge])
       },
 
       function removeInitial(count = 1) {
-        return this._removeWithin(this._asNormalizedSpan([0, count]))
+        return this._removeWithin([0, count])
       },
 
       function removeFinal(count = 1) {
-        return this._removeWithin(this._asNormalizedSpan([-count, null]))
+        return this._removeWithin([-count, null])
       },
 
 
-      function _removeWithin([lo, hi]) {
+      function _removeWithin(span) {
+        const [lo, hi] = this._asNormalizedSpan(span)
+
         return (lo === hi) ? this : this._set(this.__subFromShiftTo, hi, lo)
+      },
+
+
+
+      //// REMOVE : a Value satisfying a Condition
+
+      function removeWhere(scanDirective_, condition) {
+        const index = this.indexOfWhere(scanDirective_, condition)
+        return (index >= 0) ? this._set(this._removeAtIndex(index)) : this
+      },
+
+      function removeEveryWhere(scanDirective_, test) {
+        return this._new((result) => {
+          const indexes = this.indexesOfWhere(...Justify(scanDirective_, test))
+
+          if (indexes.size === 0) { return this }
+
+          const mapDir = readSpan[DIR]
+          const spans  = indexes.map(mapDir, (index) => [index, index + 1])
+
+          this.__fanAcrossWithinAll([], this._elements, spans)
+        })
+      },
+
+      function removeEveryWhereNot(scanDirective_, condition) {
+        const [directive, test] = Justify(scanDirective_, condition)
+        const inverseTest = (value, index) => !test.call(this.$, value, index)
+        return this.removeEveryWhere(directive, inverseTest)
       },
 
 
@@ -1155,41 +1154,6 @@ Krust.set((context) => {
 
 
 
-      //// REMOVE : a Value satisfying a Condition
-
-      function removeWhere(scanDirective_, Condition) {
-        const modified = this.eachDo(scanDirective_, function (value, index) {
-          if (Conditional.call(this.$, value, index)) {
-            return this._set(this._removeAtIndex(index))
-          }
-        })
-        return modified || this
-      },
-
-      function removeEveryWhere(scanDirective_, condition) {
-        return this._new((result) => {
-          const originalValues =
-          const [readSpan, test] =
-            this._justifyArgs(scanDirective_, condition)
-          const indexes = this.indexesOfWhere(readSpan, test)
-
-          if (indexes.size === 0) { return this }
-
-          const mapDir  = readSpan[DIR]
-          const spans   = indexes.map(mapDir, (index) => [index, index + 1])
-
-          this.__fanAcrossWithinAll([], this._elements, spans)
-        })
-      },
-
-      function removeEveryWhereNot(scanDirective_, condition) {
-        const inverseCondition =
-          (value, index) => !condition.call(this.$, value, index)
-        return this.removeEveryWhere(scanDirective_, inverseCondition)
-      },
-
-
-
       //// REMOVE : a Subsequence
 
       function removeOver(sub, directives_) {
@@ -1205,8 +1169,8 @@ Krust.set((context) => {
         return this.removeOver(sub, {scan: BACKWARD, sub: subDirection})
       },
 
-      function removeOverDistinct(matchSub, directives_) {
-        return fanOverDistinct([], matchSub, directives_)
+      function removeOverEvery(matchSub, directives_) {
+        return fanOverEvery([], matchSub, directives_)
       },
 
 
@@ -1215,7 +1179,7 @@ Krust.set((context) => {
 
       //// SUPPORT METHODS ////
 
-      //   undefined    + direction
+      //   undefined    + direction     /// Removed as an option now
       //   boolean      +/- direction
       //   number       +/- direction
       //   [Infinity]   +/- direction
@@ -1236,10 +1200,10 @@ Krust.set((context) => {
         let size = this._elements.length
 
         do {
-          if (specifier === undefined) {
-            debugger; // LOOK: Is it necessary to check for undefined???
-            return [0, size, FWD]
-          } // direction
+          // if (specifier === undefined) {
+          //   debugger; // LOOK: Is it necessary to check for undefined???
+          //   return [0, size, FWD]
+          // } // direction
           if (specifier.toFixed) {return [0, size, (specifier < 0) ? BWD : FWD]}
 
           switch (span.length) {
@@ -1288,25 +1252,6 @@ Krust.set((context) => {
         else (bounded === STRETCH) { direction = STRETCH }
 
         return (wraps) ? [lo, hi, dir, wraps] : [lo, hi, dir]
-      },
-
-      function _justifyArgs(...args) {
-        do {
-          let [first, ...remaining] = args
-
-          switch (typeof first) {
-            case "function"  : return [this.span, ...args]
-            case "string"    : return [this.span, ...args]
-            case "undefined" :
-              if (!args.length) { return undefined } // [[0, 0, NON], ...args]
-              args = remaining
-              ;continue
-          }
-
-          if (args.length === 1) { args = first; continue }
-        } while (false)
-
-        return [this._asNormalizedSpan(first), ...remaining]
       },
 
       function __fillWithin(source, lo, hi, scanDir, fillDir_, sIndex__) {

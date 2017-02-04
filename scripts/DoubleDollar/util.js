@@ -180,14 +180,18 @@ function Reverser(source) {
   return target
 }
 
-if (typeof directives_ === "boolean") {
-  directives = DefaultDirectives
-  overlaps   = directives_
+function Justify(...args) {
+  return (args[args.length - 1] === undefined) ? [null, ...args] : args
 }
-else {
-  directives = NormalizeDirectives(directives_)
-  overlaps   = directives.OVERLAPS || true
-}
+
+function JustifyWithAll(...args) {
+  let [first, ...remaining] = args
+
+  switch (typeof first) {
+    case "function" : case "string" : return [null, ...args]
+  }
+  return args
+},
 
 
 function Each(object, action) {

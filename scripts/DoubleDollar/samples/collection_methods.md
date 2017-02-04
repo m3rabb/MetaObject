@@ -56,18 +56,6 @@ Accessing
     initial(count = 1, scanDirective_)
     final(count = 1, scanDirective_)
 
-  By Value
-    Answer Index
-      indexOf(value, scanDirective_)
-      indexOfFirst(value)
-      indexOfLast(value)
-      indexesOfEvery(value, scanDirective_)
-
-    Answer Count
-      countOf(value)
-      countOfWhere(scanDirective_, conditional)
-      contains(value)
-
   By Value Condition
     Answer Index
       indexOfWhere(scanDirective_, condition)
@@ -84,6 +72,32 @@ Accessing
       select  : "everyWhere",
       reject  : "everyWhereNot"
 
+    Answer Count
+      countOfWhere(scanDirective_, conditional)
+
+
+  By Value
+    Answer Index
+      indexOf(value, scanDirective_)
+      indexOfFirst(value)
+      indexOfLast(value)
+      indexesOfEvery(value, scanDirective_)
+
+    Answer Count
+      countOf(value)
+      contains(value)
+
+  By Sub condition
+    Answer Span
+      spanWhere(directives_, subSize, condition)
+      distinctSpansWhere(directives_, subSize, condition)
+      indistinctSpansWhere(directives_, subSize, condition)
+
+    Answer Sub
+      subWhere(directives_, subSize, condition)
+      distinctWhere(directives_, subSize, condition)
+      indistinctWhere(directives_, subSize, condition)
+
   By Sub
     Answer Span
       spanOf(matchSub, directives_)                  scan|match
@@ -96,17 +110,6 @@ Accessing
       countOfDistinct(matchSub, directives_)      scan|sub
       countOfIndistinct(matchSub, directives_)      scan|sub
       containsSub(sub)
-
-  By Sub condition
-    Answer Span
-      spanWhere(directives_, subSize, condition)
-      distinctSpansWhere(directives_, subSize, condition)
-      indistinctSpansWhere(directives_, subSize, condition)
-
-    Answer Sub
-      subWhere(directives_, subSize, condition)
-      distinctWhere(directives_, subSize, condition)
-      indistinctWhere(directives_, subSize, condition)
 
 Enumeration
   By Value
@@ -126,11 +129,10 @@ Enumeration
     inject  : "reduce",
 
   By Sub
-    distinctDo(directives_, subSize, action)       scan|sub
-    indistinctDo(directives_, subSize, action)       scan|sub
-    distinctMap(directives_, subSize, action)       scan|sub
+    distinctDo(directives_, subSize, action)          scan|sub
+    indistinctDo(directives_, subSize, action)        scan|sub
+    distinctMap(directives_, subSize, action)         scan|sub
     indistinctMap(directives_, subSize, action)       scan|sub
-
 
 Put
   Generic
@@ -160,10 +162,10 @@ Put
    atEveryPut(matchElement, newElement)
 
   By Sub
-    fanOver(sub, values, directives_)              scan|sub|fill
-    fanOverLast(sub, values)
-    fanOverLast(sub, values)
-    fanOverDistinct(sub, values, directives_)         scan|sub|fill
+    fanOver(values, subSeq, directives_)              scan|sub|fill
+    fanOverFirst(values, subSeq)
+    fanOverLast(values, subSeq)
+    fanOverEvery(values, subSeq, directives_)         scan|sub|fill
 
 Add
   Generic
@@ -201,17 +203,17 @@ Remove
     removeFinal(count = 1)
 
   By Value
+    removeWhere(span_, condition)
+    removeEveryWhere(span_, conditional)
+    removeEveryWhereNot(span_, conditional)
+
     remove(value, scanDirective_)
     removeFirst(value_)
     removeLast(value_)
     removeEvery(value)
 
-    removeWhere(span_, condition)
-    removeEveryWhere(span_, conditional)
-    removeEveryWhereNot(span_, conditional)
-
   By Span
-    removeOver(sub, directive_)    scan|sub
+    removeOver(sub, directive_)            scan|sub
     removeOverFirst(sub, subDirection_)    scan|sub
-    removeOverLast(sub, subDirection_)    scan|sub
-    removeOverDistinct(sub, directive_)    scan|sub
+    removeOverLast(sub, subDirection_)     scan|sub
+    removeOverEvery(sub, directive_)    scan|sub
