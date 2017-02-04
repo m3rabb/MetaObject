@@ -20,15 +20,13 @@ Krust.set((context) => {
   const FORWARD   =  Infinity
   const BACKWARD  = -Infinity
 
-  const SCAN      = "SCAN"
-  const FILL      = "FILL"
+  const SCAN      = "scan"
+  const FILL      = "fill"
 
-  const INDEX     = "INDEX"
-  const VALUE     = "VALUE"
-  const SPAN      = "SPAN"
-  const SUB       = "SUB"
-
-  const DefaultDirectives = { SCAN: FORWARD, SUB: FORWARD, FILL: FORWARD }
+  const INDEX     = "index"
+  const VALUE     = "value"
+  const SPAN      = "span"
+  const SUB       = "sub"
 
   const UNTIL_EDGE  = Symbol("UNTIL_EDGE")
   const BEYOND_EDGE = Symbol("BEYOND_EDGE")
@@ -368,11 +366,11 @@ Krust.set((context) => {
       },
 
       function spanOfFirst(sub, subDirection = FORWARD) {
-        return this.spanOf(sub, {SCAN : FORWARD, SUB : subDirection})
+        return this.spanOf(sub, {scan: FORWARD, sub: subDirection})
       },
 
       function spanOfLast(sub, subDirection = FORWARD) {
-        return this.spanOf(sub, {SCAN : BACKWARD, SUB : subDirection})
+        return this.spanOf(sub, {scan: BACKWARD, sub: subDirection})
       },
 
       function spansOfDistinct(sub, directives = FORWARD) {
@@ -564,7 +562,7 @@ Krust.set((context) => {
 
       function _overDo(directives, distinct, size, action) {
         const target = this._elements
-        const subDir = directives.SUB || FWD
+        const subDir = directives.sub || FWD
         let   [lo, hi, scanDir, wraps] = this._asNormalizedSpan(directives)
 
         if (wraps) {
@@ -866,7 +864,7 @@ Krust.set((context) => {
         if (!span) { return undefined }
 
         span[DIR]  = STRETCH
-        return this._withinSetBy(span, source, "__fillWithin", directives_.FILL)
+        return this._withinSetBy(span, source, "__fillWithin", directives_.fill)
       },
 
       // function fanOverLast(values, sub, sub_fill_dir_) {
@@ -876,7 +874,7 @@ Krust.set((context) => {
       // },
 
       // function fanOverLast(values, sub, subDirection = FORWARD) {
-      //   return this.fanOver(values, sub, {SCAN : FORWARD, SUB : subDirection})
+      //   return this.fanOver(values, sub, {scan: FORWARD, sub: subDirection})
       // },
 
       function fanOverLast(values, sub) {
@@ -893,7 +891,7 @@ Krust.set((context) => {
         const matchSize    = matchSub.length
         const filler       = AsArray(values)
         const fillerSize   = original.length
-        const fillDir      = directives.FILL || FWD
+        const fillDir      = directives.fill || FWD
 
         return this._nonCopy((result) => {
           if (matchSize === fillerSize && this === result) {
@@ -908,7 +906,7 @@ Krust.set((context) => {
           const spans = this._spansOfEvery(matchSub, directives, false)
 
           if (spans.size === 0)    { return this }
-          if (directives.SCAN < 0) { spans = spans.reversed }
+          if (directives.scan < 0) { spans = spans.reversed }
 
           this.__fanAcrossWithinAll(filler, original, spans, fillDir)
         })
@@ -1130,11 +1128,11 @@ Krust.set((context) => {
       },
 
       function removeOverFirst(sub, subDirection = FORWARD) {
-        return this.removeOver(sub, {SCAN : FORWARD, SUB : subDirection})
+        return this.removeOver(sub, {scan: FORWARD, sub: subDirection})
       },
 
       function removeOverLast(sub, subDirection = FORWARD) {
-        return this.removeOver(sub, {SCAN : BACKWARD, SUB : subDirection})
+        return this.removeOver(sub, {scan: BACKWARD, sub: subDirection})
       },
 
       function removeOverDistinct(matchSub, directives_) {
@@ -1183,7 +1181,7 @@ Krust.set((context) => {
               if (specifier === undefined) { return [0, size, FWD] }
               // LOOK: Maybe this is where the undefined check needs to move!!!
               ;continue
-              // return [0, size, (specifier.SCAN < 0) ? BWD : FWD]
+              // return [0, size, (specifier.scan < 0) ? BWD : FWD]
             case 1 :
               ;[start, end, dir] = [specifier, specifier, NON]  // relative edge
               if (start + 1 === start) { return [0, size, FWD] }// direction
