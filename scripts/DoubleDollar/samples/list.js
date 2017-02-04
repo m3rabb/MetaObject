@@ -479,8 +479,7 @@ Krust.set((context) => {
         let target = this._elements
         let size   = target.length
         let preIndex, preLimit, sIndex, sLimit, noWrap, result
-        let [lo, hi, dir, wraps] = (scanDirective == null) ?
-          [0, size, FWD, false] : this._asNormalizedSpan(scanDirective)
+        let [lo, hi, dir, wraps] = this._asNormalizedSpan(scanDirective)
 
         if (wraps) {
           [preIndex, preLimit, sIndex, sLimit, inc] =
@@ -522,13 +521,12 @@ Krust.set((context) => {
       function withinReduce(directive, Accumulator_, Reducer) {
         if (Reducer === undefined) {
           Reducer   = Accumulator_
-          directive = (directive == null) ?
-            this.span : this._asNormalizedSpan(directive)
+          directive = this._asNormalizedSpan(directive)
           let index = (directive[DIR] < 0) ? --directive[HI] : directive[LO]++
           Accumulator_ = this._atIndex(index)
         }
 
-        this._withinDo(directive, function (value, index) {
+        this.withinDo(directive, function (value, index) {
           Accumulator_ = Reducer.call(this.$, Accumulator_, value, index)
         })
 
@@ -538,13 +536,13 @@ Krust.set((context) => {
       function eachDo(scanDirective_, action) {
         return action ?
           this.withinDo(scanDirective_, action) :
-          this.withinDo(null, action = scanDirective_)
+          this.withinDo(undefined, action = scanDirective_)
       },
 
       function map(scanDirective_, action) {
         return action ?
           this._withinMap(scanDirective_, action) :
-          this._withinMap(null, action = scanDirective_)
+          this._withinMap(undefined, action = scanDirective_)
       },
 
       function eachSend(...scanDirective___method_selector__args_) {
@@ -880,7 +878,7 @@ Krust.set((context) => {
           let target = result._elements
           let count = 0
 
-          this._withinDo(this.span, function (value, index) {
+          this.withinDo(undefined, function (value, index) {
             if (value === matchValue) {
               target[index] = newValue
               count++
@@ -1200,22 +1198,16 @@ Krust.set((context) => {
         let size = this._elements.length
 
         do {
-          // if (specifier === undefined) {
-          //   debugger; // LOOK: Is it necessary to check for undefined???
-          //   return [0, size, FWD]
-          // } // direction
+          if (specifier === undefined) {return [0, size, FWD]} // forward
           if (specifier.toFixed) {return [0, size, (specifier < 0) ? BWD : FWD]}
-
+                                                                 // direction
           switch (span.length) {
             case undefined :
               if (typof specifier === "boolean") {              // direction
                 return [0, size, (specifier) ? FWD : BWD]
               }
               specifier = specifier.scan                        // dirSpec
-              if (specifier === undefined) { return [0, size, FWD] }
-              // LOOK: Maybe this is where the undefined check needs to move!!!
               ;continue
-              // return [0, size, (specifier.scan < 0) ? BWD : FWD]
             case 1 :
               ;[start, end, dir] = [specifier, specifier, NON]  // relative edge
               if (start + 1 === start) { return [0, size, FWD] }// direction
