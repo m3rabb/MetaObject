@@ -194,7 +194,7 @@ Krust.set((context) => {
 
 
 
-      //// ACCESS : answer the Sequence within the Span
+      //// ACCESS : answer the Subsequence within the Span
 
       function within(span_start, ...end__direction__wrap) {
         const span = (span_start.length) ? span_start :
@@ -232,7 +232,7 @@ Krust.set((context) => {
       function _within(start, end, scanDirective, _wraps) {
         const readSpan = this._asNormalizedSpan([start, end])
 
-        readSpan[DIR] = (AsDirection(SCAN, scanDirective) < 0) ? BWD : FWD
+        readSpan[DIR] = AsDirection(SCAN, scanDirective)
         return this._withinMap(readSpan, (value) => value))
       },
 
@@ -242,9 +242,7 @@ Krust.set((context) => {
 
       function indexOf(value, scanDirective = FORWARD) {
         const condition = (existing) => value === existing)
-        const readSpan  = this._asNormalizedSpan(scanDirective)
-
-        return this._byWithinFind(INDEX, readSpan, condition)
+        return this._byWithinFind(INDEX, scanDirective, condition)
       },
 
       function indexOfFirst(value) {
@@ -323,9 +321,8 @@ Krust.set((context) => {
         return this.new((result) => {
           this._withinDo(readSpan, (value, index) => {
             if (Conditional.call(this.$, value, index)) {
-              const slot =
-                { index: index, value: value } // element: value, key: index,
-              result.add( slot[Grip] )
+              const slot = { index: index, value: value }
+              result.add( slot[Grip] )        // element: value, key: index,
             }
           })
         })
@@ -357,16 +354,15 @@ Krust.set((context) => {
         reject  : "everyWhereNot"
       } },
 
+      undefined|number|bool|span|
 
+      //// ACCESS : answering the Span of a Subsequence
 
-      //// ACCESS : answering the Span of a Sequence
-
-      function spanOf(sub, directives_) {
+      function spanOf(sub, directives = FORWARD) {
         const matchSub   = AsArray(sub)
         const subSize    = matchSub.length
-        const directives = NormalizeDirectives(directives_)
 
-        return this._overDo(directives, true, subSize, false, (sub, span) => {
+        return this._overDo(directives, false, subSize, (sub, span) => {
           if (EqualArrays(sub, matchSub)) { return span }
         })
       },
@@ -375,42 +371,47 @@ Krust.set((context) => {
         return this.spanOf(sub, {SCAN : FORWARD, SUB : subDirection})
       },
 
-      function spanOfLast(sub, subDirection = FORWAR) {
+      function spanOfLast(sub, subDirection = FORWARD) {
         return this.spanOf(sub, {SCAN : BACKWARD, SUB : subDirection})
       },
 
-      function spanOfEvery(sub, directives_) {
-        const directives__overlaps = NormalizeDirectives(directives_, false)
+      function spansOfDistinct(sub, directives = FORWARD) {
+        return this._spansOfEvery(sub, directives, false)
+      },
 
-        return this._spanOfEvery(sub, ...directives__overlaps)
+      function spansOfIndistinct(sub, directives = FORWARD) {
+        return this._spansOfEvery(sub, directives, true)
       },
 
 
-      function _spanOfEvery(sub, directives, overlaps = false) {
+      function _spansOfEvery(sub, directives, distinct) {
         const matchSub   = AsArray(sub)
         const subSize    = matchSub.length
 
         return this._new((result) => {
-          return this._overDo(directives, overlaps, subSize, false,
-            (next, span) => {
-              if (EqualArrays(next, matchSub)) { result.add( span ) }
-            })
+          return this._overDo(directives, distinct, subSize, (next, span) => {
+            if (EqualArrays(next, matchSub)) { result.add( span ) }
+          })
         })
       },
 
 
 
-      //// ACCESS : answering the Count of a Sequence
+      //// ACCESS : answering the Count of a Subsequence
 
-      function countOfSeq(sub, directives_) {
-        return this.spanOfEvery(sub, directives_).size
+      function countOfDistinct(sub, directives = FORWARD) {
+        return this._spansOfEvery(sub, directives, false).size
+      },
+
+      function countOfIndistinct(sub, directives = FORWARD) {
+        return this._spansOfEvery(sub, directives, true).size
       },
 
 
 
-      //// ACCESS : answer the presence (or not) of a sequence of Subelements
+      //// ACCESS : answer the presence (or not) of a Subsequence
 
-      function containsSeq(sub, directives_) {
+      function containsSub(sub, directives_) {
         return (this.spanOf(sub, directives_) != null)
       },
 
@@ -421,12 +422,28 @@ Krust.set((context) => {
 
       //// ENUMERATION : by Value & Index
 
-      function withinDo(span, action) {
-        this._withinDo(this._asNormalizedSpan(span), action)
+      function withinDo(scanDirective, action) {
+        this._withinDo(this._asNormalizedSpan(scanDirective), action)
       },
 
-      function withinMap(span, action) {
-        this._withinMap(this._asNormalizedSpan(span), action)
+      function withinMap(scanDirective, action) {
+        this._withinMap(this._asNormalizedSpan(scanDirective), action)
+      },
+
+      function withinReduce(scanDirective, Accumulator_, Reducer) {
+        const readSpan = this._asNormalizedSpan(scanDirective)
+
+        if (action === undefined) {
+          Reducer = Accumulator_
+          Accumulator_ = (readSpan[DIR] < 0) ?
+            this._atIndex(--readSpan[HI]) : this._atIndex(readSpan[LO]++)]
+        }
+
+        this._withinDo(readSpan, function (value, index) {
+          Accumulator_ = Reducer.call(this.$, Accumulator_, value, index)
+        })
+
+        return Accumulator_
       },
 
       function eachDo(scanDirective_, action) {
@@ -459,21 +476,8 @@ Krust.set((context) => {
           this._withinMap(readSpan, (value) => { value[Method](...Args))
       },
 
-      function reduce(...scanDirective___action__seed_) {
-        let args = this._justifyArgs(scanDirective___action__seed_)
-        let [readSpan, Action, Accumulator] = args
-        let scanDir = readSpan[DIR]
-
-        if (args.length === 2) {
-          Accumulator = (scanDir < 0) ?
-            this._atIndex(--readSpan[HI]) : this._atIndex(readSpan[LO]++)
-        }
-
-        this._withinDo(readSpan, function (value, index) {
-          Accumulator = Action.call(this.$, Accumulator, value, index)
-        })
-
-        return Accumulator
+      function reduce(accumulator_, reducer) {
+        return this.withinReduce(FORWARD, accumulator_, reducer)
       },
 
       { ALIAS : {
@@ -530,34 +534,37 @@ Krust.set((context) => {
 
       //// ENUMERATION : by Subsequence & Span
 
-      function overDo(directives_, subSize, action) {
-        // NOTE: Can't use _justifyArgs here because next arg is a number!!!
-        if (action === undefined) {
-          [directives_, subSize, action] = [DEF, directives_, subSize]
-        }
-        const directives__overlaps = NormalizeDirectives(directives_, true)
-
-        return this._overDo(...directives__overlaps, subSize, true, action)
+      function distinctDo(directives_, subSize, action) {
+        return (action) ?
+          this._overDo(directives, true, subSize, action) :
+          this._overDo(FORWARD, true, directives_, subSize)
       },
 
-      function overMap(directives_, subSize, action) {
-        // NOTE: Can't use _justifyArgs here because next arg is a number!!!
-        if (action === undefined) {
-          [directives_, subSize, action] = [DEF, directives_, subSize]
-        }
-        const directives__overlaps = NormalizeDirectives(directives_, true)
-
-        return this.new((result) => {
-          this._overDo(...directives__overlaps, subSize, true, (sublist, span) => {
-            result.add( Action.call(this.$, sublist, span) )
-          })
-        })
+      function indistinctDo(directives_, subSize, action) {
+        return (action) ?
+          this._overDo(directives, false, subSize, action) :
+          this._overDo(FORWARD, false, directives_, subSize)
       },
 
+      function distinctMap(directives_, subSize, action) {
+        return (action) ?
+          this._overMap(directives, true, subSize, action) :
+          this._overMap(FORWARD, true, directives_, subSize)
+      },
 
-      function _overDo(directives, overlaps, size, subsAsLists, action) {
+      function indistinctMap(directives_, subSize, action) {
+        return (action) ?
+          this._overMap(directives, false, subSize, action) :
+          this._overMap(FORWARD, false, directives_, subSize)
+      },
+
+      // NOTE: Can't use _justifyArgs for previous methods because the
+      // next arg is a number!!!
+
+
+      function _overDo(directives, distinct, size, action) {
         const target = this._elements
-        const subDir = directives.SUB
+        const subDir = directives.SUB || FWD
         let   [lo, hi, scanDir, wraps] = this._asNormalizedSpan(directives)
 
         if (wraps) {
@@ -567,7 +574,7 @@ Krust.set((context) => {
         let [start, limit, startInc, endInc] = (scanDir < 0) ?
               [hi, lo, BWD, -size] : [lo, hi, FWD, size]
 
-        if (!overlaps) { startInc *= size }
+        if (distinct) { startInc *= size }
 
         let [sStart, sLimit, sInc] = (subDir < 0) ?
               [size - 1, -1, BWD] : [0, size, FWD]
@@ -579,7 +586,7 @@ Krust.set((context) => {
 
             if (remaining < 0) { break }
 
-            let [tIndex, nextSpan] = (scanDir < 0) ?
+            let [tIndex, span] = (scanDir < 0) ?
                   [end  , [end, start, sInc]] :
                   [start, [start, end, sInc]]
 
@@ -591,9 +598,7 @@ Krust.set((context) => {
               sIndex += sInc
             }
 
-            let nextSub = subsAsLists ? List(sub) : sub
-            let result  = action.call(this.$, nextSub, nextSpan)
-
+            let result  = action.call(this.$, sub, span)
             if (result !== undefined) { return result }
 
             start += startInc
@@ -606,6 +611,15 @@ Krust.set((context) => {
         } while (true)
 
         return undefined
+      },
+
+
+      function _overMap(directives, distinct, subSize, action) {
+        return this.new((result) => {
+          this._overDo(directives, distinct, subSize, (sublist, span) => {
+            result.add( Action.call(this.$, sublist, span) )
+          })
+        })
       },
 
 
@@ -629,16 +643,16 @@ Krust.set((context) => {
         })
       },
 
-      function atEachPutEach(indexes_spans, Values) {
+      function atEachPutEach(positions, Values) {
         return this.set(function () {
-          Each(indexes_spans,
-            (index_span, next) => this.atPut(index_span, Values[next]))
+          Each(positions, (position, next) => {
+            this.atPut(positions, Values[next])
+          })
         })
       },
 
-      function atFan(index_span, values) {
-        const span = (index_span.length) ?
-          index_span : [index_span, index_span + 1]
+      function atFan(position, values) {
+        const span = (position.length) ? position : [position, position + 1]
         return this.withinFan(span, values)
       },
 
@@ -685,9 +699,9 @@ Krust.set((context) => {
       function withinFan(span, values, fillDirective = FORWARD) {
         const source    = AsArray(values)
         const writeSpan = this._asNormalizedSpan(span, STRETCH)
-        const direction = AsDirection(FILL, fillDirective)
+        const fillDir   = AsDirection(FILL, fillDirective)
 
-        return this._withinSetBy(writeSpan, source, "__fillWithin", direction)
+        return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
       },
 
       function withinFill(span, values, fillDirective = FORWARD) {
@@ -841,57 +855,57 @@ Krust.set((context) => {
 
 
 
-      //// PUT : a Sequence over a Sequence
+      //// PUT : a Sequence over a Subsequence
 
       // NOTE: Consider adding 'put' directives put: fan|fill|lay !!!
       // overPut
 
-      function overFan(sub, values, directives_) {
-        const directives = NormalizeDirectives(directives_)
-        const source     = AsArray(values)
-        const span       = this.spanOf(sub, directives)
+      function fanOver(values, sub, directives_ = FORWARD) {
+        const source = AsArray(values)
+        const span   = this.spanOf(sub, directives_)
         if (!span) { return undefined }
 
         span[DIR]  = STRETCH
-        return this._withinSetBy(span, source, "__fillWithin", directives.FILL)
+        return this._withinSetBy(span, source, "__fillWithin", directives_.FILL)
       },
 
-      // function overFirstFan(sub, values, sub_fill_dir_) {
-      //   let directives = NormalizeDirectives(SUB, sub_fill_dir_)
+      // function fanOverLast(values, sub, sub_fill_dir_) {
+      //   let directives = AsDirectives(SUB, sub_fill_dir_)
       //   directives = { __proto__ : directives, SCAN : FORWARD }
-      //   return this.overFan(sub, values, directives)
+      //   return this.fanOver(values, sub, directives)
       // },
 
-      function overFirstFan(sub, values) {
-        return this.overFan(sub, values, FORWARD)
+      // function fanOverLast(values, sub, subDirection = FORWARD) {
+      //   return this.fanOver(values, sub, {SCAN : FORWARD, SUB : subDirection})
+      // },
+
+      function fanOverLast(values, sub) {
+        return this.fanOver(values, sub, FORWARD)
       },
 
-      function overLastFan(sub, values) {
-        return this.overFan(sub, values, BACKWARD)
+      function fanOverLast(values, sub) {
+        return this.fanOver(values, sub, BACKWARD)
       },
 
-      function overEveryFan(sub, values, directives_) {
-        const directives   = NormalizeDirectives(directives_)
+      function fanOverDistinct(values, subSeq, directives = FORWARD) {
         const original     = this._elements
-        const matchSub     = AsArray(sub)
+        const matchSub     = AsArray(subSeq)
         const matchSize    = matchSub.length
         const filler       = AsArray(values)
         const fillerSize   = original.length
-        const fillDir      = directives.FILL
+        const fillDir      = directives.FILL || FWD
 
         return this._nonCopy((result) => {
           if (matchSize === fillerSize && this === result) {
-            this._overDo(directives, false, matchSize, false,
-              (nextSub, [left, right, dir]) => {
-                if (EqualArrays(nextSub, matchSub)) {
-                  this.__fillWithin(filler, left, right, FORWARD, fillDir)
-                }
-              })
-
+            this._overDo(directives, true, matchSize, (sub, [lo, hi, dir]) => {
+              if (EqualArrays(sub, matchSub)) {
+                this.__fillWithin(filler, lo, hi, FORWARD, fillDir)
+              }
+            })
             return this
           }
 
-          const spans = this._spanOfEvery(matchSub, directives, false)
+          const spans = this._spansOfEvery(matchSub, directives, false)
 
           if (spans.size === 0)    { return this }
           if (directives.SCAN < 0) { spans = spans.reversed }
@@ -973,14 +987,14 @@ Krust.set((context) => {
 
       //// REMOVE : Generic
 
-      function removeAt(index_span) {
-        return (index_span.length) ?
-          this.removeWithin(index_span) : this.removeAtIndex(index_span
+      function removeAt(position) {
+        return (position.length) ?
+          this.removeWithin(position) : this.removeAtIndex(position)
       },
 
-      function removeAtEach(indexes_spans) {
+      function removeAtEach(positions) {
         return this.set((result) => {
-          Each(indexes_spans, (index_span) => { result.removeAt( index_span ) })
+          Each(positions, (position) => { result.removeAt( position ) })
         })
       },
 
@@ -1019,7 +1033,7 @@ Krust.set((context) => {
 
 
 
-      //// REMOVE : the Sequence at the Span
+      //// REMOVE : the Subsequence at the Span
 
       function removeWithin(span_start, ...end__direction__wrap) {
         const span = (span_start.length) ? span_start :
@@ -1067,9 +1081,8 @@ Krust.set((context) => {
           this.removeAtIndex(this.indexOfLast(value_)) : this.removeFinal()
       },
 
-      function removeEvery(value, scanDirective = FORWARD) {
-        const condition = (existing) ==> value === existing
-        return this.removeEveryWhere(scanDirective, condition)
+      function removeEvery(value) {
+        return this.removeEveryWhere((existing) ==> value === existing)
       },
 
 
@@ -1109,7 +1122,7 @@ Krust.set((context) => {
 
 
 
-      //// REMOVE : a Sequence
+      //// REMOVE : a Subsequence
 
       function removeOver(sub, directives_) {
         const span = this.spanOf(sub, directives_)
@@ -1124,48 +1137,75 @@ Krust.set((context) => {
         return this.removeOver(sub, {SCAN : BACKWARD, SUB : subDirection})
       },
 
-      function removeOverEvery(matchSub, directives_) {
-        return overEveryFan(matchSub, [], directives_)
+      function removeOverDistinct(matchSub, directives_) {
+        return fanOverDistinct([], matchSub, directives_)
       },
 
 
 
+      //
 
       //// SUPPORT METHODS ////
 
-      //    1           direction
+      //   undefined    + direction
+      //   boolean      +/- direction
+      //   number       +/- direction
+      //   [Infinity]   +/- direction
       //   [1]          relative edge
       //   [1,,]        relative index
       //   [2,-1]       relative span
       //   [1,,,]       linear index
       //   [7,2,-1]     linear span
+      //   [x,,1]       +/- direction
+      //   {scan : BWD }
+      //   {scan: [1,3,-1] }
+
+      // LOOK: Can undefined ever be passed in to this method???
+      // undefined|boolean|number|span|{scan: undefined|boolean|number|span }
 
       function _asNormalizedSpan(specifier, bounded = true) {
         let start, end, dir, lo, hi
         let size = this._elements.length
 
-        if (specifier.toFixed) {                   // direction
-          return [0, size, (specifier < 0) ? BWD : FWD]
-        }
+        do {
+          if (specifier === undefined) {
+            debugger; // LOOK: Is it necessary to check for undefined???
+            return [0, size, FWD]
+          } // direction
+          if (specifier.toFixed) {return [0, size, (specifier < 0) ? BWD : FWD]}
 
-        switch (span.length) {
-          case undefined :                         // scanDirective
-            return [0, size, (specifier.SCAN < 0) ? BWD : FWD]
-          case 1 :                                 // relative edge
-            ;[start, end, dir] = [specifier, specifier, NON]
-            ;break
-          case 2 :
-            ;[start, end = start + 1] = specifier  // relative span|edge|index
-            ;break
-          case 4 :
-            wraps = specifier[WRAPS]
-            // INTENTIONAL FALL THRU
-          case 3 :
-            ;[lo, hi = lo, dir] = specifier        // linear span|edge|index
-            dir = dir ? (dir < 0 ? BWD : FWD) : NON
-            ;break
-          default : return undefined
-        }
+          switch (span.length) {
+            case undefined :
+              if (typof specifier === "boolean") {              // direction
+                return [0, size, (specifier) ? FWD : BWD]
+              }
+              specifier = specifier.scan                        // dirSpec
+              if (specifier === undefined) { return [0, size, FWD] }
+              // LOOK: Maybe this is where the undefined check needs to move!!!
+              ;continue
+              // return [0, size, (specifier.SCAN < 0) ? BWD : FWD]
+            case 1 :
+              ;[start, end, dir] = [specifier, specifier, NON]  // relative edge
+              if (start + 1 === start) { return [0, size, FWD] }// direction
+              ;break
+            case 2 :
+              ;[start, end] = specifier                    // relative span|edge
+              if (end === undefined) { end = start + 1 }   // relative index
+              ;break
+            case 4 :
+              wraps = specifier[WRAPS]
+              // INTENTIONAL FALL THRU
+            case 3 :
+              [lo, hi, dir] = specifier
+              if (hi === undefined) {                          // direction
+                if (dir !== undefined) {return [0, size, (dir < 0) ? BWD : FWD]}
+                hi = lo + 1                                   // linear index
+              }                                              // linear span|edge
+              dir = dir ? (dir < 0 ? BWD : FWD) : NON
+              ;break
+            default : return undefined
+          }
+        } while (false)
 
         if (lo === undefined) {
           start = (start >= 0) ? (start === null ? size : start) : start + size

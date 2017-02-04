@@ -128,17 +128,28 @@ function AddLazyProperty(target, namedInstaller_name, installer_) {
 //     [startEdge, startEdge, lastArg]
 // }
 
+// undefined|boolean|number|span|{scan: undefined|boolean|number|span }
 
 function AsDirection(name, directives) {
-  return (directives.toFixed) ? directives : directives[name] || FORWARD
+  switch (typeof directives) {
+    case "number"  : return (directives >= 0) ? FWD : BWD
+    case "boolean" : return (directives)      ? FWD : BWD
+    case "object"  : return  (directives.length) ?
+        (directives[DIR] >= 0 ? FWD : BWD) : (directives[name] || FWD)
+  }
+  return FWD
 }
+
+>= 0
+|number|bool|dirSpec { undefined|bool|number|span }
+
 
 function AsDir(name, directives) {
   const direction = (directives.toFixed) ? directives : directives[name]
   return (direction < 0) : BWD : FWD
 }
 
-function NormalizeDirectives(directives, defaultOverlaps_) {
+function AsDirectives(directives, defaultOverlaps_) {
   switch (typeof directives) {
     default :
       return DefaultDirectives

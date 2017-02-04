@@ -50,33 +50,33 @@ Accessing
     last
 
   By Span
-    within(lo, hi = lo, direction, wrap)
-    beyond(edge, scanDir_)
-    until(edge, scanDir_)
-    initial(count = 1, scanDir_)
-    final(count = 1, scanDir_)
+    within(lo, hi = lo, dir, wrap)
+    beyond(edge, scanDirective_)
+    until(edge, scanDirective_)
+    initial(count = 1, scanDirective_)
+    final(count = 1, scanDirective_)
 
   By Value
     Answer Index
-      indexOf(value, scanDir_)
+      indexOf(value, scanDirective_)
       indexOfFirst(value)
       indexOfLast(value)
-      indexOfEvery(value, scanDir_)
+      indexOfEvery(value, scanDirective_)
 
     Answer Count
       countOf(value)
-      countOfWhere(span_, conditional)
+      countOfWhere(scanDirective_, conditional)
       contains(value)
 
   By Value Condition
     Answer Index
-      indexOfWhere(span_, condition, absent_)
-      indexesOfWhere(span_, condition)
+      indexOfWhere(scanDirective_, condition)
+      indexesOfWhere(scanDirective_, condition)
 
     Answer Value
-      valueWhere(span_, condition, absent_)
-      everyWhere(span_, conditional)
-      everyWhereNot(span_, conditional)
+      valueWhere(scanDirective_, condition, absent_)
+      everyWhere(scanDirective_, conditional)
+      everyWhereNot(scanDirective_, conditional)
 
     where   : "valueWhere"
     detect  : "valueWhere",
@@ -84,39 +84,51 @@ Accessing
     select  : "everyWhere",
     reject  : "everyWhereNot"
 
+    Answer Sub
+*      subWhere
+      firstSubWhere
+      lastSubWhere
+*      distinctWhere
+*      indistinctWhere
+
   By Sub
     Answer Span
       spanOf(matchSub, directives_)                  scan|match
-      spanOfFirst(matchSub)
-      spanOfLast(matchSub)
-      spanOfEvery(matchSub, directives_)             scan|sub|overlaps
+      spanOfFirst(matchSub, subDirection_)
+      spanOfLast(matchSub, subDirection_)
+      spansOfDistinct(matchSub, directive_)       scan|sub
+      spansOfIndistinct(matchSub, directive_)       scan|sub
 
     Answer Count
-      countOfSeq(matchSub, directives_)               scan|sub|overlaps
-      containsSeq(sub)
-
+      countOfDistinct(matchSub, directives_)      scan|sub
+      countOfIndistinct(matchSub, directives_)      scan|sub
+      containsSub(sub)
 
 Enumeration
   By Value
     withinDo(normSpan, action)
     withinMap(normSpan, Action)
+    withinReduce(scanDirective, startValue_, reducer)
 
     eachDo(span_, action)
     map(span_, action)
     eachSend(span_, method_selector, ...args)
     mapSend(span_, method_selector, ...args)
 
-    reduce(span_, action, seed_)
+    reduce(startValue_, reducer)
 
     do      : "eachDo",
     collect : "map",
     inject  : "reduce",
 
   By Sub
-    _ Do(directives, subSize, action)           scan|sub|overlaps|subsAsLists
+    distinctDo(directives_, subSize, action)       scan|sub
+    indistinctDo(directives_, subSize, action)       scan|sub
+    distinctMap(directives_, subSize, action)       scan|sub
+    indistinctMap(directives_, subSize, action)       scan|sub
 
-    overDo(directives_, subSize, action)           scan|sub|overlaps
-    overMap(directives_, subSize, action)          scan|sub|overlaps
+
+
 
 Put
   Generic
@@ -132,12 +144,12 @@ Put
     withinPut(edge_span, value)
     withinEcho(span, value)
 
-    withinFan(span, values, fillDir_)              fill
-    withinFill(span, values, fillDir_)             fill
-    withinEchoFill(span, values, fillDir_)         fill
+    withinFan(span, values, fillDirective_)              fill
+    withinFill(span, values, fillDirective_)             fill
+    withinEchoFill(span, values, fillDirective_)         fill
 
-    beyondLay(edge, sub, fillDir_)                 fill
-    untilLay(edgs, sub, fillDir_)                  fill
+    beyondLay(edge, sub, fillDirective_)                 fill
+    untilLay(edgs, sub, fillDirective_)                  fill
 
   By Value
    atValuePut
@@ -146,10 +158,10 @@ Put
    atEveryPut(matchElement, newElement)
 
   By Sub
-    overFan(sub, values, directives_)              scan|sub|fill
-    overFirstFan(sub, values)
-    overLastFan(sub, values)
-    overEveryFan(sub, values, directives_)         scan|sub|fill
+    fanOver(sub, values, directives_)              scan|sub|fill
+    fanOverLast(sub, values)
+    fanOverLast(sub, values)
+    fanOverDistinct(sub, values, directives_)         scan|sub|fill
 
 Add
   Generic
@@ -187,17 +199,17 @@ Remove
     removeFinal(count = 1)
 
   By Value
-    remove(value, scanDir_)
+    remove(value, scanDirective_)
     removeFirst(value_)
     removeLast(value_)
     removeEvery(value)
 
-    removeWhere(span_, condition, absent_)
+    removeWhere(span_, condition)
     removeEveryWhere(span_, conditional)
     removeEveryWhereNot(span_, conditional)
 
   By Span
-    removeOver(span, directive_)    scan|sub
-    removeOverFirst(span, directive_)    scan|sub
-    removeOverLast(span, directive_)    scan|sub
-    removeOverEvery(span, directive_)    scan|sub
+    removeOver(sub, directive_)    scan|sub
+    removeOverFirst(sub, subDirection_)    scan|sub
+    removeOverLast(sub, subDirection_)    scan|sub
+    removeOverDistinct(sub, directive_)    scan|sub
