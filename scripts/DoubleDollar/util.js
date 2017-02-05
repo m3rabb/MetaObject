@@ -63,70 +63,6 @@ function AddLazyProperty(target, namedInstaller_name, installer_) {
   })
 }
 
-// function AsSpan(firstArg, ...remainingArgs) {
-//   let startEdge, restArgs, numbersCount, lastArg, wraps
-//
-//   if (typeof firstArg === "number") {
-//     startEdge = firstArg, restArgs = remainingArgs
-//   } else {
-//     [startEdge, ...restArgs] = firstArg
-//   }
-//   numbersCount = restArgs.length
-//   lastArg = restArgs[numbersCount - 1]
-//   wraps = (typeof lastArg === "boolean") ? (numbersCount -= 1, lastArg) : false
-//
-//   switch (numbersCount) {
-//     //               startEdge, endEdge    , direction  , wrap
-//     case 0 : return [startEdge, startEdge  , undefined  , wraps]
-//     case 1 : return [startEdge, restArgs[0], undefined  , wraps]
-//     case 2 : return [startEdge, restArgs[0], restArgs[1], wraps]
-//   }
-// }
-
-// NOTE: for use with over vs within
-// function AsSpan(firstArg, ...remainingArgs) {
-//   let startEdge, endEdge, direction, wraps
-//   let restArgs, numbersCount, _startEdge, _endEdge
-//
-//   if (typeof firstArg === "number") {
-//     startEdge = firstArg, restArgs = remainingArgs
-//   } else {
-//     [startEdge, ...restArgs] = firstArg
-//   }
-//   numbersCount = restArgs.length
-//   lastArg = restArgs[numbersCount - 1]
-//   wraps = (typeof lastArg === "boolean") ? (numbersCount -= 1, lastArg) : false
-//
-//   if (numbersCount === 0) {
-//     return [startEdge, startEdge, FORWARD, wraps]
-//   }
-//   endEdge = restArgs[1]
-//   _startEdge = (startEdge !== undefined) ? startEdge : Infinity
-//   _endEdge   = (endEdge !== undefined) ? endEdge : Infinity
-//   direction = (_startEdge <= _endEdge) ? FORWARD : BACKWARD
-//   return [startEdge, endEdge, direction, wraps]
-// }
-
-
-
-// function AsSmartSpan(firstArg, ...remainingArgs) {
-//   let startEdge, restArgs, lastArg
-//
-//   if (typeof firstArg === "number") {
-//     startEdge = firstArg, restArgs = remainingArgs
-//   } else {
-//     [startEdge, ...restArgs] = firstArg
-//   }
-//   switch (restArgs.length) {
-//     case 0 : return [startEdge, startEdge, false]
-//     case 2 : return [startEdge, ...restArgs]
-//   }
-//
-//   return (typeof (lastArg = restArgs[0]) === "number") ?
-//   // startEdge, endEdge  , wrap
-//     [startEdge, lastArg  , false] :
-//     [startEdge, startEdge, lastArg]
-// }
 
 // undefined|boolean|number|span|{scan: undefined|boolean|number|span }
 
@@ -140,35 +76,12 @@ function AsDirection(name, directives) {
   return FWD
 }
 
->= 0
-|number|bool|dirSpec { undefined|bool|number|span }
-
 
 function AsDir(name, directives) {
   const direction = (directives.toFixed) ? directives : directives[name]
   return (direction < 0) : BWD : FWD
 }
 
-function AsDirectives(directives, defaultOverlaps_) {
-  switch (typeof directives) {
-    default :
-      return DefaultDirectives
-    case "boolean" :
-      return { directives : DefaultDirectives, overlaps : directives }
-    case "string"  :
-
-    case "object"  :
-      if (directives.length === undefined) {
-        return (defaultOverlaps_ === undefined) ? directives :
-           [directives, directives.OVERLAPS || defaultOverlaps_]
-      }
-      // INTENTIONAL FALL THRU
-    case "number" :
-      var normDirectives = { __proto__ : DefaultDirectives, SCAN : directives }
-  }
-  return (defaultOverlaps_ === undefined) ? normDirectives :
-           [normDirectives, defaultOverlaps_]
-}
 
 function Reverser(source) {
   let target = []

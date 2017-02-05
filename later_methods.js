@@ -142,6 +142,12 @@ kontext
 Koating
 Wrapture
 Fragrant
+HeatShield
+MagicShell
+MagicShield
+MagicKrust
+
+chaperon
 
 Klobal
 Krust.Krust

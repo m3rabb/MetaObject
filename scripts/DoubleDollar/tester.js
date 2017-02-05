@@ -1,3 +1,30 @@
+
+function Parcel() {
+
+}
+
+Parcel.prototype.setLocation = function (city, country) {
+  this._setCity(city)
+  this._setCountry(country)
+}
+
+Parcel.prototype._setCity = function (city) {
+  this._city = city
+}
+
+Parcel.prototype._setCountry = function (country) {
+  this._country = country
+}
+
+var box = new Parcel()
+
+var p = new Proxy(box, {
+  get : function (inner, selector) {
+    return inner[selector]
+  }
+})
+
+
 const DefineProperty     = Object.defineProperty
 
 const LazyPropertyConfiguration = {

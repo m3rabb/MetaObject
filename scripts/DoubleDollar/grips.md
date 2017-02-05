@@ -84,6 +84,12 @@ allSuchThat
   relative span  = direction | span
 
 
+  equals
+  sameAs
+  isIdentical
+  is
+
+
   directions
     FWD     1
     BWD    -1

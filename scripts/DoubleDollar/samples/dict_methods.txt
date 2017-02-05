@@ -5,45 +5,69 @@ toString()
   asCopy
   asNonCopy
 
+Conversion
+  toString()
+  asString
 
 Accessing
-  Generic
+  General
     size
-    isEmpty
-    elements
-    keys
     slots
+    elements
+    values
+    keys
+    isEmpty
 
-    values @ index|span
-      at(index_span, absent_)
-      atEach(indexers)
+  Generic
+    at(index_span, absent_)
+    atEach(indexers)
+
+  By Key
+    atKey(index, absent_)
+
+  By Value Condition
+    Answer Key
+      keyWhere(scanDirective_, condition)
+      keysOfWhere(scanDirective_, condition)
+
+    Answer Value
+      valueWhere(scanDirective_, condition, absent_)
+      everyWhere(scanDirective_, conditional)
+      everyWhereNot(scanDirective_, conditional)
+
+      where   : "valueWhere"
+      detect  : "valueWhere",
+      find    : "valueWhere",
+      select  : "everyWhere",
+      reject  : "everyWhereNot"
+
+    Answer Count
+      countOfWhere(scanDirective_, conditional)
 
 
+  By Value
+    Answer Index
+      keyOf(value, scanDirective_)
+      keysOfEvery(value, scanDirective_)
+
+    Answer Count
       countOf(value)
       contains(value)
 
-      countWhere(span_, conditional)
 
-      valueWhere(span_, condition, absent_)
-      everyWhere(span_, conditional)
-      everyNotWhere(span_, conditional)
-
-  Enumeration
-
+Enumeration
+  By Value
     eachDo(span_, action)
+*    elementsDo
     map(span_, action)
     eachSend(span_, method_selector, ...args)
     mapSend(span_, method_selector, ...args)
-    reduce(span_, action, seed_)
+
+    reduce(startValue_, reducer)
 
     do      : "eachDo",
     collect : "map",
-    detect  : "valueWhere",
-    find    : "valueWhere",
-    select  : "everyWhere",
-    reject  : "everyNotWhere"
     inject  : "reduce",
-    where   : "valueWhere"
 
 Put
   Generic
@@ -51,40 +75,33 @@ Put
     atEachPut(indexers, value)
     atEachPutEach(indexers, values)
 
+  By Key
+    atKeyPut(index, value)
 
-  value PUT value
-   atValuePut(matchElement, newElement)
+  By Value
+   atValuePut
    atEveryPut(matchElement, newElement)
 
-
-
 Add
-
-  add
-
-  plural
-
-    _overDo(directives, subSize, action)           scan|sub|overlaps|subsAsLists
-
-    overDo(directives_, subSize, action)           scan|sub|overlaps
-    overMap(directives_, subSize, action)          scan|sub|overlaps
-    countOver(matchSub, directives_)               scan|sub|overlaps
-
-
-    addAll(values, directive_)                     fill
-
+  Generic
+    add    : "addLast",
+    addAll : "addAllLast",                   fill
 
 Remove
+  Generic
     removeAt(index_span)
     removeAtEach(indexers)
-
-    removeAtKey
-
-    removeWhere(span_, condition, absent_)
-    removeEveryWhere(span_, conditional)
-
-    remove(value, scanDir_)
-    removeEvery(value)
-
+    removeEach(values)
+    removeAll()
     empty
-    removeAll
+
+  By Key
+    removeAtKey(key)
+
+  By Value
+    removeWhere(span_, condition)
+    removeEveryWhere(span_, conditional)
+    removeEveryWhereNot(span_, conditional)
+
+    remove(value, scanDirective_)
+    removeEvery(value)

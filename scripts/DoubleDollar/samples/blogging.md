@@ -4,3 +4,5 @@
 - privacy wrapping
 - immutability
 - return from looping
+- how debugger finds names of functions
+- proxies

@@ -1,19 +1,4 @@
 __init(elements_)
-__withinFill(lo, hi, fillDirection, source, takeDirection)
-__echoWithin(value, lo, hi)
-__echoFillWithin(source, lo, hi, fillDirection, takeDirection)
-__subFromShiftTo(sourceEdge, targetEdge)
-
-_withinSetBy(
-_normalize(span_startEdge, endEdge_)
-_normalizeArgs(...args)
-
-_byOverFind(grip, ...args)
-_byOverFindAll(Grip, ...args)
-
-_contractedSpanTo(span, fillSize)
-_expandFromBy(edge, anchorLocation, fillSize)
-
 
 toString()
 
