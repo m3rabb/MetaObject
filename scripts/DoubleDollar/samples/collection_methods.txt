@@ -103,6 +103,7 @@ Enumeration
     withinReduce(scanDirective, startValue_, reducer)
 
     eachDo(span_, action)
+    elementsDo(span_, action)
     map(span_, action)
     eachSend(span_, method_selector, ...args)
     mapSend(span_, method_selector, ...args)
@@ -202,4 +203,4 @@ Remove
     removeOver(sub, directive_)            scan|sub
     removeOverFirst(sub, subDirection_)    scan|sub
     removeOverLast(sub, subDirection_)     scan|sub
-    removeOverEvery(sub, directive_)    scan|sub
+    removeOverEvery(sub, directive_)       scan|sub

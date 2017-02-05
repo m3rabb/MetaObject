@@ -571,9 +571,10 @@ Krust.set((context) => {
       },
 
       { ALIAS : {
-        do      : "eachDo",
-        collect : "map",
-        inject  : "reduce",
+        do         : "eachDo",
+        elementsDo : "eachDo",
+        collect    : "map",
+        inject     : "reduce",
       } },
 
 

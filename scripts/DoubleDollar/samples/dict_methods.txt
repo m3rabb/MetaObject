@@ -1,3 +1,5 @@
+__init(elements_)
+
 toString()
 
 * copy(span_)
@@ -42,11 +44,11 @@ Accessing
       reject  : "everyWhereNot"
 
     Answer Count
-      countOfWhere(scanDirective_, conditional)
+      countWhere(scanDirective_, conditional)
 
 
   By Value
-    Answer Index
+    Answer Key
       keyOf(value, scanDirective_)
       keysOfEvery(value, scanDirective_)
 
@@ -54,11 +56,10 @@ Accessing
       countOf(value)
       contains(value)
 
-
 Enumeration
   By Value
     eachDo(span_, action)
-*    elementsDo
+    elementsDo(span_, action)
     map(span_, action)
     eachSend(span_, method_selector, ...args)
     mapSend(span_, method_selector, ...args)
@@ -71,16 +72,17 @@ Enumeration
 
 Put
   Generic
-    atPut(index_span, value)
-    atEachPut(indexers, value)
-    atEachPutEach(indexers, values)
+    atPut(position, value)
+    putAt(value, position)
+    putAtEach(value, positions)
+    putEachAtEach(value, positions)
 
   By Key
-    atKeyPut(index, value)
+    putAtKey(value, key)
 
   By Value
-   atValuePut
-   atEveryPut(matchElement, newElement)
+   putAtValue
+   putAtEvery(matchElement, newElement)
 
 Add
   Generic
