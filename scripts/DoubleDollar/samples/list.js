@@ -4,6 +4,7 @@
 
 Krust.set((context) => {
 
+  const EDGE      =  0
   const LO        =  0
   const HI        =  1
   const START     =  0
@@ -206,14 +207,16 @@ Krust.set((context) => {
           }
         }
 
-        return this._withinMap(readSpan, (value) => value))
+        return this.withinMap(readSpan, (value) => value))
       },
 
       function beyond(edge, scanDirective_) {
+        const edge = (edge.toFixed) ? edge : edge[EDGE]
         this._within(edge, null, scanDirective_)
       },
 
       function until(edge, scanDirective_) {
+        const edge = (edge.toFixed) ? edge : edge[EDGE]
         return this._within(0, edge, scanDirective_)
       },
 
@@ -232,18 +235,18 @@ Krust.set((context) => {
 
         readSpan[DIR] = (scanDirective == null) ? FWD :
           AsDirection(SCAN, scanDirective)
-        return this._withinMap(readSpan, (value) => value))
+        return this.withinMap(readSpan, (value) => value))
       },
 
 
 
       //// ACCESS : answer an Index satisfying a Condition
 
-      function indexOfWhere(scanDirective_, test, absent_) {
+      function indexWhere(scanDirective_, test, absent_) {
         return this._byFind(INDEX, ...Justify(scanDirective_, test, absent_))
       },
 
-      function indexesOfWhere(scanDirective_, condition) {
+      function indexesWhere(scanDirective_, condition) {
         return this._byFindEvery(INDEX, ...Justify(scanDirective_, condition))
       },
 
@@ -302,7 +305,7 @@ Krust.set((context) => {
 
       //// ACCESS : answer the Count satisfying a Condition
 
-      function countOfWhere(scanDirective_, conditional) {
+      function countWhere(scanDirective_, conditional) {
         let [scanDirective, Conditional] = Justify(scanDirective_, conditional)
         let count = 0
         this.withinDo(scanDirective, (value, index) => {
@@ -338,7 +341,7 @@ Krust.set((context) => {
       //// ACCESS : answer the Count of a Value
 
       function countOf(value) {
-        return this.countOfWhere((existing) => (existing === value))
+        return this.countWhere((existing) => (existing === value))
       },
 
 
@@ -541,8 +544,8 @@ Krust.set((context) => {
 
       function map(scanDirective_, action) {
         return action ?
-          this._withinMap(scanDirective_, action) :
-          this._withinMap(undefined, action = scanDirective_)
+          this.withinMap(scanDirective_, action) :
+          this.withinMap(undefined, action = scanDirective_)
       },
 
       function eachSend(...scanDirective___method_selector__args_) {
@@ -665,34 +668,40 @@ Krust.set((context) => {
       function atPut(position, value) {
         return (position.length) ?
           this.withinPut(position, value) :
-          this.atIndexPut(position, value)
+          this.putAtIndex(value, index)
+      },
+
+      function putAt(value, position) {
+        return (position.length) ?
+          this.withinPut(position, value) :
+          this.putAtIndex(value, index)
       },
 
       // LOOK check use of set vs _set!!!
-      function atEachPut(positions, value) {
+      function putAtEach(value, positions) {
         return this.set(function () {
-          Each(positions, (position) => this.atPut(position, value))
+          Each(positions, (position) => this.putAt(value, position))
         })
       },
 
-      function atEachPutEach(positions, Values) {
+      function putEachAtEach(Values, positions) {
         return this.set(function () {
           Each(positions, (position, next) => {
-            this.atPut(positions, Values[next])
+            this.putAt(Values[next], positions)
           })
         })
       },
 
-      function atFan(position, values) {
+      function fanAt(values, position) {
         const span = (position.length) ? position : [position, position + 1]
-        return this.withinFan(span, values)
+        return this.fanWithin(values, span)
       },
 
 
 
       //// PUT : a Value at the Index
 
-      function atIndexPut(index, value) {
+      function putAtIndex(value, index) {
         return this._set(function () {
           const target = this._elements
           const slotIndex
@@ -717,52 +726,52 @@ Krust.set((context) => {
 
       //// PUT : a Sequence within a Span
 
-      function withinPut(span, value) {
-        const writeSpan = this._asNormalizedSpan(span, STRETCH)
+      function putWithin(value, edge_span) {
+        const writeSpan = this._asNormalizedSpan(edge_span, STRETCH)
 
         return this._withinSetBy(writeSpan, [value], "__fillWithin")
       },
 
-      function withinEcho(span, value) {
+      function echoWithin(value, span) {
         const writeSpan = this._asNormalizedSpan(span, UNBOUNDED)
 
         return this._withinSetBy(writeSpan, value, "__echoWithin")
       },
 
-      function withinFan(span, values, fillDirective_) {
-        const source    = AsArray(values)
-        const writeSpan = this._asNormalizedSpan(span, STRETCH)
-        const fillDir   = AsDirection(FILL, fillDirective_)
+      function fanWithin(values, directives = FORWARD) {
+        const source = AsArray(values)
+        const span   = this._asNormalizedSpan(directives, STRETCH)
 
-        return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
+        return this._withinSetBy(span, source, "__fillWithin", directives.fill)
       },
 
-      function withinFill(span, values, fillDirective_) {
-        const source    = AsArray(values)
-        const writeSpan = this._contractSpanTo(span, source.length)
-        const fillDir   = AsDirection(FILL, fillDirective_)
+      function fillWithin(values, directives = FORWARD) {
+        const source = AsArray(values)
+        const span   = this._contractSpanTo(span, source.length)
 
-        return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
+        return this._withinSetBy(span, source, "__fillWithin", directives.fill)
       },
 
-      function withinEchoFill(span, values, fillDirective_) {
-        const source    = AsArray(values)
-        const writeSpan = this._asNormalizedSpan(span, UNBOUNDED)
-        const fillDir   = AsDirection(FILL, fillDirective_)
+      function echoFillWithin(values, directives = FORWARD) {
+        const source  = AsArray(values)
+        const span    = this._asNormalizedSpan(span, UNBOUNDED)
+        const fillDir = directives.fill
 
-        return this._withinSetBy(writeSpan, source, "__echoFillWithin", fillDir)
+        return this._withinSetBy(span, source, "__echoFillWithin", fillDir)
       },
 
-      function beyondLay(edge, values, fillDirective_) {
+      function layBeyond(values, edge, fillDirective_) {
         const source    = AsArray(values)
+        const edge      = (edge.toFixed) ? edge : edge[EDGE]
         const writeSpan = this._contractSpanTo([edge, BEYOND], source.length)
         const fillDir   = AsDirection(FILL, fillDirective_)
 
         return this._withinSetBy(writeSpan, source, "__fillWithin", fillDir)
       },
 
-      function untilLay(edge, values, fillDirective_) {
+      function layUntil(values, edge, fillDirective_) {
         const source    = AsArray(values)
+        const edge      = (edge.toFixed) ? edge : edge[EDGE]
         const writeSpan = this._contractSpanTo([-BEYOND, edge], source.length)
         const fillDir   = AsDirection(FILL, fillDirective_)
 
@@ -860,18 +869,18 @@ Krust.set((context) => {
       //// PUT : a Value at a Value
 
       { ALIAS : {
-        atValuePut, "atFirstPut"
+        putAtValue, "putAtFirst"
       } },
 
-      function atFirstPut(matchValue, newValue) {
-        return this.atIndexPut(this.indexOf(matchValue, FORWARD), newValue)
+      function putAtFirst(newValue, matchValue) {
+        return this.putAtIndex(newValue, this.indexOf(matchValue, FORWARD))
       },
 
-      function atLastPut(matchValue, newValue) {
-        return this.atIndexPut(this.indexOf(matchValue, BACKWARD), newValue)
+      function putAtLast(newValue, matchValue) {
+        return this.putAtIndex(newValue, this.indexOf(matchValue, BACKWARD))
       },
 
-      function atEveryPut(matchValue, newValue) {
+      function putAtEvery(newValue, matchValue) {
         return this._set((result) => {
           let target = result._elements
           let count = 0
@@ -893,13 +902,13 @@ Krust.set((context) => {
       // NOTE: Consider adding 'put' directives put: fan|fill|lay !!!
       // overPut
 
-      function fanOver(values, sub, directives_ = FORWARD) {
+      function fanOver(values, sub, directives = FORWARD) {
         const source = AsArray(values)
-        const span   = this.spanOf(sub, directives_)
+        const span   = this.spanOf(sub, directives)
         if (!span) { return undefined }
 
         span[DIR]  = STRETCH
-        return this._withinSetBy(span, source, "__fillWithin", directives_.fill)
+        return this._withinSetBy(span, source, "__fillWithin", directives.fill)
       },
 
       // function fanOverLast(values, sub, sub_fill_dir_) {
@@ -920,17 +929,17 @@ Krust.set((context) => {
         return this.fanOver(values, sub, BACKWARD)
       },
 
-      function fanOverEvery(values, subSeq, directives_ = FORWARD) {
+      function fanOverEvery(values, subSeq, directives = FORWARD) {
         const original     = this._elements
         const matchSub     = AsArray(subSeq)
         const matchSize    = matchSub.length
         const filler       = AsArray(values)
         const fillerSize   = original.length
-        const fillDir      = directives.fill || FWD
+        const fillDir      = directives.fill
 
         return this._nonCopy((result) => {
           if (matchSize === fillerSize && this === result) {
-            this._overDo(true, directives_, matchSize, (sub, [lo, hi, dir]) => {
+            this._overDo(true, directives, matchSize, (sub, [lo, hi, dir]) => {
               if (EqualArrays(sub, matchSub)) {
                 this.__fillWithin(filler, lo, hi, FORWARD, fillDir)
               }
@@ -938,10 +947,10 @@ Krust.set((context) => {
             return this
           }
 
-          const spans = this._spansOfEvery(true, matchSub, directives_)
+          const spans = this._spansOfEvery(true, matchSub, directives)
 
           if (spans.size === 0)    { return this }
-          if (AsDirection(SCAN, directives_) < 0) { spans = spans.reversed }
+          if (AsDirection(SCAN, directives) < 0) { spans = spans.reversed }
 
           this.__fanAcrossWithinAll(filler, original, spans, fillDir)
         })
@@ -984,8 +993,8 @@ Krust.set((context) => {
         return this.withinPut([index], value)
       },
 
-      function addAfter(value, matchValue, scanDirective = FORWARD) {
-        const index = this.indexOf(matchValue, scanDirective)
+      function addAfter(value, matchValue, scanDirective_) {
+        const index = this.indexOf(matchValue, scanDirective_)
         if (index === undefined) { return this }
 
         return this.withinPut([++index], value)
@@ -996,21 +1005,23 @@ Krust.set((context) => {
       //// ADD : a Sequence at a Position
 
       function addFirstAll(values, fillDirective_) {
-        return this.withinFan([0], values, fillDirective_)
+        return this.fanWithin(values, { scan: [0], fill: fillDirective_ })
       },
 
       function addLastAll(values, fillDirective_) {
-        return this.withinFan([null], values, fillDirective_)
+        return this.fanWithin(values, { scan: [null], fill: fillDirective_ })
       },
 
       function addAllBefore(values, sub, directives_) {
         const span = this.spanOf(sub, directives_)
-        return (span) ? this.withinFan([span[LO]], values, directives_) : this
+        return (!span) ? this :
+          this.fanWithin(values, { scan: [span[LO]], fill: directives_.fill })
       },
 
       function addAllAfter(values, sub, directives_) {
         const span = this.spanOf(sub, directives_)
-        return (span) ? this.withinFan([span[HI]], values, directives_) : this
+        return (!span) ? this :
+          this.fanWithin(values, { scan: [span[HI]], fill: directives_.fill })
       },
 
 
@@ -1103,13 +1114,13 @@ Krust.set((context) => {
       //// REMOVE : a Value satisfying a Condition
 
       function removeWhere(scanDirective_, condition) {
-        const index = this.indexOfWhere(scanDirective_, condition)
+        const index = this.indexWhere(scanDirective_, condition)
         return (index >= 0) ? this._set(this._removeAtIndex(index)) : this
       },
 
       function removeEveryWhere(scanDirective_, test) {
         return this._new((result) => {
-          const indexes = this.indexesOfWhere(...Justify(scanDirective_, test))
+          const indexes = this.indexesWhere(...Justify(scanDirective_, test))
 
           if (indexes.size === 0) { return this }
 

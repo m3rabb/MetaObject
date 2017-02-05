@@ -43,8 +43,8 @@ Accessing
 
   By Value Condition
     Answer Index
-      indexOfWhere(scanDirective_, condition)
-      indexesOfWhere(scanDirective_, condition)
+      indexWhere(scanDirective_, condition)
+      indexesWhere(scanDirective_, condition)
 
     Answer Value
       valueWhere(scanDirective_, condition, absent_)
@@ -58,7 +58,7 @@ Accessing
       reject  : "everyWhereNot"
 
     Answer Count
-      countOfWhere(scanDirective_, conditional)
+      countWhere(scanDirective_, conditional)
 
 
   By Value
@@ -121,30 +121,31 @@ Enumeration
 
 Put
   Generic
-    atPut(index_span, value)
-    atEachPut(indexers, value)
-    atEachPutEach(indexers, values)
-    atFan()
+    atPut(position, value)
+    putAt(value, position)
+    putAtEach(value, positions)
+    putEachAtEach(value, positions)
+    fanAt(value, positions)
 
   By Index
-    atIndexPut(index, value)
+    putAtIndex(value, index)
 
   By Span
-    withinPut(edge_span, value)
-    withinEcho(span, value)
+    putWithin(value, edge_span)
+    echoWithin(value, span)
 
-    withinFan(span, values, fillDirective_)              fill
-    withinFill(span, values, fillDirective_)             fill
-    withinEchoFill(span, values, fillDirective_)         fill
+    fanWithin(values, directives_)              fill
+    fillWithin(values, directives_)             fill
+    echoFillWithin(values, directives_)         fill
 
-    beyondLay(edge, sub, fillDirective_)                 fill
-    untilLay(edgs, sub, fillDirective_)                  fill
+    layBeyond(values, edge, fillDirective_)                 fill
+    layUntil(values, edge, fillDirective_)                  fill
 
   By Value
-   atValuePut
-   atFirstPut(matchElement, newElement)
-   atLastPut(matchElement, newElement)
-   atEveryPut(matchElement, newElement)
+   putAtValue
+   putAtFirst(matchElement, newElement)
+   putAtLast(matchElement, newElement)
+   putAtEvery(matchElement, newElement)
 
   By Sub
     fanOver(values, subSeq, directives_)              scan|sub|fill
