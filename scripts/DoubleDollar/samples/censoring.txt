@@ -1,0 +1,201 @@
+These are some thoughts on censoring arguments passed into Thing methods.
+
+I've abandoned this approach for the simplicity (and speed) of protection using
+this.$ instead.
+
+======
+
+
+Passing arguments
+- primitive
+- object  Censor
+- function Censor and wrap to ensure its exec is only on facts and that it
+censors its returned output as well.  At first, I thought there was no need to
+restrict the return value, because since it came from the outside, there's no
+way it could leak an inner thing object.  However, it could create a new object
+that could then have one of its properties set to an inner object, thus needing
+for the returned object to be chapperoned.
+
+  yet no restrictions on return
+
+setting on things is NOT allowed
+
+getting
+- when getting a property always return it as a fact
+
+Methods must be saved as facts
+
+when exec a method
+- if mutable
+-- send to inner
+-- return self or a fact
+- if immutable
+-- inner copy wrapper to capture sets
+-- send to copy wrapper
+-- return a fact or copy from wrapper
+
+
+
+Censored objects
+- [ORIGINAL]
+- [IS_CENSOR]
+- [FACT]
+- [IS_FACT]
+
+As Fact
+- primitives
+- [IS_FACT]
+- "object" --> make deeply immutable copy and mark as a fact
+- "function" --> wrap in function to ensure
+-- censors arguments ( because interior of func could assign )
+-- make sure return value is a fact
+
+
+function method(x, y) {
+
+  return function (g) {
+    g.abc = this
+  }
+}
+
+
+
+
+
+const InterMap = new WeakMap()
+
+
+// Ensure that object passed in from the outside is wrapped
+function Protect(target) {
+  switch (typeof target) {
+    default         : return target  // Primitives don't need wrapping
+    case "function" : break
+    case "object"   : break
+  }
+  if (target === null)      { return null   }
+  if (InterMap.get(target)) { return target } // already protected
+  return CensorObject(value)                  // censor and answer chapperon
+}
+
+const BaseCensoringBehaviors = {
+  __proto__ : null,
+
+  apply     : (func, receiver, args) => {
+    const target = receiver[IS_FACT] ? receiver : AsFact(receiver)
+    return func.apply(AsFact(receiver), args.map(AsFact))
+  },
+
+  // CONSIDER construct handler (and possibly others)
+}
+
+function CensorObject(object) {
+  const CacheAccesses = {
+      __proto__  : null,
+      [ORIGINAL] : object
+  }
+
+  const chapperon = new Proxy(object, {
+    __proto__ : BaseCensoringBehaviors,
+
+    get (object, selector, _wrapper) {
+      return (selector in CacheAccesses) ?
+         CacheAccesses[selector] :
+        (CacheAccesses[selector] = Protect(object[selector]))
+    },
+
+    set (object, selector, value, _wrapper) {
+      CacheAccesses[selector] = object[selector] = Protect(value)
+      return true
+    },
+
+    has (object, selector) {
+      return (selector === IS_CENSOR) ? false : (selector in object)
+    },
+
+    // Symbol.hasInstance
+    // isExtensible()
+    // preventExtensions()
+    // getOwnPropertyDescriptor: function(target, prop)
+    // defineProperty: function(target, property, descriptor)
+    // deleteProperty: function(target, property)
+  })
+
+  InterMap.set(chapperon, object)
+  return chapperon
+}
+
+
+const BaseKrustBehaviors = {
+  __proto__ : null,
+
+  // Setting on things in not allowed because the setting semantics are broken.
+  // For our model, the return value should always be the receiver, or a copy
+  // of the receiver, with the property changed.
+
+  // Further, note that the return value of a set always returns the value that
+  // was tried to be set to, regardless of whether it was successful or not.
+
+  set (inner, selector, value, outer) {
+    return inner._externalWrite(selector, value) || false
+  },
+
+  has (inner, selector) {
+    switch (selector[0]) {
+      case "_"       : return inner._externalPrivateRead(selector) || false
+      case undefined : return undefined
+    }
+    return (selector in inner)
+  },
+
+  ownKeys (inner) {
+    const names = AllNames(inner).filter(name => name[0] !== "_")
+    return names.concat(ALLOWED_SYMBOLS)
+  },
+
+  getPrototypeOf (inner) {
+    return null
+  },
+
+  setPrototypeOf (inner, target) {
+    return false
+  },
+  // Symbol.hasInstance
+  // isExtensible()
+  // preventExtensions()
+  // getOwnPropertyDescriptor: function(target, prop)
+  // defineProperty: function(target, property, descriptor)
+  // deleteProperty: function(target, property)
+}
+
+function EnkrustThing(inner) {
+  const outer = new Proxy(inner, {
+    __proto__ : BaseKrustBehaviors,
+
+    get : (inner, selector, outer_) => {
+      switch (selector[0]) {
+        case "_"       : return inner._externalPrivateRead(selector) ||undefined
+        case undefined : return undefined  // Prevents reading of Symbols
+      }
+
+      const value = (inner[selector])
+      return value[IS_FACT] ? value : AsFact(value)
+    }
+  })
+}
+
+ AddLazyProperty(_Thing_root, KRUST, EnkrustThing)
+
+function AsFact(target) {
+  if (target == null || target[IS_FACT]) { return target }
+
+  if (target[IS_CENSORED])
+
+
+
+  new {} or [] of function
+  censored object|
+
+  if (typeof target = "object") {
+
+  }
+}

@@ -44,7 +44,7 @@ Krust.set((context) => {
 
     instanceMethods: [
 
-      function __init(elements_) {
+      function _init(elements_) {
         this._elements = []
         elements_ && this.addAll(elements_)
       },
@@ -1228,7 +1228,7 @@ Krust.set((context) => {
               ;break
             case 4 :
               wraps = specifier[WRAPS]
-              // INTENTIONAL FALL THRU
+              // break omitted
             case 3 :
               [lo, hi, dir] = specifier
               if (hi === undefined) {                          // direction

@@ -1,0 +1,37 @@
+intercepting method declaration enables:
+- dynamic immutbale copying
+- privacy
+
+setting on things is NOT allowed
+
+getting
+- when getting a property always return it as a fact
+
+Methods must be saved as facts
+
+when exec a method
+- if mutable
+-- send to inner
+-- return self or a fact
+- if immutable
+-- inner copy wrapper to capture sets
+-- send to copy wrapper
+-- return a fact or copy from wrapper
+
+
+
+As Fact
+- primitives
+- [IS_FACT]
+- "object" --> make deeply immutable copy and mark as a fact
+- "function" --> wrap in function to ensure
+-- censors arguments ( because interior of func could assign )
+-- make sure return value is a fact
+
+
+function method(x, y) {
+
+  return function (g) {
+    g.abc = this
+  }
+}

@@ -52,14 +52,14 @@ function AddGetter(target, namedGetter_name, getter_) {
 }
 
 function AddLazyProperty(target, namedInstaller_name, installer_) {
-  const [Name, installer] =
+  const [Name, Installer] =
     (typeof namedInstaller_name === "function") ?
       [namedInstaller_name.name, namedInstaller_name] :
       [namedInstaller_name     , installer_         ]
 
   _AddGetter(target, Name, function _loader() {
     DefineProperty(this, Name, InvisibleConfiguration)
-    return (this[Name] = installer.call(this))
+    return (this[Name] = Installer.call(this))
   })
 }
 
@@ -216,4 +216,25 @@ function Copy(value) {
     case "function" : return CopyFunc(value)
     case "object"   : return CopyObject(value)
   }
+}
+
+
+function BeDeeplyImmutable(target) {
+  if (typeof target === "object" && !IsFrozen(target)) {
+    DeepFreeze(target)
+  }
+  return target
+}
+
+function DeepFreeze(object) {
+  ShallowFreeze(object)
+  const selectors = AllProperties(object)
+  const next = selectors.length
+  while (next--) {
+    const value = object[selectors[next]]
+    if (typeof value === "object" && !IsFrozen(value)) {
+      DeepFreeze(value)
+    }
+  }
+  return object
 }

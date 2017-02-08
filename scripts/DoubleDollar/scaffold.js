@@ -75,7 +75,7 @@ function PutMethod(target, namedFunc) {
 }
 
 
-// Change name into an instance of Name!!!
+// Change name into an instance of Kname!!!
 PutMethod(Thing_root, function _init(name_) {
   // this._super._Init(arguments);
   if (name_ !== undefined) { this.name = name_ }
@@ -168,20 +168,20 @@ Type.addSGetter(function copy() {
   const type = Type.new(this.name, this.supertypes)
 })
 
-PutMethod(Type_root, function new(...args) {
-  var instance = SpawnFrom(this._instanceRoot)
+AtPutMethod(Type_root, "new", function (...args) {
+  var instance = { __proto__ : this._instanceRoot }
   instance._init(...args)
   return instance
 })
 
 
 _Type_root._instanceRoot = _Type_root
-const Thing   = _Type_root.new("Thing"  , []     , Thing_root)
-const Type    = _Type_root.new("Type"   , [Thing], Type_root)
+const Thing   = _Type_root.new("Thing"  , []     , Thing_root  )
+const Type    = _Type_root.new("Type"   , [Thing], Type_root   )
 const Nothing =       Type.new("Nothing", []     , Nothing_root)
-const Method  =       Type.new("Method" , [Thing], Method_root)
+const Method  =       Type.new("Method" , [Thing], Method_root )
 const Context =       Type.new("Context", [Thing], Context_root)
-const Name    =       Type.new("Name"   , [Thing], Name_root)
+const Name    =       Type.new("Name"   , [Thing], Name_root   )
 
 PutMethod(Method_root, function _init(func_name, func_) {
   const isFuncArg = (typeof func_name === "function")
@@ -213,13 +213,13 @@ PutMethod(Type_root, function addSMethod(method_func__name, func__) {
 
 // Method bootstrapping
 
-Thing.addSMethod(INTER, Thing_root._instanceRoot[INTER])
-Thing.addSMethod(       Thing_root._instanceRoot._init)
-Thing.addSMethod(       Thing_root._instanceRoot.is)
-Type.addSMethod(         Type_root._instanceRoot._init)
-Type.addSMethod(         Type_root._instanceRoot.new)
-Type.addSMethod(         Type_root._instanceRoot.addSMethod)
-Method.addSMethod(     Method_root._instanceRoot._init)
+Thing .addSMethod(INTER, Thing_root ._instanceRoot[INTER]    )
+Thing .addSMethod(       Thing_root ._instanceRoot._init     )
+Thing .addSMethod(       Thing_root ._instanceRoot.is        )
+Type  .addSMethod(       Type_root  ._instanceRoot._init     )
+Type  .addSMethod(       Type_root  ._instanceRoot.new       )
+Type  .addSMethod(       Type_root  ._instanceRoot.addSMethod)
+Method.addSMethod(       Method_root._instanceRoot._init     )
 
 Thing.addSMethod(function _noSuchProperty(name) {
   return this.error(`No such property: ${name}!`)
