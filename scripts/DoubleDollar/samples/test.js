@@ -47,57 +47,72 @@ const BaseKrustBehaviors = {
   // deleteProperty: function(target, property)
 }
 
-function EnkrustMutable(thing) {
-  const External = { __proto__ : Outer_root }
-  const Internal = { __proto__ : null       }
+function MutableGet(inner, selector, _outer) {
+  switch (selector[0]) {
+    case "_"       :
+      return inner._externalPrivateRead(selector) || undefined
+    case undefined :
+      if (!(selector in ALLOWED_SYMBOLS)) { return undefined }
+  }
 
-  const krustBehaviors = {
-    __proto__ : BaseKrustBehaviors,
+  if (inner.atIndex) {
+    index = +selector
+    if (index === index || index === "null") { return inner.atIndex(index) }
+  }
 
-    get (inner, selector, _outer) {
-      switch (selector[0]) {
-        case "_"       :
-          return inner._externalPrivateRead(selector) || undefined
-        case undefined :
-          if (!(selector in ALLOWED_SYMBOLS)) { return undefined }
-      }
+  let externals = this.externals
+  let internals = this.internals
+  let external  = externals[selector]
+  let internal  = internals[selector]
+  let value     = inner    [selector]
 
-      if (inner.atIndex) {
-        index = +selector
-        if (index === index || index === "null") { return inner.atIndex(index) }
-      }
+  if (internal === value) { return external }
 
-      let external = External[selector]
-      let internal = Internal[selector]
-      let value    = inner   [selector]
+  internals[selector] = value
 
-      if (internal === value) { return external }
-
-      Internal[selector] = value
-
-      if (internal === undefined) {  // This is first access of the property
-        if (external !== undefined) { // The krust is inheriting this property
-          return external
-        }
-      }
-
-      switch (typeof value) {
-        case "undefined" : return (External[selector] = value)
-        case "boolean"   : return (External[selector] = value)
-        case "number"    : return (External[selector] = value)
-        case "symbol"    : return (External[selector] = value)
-        case "string"    : return (External[selector] = value)
-        case "object"    :
-          if (result === null) { return (External[selector] = value) }
-          // break omitted
-        case "function"  : break
-      }
-
-      return (External[selector] = (value[IS_FACT]) ? value :
-        (value === inner) ? inner.$ : _NonFactAsFact(value))
+  if (internal === undefined) { // This is first access of the property
+    if (external !== undefined) {
+      return external          // The krust is inheriting this property
     }
   }
 
+  switch (typeof value) {
+    case "undefined" :       return (externals[selector] = value)
+    case "boolean"   :       return (externals[selector] = value)
+    case "number"    :       return (externals[selector] = value)
+    case "symbol"    :       return (externals[selector] = value)
+    case "string"    :       return (externals[selector] = value)
+    case "object"    :
+      if (result === null) { return (externals[selector] = value) }
+      // break omitted
+    case "function"  : break
+  }
+
+  return (externals[selector] = (value[IS_FACT]) ? value :
+    (value === inner) ? inner.$ : _NonFactAsFact(value))
+}
+
+function ImmutableGet(inner, selector, _outer) {
+  switch (selector[0]) {
+    case "_"       : return inner._externalPrivateRead(selector) ||undefined
+    case undefined : return undefined  // Prevents reading of Symbols
+  }
+
+  if (inner.atIndex) {
+    index = +selector
+    if (index === index || index === "null") { return inner.atIndex(index) }
+  }
+
+  return this.external[selector]
+}
+
+function EnkrustMutable(thing) {
+  const krustBehaviors = {
+    __proto__   : BaseKrustBehaviors,
+      get       : MutableGet,
+      externals : { __proto__ : Outer_root },
+      internals : { __proto__ : null       },
+  }
   const krust = new Proxy(thing, krustBehaviors)
 
   InterMap.set(krust, thing)
@@ -105,46 +120,6 @@ function EnkrustMutable(thing) {
   return (thing.$ = krust)
 }
 
-function EnkrustImmutable(thing) {
-  const External = { __proto__ : Outer_root }
-
-  let props = LocalProperties(thing)
-  let next  = props.length
-
-  while (next--) {
-    let name = props[next]
-    let value = thing[name]   // NOTE: if immutable values should already be facts!!!
-    External[name] = (!value || value[IS_FACT]) ? value :
-      (value === this) ? this.$ : _NonFactAsFact(value)
-  }
-
-  const krust = new Proxy(thing, {
-    __proto__ : BaseKrustBehaviors,
-
-    get (inner, selector, _outer) {
-      switch (selector[0]) {
-        case "_"       : return inner._externalPrivateRead(selector) ||undefined
-        case undefined : return undefined  // Prevents reading of Symbols
-      }
-
-      if (inner.atIndex) {
-        index = +selector
-        if (index === index || index === "null") { return inner.atIndex(index) }
-      }
-
-      return External[selector]
-    }
-  })
-
-  InterMap.set(krust, thing)
-  return (thing.$ = krust)
-}
-
-function EnkrustThing(thing) {
-  return (this[IMMUTABLE]) ? EnkrustImmutable(thing) : EnkrustMutable(thing)
-}
-
-AddLazyProperty(_Thing_root, KRUST, EnkrustThing)
 
 
 const BaseWriteBarrierBehaviors = {
