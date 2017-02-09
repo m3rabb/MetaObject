@@ -12,41 +12,50 @@ function _setId(newId_) {
     ids[newId_] = newId_
 
   }
-  else { this[IS_FACT] = true }
+  else { this[MUTABILITY] = FACT }
 
   this[EXPLICIT_ID] = newId_
   return this
 },
 
+JS_OBJECT = undefined
+VIRGIN    = null
+MUTABLE   = 0
+FACT      = -1
+IMMUTABLE = -2
+
 
 function asFact() {
-  if (this[IS_FACT]) { return this }
-  return this._copyInto(AS_FACT)
+  if (this[MUTABILITY] <= FACT) { return this }
+  return this._copy(AS_FACT)
 },
 
 function beImmutable() {
-  if (this[IS_IMMUTABLE]) { return this }
-  return this._copyInto(IMMUTABLE, undefined, this)
+  if (this[MUTABILITY] === IMMUTABLE) { return this }
+  return this._copy(true, undefined, this)
 },
 
+// [REF_COUNT] of 0 or 1 no copy needed on beImmutable
+// [REF_COUNT] is -Infinity for FACT and NaN for IMMUTABLE
+
+
 function asImmutable() {
-  if (this[IS_IMMUTABLE]) { return this }
-  return this._copyInto(IMMUTABLE)
+  if (this[MUTABILITY] === IMMUTABLE) { return this }
+  return this._copy(true)
 },
 
 function copy() {
-  if (this[IS_IMMUTABLE]) { return this }
-  return this._copyInto(MUTABLE)
+  if (this[MUTABILITY] === IMMUTABLE) { return this }
+  return this._copy(false)
 },
 
 function nonCopy() {
-  return (this[IS_IMMUTABLE]) ? this._new() : this
+  return (this[MUTABILITY] === IMMUTABLE) ? this._new() : this
 },
 
 
-function _copyInto(mode, visited = new Map(), target = this._new()) {
-  let name, value, Copy, traversed, inner
-  let asFact   = !!mode
+function _copy(harden, visited = new Map(), target = this._new()) {
+  let name, value, isFunc, traversed, inner, copy
   let names    = this[KNOWN_PROPERTIES] || LocalProperties(this)
   let next     = names.length
 
@@ -64,60 +73,45 @@ function _copyInto(mode, visited = new Map(), target = this._new()) {
       case "string"    :       target[next] = value; continue
       case "object"    :       target[next] = value; continue
         if (result === null) { target[next] = value; continue }
-        Copy = CopyObject; break
+        isFunc = true ; break
       case "function"  :
-        Copy = CopyFunc  ; break
+        isFunc = false; break
     }
 
-    if (value[IS_FACT]) {
+    if (value[MUTABILITY] <= FACT) {
       target[next] = value
     }
     else if ((traversed = visited.get(value))) {
       target[next] = traversed
     }
     else if ((inner = InterMap.get(value))) {
-      target[next] = inner._copyInto(asFact, visited)
+      target[next] = inner._copy(harden, visited)
     }
     else if (value.id !== undefined) {
       target[next] = value
     }
+    // else if (value.krustyCopy) {
+    //   target[next] = copy = value.krustyCopy(harden)
+    //   visited.set(value, copy)
+    // }
     // else if (value.constructor !== Object_constructor && (copy = value.copy)) {
-    //   if (typeof copy === "function") { copy = value.copy(asFact) }
+    //   if (typeof copy === "function") { copy = value.copy(harden) }
     //
     //   target[next] = copy
     //   visited.set(value, copy)
     // }
     else {
-      target[next] = (Copy === CopyFunc) ?
-        CopyFunc(value, asFact, visited) :
+      target[next] = (isFunc) ? CopyFunc(value, harden, visited) :
         IsArray(value) ?
-          CopyArray (value, asFact, visited) :
-          CopyObject(value, asFact, visited)
+          CopyArray (value, harden, visited) :
+          CopyObject(value, harden, visited)
     }
   }
+                    // _setId will adjust the target's mutability as necessary
+  if (this.id !== undefined) { target._setId() }  // entity
+  if (!harden) { return target }
 
-  if (this.id !== undefined) {   // entity
-    target._setId()   // this also sets AS_FACT
-    if (mode !== IMMUTABLE) { return target }
-  }
-  else if (asFact) {             // immutable value
-    target[IS_FACT] = target[IS_IMMUTABLE] = true
-  }
-  else {
-    return target
-  }
-
-  next               = names.length
-  krustBehaviors     = target[KRUST_BEHAVIORS]
-  krustBehaviors.get = ImmutableGet
-  externals          = krustBehaviors.externals
-  delete krustBehaviors.internals
-
-  while (next--) {
-    name           = names[next]
-    external[name] = target[name]
-  }
-
+  target[MUTABILITY] == IMMUTABLE
   return BeImmutable(target)
 }
 
@@ -137,12 +131,26 @@ function _AsFact(target) {
 }
 
 
-root = {}
 
-Object.defineProperty(root, "size", {
-  get () {
-    return 12345
-  }
-})
 
-bob = { __proto__ : root, name : "bob" }
+
+
+// asFact
+// MUTABLE    immutable copy  -- subs are asFacts
+// FACT       self
+// IMMUTABLE  self
+//
+// refCopy
+// MUTABLE    copy  -- subs are refCopy
+// FACT       self
+// IMMUTABLE  self
+//
+// copy
+// MUTABLE    copy  -- subs are refCopy
+// FACT       copy
+// IMMUTABLE  self
+//
+// asImmutable
+// MUTABLE    immutable copy  -- subs are asFacts
+// FACT       immutable copy  -- subs are asFacts
+// IMMUTABLE  self

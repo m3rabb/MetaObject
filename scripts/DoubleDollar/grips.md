@@ -1,5 +1,7 @@
 
 
+hidden symbol properties are now called attributes
+
 
 mode
 match

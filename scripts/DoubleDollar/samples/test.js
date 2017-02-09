@@ -1,6 +1,9 @@
 
 const InterMap = new WeakMap()
 
+const ANSWER_FALSE = () => false
+const ANSWER_NULL = () => null
+
 const KrustBehaviors = {
   __proto__ : null,
 
@@ -32,38 +35,41 @@ const KrustBehaviors = {
     return inner._externalWrite(selector, value) || false
   },
 
-  defineProperty (inner, selector, descriptor) {
-    return false
-  },
-
   has (inner, selector) {
     switch (selector[0]) {
       case "_"       : return inner._externalPrivateRead(selector) || false
-      case undefined : if (!(selector in ALLOWED_SYMBOLS)) { return false }
+      // case undefined : if (!(selector in ALLOWED_SYMBOLS)) { return false }
+      case undefined : return false
     }
     return (selector in inner)
   },
 
+  getOwnPropertyDescriptor (inner, selector) {
+    switch (selector[0]) {
+      case "_"       : return inner._externalPrivateRead(selector) || undefined
+      // case undefined : if (!(selector in ALLOWED_SYMBOLS)) { return false }
+      case undefined : return undefined
+    }
+    return Reflect.getOwnPropertyDescriptor(inner, selector)
+  },
+
   ownKeys (inner) {
     const names = AllNames(inner).filter(name => name[0] !== "_")
-    return names.concat(ALLOWED_SYMBOLS_LIST)
+    // return names.concat(ALLOWED_SYMBOLS_LIST)
+    return names
   },
 
-  getPrototypeOf (inner) {
-    return null
-  },
-
-  setPrototypeOf (inner, target) {
-    return false
-  },
+  getPrototypeOf : ANSWER_NULL,
+  setPrototypeOf : ANSWER_FALSE,
+  defineProperty : ANSWER_FALSE,
+  deleteProperty : ANSWER_FALSE,
+  isExtensible   : ANSWER_FALSE,
 
   // Symbol.hasInstance
-  // isExtensible()
   // preventExtensions()
-  // getOwnPropertyDescriptor: function(target, prop)
-  // defineProperty: function(target, property, descriptor)
-  // deleteProperty: function(target, property)
+
 }
+
 
 
 
@@ -85,19 +91,24 @@ const MutableWriteBarrierBehaviors = {
         isFunc = false; break
     }
 
-    if (value[IS_FACT]) { inner[selector] = value; return true }
+    if (value[MUTABILITY] <= FACT) { inner[selector] = value; return true }
 
     const firstChar = selector[0]
     const isPublic  = (firstChar !== "_" && firstChar !== undefined)
 
     inner[selector] = ((innerValue = InterMap.get(value))) ?
-      (isPublic) ? innerValue.asFact : innerValue.copy
+      (isPublic) ? innerValue.asImmutable : innerValue.copy
       (isFunc) ? CopyFunc(value, isPublic) :
         IsArray(value) ? CopyArray(value, isPublic) :CopyObject(value, isPublic)
 
     return true
   }
 }
+
+
+
+
+
 
 
 
@@ -262,8 +273,7 @@ function MakeFactory(InstanceRoot) {
 }
 
 
-
-
+// This is the factory for Type
 function Type(spec_typeName, supertypes_) {
   const spec = (spec_typeName !== "string") ? spec_typeName :
                  {name : spec_typeName, supertypes : supertypes_}
@@ -288,12 +298,28 @@ TypeBehaviors = {
 
 
 PutMethod(Type_root, function _init(spec, _root_, context__) {
-  const _supertypes  = ConnectTypes(this, spec.supertypes)
-  const _ancestors   = BuildAncestors(_supertypes)
-  const _root        = _root_ || { __proto__ : Inner_root }
+  const _supertypes, _ancestors, _root, _factory, behaviors, disguise
+
+  _supertypes = ConnectTypes(this, spec.supertypes)
+  _ancestors  = BuildAncestors(_supertypes)
+  _root       = _root_ || { __proto__ : Inner_root }
+
+  SeedInstanceRootMethodHandlers(_root, _ancestors)
+  _ancestors[_ancestors.length] = this
+
+  _root.ancestry     = _ancestors
+  _root.type         = this
+  _root[ROOT]        = _root
+  _root.constructor  = ConstructorNamingInDebugger(typeName)
+
+  _factory = MakeFactory(_root)
+  _factory[Symbol.hasInstance] = (instance) => (instance.type === this)
+
+  behaviors = { __proto__: TypeBehaviors, typeInstance: this }
+  disguise  = new Proxy(_factory, behaviors)
 
   this.name          = spec.name
-  this._factory      = MakeFactory(_root)
+  this._factory      = _factory
   this._instanceRoot = _root
   this.context       = context__ || null
   this.subtypes      = { __proto__ : null }
@@ -303,21 +329,11 @@ PutMethod(Type_root, function _init(spec, _root_, context__) {
 
   this._setId(`${spec.name},${Type_root._nextInstanceNumber}.Type`)
 
-  _root.type         = this
-  _root[ROOT]        = _root
-  _root.constructor  = ConstructorNamingInDebugger(typeName)
-
-  SeedInstanceRootMethodHandlers(_root, _ancestors)
-  _ancestors[_ancestors.length] = this
-  _root.ancestry     = _ancestors
-
-  this._disguise     = new Proxy(this._factory, {
-    __proto__    : TypeBehaviors,
-    typeInstance : this
-  })
-
-  return (this._disguise)
+  return (this._disguise = disguise)
 })
+
+
+AddLazilyInstalledProperty(_Thing_root, "$", EnkrustThing)
 
 
 function EnkrustThing(thing) {
