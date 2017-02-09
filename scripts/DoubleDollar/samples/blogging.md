@@ -6,3 +6,5 @@
 - return from looping
 - how debugger finds names of functions
 - proxies
+- disguising functions
+- lazy installer properties

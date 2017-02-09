@@ -1,7 +1,7 @@
 
 const InterMap = new WeakMap()
 
-const BaseKrustBehaviors = {
+const KrustBehaviors = {
   __proto__ : null,
 
   // Setting on things in not allowed because the setting semantics are broken.
@@ -10,6 +10,23 @@ const BaseKrustBehaviors = {
 
   // Further, note that the return value of a set always returns the value that
   // was tried to be set to, regardless of whether it was successful or not.
+
+  get (inner, selector, _outer) {
+    switch (selector[0]) {
+      case "_"       :
+        return inner._externalPrivateRead(selector) || undefined
+      case undefined : if (!(selector in ALLOWED_SYMBOLS)) { return undefined }
+    }
+
+    if (inner.atIndex) {
+      index = +selector
+      if (index === index || index === "null") { return inner.atIndex(index) }
+    }
+
+    let value = inner[selector]
+
+    return (value === inner) ? value.$ : value
+  },
 
   set (inner, selector, value, _outer) {
     return inner._externalWrite(selector, value) || false
@@ -22,14 +39,14 @@ const BaseKrustBehaviors = {
   has (inner, selector) {
     switch (selector[0]) {
       case "_"       : return inner._externalPrivateRead(selector) || false
-      case undefined : return undefined
+      case undefined : if (!(selector in ALLOWED_SYMBOLS)) { return false }
     }
     return (selector in inner)
   },
 
   ownKeys (inner) {
     const names = AllNames(inner).filter(name => name[0] !== "_")
-    return names.concat(ALLOWED_SYMBOLS)
+    return names.concat(ALLOWED_SYMBOLS_LIST)
   },
 
   getPrototypeOf (inner) {
@@ -39,6 +56,7 @@ const BaseKrustBehaviors = {
   setPrototypeOf (inner, target) {
     return false
   },
+
   // Symbol.hasInstance
   // isExtensible()
   // preventExtensions()
@@ -47,82 +65,43 @@ const BaseKrustBehaviors = {
   // deleteProperty: function(target, property)
 }
 
-function MutableGet(inner, selector, _outer) {
-  switch (selector[0]) {
-    case "_"       :
-      return inner._externalPrivateRead(selector) || undefined
-    case undefined :
-      if (!(selector in ALLOWED_SYMBOLS)) { return undefined }
-  }
 
-  if (inner.atIndex) {
-    index = +selector
-    if (index === index || index === "null") { return inner.atIndex(index) }
-  }
 
-  let externals = this.externals
-  let internals = this.internals
-  let external  = externals[selector]
-  let internal  = internals[selector]
-  let value     = inner    [selector]
 
-  if (internal === value) { return external }
+const MutableWriteBarrierBehaviors = {
+  __proto__ : null,
 
-  internals[selector] = value
-
-  if (internal === undefined) { // This is first access of the property
-    if (external !== undefined) {
-      return external          // The krust is inheriting this property
+  set (inner, selector, value, _outer) {
+    switch (typeof value) {
+      case "undefined" :       inner[selector] = value; return true
+      case "boolean"   :       inner[selector] = value; return true
+      case "number"    :       inner[selector] = value; return true
+      case "symbol"    :       inner[selector] = value; return true
+      case "string"    :       inner[selector] = value; return true
+      case "object"    :       inner[selector] = value; return true
+        if (result === null) { inner[selector] = value; return true }
+        isFunc = true ; break
+      case "function"  :
+        isFunc = false; break
     }
+
+    if (value[IS_FACT]) { inner[selector] = value; return true }
+
+    const firstChar = selector[0]
+    const isPublic  = (firstChar !== "_" && firstChar !== undefined)
+
+    inner[selector] = ((innerValue = InterMap.get(value))) ?
+      (isPublic) ? innerValue.asFact : innerValue.copy
+      (isFunc) ? CopyFunc(value, isPublic) :
+        IsArray(value) ? CopyArray(value, isPublic) :CopyObject(value, isPublic)
+
+    return true
   }
-
-  switch (typeof value) {
-    case "undefined" :       return (externals[selector] = value)
-    case "boolean"   :       return (externals[selector] = value)
-    case "number"    :       return (externals[selector] = value)
-    case "symbol"    :       return (externals[selector] = value)
-    case "string"    :       return (externals[selector] = value)
-    case "object"    :
-      if (result === null) { return (externals[selector] = value) }
-      // break omitted
-    case "function"  : break
-  }
-
-  return (externals[selector] = (value[IS_FACT]) ? value :
-    (value === inner) ? inner.$ : _NonFactAsFact(value))
-}
-
-function ImmutableGet(inner, selector, _outer) {
-  switch (selector[0]) {
-    case "_"       : return inner._externalPrivateRead(selector) ||undefined
-    case undefined : return undefined  // Prevents reading of Symbols
-  }
-
-  if (inner.atIndex) {
-    index = +selector
-    if (index === index || index === "null") { return inner.atIndex(index) }
-  }
-
-  return this.external[selector]
-}
-
-function EnkrustMutable(thing) {
-  const krustBehaviors = {
-    __proto__   : BaseKrustBehaviors,
-      get       : MutableGet,
-      externals : { __proto__ : Outer_root },
-      internals : { __proto__ : null       },
-  }
-  const krust = new Proxy(thing, krustBehaviors)
-
-  InterMap.set(krust, thing)
-  thing[KRUST_BEHAVIORS] = krustBehaviors
-  return (thing.$ = krust)
 }
 
 
 
-const BaseWriteBarrierBehaviors = {
+const ImmutableWriteBarrierBehaviors = {
   __proto__ : null,
 
   set (inner, selector, value, _outer) {
@@ -151,8 +130,8 @@ function EnkrustMethod(OriginalMethod) {
     let handlers, receiver
 
     if (innerReceiver[IS_IMMUTABLE]) {
-      handlers = { __proto__ : BaseWriteBarrierBehaviors,
-                     target  : innerReceiver              }
+      handlers = { __proto__ : ImmutableWriteBarrierBehaviors,
+                     target  : innerReceiver                   }
       receiver = new Proxy(innerReceiver, handlers)
     }
     else { receiver = innerReceiver }
@@ -249,39 +228,101 @@ function _FuncAsFact(nonFactFunc, visited) {
 }
 
 
-// function MakeConstructor(typeName, instanceRoot) {
-//   const funcBody =
-//     `return function ${typeName}(...args) {
-//       this._init(...args)
-//       if (args.length) { this.beImmutable }
-//     }`
-//   const constructor = Function(funcBody)()
-//
-//   constructor.prototype    = instanceRoot
-//   instanceRoot.constructor = constructor
-//   return constructor
-// }
 
-function MakeConstructor(typeName, instanceRoot) {
-  const funcBody = `return function ${typeName}() {}`
+
+function ConstructorNamingInDebugger(typeName) {
+  const funcBody = `return function ${typeName}() {
+    throw new Error("This constructor is only for use in debugging!")
+  }`
   const constructor = Function(funcBody)()
-
-  constructor.prototype    = instanceRoot
-  instanceRoot.constructor = constructor
-  return constructor
+  delete constructor.prototype
+  constructor[IS_FACT] = constructor[IS_IMMUTABLE] = true
+  return BeImmutable(constructor)
 }
 
-function MakeType(typeName) {
-  return new Proxy(
+// function MakeConstructor(typeName, instanceRoot) {
+//   const funcBody = `return function _${typeName}_constructor() {
+//     this._init(...arguments)
+//     if (arguments.length && this.id === undefined) { this.beImmutable }
+//   }`
+//   const constructor = Function(funcBody)()
+//   constructor.prototype = instanceRoot
+//   constructor[IS_FACT] = constructor[IS_IMMUTABLE] = true
+//   return BeImmutable(constructor)
+// }
 
-    function (...args) {
-      const instance = new this._constructor()
-      instance._init(...args)
 
-    },
+function MakeFactory(InstanceRoot) {
+  return function (...args) {
+    const instance = { __proto__ : InstanceRoot }
+    instance._init(...args)
+    if (args.length && instance.id === undefined) { instance.beImmutable }
+    return instance
+  }
+}
 
-    {
 
-    }
 
+
+function Type(spec_typeName, supertypes_) {
+  const spec = (spec_typeName !== "string") ? spec_typeName :
+                 {name : spec_typeName, supertypes : supertypes_}
+  const newType = { __proto__ : Inner_root }
+  return newType._init(typeName, supertypes_)
+}
+
+TypeBehaviors = {
+  get (_factory, selector, _disguise) {
+    return this.typeInstance[selector]
+  },
+
+  set (_factory, selector, value, _disguise) {
+    this.typeInstance[selector] = value
+    return false
+  },
+
+  has (_factory, selector) {
+    return (selector in this.typeInstance)
+  },
+}
+
+
+PutMethod(Type_root, function _init(spec, _root_, context__) {
+  const _supertypes  = ConnectTypes(this, spec.supertypes)
+  const _ancestors   = BuildAncestors(_supertypes)
+  const _root        = _root_ || { __proto__ : Inner_root }
+
+  this.name          = spec.name
+  this._factory      = MakeFactory(_root)
+  this._instanceRoot = _root
+  this.context       = context__ || null
+  this.subtypes      = { __proto__ : null }
+  this.methods       = { __proto__ : null }
+  this.supertypes    =
+    spec.supertypes || spec.supertype && [spec.supertype] || [Thing]
+
+  this._setId(`${spec.name},${Type_root._nextInstanceNumber}.Type`)
+
+  _root.type         = this
+  _root[ROOT]        = _root
+  _root.constructor  = ConstructorNamingInDebugger(typeName)
+
+  SeedInstanceRootMethodHandlers(_root, _ancestors)
+  _ancestors[_ancestors.length] = this
+  _root.ancestry     = _ancestors
+
+  this._disguise     = new Proxy(this._factory, {
+    __proto__    : TypeBehaviors,
+    typeInstance : this
+  })
+
+  return (this._disguise)
+})
+
+
+function EnkrustThing(thing) {
+  const krust = new Proxy(thing, KrustBehaviors)
+
+  InterMap.set(krust, thing)
+  return (thing.$ = krust)
 }

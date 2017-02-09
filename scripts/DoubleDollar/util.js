@@ -51,7 +51,7 @@ function AddGetter(target, namedGetter_name, getter_) {
   return _AddGetter(target, name, getter)
 }
 
-function AddLazyProperty(target, namedInstaller_name, installer_) {
+function AddLazyInstalledProperty(target, namedInstaller_name, installer_) {
   const [Name, Installer] =
     (typeof namedInstaller_name === "function") ?
       [namedInstaller_name.name, namedInstaller_name] :

@@ -35,7 +35,8 @@ function asImmutable() {
 },
 
 function copy() {
-  return this._copyInto(this[IS_IMMUTABLE] ? IMMUTABLE : MUTABLE)
+  if (this[IS_IMMUTABLE]) { return this }
+  return this._copyInto(MUTABLE)
 },
 
 function nonCopy() {
