@@ -194,7 +194,7 @@ function EnkrustMethod(OriginalMethod) {
 }
 
 
-function ConstructorNamingInDebugger(typeName) {
+function ConstructorForNamingInDebugger(typeName) {
   const funcBody = `return function ${typeName}() {
     throw new Error("This constructor is only for use in debugging!")
   }`
@@ -204,31 +204,30 @@ function ConstructorNamingInDebugger(typeName) {
   return BeImmutable(constructor)
 }
 
-function BasicConstructorFor(instanceRoot) {
+function BlankConstructorFor(instanceRoot) {
   const constructor = function () {}
   constructor.prototype = instanceRoot
   constructor[MUTABILITY] = IMMUTABLE
   return BeImmutable(constructor)
 }
 
-function CreateFactory(typeName, basicConstructor) {
-  const funcBody =
-    `return function (_basic_${typeName}) {
-      return function ${typeName}(...args) {
-        const instance = new _basic_${typeName}()
-        instance._init(...args)
-        if (args.length && instance.id === undefined) { instance.beImmutable }
-        return instance
-      }
-    }`
-  const customFactoryGenerator = Function(funcBody)()
+
+function CreateFactory(_Blank) {
+  return function (...args) {
+    const instance = new _Blank()
+    instance._init(...args)
+    if (args.length && instance.id === undefined) { instance.beImmutable }
+    return instance
+  }
+}
+
   const factory = customFactoryGenerator(basicConstructor)
 
   BeImmutable(factory.prototype)
   return BeImmutable(factory)
 }
 
-class TypeBasisBehavior {
+class TypeDisguiseBehavior {
   constructor (typeInstance) {
     this.typeInstance = typeInstance
   }
@@ -247,13 +246,13 @@ class TypeBasisBehavior {
   }
 }
 
-const RootConstructor = BasicConstructorFor(Inner_root)
-const TypeConstructor = BasicConstructorFor(Type_root)
+const BlankRoot = BlankConstructorFor(Inner_root)
+const BlankType = BlankConstructorFor(Type_root)
 
 
 // This is the factory for Type
 function Type(spec_typeName, supertypes_) {
-  const newType = new TypeConstructor()
+  const newType = new BlankType()
   const spec    = (spec_typeName !== "string") ? spec_typeName :
                     {name : spec_typeName, supertypes : supertypes_}
   return newType._init(spec)
@@ -261,46 +260,59 @@ function Type(spec_typeName, supertypes_) {
 
 
 PutMethod(Type_root, function _init(spec, _root_, context__) {
-  const _supertypes      = ConnectTypes(this, spec.supertypes)
-  const _ancestors       = BuildAncestors(_supertypes)
-  const _root            = _root_ || new RootConstructor()
-  const basicConstructor = BasicConstructorFor(_root)
-  const name             = spec.name
   const iid              = Type_root._nextIID++
+  const _root            = _root_ || new BlankRoot()
+  const basicConstructor = BasicConstructorFor(_root)
+  const _factory         = CreateFactory(basicConstructor)
+  const behavior         = new TypeDisguiseBehavior(this)
+  const disguise         = new Proxy(_factory, behavior)
 
-  SeedInstanceRootMethodHandlers(_root, _ancestors)
-  _ancestors[_ancestors.length] = this
-
-  _root.ancestry     = _ancestors // LOOK: ancestry & type need to be protected!!!
-  _root.type         = this
-  _root[ROOT]        = _root
-  _root.constructor  = ConstructorNamingInDebugger(name)
-  _root._new         = basicConstructor
-
-  const _factory = CreateFactory(name, basicConstructor)
   _factory[Symbol.hasInstance] = (instance) => (instance.type === this)
 
-  const behavior = new TypeBasisBehavior(this)
-  const disguise = new Proxy(_factory, behavior)
+  _root.type         = disguise  // LOOK: need to be protected!!!
+  _root[ROOT]        = _root
+  _root._newBlank    = basicConstructor
 
-  this.name          = name
-  this._iid          = iid
-  this._factory      = _factory
-  this._constructor  = basicConstructor
-  this._nextIID      = 0
   this._instanceRoot = _root
-  this.context       = context__ || null
-  this.subtypes      = SpawnFrom(null)
-  this.methods       = SpawnFrom(null)
-  this.supertypes    = spec.supertypes ||
-    spec.supertype && [spec.supertype] || [Thing]
+  this._constructor  = basicConstructor
+  this._factory      = _factory
+  this._disguise     = disguise
+  this._nextIID      = 0
+  this._context      = context__ || null   // LOOK: need to be protected!!!
+  this._subtypes     = SpawnFrom(null)
+  this._methods      = SpawnFrom(null)
 
   const prefix = context__ ? context__.id + "@" : ""
+  this._setId(NewUniqueId(`${prefix}${iid}.Type-`))
 
-  this._setId(`${prefix}${name},${iid}.Type`)
+  const supertypes =
+    (spec && spec.supertypes || spec.supertype && [spec.supertype]) || [Thing]
+  this.setSupertypes(supertypes)
+  spec && this.setName(spec.name)
 
-  return (this._disguise = disguise)
+  return disguise
+}
+
+AddGetter(Thing_root, function id() {
+  return this[EXPICIT_ID]
 })
+
+PutMethod(Type_root, function setSupertypes(supertypes) {
+  const _supertypes = ConnectTypes(this, supertypes)
+  const _ancestors  = BuildAncestors(_supertypes)
+
+  SeedInstanceRootMethodHandlers(_root, _ancestors)
+
+  _ancestors[_ancestors.length] = this
+  this._instanceRoot.ancestry   = _ancestors // LOOK: need to be protected!!!
+  this.supertypes               = supertypes // LOOK: need to be protected!!!
+})
+
+PutMethod(Type_root, function setName(name) {
+  this.name = name
+  this._instanceRoot.constructor = ConstructorForNamingInDebugger(name)
+})
+
 
 function EnkrustThing(thing) {
   const krust = new Proxy(thing, KrustBehavior)

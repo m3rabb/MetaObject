@@ -173,7 +173,7 @@ Krust.set((context) => {
             absent_ : absent_.call(this.$, index)
       },
 
-      { GETTER : [
+      "GETTER", [
 
         function first() {
           return this._elements[0]
@@ -293,13 +293,13 @@ Krust.set((context) => {
         return this.everyWhere(scanDirective_, inverseCondition)
       },
 
-      { ALIAS : {
+      "ALIAS", {
         where   : "valueWhere"
         detect  : "valueWhere",
         find    : "valueWhere",
         select  : "everyWhere",
         reject  : "everyWhereNot"
-      } },
+      },
 
 
 

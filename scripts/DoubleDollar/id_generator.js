@@ -22,5 +22,5 @@ function NewUniqueId(
 ) {
   const id = (seedDate * seedValue).toString(36)
   const zeros = ZERO_PADDING.slice(0, MAX_UNIQUE_ID_LENGTH - id.length)
-  return prefix + zeros + id
+  return `${prefix}${zeros}${id}`
 }

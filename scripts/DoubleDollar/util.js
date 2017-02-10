@@ -34,21 +34,30 @@ const InvisibleConfiguration = {
   configurable: true,
 }
 
-function _AddGetter(target, name, getter) {
+function _AddGetter(target, name, getter, isVisible) {
   const configuration = {
-    __proto__ : InvisibleConfiguration,
-      get     : getter
+    enumerable  : isVisible,
+    writable    : true,
+    configurable: true,
+    get         : getter
   }
   return DefineProperty(target, name, configuration)
 }
 
 function AddGetter(target, namedGetter_name, getter_) {
-  const [name, getter] =
-    (typeof namedGetter_name === "function") ?
+  const [name, getter] = (typeof namedGetter_name === "function") ?
       [namedGetter_name.name, namedGetter_name] :
       [namedGetter_name     , getter_         ]
 
-  return _AddGetter(target, name, getter)
+  return _AddGetter(target, name, getter, true)
+}
+
+function AddInvisibleGetter(target, namedGetter_name, getter_) {
+  const [name, getter] = (typeof namedGetter_name === "function") ?
+      [namedGetter_name.name, namedGetter_name] :
+      [namedGetter_name     , getter_         ]
+
+  return _AddGetter(target, name, getter, false)
 }
 
 function AddLazilyInstalledProperty(target, namedInstaller_name, installer_) {
