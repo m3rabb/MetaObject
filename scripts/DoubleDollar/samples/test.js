@@ -1,18 +1,14 @@
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/
 
 const InterMap = new WeakMap()
 
 const ANSWER_FALSE = () => false
 const ANSWER_NULL = () => null
 
-const KrustBehaviors = {
+const KrustBehavior = {
   __proto__ : null,
-
-  // Setting on things in not allowed because the setting semantics are broken.
-  // For our model, the return value should always be the receiver, or a copy
-  // of the receiver, with the property changed.
-
-  // Further, note that the return value of a set always returns the value that
-  // was tried to be set to, regardless of whether it was successful or not.
 
   get (inner, selector, _outer) {
     switch (selector[0]) {
@@ -22,7 +18,7 @@ const KrustBehaviors = {
     }
 
     if (inner.atIndex) {
-      index = +selector
+      let index = +selector
       if (index === index || index === "null") { return inner.atIndex(index) }
     }
 
@@ -30,6 +26,13 @@ const KrustBehaviors = {
 
     return (value === inner) ? value.$ : value
   },
+
+  // Setting on things in not allowed because the setting semantics are broken.
+  // For our model, the return value should always be the receiver, or a copy
+  // of the receiver, with the property changed.
+
+  // Further, note that the return value of a set always returns the value that
+  // was tried to be set to, regardless of whether it was successful or not.
 
   set (inner, selector, value, _outer) {
     return inner._externalWrite(selector, value) || false
@@ -64,56 +67,64 @@ const KrustBehaviors = {
   defineProperty : ANSWER_FALSE,
   deleteProperty : ANSWER_FALSE,
   isExtensible   : ANSWER_FALSE,
-
-  // Symbol.hasInstance
-  // preventExtensions()
-
+  // preventExtensions ???
 }
 
-
-
-
-
-const MutableWriteBarrierBehaviors = {
+const MutableWriteBarrierBehavior = {
   __proto__ : null,
 
   set (inner, selector, value, _outer) {
+    let result, isFunc
+
     switch (typeof value) {
       case "undefined" :       inner[selector] = value; return true
       case "boolean"   :       inner[selector] = value; return true
       case "number"    :       inner[selector] = value; return true
       case "symbol"    :       inner[selector] = value; return true
       case "string"    :       inner[selector] = value; return true
-      case "object"    :       inner[selector] = value; return true
+      case "object"    :
         if (result === null) { inner[selector] = value; return true }
         isFunc = true ; break
-      case "function"  :
-        isFunc = false; break
+      case "function"  : break
     }
 
     if (value[MUTABILITY] <= FACT) { inner[selector] = value; return true }
 
     const firstChar = selector[0]
-    const isPublic  = (firstChar !== "_" && firstChar !== undefined)
+    const hardenIfPublic = (firstChar !== "_" && firstChar !== undefined)
 
-    inner[selector] = ((innerValue = InterMap.get(value))) ?
-      (isPublic) ? innerValue.asImmutable : innerValue.copy
-      (isFunc) ? CopyFunc(value, isPublic) :
-        IsArray(value) ? CopyArray(value, isPublic) :CopyObject(value, isPublic)
+    if ((inner = InterMap.get(value))) {
+      inner[selector] = inner._copy(hardenIfPublic, undefined, inner._new())
+    }
+    else if (value.id !== undefined) {
+      inner[selector] = value
+    }
+    // if (value.krustyCopy) {
+    //   inner[next] = value.krustyCopy(hardenIfPublic); return true
+    // }
+    // if (value.constructor !== Object && (copy = value.copy)) {
+    //   if (typeof copy === "function") { copy = value.copy(harden) }
+    //
+    //   inner[next] = copy; return true
+    // }
+    else if (isFunc) {                               // is function
+      inner[selector] = CopyFunc(value, hardenIfPublic)
+    }
+    else if (IsArray(value)) {  // is array
+      inner[selector] = _Copy.call(value, hardenIfPublic, undefined, null)
+    }
+    else {
+      inner[selector] = _Copy.call(value, hardenIfPublic)
+    }
 
     return true
   }
 }
 
-
-
-
-
-
-
-
-const ImmutableWriteBarrierBehaviors = {
-  __proto__ : null,
+class ImmutableWriteBarrierBehavior {
+  constructor (target) {
+    this.target = target
+  }
 
   set (inner, selector, value, _outer) {
     if (inner[selector] !== value) {
@@ -122,27 +133,26 @@ const ImmutableWriteBarrierBehaviors = {
       this.get = this.getMutableCopy
     }
     return true
-  },
+  }
 
   setMutableCopy (inner, selector, value, _outer) {
     this.target[selector] = value
     return true
-  },
+  }
 
   getMutableCopy (inner, selector, _outer) {
     return this.target[selector]
-  },
+  }
 }
-
 
 function EnkrustMethod(OriginalMethod) {
   const method = function (...args) {
-    const innerReceiver = InterMap.get(this)
-    let handlers, receiver
+    let innerReceiver, handlers, receiver, inner
+
+    innerReceiver = InterMap.get(this)
 
     if (innerReceiver[IS_IMMUTABLE]) {
-      handlers = { __proto__ : ImmutableWriteBarrierBehaviors,
-                     target  : innerReceiver                   }
+      handlers = new ImmutableWriteBarrierBehavior(innerReceiver)
       receiver = new Proxy(innerReceiver, handlers)
     }
     else { receiver = innerReceiver }
@@ -159,86 +169,29 @@ function EnkrustMethod(OriginalMethod) {
       case "function"  : break
     }
 
-    return (result === receiver) ?
-       (handlers) ? handlers.target.$ : innerReceiver.$  :
-       (result[IS_FACT]) ? result : _NonFactAsFact(result)
+    if (result === receiver) {
+      return (handlers) ? handlers.target.$ : innerReceiver.$
+    }
+    if (result[MUTABILITY] <= FACT) { return result }
+    if ((inner = InterMap.get(result))) { return inner.asImmutable }
+    if (result.id !== undefined) { return result }
+    // if (result.krustyCopy) { return result.krustyCopy(true) }
+    // if (result.constructor !== Object && (copy = result.copy)) {
+    //   return (typeof copy === "function") ? result.copy(true) : result
+    // }
+    if (isFunc) { return CopyFunc(result, true) }
+    if (IsArray(result)) { return _Copy.call(result, true, undefined, null) }
+
+    return _Copy.call(result, true)
   }
 
   DefineProperty(method, "name", VisibleConfiguration)
-  method.name      = OriginalMethod.name
-  method[ORIGINAL] = OriginalMethod[ORIGINAL] || OriginalMethod
-  method[IS_FACT]  = true
+  method.name        = OriginalMethod.name
+  method[ORIGINAL]   = OriginalMethod[ORIGINAL] || OriginalMethod
+  method[MUTABILITY] = IMMUTABLE
 
   return BeImmutable(method)
 }
-
-
-const AsFact = {
-  object   : _ObjectAsFact,
-  function : _FuncAsFact,
-}
-
-function _NonFactAsFact(nonFact) {
-  const visited = new Map()
-  const inner   = InterMap.get(nonFact)
-  return (inner) ?
-    inner._copyInto(this._new(), true, visited) : // asImmutable
-    AsFact[typeof nonFact](nonFact, visited)
-}
-
-function _ObjectAsFact(nonFact, visited) {
-  let fact, next, value, names, name
-
-  if (IsArray(nonFact)) {
-    next = nonFact.length
-    fact = []
-    visited.set(nonFact, fact)
-
-    while (next--) {
-      value      = nonFact[next]
-      fact[next] = (value[IS_FACT]) ? value :
-        visited.get(value) || AsFact[typeof value](value, visited)
-    }
-  }
-  else {
-    names = LocalProperties(nonFact)
-    next  = names.length
-    fact  = { __proto__ : nonFact.__proto__ }
-    visited.set(nonFact, fact)
-
-    while (next--) {
-      name       = names[next]
-      value      = nonFact[name]
-      fact[next] = (value[IS_FACT]) ? value :
-        visited.get(value) || AsFact[typeof value](value, visited)
-    }
-  }
-
-  fact[IS_FACT] = true
-  return BeImmutable(fact)
-}
-
-function _FuncAsFact(nonFactFunc, visited) {
-  const func  = function (...args) { return Func.apply(this, ...args) }
-  const names = LocalProperties(func)
-  let   next  = names.length
-
-  DefineProperty(func, "name", VisibleConfiguration)
-  visited.set(nonFactFunc, func)
-
-  while (next--) {
-    name       = names[next]
-    value      = nonFactFunc[name]
-    func[next] = (value[IS_FACT]) ? value :
-      visited.get(value) || AsFact[typeof value](value, visited)
-  }
-
-  func[ORIGINAL] = nonFactFunc[ORIGINAL] || nonFactFunc
-  func[IS_FACT]  = true
-  return BeImmutable(func)
-}
-
-
 
 
 function ConstructorNamingInDebugger(typeName) {
@@ -247,98 +200,112 @@ function ConstructorNamingInDebugger(typeName) {
   }`
   const constructor = Function(funcBody)()
   delete constructor.prototype
-  constructor[IS_FACT] = constructor[IS_IMMUTABLE] = true
+  constructor[MUTABILITY] = IMMUTABLE
   return BeImmutable(constructor)
 }
 
-// function MakeConstructor(typeName, instanceRoot) {
-//   const funcBody = `return function _${typeName}_constructor() {
-//     this._init(...arguments)
-//     if (arguments.length && this.id === undefined) { this.beImmutable }
-//   }`
-//   const constructor = Function(funcBody)()
-//   constructor.prototype = instanceRoot
-//   constructor[IS_FACT] = constructor[IS_IMMUTABLE] = true
-//   return BeImmutable(constructor)
-// }
+function BasicConstructorFor(instanceRoot) {
+  const constructor = function () {}
+  constructor.prototype = instanceRoot
+  constructor[MUTABILITY] = IMMUTABLE
+  return BeImmutable(constructor)
+}
 
+function CreateFactory(typeName, basicConstructor) {
+  const funcBody =
+    `return function (_basic_${typeName}) {
+      return function ${typeName}(...args) {
+        const instance = new _basic_${typeName}()
+        instance._init(...args)
+        if (args.length && instance.id === undefined) { instance.beImmutable }
+        return instance
+      }
+    }`
+  const customFactoryGenerator = Function(funcBody)()
+  const factory = customFactoryGenerator(basicConstructor)
 
-function MakeFactory(InstanceRoot) {
-  return function (...args) {
-    const instance = { __proto__ : InstanceRoot }
-    instance._init(...args)
-    if (args.length && instance.id === undefined) { instance.beImmutable }
-    return instance
+  BeImmutable(factory.prototype)
+  return BeImmutable(factory)
+}
+
+class TypeBasisBehavior {
+  constructor (typeInstance) {
+    this.typeInstance = typeInstance
   }
-}
 
-
-// This is the factory for Type
-function Type(spec_typeName, supertypes_) {
-  const spec = (spec_typeName !== "string") ? spec_typeName :
-                 {name : spec_typeName, supertypes : supertypes_}
-  const newType = { __proto__ : Inner_root }
-  return newType._init(typeName, supertypes_)
-}
-
-TypeBehaviors = {
   get (_factory, selector, _disguise) {
     return this.typeInstance[selector]
-  },
+  }
 
   set (_factory, selector, value, _disguise) {
     this.typeInstance[selector] = value
     return false
-  },
+  }
 
   has (_factory, selector) {
     return (selector in this.typeInstance)
-  },
+  }
+}
+
+const RootConstructor = BasicConstructorFor(Inner_root)
+const TypeConstructor = BasicConstructorFor(Type_root)
+
+
+// This is the factory for Type
+function Type(spec_typeName, supertypes_) {
+  const newType = new TypeConstructor()
+  const spec    = (spec_typeName !== "string") ? spec_typeName :
+                    {name : spec_typeName, supertypes : supertypes_}
+  return newType._init(spec)
 }
 
 
 PutMethod(Type_root, function _init(spec, _root_, context__) {
-  const _supertypes, _ancestors, _root, _factory, behaviors, disguise
-
-  _supertypes = ConnectTypes(this, spec.supertypes)
-  _ancestors  = BuildAncestors(_supertypes)
-  _root       = _root_ || { __proto__ : Inner_root }
+  const _supertypes      = ConnectTypes(this, spec.supertypes)
+  const _ancestors       = BuildAncestors(_supertypes)
+  const _root            = _root_ || new RootConstructor()
+  const basicConstructor = BasicConstructorFor(_root)
+  const name             = spec.name
+  const iid              = Type_root._nextIID++
 
   SeedInstanceRootMethodHandlers(_root, _ancestors)
   _ancestors[_ancestors.length] = this
 
-  _root.ancestry     = _ancestors
+  _root.ancestry     = _ancestors // LOOK: ancestry & type need to be protected!!!
   _root.type         = this
   _root[ROOT]        = _root
-  _root.constructor  = ConstructorNamingInDebugger(typeName)
+  _root.constructor  = ConstructorNamingInDebugger(name)
+  _root._new         = basicConstructor
 
-  _factory = MakeFactory(_root)
+  const _factory = CreateFactory(name, basicConstructor)
   _factory[Symbol.hasInstance] = (instance) => (instance.type === this)
 
-  behaviors = { __proto__: TypeBehaviors, typeInstance: this }
-  disguise  = new Proxy(_factory, behaviors)
+  const behavior = new TypeBasisBehavior(this)
+  const disguise = new Proxy(_factory, behavior)
 
-  this.name          = spec.name
+  this.name          = name
+  this._iid          = iid
   this._factory      = _factory
+  this._constructor  = basicConstructor
+  this._nextIID      = 0
   this._instanceRoot = _root
   this.context       = context__ || null
-  this.subtypes      = { __proto__ : null }
-  this.methods       = { __proto__ : null }
-  this.supertypes    =
-    spec.supertypes || spec.supertype && [spec.supertype] || [Thing]
+  this.subtypes      = SpawnFrom(null)
+  this.methods       = SpawnFrom(null)
+  this.supertypes    = spec.supertypes ||
+    spec.supertype && [spec.supertype] || [Thing]
 
-  this._setId(`${spec.name},${Type_root._nextInstanceNumber}.Type`)
+  const prefix = context__ ? context__.id + "@" : ""
+
+  this._setId(`${prefix}${name},${iid}.Type`)
 
   return (this._disguise = disguise)
 })
 
-
-AddLazilyInstalledProperty(_Thing_root, "$", EnkrustThing)
-
-
 function EnkrustThing(thing) {
-  const krust = new Proxy(thing, KrustBehaviors)
-
+  const krust = new Proxy(thing, KrustBehavior)
   InterMap.set(krust, thing)
   return (thing.$ = krust)
 }
+
+AddLazilyInstalledProperty(_Thing_root, "$", EnkrustThing)

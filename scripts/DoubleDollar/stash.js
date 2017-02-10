@@ -1,6 +1,6 @@
 // Note: Doesn't handle symbols for init
 function NewStash(spec_) {
-  const stash = { __proto__ : Stash_root }
+  const stash = SpawnFrom(Stash_root)
   if (spec_) {
     if (HandleInheritancePoisoning && spec_ instanceof Object) {
       for (const name in spec_) {

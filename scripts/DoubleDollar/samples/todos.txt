@@ -1,2 +1,4 @@
-- consolidate VIRGIN|MUTABLE|FACT|immutable
-- 
+- consider using refCount for virgin 0|1|many
+-  fix post big switches
+- replace spawnfroms
+- figure out how to implement copy for type
