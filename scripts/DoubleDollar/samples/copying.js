@@ -14,29 +14,30 @@ function _setId(newId_) {
     }
     ids[newId] = newId
   }
-  else { this[MUTABILITY] = FACT }
+  else { this[IS_FACT] = FACT }
 
   this[EXPLICIT_ID] = newId
   return this
 },
 
-JS_OBJECT = undefined
-VIRGIN    = null
-MUTABLE   = 0
-FACT      = -1
-IMMUTABLE = -2
+EXPLICIT_ID = Symbol("EXPLICIT_ID")
+ALL_IDS     = Symbol("ALL_IDS")
+IS_FACT     = Symbol("IS_FACT")
+MUTABLE     = null
+FACT        = Symbol("FACT")
+IMMUTABLE   = Symbol("IMMUTABLE")
 
 function isFact() {
-  return (this[MUTABILITY] >= FACT)
+  return (this[IS_FACT])
 },
 
 function isImmutable() {
-  return (this[MUTABILITY] === IMMUTABLE)
+  return (this[IS_FACT] === IMMUTABLE)
 },
 
 
 function beImmutable() {
-  if (this[MUTABILITY] === IMMUTABLE) { return this }
+  if (this[IS_FACT] === IMMUTABLE) { return this }
 
   const outer     = this.$
   const traversal = new Map()
@@ -51,7 +52,7 @@ function beImmutable() {
 },
 
 function asImmutable() {
-  if (this[MUTABILITY] === IMMUTABLE) { return this }
+  if (this[IS_FACT] === IMMUTABLE) { return this }
 
   const  copy     = this._newBlank()
   const _copy     = InterMap.get(copy)
@@ -69,7 +70,7 @@ function asImmutable() {
 GETTER asCopy same as copy()
 
 function copy() {
-  if (this[MUTABILITY] === IMMUTABLE) { return this }
+  if (this[IS_FACT] === IMMUTABLE) { return this }
 
   const  copy     = this._newBlank()
   const _copy     = InterMap.get(copy)
@@ -81,7 +82,7 @@ function copy() {
 }
 
 function nonCopy() {
-  return (this[MUTABILITY] === IMMUTABLE) ? this._newBlank() : this
+  return (this[IS_FACT] === IMMUTABLE) ? this._newBlank() : this
 },
 
 
@@ -133,7 +134,7 @@ function _InitFrom(source, visited, asFixedFacts_, isArray_) {
       case "function" : isFunc = true; break
     }
 
-    if (value[MUTABILITY] <= FACT) {
+    if (value[IS_FACT] <= FACT) {
       this[prop] = value
     }
     else if ((traversed = visited.get(value))) {
@@ -160,8 +161,10 @@ function _InitFrom(source, visited, asFixedFacts_, isArray_) {
     }
   }
 
+  if (this.id !== undefined && source !== this) { this._setId && this._setId() }
+
   if (asFixedFacts_) {
-    this[MUTABILITY] = IMMUTABLE
+    this[IS_FACT] = IMMUTABLE
     BeImmutable(this)
   }
 
@@ -192,14 +195,14 @@ function AsFixedFacts(_target, visited = new Set()) {
       case "function" : break
     }
 
-    if (value[MUTABILITY] <= FACT)     { continue }
+    if (value[IS_FACT])                { continue }
     if (visited.has(value))            { continue }
     if (value.id !== undefined)        { continue }
     if ((inner = InterMap.get(value))) { AsFixedFacts(inner, visited) }
     else                               { AsFixedFacts(value, visited) }
   }
 
-  _target[MUTABILITY] = IMMUTABLE
+  _target[IS_FACT] = IMMUTABLE
   return BeImmutable(_target)
 }
 
@@ -296,6 +299,7 @@ Thing.add(function addAll(items) {
     switch (typeof item) {
       default         : continue
 
+      case "object"   :
       case "function" :
 
         this.addSMethod(item)
@@ -353,40 +357,14 @@ Thing.add(function addAll(items) {
   return this
 })
 
-PutMethod(Thing_root, function _new(...args) {
-  const newInstance = this._newBlank()
-  newInstance._init(...args)
-  return newInstance
+
+// Type.add(function copy(visited) {
+//   const newType = Type({ name: type.name, supertypes: type.supertypes })
+//   newType.methods = this.methods.copy(visited)
+//   return newType
+// })
+
+Type.add(function _initFrom(type, visited) {
+  this._init(type)
+  this.method = type.methods.copy(visited)
 })
-
-
-
-
-  Type.add(function _copy(harden = false, visited = new Map(), target) {
-    const spec = {
-      name       : this.name
-      supertypes : this.supertypes
-    }
-    target._init(spec)
-    target.addAll(this.methods)
-  })
-
-
-  Type.add(function _copy(visited_) {
-    const copy = this._new({ name: this.name, supertypes: this.supertypes })
-    return copy.addAll(this.methods)
-  })
-
-  Person.add(function _copy(visited) {
-    const copy = this._newBlank()
-    return this._copyAtInto("friends", copy, visited)
-  })
-
-  Thing.add(function _initFrom(exactSameThing) {
-
-  }
-
-  Person.add(function _initFrom(person) {
-    this._init(person.name, person.age)
-    this.friends = person.friends.copy(visited)
-  })

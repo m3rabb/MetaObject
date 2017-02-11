@@ -83,7 +83,7 @@ const MutableWriteBarrierBehavior = {
         if (value === null) { target[selector] = value; return true }
     }
 
-    if (value[MUTABILITY] <= FACT) { target[selector] = value; return true }
+    if (value[IS_FACT]) { target[selector] = value; return true }
 
     firstChar            = selector[0]
     asFixedFactsIfPublic = (firstChar !== "_" && firstChar !== undefined)
@@ -140,7 +140,7 @@ function EnkrustMethod(OriginalMethod) {
 
     innerReceiver = InterMap.get(this)
 
-    if (innerReceiver[IS_IMMUTABLE]) {
+    if (innerReceiver[IS_FACT] === IMMUTABLE) {
       handlers = new ImmutableWriteBarrierBehavior(innerReceiver)
       receiver = new Proxy(innerReceiver, handlers)
     }
@@ -157,7 +157,7 @@ function EnkrustMethod(OriginalMethod) {
     if (result === receiver) {
       return (handlers) ? handlers.target.$ : innerReceiver.$
     }
-    if (result[MUTABILITY] <= FACT) { return result }
+    if (result[IS_FACT]) { return result }
     if ((inner = InterMap.get(result))) { return inner.asImmutable }
     if (result.id !== undefined) { return result }
     if (value.constructor !== Object && (copy = value.copy)) {
@@ -172,7 +172,7 @@ function EnkrustMethod(OriginalMethod) {
   DefineProperty(method, "name", VisibleConfiguration)
   method.name        = OriginalMethod.name
   method[ORIGINAL]   = OriginalMethod[ORIGINAL] || OriginalMethod
-  method[MUTABILITY] = IMMUTABLE
+  method[IS_FACT] = IMMUTABLE
 
   return BeImmutable(method)
 }
@@ -184,14 +184,14 @@ function ConstructorForNamingInDebugger(typeName) {
   }`
   const constructor = Function(funcBody)()
   delete constructor.prototype
-  constructor[MUTABILITY] = IMMUTABLE
+  constructor[IS_FACT] = IMMUTABLE
   return BeImmutable(constructor)
 }
 
 function BlankConstructorFor(instanceRoot) {
   const constructor = function () {}
   constructor.prototype = instanceRoot
-  constructor[MUTABILITY] = IMMUTABLE
+  constructor[IS_FACT] = IMMUTABLE
   return BeImmutable(constructor)
 }
 
@@ -207,7 +207,7 @@ function CreateFactory(_Blank) {
 
 function Create_copy(_Blank) {
   return function copy(visited = new Map()) {
-    if (this[MUTABILITY] === IMMUTABLE) { return this }
+    if (this[IS_FACT] === IMMUTABLE) { return this }
 
     const _copy = _Blank()
     const  copy = _copy.$
@@ -220,7 +220,7 @@ function Create_copy(_Blank) {
 
 function Create_asImmutable(_Blank) {
   function asImmutable() {
-    if (this[MUTABILITY] === IMMUTABLE) { return this }
+    if (this[IS_FACT] === IMMUTABLE) { return this }
 
     const _copy = _Blank()
     const  copy = _copy.$

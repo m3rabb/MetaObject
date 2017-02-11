@@ -1,4 +1,4 @@
-- consider using refCount for virgin 0|1|many
+- implement contexts
 - figure out how to implement copy for type
 - objectify methods
 - replace, using spawnFrom instead
