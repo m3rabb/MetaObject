@@ -10,6 +10,7 @@
 - lazy installer properties
 - making newless constructors
 - naming functions dynamically; enabling uses of arguments, etc
+- deep copying and equality
 
 
 

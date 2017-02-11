@@ -1,22 +1,22 @@
 
 function _setId(newId_) {
-  if (newId_ === undefined) { return this }
+  const newId = (arguments.length) ? newId_ : this.defaultId()
 
   const existingId = this[EXPLICIT_ID]
 
   if (existingId !== undefined) {
     let ids
 
-    if (newId_ === existingId) { return this }
+    if (newId === existingId) { return this }
     if (!(ids = this[ALL_IDS])) {
       this[ALL_IDS] = ids = SpawnFrom(null)
       ids[existingId] = existingId
     }
-    ids[newId_] = newId_
+    ids[newId] = newId
   }
   else { this[MUTABILITY] = FACT }
 
-  this[EXPLICIT_ID] = newId_
+  this[EXPLICIT_ID] = newId
   return this
 },
 
@@ -35,111 +35,177 @@ function isImmutable() {
 },
 
 
-// [REF_COUNT] of 0 or 1 no copy needed on beImmutable
-// [REF_COUNT] is -Infinity for FACT and NaN for IMMUTABLE
-
 function beImmutable() {
   if (this[MUTABILITY] === IMMUTABLE) { return this }
-  return this._copy(true, undefined, this)
+
+  const outer     = this.$
+  const traversal = new Map()
+
+  traversal.set(outer, outer)  // Prevents infinite recursion on cyclic objects
+
+  if (this._initFrom === _InitFrom)
+    { this._initFrom(this, traversal, true) }
+  else
+    { AsFixedFacts(this._initFrom(this, traversal, false)) }
+  return this
 },
 
 function asImmutable() {
   if (this[MUTABILITY] === IMMUTABLE) { return this }
-  return this._copy(true, undefined, this._new())
+
+  const  copy     = this._newBlank()
+  const _copy     = InterMap.get(copy)
+  const traversal = new Map()
+
+  traversal.set(this.$, copy)  // Prevents infinite recursion on cyclic objects
+
+  if (_copy._initFrom === _InitFrom)
+    { _copy._initFrom(this, traversal, true) }
+  else
+    { AsFixedFacts(_copy._initFrom(this, traversal, false)) }
+  return copy
 },
+
+GETTER asCopy same as copy()
 
 function copy() {
   if (this[MUTABILITY] === IMMUTABLE) { return this }
-  return this._copy(false, undefined, this._new())
-},
+
+  const  copy     = this._newBlank()
+  const _copy     = InterMap.get(copy)
+  const traversal = new Map()
+
+  traversal.set(this.$, copy)  // Prevents infinite recursion on cyclic objects
+  _copy._initFrom(this, traversal)
+  return copy
+}
 
 function nonCopy() {
-  return (this[MUTABILITY] === IMMUTABLE) ? this._new() : this
+  return (this[MUTABILITY] === IMMUTABLE) ? this._newBlank() : this
 },
 
-AtPutMethod(Thing_root, "_copy", _Copy)
 
-//  This method must never be called initially on a JS object|func|array!!!
-function _Copy(harden = false, visited = new Map(), target_) {
-  let isArray, target, names, value, isFunc, traversed, inner
-  let next     = names.length
-  let isArray  = (target_ === null)
+function CopyFunc(Source, visited = new Map(), asFixedFacts) {
+  const target = function (...args) {
+    return Source.apply(this, ...args)
+  }
+  DefineProperty(target, "name", VisibleConfiguration)
+  target[ORIGINAL] = Source[ORIGINAL] || Source
 
-  if (isArray) {
-    target = []
+  visited.set(source, target)
+  return _InitFrom.call(target, Source, visited, asFixedFacts, false)
+}
+
+function CopyObject(source, visited = new Map(), asFixedFacts) {
+  let isArray, target
+
+  switch (source.constructor) {
+    case Object : isArray = false; target = {}; break
+    case Array  : isArray = true ; target = []; break
+    default     : isArray = false; target = SpawnFrom(RootOf(source)); break
+  }
+
+  visited.set(source, target) // Prevents infinite recursion on cyclic objects
+  return _InitFrom.call(target, source, visited, asFixedFacts, isArray)
+}
+
+
+Thing.add("_initFrom", _InitFrom)
+
+function _InitFrom(source, visited, asFixedFacts_, isArray_) {
+  let props, next, prop, value, isFunc, traversed, inner, copy
+
+  if (isArray_) {
+    next = this.length = source.length
   }
   else {
-    target = target_ ||
-      (this.constructor === Object) ? {} : SpawnFrom(RootOf(this))
-    names = this[KNOWN_PROPERTIES] || LocalProperties(this)
+    props = source[KNOWN_PROPERTIES] || LocalProperties(source)
+    next  = props.length
   }
 
-  visited.set(this, target)
-
   while (next--) {
-    value = isArray ? this[next] : this[ names[next] ]
+    prop  = isArray_ ? next : props[next]
+    value = source[prop]
 
     switch (typeof value) {
-      case "undefined" :       target[next] = value; continue
-      case "boolean"   :       target[next] = value; continue
-      case "number"    :       target[next] = value; continue
-      case "symbol"    :       target[next] = value; continue
-      case "string"    :       target[next] = value; continue
-      case "function"  :       isFunc = true       ; break
-      case "object"    :
-        if (result === null) { target[next] = value; continue }
+      default         : this[prop] = value; continue
+      case "object"   : if (value === null) { this[prop] = value; continue }
+      case "function" : isFunc = true; break
     }
 
     if (value[MUTABILITY] <= FACT) {
-      target[next] = value
+      this[prop] = value
     }
     else if ((traversed = visited.get(value))) {
-      target[next] = traversed
+      this[prop] = traversed
     }
     else if ((inner = InterMap.get(value))) {
-      target[next] = inner._copy(harden, visited, inner._new())
+      copy       = inner.copy(visited)
+      this[prop] = (asFixedFacts_) ? AsFixedFacts(copy) : copy
     }
     else if (value.id !== undefined) {
-      target[next] = value
+      this[prop] = value
     }
-    // else if (value.krustyCopy) {
-    //   target[next] = copy = value.krustyCopy(harden)
-    //   visited.set(value, copy)
-    // }
-    // else if (value.constructor !== Object && (copy = value.copy)) {
-    //   if (typeof copy === "function") { copy = value.copy(harden) }
-    //
-    //   target[next] = copy
-    //   visited.set(value, copy)
-    // }
+    else if (value.constructor !== Object && (copy = value.copy)) {
+      if (typeof copy === "function") { copy = value.copy(visited) }
+
+      this[prop] = (asFixedFacts_) ? AsFixedFacts(copy) : copy
+      visited.set(value, copy)
+    }
     else if (isFunc) {                               // is function
-      target[next] = CopyFunc(value, harden, visited)
-    }
-    else if (IsArray(value)) {  // is array
-      target[next] = _Copy.call(value, harden, visited, null)
+      this[prop] = CopyFunc(value, asFixedFacts_, visited)
     }
     else {
-      target[next] = _Copy.call(value, harden, visited)
+      this[prop] = CopyObject(value, asFixedFacts_, visited)
     }
   }
-      // _setId will adjust the target thing's mutability as necessary
-      // Note: a JS object with an id shouldn't make it to this point
-  if (this.id !== undefined) { target._setId() } // thing entity
-  if (!harden) { return target }
 
-  target[MUTABILITY] == IMMUTABLE  // Should invisibility be set here???
-  return BeImmutable(target)
-}
-
-function CopyFunc(source, harden = false, visited = new Map()) {
-  const target = function (...args) {
-    return source.apply(this, ...args)
+  if (asFixedFacts_) {
+    this[MUTABILITY] = IMMUTABLE
+    BeImmutable(this)
   }
 
-  DefineProperty(target, "name", VisibleConfiguration)
-  target[ORIGINAL] = source[ORIGINAL] || source
-  return _Copy.call(source, harden, visited, target)
+  return this
 }
+
+
+function AsFixedFacts(_target, visited = new Set()) {
+  let isArray, props, next, prop, value, isFunc, traversed, inner
+
+  if ((isArray = (_target.constructor === Object))) {
+    next = _target.length
+  }
+  else {
+    props = _target[KNOWN_PROPERTIES] || LocalProperties(_target)
+    next  = props.length
+  }
+
+  visited.add(_target)
+
+  while (next--) {
+    prop  = isArray_ ? next : props[next]
+    value = source[prop]
+
+    switch (typeof value) {
+      default         : continue
+      case "object"   : if (value === null) { continue }
+      case "function" : break
+    }
+
+    if (value[MUTABILITY] <= FACT)     { continue }
+    if (visited.has(value))            { continue }
+    if (value.id !== undefined)        { continue }
+    if ((inner = InterMap.get(value))) { AsFixedFacts(inner, visited) }
+    else                               { AsFixedFacts(value, visited) }
+  }
+
+  _target[MUTABILITY] = IMMUTABLE
+  return BeImmutable(_target)
+}
+
+
+
+
 
 
 
@@ -263,6 +329,15 @@ Thing.add(function addAll(items) {
               savedAliases[aliasName] = originalName
             }
             break
+
+          case "JIT" :
+          case "JIT PROP" :
+          case "JIT PROPERTY" :
+          case "JIT PROPERTIES" :
+          case "LAZY" :
+          case "LAZY PROP" :
+          case "LAZY PROPERTY" :
+          case "LAZY PROPERTIES" :
         }
     }
   }
