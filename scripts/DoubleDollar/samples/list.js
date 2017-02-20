@@ -570,12 +570,12 @@ Krust.set((context) => {
         return this.withinReduce(null, accumulator_, reducer)
       },
 
-      { ALIAS : {
+      "ALIAS", {
         do         : "eachDo",
         elementsDo : "eachDo",
         collect    : "map",
         inject     : "reduce",
-      } },
+      },
 
 
 
@@ -869,9 +869,9 @@ Krust.set((context) => {
 
       //// PUT : a Value at a Value
 
-      { ALIAS : {
+      "ALIAS", {
         putAtValue, "putAtFirst"
-      } },
+      },
 
       function putAtFirst(newValue, matchValue) {
         return this.putAtIndex(newValue, this.indexOf(matchValue, FORWARD))
@@ -964,10 +964,10 @@ Krust.set((context) => {
 
       //// ADD : Generic
 
-      { ALIAS : {
+      "ALIAS", {
         add    : "addLast",
         addAll : "addAllLast"
-      } },
+      },
 
 
 
@@ -1053,10 +1053,8 @@ Krust.set((context) => {
         return this._nonCopy((result) => { result._elements = [] })
       },
 
-      { GETTER :
-        function empty() {
-          return this._new((result) => {})
-        },
+      "GETTER", function empty() {
+        return this._new((result) => {})
       },
 
 

@@ -70,11 +70,27 @@ const KrustBehavior = {
   // preventExtensions ???
 }
 
+SetBarrierBehavior = {
+  set (inner, selector, value, outer_) {
+    if (inner[selector] !== value) {
+      inner[selector] = value
+      if (inner[selector] !== value) {
+        (this.target = inner.copy)[selector] = value  // LOOK: check this!!!
+        this.set = this.setMutableCopy
+        this.get = this.getMutableCopy
+      }
+    }
+    return true
+  }
+}
+
 const MutableWriteBarrierBehavior = {
   __proto__ : null,
 
   set (target, selector, value, outer_) {
-    let isFunc, firstChar, asFixedFactsIfPublic, inner
+    let isFunc, firstChar, asFixedFacts, isPublic, inner
+
+    if (target[selector] === value) { return true }
 
     switch (typeof value) {
       default          :      target[selector] = value; return true
@@ -85,25 +101,26 @@ const MutableWriteBarrierBehavior = {
 
     if (value[IS_FACT]) { target[selector] = value; return true }
 
-    firstChar            = selector[0]
-    asFixedFactsIfPublic = (firstChar !== "_" && firstChar !== undefined)
+    firstChar    = selector[0]
+    isPublic     = (firstChar !== "_" && firstChar !== undefined)
+    asFixedFacts = isPublic
 
     if ((inner = InterMap.get(value))) {
-      target[selector] = asFixedFactsIfPublic ? inner.asImmutable : inner.asCopy
+      target[selector] = inner[COPY](asFixedFacts)
     }
     else if (value.id !== undefined) {
       target[selector] = value
     }
     else if (value.constructor !== Object && (copy = value.copy)) {
-      if (typeof copy === "function") { copy = value.copy(visited) }
+      if (typeof copy === "function") { copy = value.copy() }
 
-      target[selector] = (asFixedFactsIfPublic) ? AsFixedFacts(copy) : copy
+      target[selector] = (asFixedFacts) ? BeFixedFacts(copy) : copy
     }
     else if (isFunc) {                               // is function
-      target[selector] = CopyFunc(value, undefined, asFixedFactsIfPublic)
+      target[selector] = CopyFunc(value, undefined, asFixedFacts)
     }
     else {
-      target[selector] = CopyObject(value, undefined, asFixedFactsIfPublic)
+      target[selector] = CopyObject(value, undefined, asFixedFacts)
     }
 
     return true
@@ -117,7 +134,7 @@ class ImmutableWriteBarrierBehavior {
 
   set (inner, selector, value, outer_) {
     if (inner[selector] !== value) {
-      (this.target = inner.copy)[selector] = value
+      (this.target = inner.mutableCopy)[selector] = value
       this.set = this.setMutableCopy
       this.get = this.getMutableCopy
     }
@@ -155,15 +172,15 @@ function EnkrustMethod(OriginalMethod) {
     }
 
     if (result === receiver) {
-      return (handlers) ? handlers.target.$ : innerReceiver.$
+      return (handlers) ? handlers.target.beImmutable.$ : innerReceiver.$
     }
     if (result[IS_FACT]) { return result }
     if ((inner = InterMap.get(result))) { return inner.asImmutable }
     if (result.id !== undefined) { return result }
     if (value.constructor !== Object && (copy = value.copy)) {
-      if (typeof copy === "function") { copy = value.copy(visited) }
+      if (typeof copy === "function") { copy = value.copy() }
 
-      return AsFixedFacts(copy)
+      return BeFixedFacts(copy)
     }
     return (isFunc) ?
       CopyFunc(result, undefined, true) : CopyObject(result, undefined, true)
@@ -171,7 +188,7 @@ function EnkrustMethod(OriginalMethod) {
 
   DefineProperty(method, "name", VisibleConfiguration)
   method.name        = OriginalMethod.name
-  method[ORIGINAL]   = OriginalMethod[ORIGINAL] || OriginalMethod
+  // method[ORIGINAL]   = OriginalMethod[ORIGINAL] || OriginalMethod
   method[IS_FACT] = IMMUTABLE
 
   return BeImmutable(method)
@@ -188,15 +205,18 @@ function ConstructorForNamingInDebugger(typeName) {
   return BeImmutable(constructor)
 }
 
+function CreateEmptyNamelessFunction() {
+  return function () {}
+}
+
 function BlankConstructorFor(instanceRoot) {
-  const constructor = function () {}
+  const constructor = CreateEmptyNamelessFunction()
   constructor.prototype = instanceRoot
   constructor[IS_FACT] = IMMUTABLE
   return BeImmutable(constructor)
 }
 
-
-function CreateFactory(_Blank) {
+function CreateFactory(_Blank, isDisguised) {
   return function (...args) {
     const instance = new _Blank()
     instance._init(...args)
@@ -205,58 +225,54 @@ function CreateFactory(_Blank) {
   }
 }
 
-function Create_copy(_Blank) {
-  return function copy(visited = new Map()) {
-    if (this[IS_FACT] === IMMUTABLE) { return this }
+function Create_new(_Blank) {
+  const target = {}
+  target.new = function (...args) {
+    const instance = new _Blank()
+    instance._init(...args)
+    return instance.$
+  }
+  return target.new
+}
 
-    const _copy = _Blank()
-    const  copy = _copy.$
+function Create__copy(_Blank) {
+  return function _copy(asImmutable, visited = new Map(), _target = _Blank()) {
+    const  target = _target.$
 
-    visited.set(this.$, copy)  // Prevents infinite recursion on cyclic objects
-    _copy._initFrom(this, visited)
-    return copy
+    visited.set(this.$, target)  // Prevents infinite recursion on cyclic objects
+    if (asImmutable && _target._initFrom_ !== _InitFrom_) {
+      BeFixedFacts(_target._initFrom_(this, visited))
+    }
+    else {
+      _target._initFrom_(this, visited, asImmutable)
+    }
+    return target
   }
 }
 
-function Create_asImmutable(_Blank) {
-  function asImmutable() {
-    if (this[IS_FACT] === IMMUTABLE) { return this }
-
-    const _copy = _Blank()
-    const  copy = _copy.$
-
-    visited.set(this.$, copy)  // Prevents infinite recursion on cyclic objects
-
-    if (_copy._initFrom === _InitFrom)
-      { _copy._initFrom(this, visited, true) }
-    else
-      { AsFixedFacts(_copy._initFrom(this, visited)) }
-    return copy
-  }
-}
-
-
-class TypeDisguiseBehavior {
-  constructor (typeInstance) {
-    this.typeInstance = typeInstance
+class DisguiseBehavior {
+  constructor (disguised) {
+    this.disguised = disguised
   }
 
   get (_factory, selector, _disguise) {
-    return this.typeInstance[selector]
+    return this.disguised[selector]
   }
 
   set (_factory, selector, value, _disguise) {
-    this.typeInstance[selector] = value
+    this.disguised[selector] = value
     return false
   }
 
   has (_factory, selector) {
-    return (selector in this.typeInstance)
+    return (selector in this.disguised)
   }
 }
 
-const BlankRoot = BlankConstructorFor(Inner_root)
-const BlankType = BlankConstructorFor(Type_root)
+const BlankRoot   = BlankConstructorFor(Inner_root)
+const BlankType   = BlankConstructorFor(Type_root)
+const BlankMethod = BlankConstructorFor(Method_root)
+
 
 
 // This is the factory for Type
@@ -271,45 +287,58 @@ function Type(spec_typeName, supertypes_) {
 
 
 
-function defaultId() {
-  const iid    = Type_root._nextIID++
+Thing.addSLazyProperty(IID, function() {
+  return InterMap.get(this.type)._nextIID++
+})
+
+This.addSGetter(function basicId() {
   const prefix = this.context ? this.context.id + "@" : ""
-  return NewUniqueId(`${prefix}${iid}.Type-`)
+  return NewUniqueId(`${prefix}${this[IID]}.Type`)
+})
+
+function _setId(newId_) {
+  if (arguments.length) { return this._super._setId(newId_) }
+  const prefix = this.context ? this.context.id + "@" : ""
+  const id     = NewUniqueId(`${prefix}${this.iid}.Type-`)
+  return this._super._setId(id)
 }
 
 
 PutMethod(Type_root, function _init(spec, _root_, context__) {
-  const _root            = _root_ || new BlankRoot()
-  const _Blank           = BlankConstructorFor(_root)
-  const _factory         = CreateFactory(_Blank)
-  const behavior         = new TypeDisguiseBehavior(this)
-  const disguise         = new Proxy(_factory, behavior)
+  const _root    = _root_ || new BlankRoot()
+  const _Blank   = BlankConstructorFor(_root)
+  const _factory = CreateFactory(_Blank)
+  const behavior = new DisguiseBehavior(this)
+  const disguise = new Proxy(_factory, behavior)
 
   _factory[Symbol.hasInstance] = (instance) => (instance.type === this)
   BeImmutable(_factory.prototype)
   BeImmutable(_factory)
 
-  _root.type         = disguise  // LOOK: need to be protected!!!
+  _root.type         = disguise.$
   _root[ROOT]        = _root
   _root._newBlank    = () => (new _Blank()).$
-  _root.copy         = Create_copy(_Blank)
-  _root.asImmutable  = Create_asImmutable(_Blank)
+  _root[COPY]        = Create__copy(_Blank)
 
   this._instanceRoot = _root
-  this._constructor  = basicConstructor
+  this._constructor  = _Blank
   this._factory      = _factory
   this._disguise     = disguise
   this._nextIID      = 0
   this._subtypes     = SpawnFrom(null)
   this._methods      = SpawnFrom(null)
 
-  this.context       = context__ || null   // LOOK: need to be protected!!!
   this._setId()
+
+  this.new           = Create_new(_Blank)
+  this.prototype     = _root.$
+  this.context       = context__.$ || null
 
   const supertypes =
     (spec && spec.supertypes || spec.supertype && [spec.supertype]) || [Thing]
   this.setSupertypes(supertypes)
   spec && this.setName(spec.name)
+  spec && this.addAll(spec.instanceMethods || [])
 
   return disguise
 }
@@ -330,8 +359,20 @@ PutMethod(Type_root, function setSupertypes(supertypes) {
 })
 
 PutMethod(Type_root, function setName(name) {
-  this.name = name
-  this._instanceRoot.constructor = ConstructorForNamingInDebugger(name)
+  const properName   = name[0].toUpperCase() + name.slice(1)
+  const priorName    = this.name
+  const testName     = "is" + properName
+  const instanceRoot = this._instanceRoot
+
+  if (priorName === properName) { return this }
+
+  this.name                = properName
+  instanceRoot.constructor = ConstructorForNamingInDebugger(properName)
+
+  if (priorName) { delete instanceRoot["is" + priorName] }
+
+  instanceRoot[testName] = true
+  Top_root[testName]     = false
 })
 
 

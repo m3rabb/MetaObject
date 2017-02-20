@@ -4,3 +4,14 @@
 - replace, using spawnFrom instead
 - add JIT properties
 - change IsArray to   target.constructor === Object
+- make method objects
+- type function construction
+- enable alias within getters/lazies
+- Equality
+- Context/Name
+- _super
+
+- change _copy to [_COPY]
+- add permanent methods
+- [IS_FACT] as piercing accessor
+- make isImmutable lazy property

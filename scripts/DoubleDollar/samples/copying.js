@@ -1,6 +1,6 @@
 
 function _setId(newId_) {
-  const newId = (arguments.length) ? newId_ : this.defaultId()
+  const newId = (arguments.length) ? newId_ : NewUniqueId(this.basicId() + "-")
 
   const existingId = this[EXPLICIT_ID]
 
@@ -27,63 +27,50 @@ MUTABLE     = null
 FACT        = Symbol("FACT")
 IMMUTABLE   = Symbol("IMMUTABLE")
 
-function isFact() {
+AddGetter(Thing_root, function isFact() {
   return (this[IS_FACT])
-},
+})
 
-function isImmutable() {
+AddGetter(Thing_root, function isImmutable() {
   return (this[IS_FACT] === IMMUTABLE)
-},
+})
 
 
-function beImmutable() {
-  if (this[IS_FACT] === IMMUTABLE) { return this }
+function mutableCopy(visited_) {
+  return this[COPY](false, visited_)
+}
 
-  const outer     = this.$
-  const traversal = new Map()
-
-  traversal.set(outer, outer)  // Prevents infinite recursion on cyclic objects
-
-  if (this._initFrom === _InitFrom)
-    { this._initFrom(this, traversal, true) }
-  else
-    { AsFixedFacts(this._initFrom(this, traversal, false)) }
-  return this
-},
-
-function asImmutable() {
-  if (this[IS_FACT] === IMMUTABLE) { return this }
-
-  const  copy     = this._newBlank()
-  const _copy     = InterMap.get(copy)
-  const traversal = new Map()
-
-  traversal.set(this.$, copy)  // Prevents infinite recursion on cyclic objects
-
-  if (_copy._initFrom === _InitFrom)
-    { _copy._initFrom(this, traversal, true) }
-  else
-    { AsFixedFacts(_copy._initFrom(this, traversal, false)) }
-  return copy
-},
-
-GETTER asCopy same as copy()
-
-function copy() {
-  if (this[IS_FACT] === IMMUTABLE) { return this }
-
-  const  copy     = this._newBlank()
-  const _copy     = InterMap.get(copy)
-  const traversal = new Map()
-
-  traversal.set(this.$, copy)  // Prevents infinite recursion on cyclic objects
-  _copy._initFrom(this, traversal)
-  return copy
+function copy(visited_) {
+  return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](false, visited_)
 }
 
 function nonCopy() {
   return (this[IS_FACT] === IMMUTABLE) ? this._newBlank() : this
-},
+}
+
+
+AddGetter(Thing_root, function asCopy() {
+  return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](false)
+}
+
+AddGetter(Thing_root, function asMutableCopy() {
+  return this[COPY](false)
+}
+
+AddGetter(Thing_root, function asMutable() {
+  return (this[IS_FACT] === IMMUTABLE) ? this[COPY](false) : this
+}
+
+AddGetter(Thing_root, function asImmutable() {
+  return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](true)
+})
+
+AddGetter(Thing_root, function beImmutable() {
+  return (this[IS_FACT] === IMMUTABLE) ? this :
+    this[COPY](true, undefined, this)
+})
+
+
 
 
 function CopyFunc(Source, visited = new Map(), asFixedFacts) {
@@ -91,30 +78,30 @@ function CopyFunc(Source, visited = new Map(), asFixedFacts) {
     return Source.apply(this, ...args)
   }
   DefineProperty(target, "name", VisibleConfiguration)
-  target[ORIGINAL] = Source[ORIGINAL] || Source
+  target[ORIGINAL] = Source[ORIGINAL] || (Source[ORIGINAL] = Source)
 
   visited.set(source, target)
-  return _InitFrom.call(target, Source, visited, asFixedFacts, false)
+  return _initFrom_.call(target, Source, visited, asFixedFacts, false)
 }
 
 function CopyObject(source, visited = new Map(), asFixedFacts) {
   let isArray, target
 
   switch (source.constructor) {
-    case Object : isArray = false; target = {}; break
     case Array  : isArray = true ; target = []; break
+    case Object : isArray = false; target = {}; break
     default     : isArray = false; target = SpawnFrom(RootOf(source)); break
   }
 
   visited.set(source, target) // Prevents infinite recursion on cyclic objects
-  return _InitFrom.call(target, source, visited, asFixedFacts, isArray)
+  return _initFrom_.call(target, source, visited, asFixedFacts, isArray)
 }
 
 
-Thing.add("_initFrom", _InitFrom)
+Thing.add("_initFrom_", _initFrom_)
 
-function _InitFrom(source, visited, asFixedFacts_, isArray_) {
-  let props, next, prop, value, isFunc, traversed, inner, copy
+function _InitFrom_(source, visited, asFixedFacts_, isArray_) {
+  let props, next, prop, value, isFunc, traversed, inner, func, copy
 
   if (isArray_) {
     next = this.length = source.length
@@ -130,8 +117,11 @@ function _InitFrom(source, visited, asFixedFacts_, isArray_) {
 
     switch (typeof value) {
       default         : this[prop] = value; continue
-      case "object"   : if (value === null) { this[prop] = value; continue }
-      case "function" : isFunc = true; break
+      case "object"   :
+        if (value === null) { this[prop] = value; continue }
+        isFunc = false; break
+      case "function" :
+        isFunc = true; break
     }
 
     if (value[IS_FACT] <= FACT) {
@@ -141,16 +131,15 @@ function _InitFrom(source, visited, asFixedFacts_, isArray_) {
       this[prop] = traversed
     }
     else if ((inner = InterMap.get(value))) {
-      copy       = inner.copy(visited)
-      this[prop] = (asFixedFacts_) ? AsFixedFacts(copy) : copy
+      this[prop] = inner[COPY](asFixedFacts_, visited)
     }
     else if (value.id !== undefined) {
       this[prop] = value
     }
-    else if (value.constructor !== Object && (copy = value.copy)) {
-      if (typeof copy === "function") { copy = value.copy(visited) }
+    else if (value.constructor !== Object && (func = value.copy)) {
+      copy = (func.constructor === Function) ? value.copy(visited) : func
 
-      this[prop] = (asFixedFacts_) ? AsFixedFacts(copy) : copy
+      this[prop] = (asFixedFacts_) ? BeFixedFacts(copy) : copy
       visited.set(value, copy)
     }
     else if (isFunc) {                               // is function
@@ -161,7 +150,7 @@ function _InitFrom(source, visited, asFixedFacts_, isArray_) {
     }
   }
 
-  if (this.id !== undefined && source !== this) { this._setId && this._setId() }
+  if (source !== this && this.id !== undefined) { this[FORCE_ID] }
 
   if (asFixedFacts_) {
     this[IS_FACT] = IMMUTABLE
@@ -172,8 +161,8 @@ function _InitFrom(source, visited, asFixedFacts_, isArray_) {
 }
 
 
-function AsFixedFacts(_target, visited = new Set()) {
-  let isArray, props, next, prop, value, isFunc, traversed, inner
+function BeFixedFacts(_target, visited = new Set()) {
+  let isArray, props, next, prop, value, traversed, inner
 
   if ((isArray = (_target.constructor === Object))) {
     next = _target.length
@@ -198,8 +187,8 @@ function AsFixedFacts(_target, visited = new Set()) {
     if (value[IS_FACT])                { continue }
     if (visited.has(value))            { continue }
     if (value.id !== undefined)        { continue }
-    if ((inner = InterMap.get(value))) { AsFixedFacts(inner, visited) }
-    else                               { AsFixedFacts(value, visited) }
+    if ((inner = InterMap.get(value))) { BeFixedFacts(inner, visited) }
+    else                               { BeFixedFacts(value, visited) }
   }
 
   _target[IS_FACT] = IMMUTABLE
@@ -233,127 +222,143 @@ function AsFixedFacts(_target, visited = new Set()) {
 // IMMUTABLE  self
 
 
-function AsMethod(method_func__name, func__) {
-  const selector, handler, method
+function AsMethod(first, ...remaining) {
+  return (first.isMethod) ?
+    (argument.length === 1) ?
+      first : Method(first.selector, first.handler, ...remaining) :
+    Method(first, ...remaining)
+}
 
-  switch (typeof method_func__name) {
-    case "object"   :
-      return method
-    case "function" :
-      selector = method_func__name.name
-      handler  = method_func__name
+PutMethod(Method_root, function _init(namedFunc_name, func_, mode__) {
+  const [name, handler, mode] = (arguments.length > 1) ?
+    [namedFunc_name, func_, mode__] :
+    [namedFunc_name.name, namedFunc_name, func_]
+
+  this.selector = name
+  this.handler  = handler
+  this.mode     = mode || STANDARD_METHOD
+})
+
+PutMethod(Type_root, function addSMethod(method_func__name, func__, mode___) {
+  const method   = AsMethod(method_func__name, func__, mode___)
+  const selector = method.selector
+  const handler  = method.handler
+
+  switch (method.mode) {
+    case STANDARD :
+      this._instanceRoot[selector] = handler
       break
-    case "string"   :
-      selector = method_func__name
-      handler  = func__
+
+    case GETTER :
+      _AddGetter(this._instanceRoot, selector, handler, true)
+      break
+
+    case LAZY_INSTALLER :
+      _AddGetter(target, Name, function _loader() {
+        DefineProperty(this, Name, InvisibleConfiguration)
+        return (this[Name] = Installer.call(this))
+      })
       break
   }
 
-  method = new MethodConstructor()
-  method._init(selector, handler)
-  return method
-}
-
-PutMethod(Type_root, function addSMethod(method_func__name, func__) {
-  const method  = AsMethod(method_func__name, func__)
-  const selector = method.selector
-  const handler  = method.handler
-
-  method.isGetter              = false
-  this.methods[selector]       = method
-  this._instanceRoot[selector] = handler
+  this._methods[selector] = method
   ReseedSubtypesMethodHandler(this, method)
   return this
 })
 
-Thing.addSMethod(function addSGetter(method_func__name, func__) {
-  const method  = AsMethod(method_func__name, func__)
-  const selector = method.selector
-  const handler  = method.handler
+Thing.addSMethod(function addSGetter(...args) {
+  return this.addSMethod(...args, GETTER)
+})
 
-  method.isGetter        = true
-  this.methods[selector] = method
-  _AddGetter(this._instanceRoot, selector, handler, true)
-  ReseedSubtypesMethodHandler(this, method)
-  return this
+Thing.addSMethod(function addSLazyInstaller(...args) {
+  return this.addSMethod(...args, LAZY_INSTALLER)
 })
 
 Thing.addSMethod(function addSAlias(aliasName, name_method) {
-  const method = (typeof name_method === "string") ?
+  const oldMethod = (typeof name_method === "string") ?
     this._methods[name_method] : name_method
 
-  return (method.isGetter) ?
-    this.addSGetter(method) : this.addSMethod(method)
+  const newMethod = Method(aliasName, oldMethod.handler, oldMethod.mode)
+  return this.addSMethod(newMethod)
 })
 
 Thing.addSAlias("add", "addSMethod")
 
-Thing.add(function addAll(items) {
-  let savedAliases = SpawnFrom(null)
-  let limit   = namedFuncs.length
-  let next    = 0
+class MethodLoader {
+  constructor (type) {
+    this.type    = type
+    this.aliases = SpawnFrom(null)
+  }
 
-  while (next < index) {
-    item = items[next++]
+  load (methods) {
+    this.addAll(methods, STANDARD)
+    this.resolveAlises()
+  }
 
-    switch (typeof item) {
-      default         : continue
+  addAll (value, mode) {
+    let items = (value.constructor === Array) ? value : [value]
+    let index   = 0
+    let count   = items.length
 
-      case "object"   :
-      case "function" :
+    while (index < count) {
+      let next = items[index++]
+      let [itemMode, item] = (item.constructor === String) ?
+        [next, items[index++]] : [mode, next]
 
-        this.addSMethod(item)
-        break
-
-      case "string"   :
-
-        switch (item.toUpperCase()) {
-          case "GETTER" :
-          case "GETTERS" :
-            item = items[next++]
-
-            if (typeof item === "function") {
-              this.addSGetter(item)
-            }
-            else {
-              getters = item
-              count   = getters.length
-              while (count--) { this.addSGetter(item) }
-            }
-            break
-
-          case "ALIAS"  :
-          case "ALIASES" :
-            aliases = items[next++]
-            aliasNames = LocalProperties(aliases)
-            count      = getters.length
-            while (count--) {
-              aliasName      = aliasNames[count]
-              originalName   = aliases[aliasName]
-              savedAliases[aliasName] = originalName
-            }
-            break
-
-          case "JIT" :
-          case "JIT PROP" :
-          case "JIT PROPERTY" :
-          case "JIT PROPERTIES" :
-          case "LAZY" :
-          case "LAZY PROP" :
-          case "LAZY PROPERTY" :
-          case "LAZY PROPERTIES" :
-        }
+      this.add(item, itemMode)
     }
   }
 
-  count = savedAliases.length
+  add (item, mode) {
+    switch (item) {
+      case "STANDARD" :
+        return this.type.addSMethod(item)
 
-  while (count--) {
-    aliasName      = savedAliases[count]
-    originalName   = aliases[aliasName]
-    this.addSAlias(aliasName, originalName)
+      case "GETTER"  :
+      case "GETTERS" :
+        return this.addAll(item, GETTER)
+
+      case "ALIAS"   :
+      case "ALIASES" :
+        return this.addAliases(item)
+
+      case "JIT"             :
+      case "JIT PROP"        :
+      case "JIT PROPERTY"    :
+      case "JIT PROPERTIES"  :
+      case "LAZY"            :
+      case "LAZY PROP"       :
+      case "LAZY PROPERTY"   :
+      case "LAZY PROPERTIES" :
+        return this.addAll(item, LAZY_INSTALLER)
+    }
   }
 
+  addAliases (aliases) {
+    const aliasNames = LocalProperties(aliases)
+    const next       = aliasNames.length
+    const saved      = this.aliases
+
+    while (next--) {
+      aliasName        = aliasNames[next]
+      originalName     = aliases[aliasName]
+      saved[aliasName] = originalName
+    }
+  }
+
+  resolveAlises () {
+    let aliases = this.aliases
+
+    for (let aliasName in aliases) {
+      let originalName = aliases[aliasName]
+      this.type.addSAlias(aliasName, originalName)
+    }
+  }
+}
+
+Thing.add(function addAll(items) {
+  const loader = new MethodLoader(this)
+  loader.load(items)
   return this
 })
 
@@ -364,7 +369,34 @@ Thing.add(function addAll(items) {
 //   return newType
 // })
 
-Type.add(function _initFrom(type, visited) {
-  this._init(type)
-  this.method = type.methods.copy(visited)
+Type.add(function _initFrom_(_type, visited) {
+  this._init(_type)
+  this._method = _type._methods.copy(visited)
 })
+
+
+is(thing)
+
+isA(type)
+
+
+
+
+
+// else if (value.constructor !== Object) {
+//   if (func = value.copy) ) {
+//     copy = (func.constructor === Function) ? value.copy(visited) : func
+//   }
+//   else if (func = value._copy) ) {
+//     copy = value._copy(visited)
+//   }
+//   if (copy) {
+//     this[prop] = (asFixedFacts_) ? BeFixedFacts(copy) : copy
+//     visited.set(value, copy)
+//     continue
+//   }
+// }
+// this[prop] = (isFunc) ?
+//   CopyFunc(value, asFixedFacts_, visited) :
+//   CopyObject(value, asFixedFacts_, visited)
+// }

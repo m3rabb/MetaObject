@@ -19,11 +19,12 @@ const   Implementation_root = new Proxy(Base_root, ImplementationHandler)
 const     Inner_root        = SpawnFrom(Implementation_root)
 
 const       Nothing_root    = SpawnFrom(Inner_root)
-const       Thing_root      = SpawnFrom(Inner_root)
-const       Type_root       = SpawnFrom(Inner_root)
-const       Method_root     = SpawnFrom(Inner_root)
-const       Context_root    = SpawnFrom(Inner_root)
-const       Name_root       = SpawnFrom(Inner_root)
+const       Top_root        = SpawnFrom(Inner_root)
+const         Thing_root    = SpawnFrom(Top_root)
+const         Type_root     = SpawnFrom(Top_root)
+const         Method_root   = SpawnFrom(Top_root)
+const         Context_root  = SpawnFrom(Top_root)
+const         Name_root     = SpawnFrom(Top_root)
 
 function ConstructorError(constructor) {
   SignalError(constructor.name,
