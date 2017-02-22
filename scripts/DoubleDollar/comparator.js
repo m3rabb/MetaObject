@@ -1,75 +1,403 @@
+LocalProperties    = Object.keys
 
+AllProperties      = Reflect.ownKeys
 
-Comparator.add(function _init() {
-  this._ids = new Map()
-  this._groupings = []
-  this._pathA = new map()
-  this._pathB = new map()
-  this._pathCount = 0
-})
+function VisibleProperties(target) {
+  let props = []
+  let next = 0
 
-Comparator.add(function _compareThings_(_a, _b) {
-  const
-
-  if (_a.type !== _b.type) { return false }
-  if (this._considerMutability) {
-    if (_a.isImmutable !== _b.isImmutable) { return false }
+  if (target == null) { return props }
+  if (target.constructor !== Object || RootOf(target) === Object_prototype) {
+    return LocalProperties(target)
   }
 
-  ids    = this._ids
-  propsA = _a[KNOWN_PROPERTIES] || LocalProperties(_target)
-  propsB = _b[KNOWN_PROPERTIES] || LocalProperties(_target)
+  for (let name in target) {
+    let value = target[name]
+    if (value !== Object_prototype[name] || IsLocalProperty.call(target,name)) {
+      props[next++] = value
+    }
+  }
+  return props
+}
+
+
+Thing.add(function is(that) {
+  return (this.$ === that)
+})
+
+Thing.add(function isIdentical(that, comparator_) {
+  if (this.$ === that) { return true }
+  const _that = InterMap.get(that)
+
+  if (_that          === undefined)       { return false }
+  if (this[IS_FACT]  !== IMMUTABLE)       { return false }
+  if (_that[IS_FACT] !== IMMUTABLE)       { return false }
+  if (this.type      !== _that.type)      { return false }
+  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
+
+  ComparePropertiesUsing(this, _that, comparator_ || IsIdentical())
+})
+
+Thing.add(function isExactly(that, comparator_) {
+  if (this.$ === that) { return true }
+  const _that = InterMap.get(that)
+
+  if (_that          === undefined)       { return false }
+  if (this[IS_FACT]  !== _that[IS_FACT])  { return false }
+  if (this.type      !== _that.type)      { return false }
+  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
+
+  ComparePropertiesUsing(this, _that, comparator_ || IsExactly())
+})
+
+Thing.add(function isInterchangeable(that, comparator_) {
+  if (this.$ === that) { return true }
+  const _that = InterMap.get(that)
+
+  if (_that          === undefined)       { return false }
+  if (this[IS_FACT]  !== _that[IS_FACT])  { return false }
+  if (this.type      !== _that.type)      { return false }
+  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
+
+  ComparePropertiesUsing(this, _that, comparator_ || IsInterchangeable())
+})
+
+Thing.add(function isEqual(that, comparator_) {
+  if (this.$ === that) { return true }
+  const _that = InterMap.get(that)
+
+  if (_that          === undefined)       { return false }
+  if (this.type      !== _that.type)      { return false }
+  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
+
+  ComparePropertiesUsing(this, _that, comparator_ || IsEqual())
+})
+
+Thing.add(function isEquivEqual(that, comparator_) {
+  if (this.$ === that) { return true }
+  const _that = InterMap.get(that) || that
+
+  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
+
+  ComparePropertiesUsing(this, _that, comparator_ || IsEqual())
+})
+
+Thing.add(function isEquivalent(that, comparator_) {
+  if (this.$ === that) { return true }
+  const _that = InterMap.get(that) || that
+
+  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
+
+  ComparePropertiesUsing(this, _that, comparator_ || IsEquivalent())
+})
+
+
+Krust.add(function are(a, b) {
+  return a === b
+})
+
+Krust.add(function areIdentical(a, b) {
+  return IsIdentical().compare(a, b)
+})
+
+Krust.add(function areExactly(a, b) {
+  return IsExactly().compare(a, b)
+})
+
+Krust.add(function areInterchangeable(a, b) {
+  return IsInterchangeable().compare(a, b)
+})
+
+Krust.add(function areEqual(a, b) {
+  return IsEqual().compare(a, b)
+})
+
+Krust.add(function areEquivEqual(a, b) {
+  return IsEquivEqual().compare(a, b)
+})
+
+Krust.add(function areEquivalent(a, b) {
+  return IsEquivalent().compare(a, b)
+})
+
+
+IsIdentical      .add("compare"              , CompareEquality)
+IsIdentical      .add("_compareObjects"      , CompareObjectsEquality)
+IsIdentical      .add("_compareObjects_2nd"  , AreObjectsExactly_2nd)
+IsIdentical      .add("_compareJSObjects"    , AreJSObjectsStrictlyEqual)
+
+IsExactly        .add("compare"              , CompareEquality)
+IsExactly        .add("_compareObjects"      , CompareObjectsEquality)
+IsExactly        .add("_compareObjects_2nd"  , AreObjectsExactly_2nd)
+IsExactly        .add("_compareJSObjects"    , AreJSObjectsStrictlyEqual)
+
+IsInterchangeable.add("compare"              , CompareEquality)
+IsInterchangeable.add("_compareObjects"      , CompareObjectsEquality)
+IsInterchangeable.add("_compareObjects_2nd"  , AreObjectsInterchangeable_2nd)
+IsInterchangeable.add("_compareJSObjects"    , AreJSObjectsStrictlyEqual)
+
+IsEqual          .add("compare"              , CompareEquality)
+IsEqual          .add("_compareObjects"      , CompareObjectsEquality)
+IsEqual          .add("_compareObjects_2nd"  , CompareObjectsEquality_2nd)
+IsEqual          .add("_compareObjects_nth"  , AreObjectsEqual_nth)
+IsEqual          .add("_compareJSObjects"    , AreJSObjectsEqual)
+IsEqual          .add("_compareJSObjects_nth", AreJSObjectsEqual)
+
+IsEquivalent     .add("compare"              , CompareEquivalence)
+IsEquivalent     .add("_compareObjects"      , CompareObjectsEquivalence)
+IsEquivalent     .add("_compareObjects_2nd"  , CompareObjectsEquality_2nd)
+IsEquivalent     .add("_compareObjects_nth"  , AreObjectsEquivalent_nth)
+IsEquivalent     .add("_compareJSObjects"    , AreJSObjectsEquivalent)
+IsEquivalent     .add("_compareJSObjects_nth", AreJSObjectsEquivalent)
+
+IsEquivEqual     .add("compare"              , CompareEquivalence)
+IsEquivEqual     .add("_compareObjects"      , CompareObjectsEquivalence)
+IsEquivEqual     .add("_compareObjects_2nd"  , CompareObjectsEquality_2nd)
+IsEquivEqual     .add("_compareObjects_nth"  , AreObjectsEqual_nth)
+IsEquivEqual     .add("_compareJSObjects"    , AreJSObjectsEquivalent)
+IsEquivEqual     .add("_compareJSObjects_nth", AreJSObjectsEqual)
+
+
+
+function CompareEquality(a, b) {
+  if (a === b) { return true }
+  // Weed out undefined and null to avoid primitives that can't has properties.
+  if (a == null || b == null) { return false }
+
+  switch (a.constructor) {
+    case Boolean: case Symbol: case String: return false  // Easy out
+    case Number: return (a !== a) && (b !== b) // Check for NaN
+    case Function:   // Ensure function execution is the same
+      if (a[ORIGINAL] !== b[ORIGINAL]) { return false }
+  }
+
+  return this._compareObjects(a, b)
+}
+
+function CompareEquivalence(a, b) {
+  if (a === b) { return true }
+  if (a == null) { return (a == b) ? this : null }
+
+  switch (a.constructor) {
+    case Symbol:
+      strA = (a.slice(7, a.length - 1)
+      switch (b.constructor) {
+        case Symbol : return (strA === b.slice(7, a.length - 1)) ? this : null
+        case String : return (strA === b) ? this : null
+        case Number :
+          m = +strA; n = b
+          return (m === n) || (m !== m) && (n !== n) ? this : null
+        default     : return null
+      }
+    case String:
+      switch (b.constructor) {
+        case Symbol : return (a === b.slice(7, a.length - 1)) ? this : null
+        case String : return (a === b) ? this : null
+        case Number :
+          m = +a; n = b
+          return (m === n) || (m !== m) && (n !== n) ? this : null
+        default     : return null
+      }
+    case Number:  // Check for NaN
+      m = a
+      switch (b.constructor) {
+        case Symbol : n = +(b.slice(7, a.length - 1)); break
+        case String : n = +b; break
+        case Number : n = b; break
+        default     : return null
+      }
+      return (m === n) || (m !== m) && (n !== n) ? this : null
+    case Function:
+      if (a[ORIGINAL] !== b[ORIGINAL]) { return false }
+  }
+
+  return this._compareObjects(a, b)
+}
+
+
+
+function CompareObjectsEquality(a, b) {
+  this._rootA          = a
+  this._rootB          = b
+  this._compareObjects = this._compareObjects_2nd
+
+  const selector = this._equalitySelector
+
+  return (a[selector] && a.constructor !== Object) ?
+    a[selector](b, this) : this._compareJSObjects(a, b)
+}
+
+function CompareObjectsEquivalence(a, b) {
+  this._rootA          = a
+  this._rootB          = b
+  this._compareObjects = this._compareObjects_2nd
+
+  return (a.isEquivalent && a.constructor !== Object) ?
+    a.isEquivalent(b, this) :
+    (b.isEquivalent && b.constructor !== Object) ?
+      b.isEquivalent(a, this) : this._compareJSObjects(a, b)
+}
+
+
+function AreObjectsExactly_2nd(a, b) {
+  const ids = new Map()
+  const cohort = [0, 1]
+  ids.set(this._rootA, 0)
+  ids.set(this._rootB, 1)
+
+  this._ids            = ids
+  this._nextId         = 2
+  this._cohorts        = [cohort, cohort]
+  this._pathA          = [-1,  ]
+  this._pathB          = [  ,-1]
+  this._pathCount      = 1
+  this._compareObjects = AreObjectsExactly_nth
+
+  return this._compareObjects(a, b)
+}
+
+function CompareObjectsExactly_nth(a, b) {
+  const ids      = this.ids
+  const idA      = ids.get(a) || ids.set(a, (idA = this._nextId++))
+  const idB      = ids.get(b) || ids.set(b, (idB = this._nextId++))
+  const selector = this._equalitySelector
+
+  if (!this._haveEqualPaths(idA, idB)) { return false }
+  if (this._alreadyCompared(idA, idB)) { return true }
+
+  return (a[selector] && a.constructor !== Object) ?
+    a[selector](b, this) : this._compareJSObjects(a, b)
+}
+
+function AreObjectsInterchangeable_2nd(a, b) {
+  const ids    = new Map()
+  const cohort = [0, 1]
+  const rootA  = this._rootA
+
+  ids.set(rootA, 0)
+  ids.set(this._rootB, 1)
+
+  this._ids            = ids
+  this._nextId         = 2
+  this._cohorts        = [cohort, cohort]
+  this._compareObjects = AreObjectsInterchangeable_nth
+  [this._pathA, this._pathB, this._pathCount] = IsImmutable(rootA) ?
+    [[], [], 0] : [[-1,  ], [  ,-1], 1]
+
+  return this._compareObjects(a, b)
+}
+
+function AreObjectsInterchangeable_nth(a, b) {
+  const ids      = this.ids
+  const idA      = ids.get(a) || ids.set(a, (idA = this._nextId++))
+  const idB      = ids.get(b) || ids.set(b, (idB = this._nextId++))
+
+  if ((!IsImmutable(a) && !this._haveEqualPaths(idA, idB)) { return false }
+  if (this._alreadyCompared(idA, idB)) { return true }
+
+  return (a.isInterchangeable && a.constructor !== Object) ?
+    a.isInterchangeable(b, this) : this._compareJSObjects(a, b)
+}
+
+function CompareObjectsEquality_2nd(a, b) {
+  const ids = new Map()
+  const cohort = [0, 1]
+  ids.set(this._rootA, 0)
+  ids.set(this._rootB, 1)
+
+  this._ids              = ids
+  this._nextId           = 2
+  this._cohorts          = [cohort, cohort]
+  this._compareObjects   = this._compareObjects_nth
+  this._compareJSObjects = this._compareJSObjects_nth
+
+  return this._compareObjects(a, b)
+}
+
+function AreObjectsEqual_nth(a, b) {
+  const ids      = this.ids
+  const idA      = ids.get(a) || ids.set(a, (idA = this._nextId++))
+  const idB      = ids.get(b) || ids.set(b, (idB = this._nextId++))
+
+  if (this._alreadyCompared(idA, idB)) { return true }
+
+  return (a.isEqual && a.constructor !== Object) ?
+    a.isEqual(b, this) : this._compareJSObjects(a, b)
+}
+
+function AreObjectsEquivalent_nth(a, b) {
+  const ids      = this.ids
+  const idA      = ids.get(a) || ids.set(a, (idA = this._nextId++))
+  const idB      = ids.get(b) || ids.set(b, (idB = this._nextId++))
+
+  if (this._alreadyCompared(idA, idB)) { return true }
+
+  return (a.isEquivalent && a.constructor !== Object) ?
+    a.isEquivalent(b, this) :
+    (b.isEquivalent && b.constructor !== Object) ?
+      b.isEquivalent(a, this) : this._compareJSObjects(a, b)
+}
+
+
+function AreJSObjectsStrictlyEqual(a, b) {
+  if (IsImmutable(a) !== IsImmutable(b)) { return false }
+
+  const = a.constructor
+  if (constructorA === b.constructor) { return false }
+
+  return (constructorA === Array) ?
+    CompareSequencesUsing(a, b, this) : ComparePropertiesUsing(a, b, this)
+})
+
+function AreJSObjectsEqual(a, b) {
+  const = a.constructor
+  if (constructorA === b.constructor) { return false }
+
+  return (constructorA === Array) ?
+    CompareSequencesUsing(a, b, this) : ComparePropertiesUsing(a, b, this)
+}
+
+function AreJSObjectsEquivalent(a, b) {
+  return (a.constructor === Array || a.isOrdered &&
+    b.constructor === Array || b.isOrdered) ?
+      CompareSequencesUsing(a, b, this) : ComparePropertiesUsing(a, b, this)
+}
+
+
+function ComparePropertiesUsing(_a, _b, comparator) {
+  // _a is an obj|fun and _b is an obj|func|num|str
+
+  propsA = _a[KNOWN_PROPERTIES] || VisibleProperties(_a)
+  propsB = _b[KNOWN_PROPERTIES] || VisibleProperties(_b)
   next   = propsA.length
 
   if (propsA !== propsB && next !== propsB.length) { return false }
 
   while (next--) {
     prop = propsA[next]
-    valueA = _a[prop]
-    if (valueA === undefined) {
-      if (!(prop in _b)) { return false }
-    }
-    valueB = _b[prop]
+    a = _a[prop]
+    if (a === undefined && !(prop in _b)) { return false }
 
-    if (valueA === valueB) { continue }
-
-    switch (typeof valueA) {
-      default         : return false
-      case "object"   :
-        if (valueA === null) { return false }
-        isFunc = false; break
-      case "function" :
-        isFunc = true; break
-    }
-
-    const idA = ids.get(_a)
-    const idB = ids.get(_b)
-
-    if (this._alreadyCompared(idA, idB))              { continue }
-    if (!this._haveEqualPaths(oidA, oidB))            { return false }
-    if (valueA === valueB)                            { continue }
-
-    if ((innerA = InterMap.get(valueA))) {
-      if (inner.equals) {
-        if (!inner.equals(valueB, this))              { return false }
-      }
-      else if (!(innerB = InterMap.get(value)))       { return false }
-      else if (!this._compareThings_(innerA, innerB)) { return false }
-    }
-    else if (valueA.constructor !== Object &&
-        ((func = valueA.equals)) && (func.constructor === Function)) {
-      if (!valueA.equals(visited, this))              { return false }
-
-      this[prop] = (asFixedFacts_) ? BeFixedFacts(copy) : copy
-      visited.set(value, copy)
-    }
-    else {
-      if (!this.compareObjectTo(valueA, valueB))      { return false }
-    }
+    b = _b[prop]
+    if (!comparator.compare(a, b)) { return false }
   }
 
   return true
-})
+}
+
+
+function CompareSequencesUsing(_a, _b, comparator) {
+  let next = _a.length
+
+  if (next !== _b.length) { return false }
+
+  while (next--) {
+    if (!comparator.compare(_a[next], _b[next])) { return false }
+  }
+
+  return true
+}
+
 
 
 Comparator.add(function _alreadyCompared(idA, idB) {
@@ -142,26 +470,26 @@ Comparator.add(function _haveEqualPaths(idA, idB) {
   return true
 })
 
+//
+// IsExactly.add(function reverseCompare(a, b) {
+//   const pathA, pathB, result
+//
+//   this._pathB = (originalA = this._pathA)
+//   this._pathA = (originalB = this._pathB)
+//   result      = b.isExactly(a, this)
+//   this._pathA = originalA
+//   this._pathB = originalB
+//   return result
+// }
+//
+//
 
-IsExactly.add(function reverseCompare(a, b) {
-  const pathA, pathB, result
-
-  this._pathB = (originalA = this._pathA)
-  this._pathA = (originalB = this._pathB)
-  result      = b.isExactly(a, this)
-  this._pathA = originalA
-  this._pathB = originalB
-  return result
-}
-
-
-
-                         mutable                       immutable
+                           mutable                       immutable
 is                               the exact same object
 isIdentical (forever)      same object                   exact same structure
 isExactly                  same structure/mutablility
 isInterchangeable (W|R)    same structure/submutability  same values
-isEqual  -   (for R)       same values (ignore mutability, type)
+isEqual  -   (for R)       same values (ignore mutability)
 isEquivEqual (for R)       equivalent root, equal children
 isEquivalent (for R)       same values (ignore mutability, type, case)
   und <=> null

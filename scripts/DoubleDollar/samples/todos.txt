@@ -1,13 +1,12 @@
-- implement contexts
+- implement contexts/namerecs
 - figure out how to implement copy for type
 - objectify methods
-- replace, using spawnFrom instead
+- replace {__proto__}, using spawnFrom instead
 - add JIT properties
 - change IsArray to   target.constructor === Object
 - make method objects
 - type function construction
 - enable alias within getters/lazies
-- Equality
 - Context/Name
 - _super
 
@@ -15,3 +14,5 @@
 - add permanent methods
 - [IS_FACT] as piercing accessor
 - make isImmutable lazy property
+
+- consider make constructors always return fact, and using new for immutable

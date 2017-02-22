@@ -150,7 +150,7 @@ function _InitFrom_(source, visited, asFixedFacts_, isArray_) {
     }
   }
 
-  if (source !== this && this.id !== undefined) { this[FORCE_ID] }
+  if (source !== this && this.id !== undefined) { this[SET_ID] }
 
   if (asFixedFacts_) {
     this[IS_FACT] = IMMUTABLE

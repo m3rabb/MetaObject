@@ -14,17 +14,23 @@ const KrustBehavior = {
     switch (selector[0]) {
       case "_"       :
         return inner._externalPrivateRead(selector) || undefined
-      case undefined : if (!(selector in ALLOWED_SYMBOLS)) { return undefined }
+      case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return undefined }
     }
 
     if (inner.atIndex) {
       let index = +selector
-      if (index === index || index === "null") { return inner.atIndex(index) }
+      if (index === index || selector === "null") {
+        return inner.atIndex(index)
+      }
     }
 
     let value = inner[selector]
 
-    return (value === inner) ? value.$ : value
+    return (value.constructor === Function) ? value[OUTER] || value :
+      (value === inner) ? value.$ : value
+
+    // return value.$ || value
+    // return (value === inner) ? value.$ : value
   },
 
   // Setting on things in not allowed because the setting semantics are broken.
@@ -41,7 +47,7 @@ const KrustBehavior = {
   has (inner, selector) {
     switch (selector[0]) {
       case "_"       : return inner._externalPrivateRead(selector) || false
-      // case undefined : if (!(selector in ALLOWED_SYMBOLS)) { return false }
+      // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       case undefined : return false
     }
     return (selector in inner)
@@ -50,7 +56,7 @@ const KrustBehavior = {
   getOwnPropertyDescriptor (inner, selector) {
     switch (selector[0]) {
       case "_"       : return inner._externalPrivateRead(selector) || undefined
-      // case undefined : if (!(selector in ALLOWED_SYMBOLS)) { return false }
+      // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       case undefined : return undefined
     }
     return Reflect.getOwnPropertyDescriptor(inner, selector)
@@ -58,7 +64,7 @@ const KrustBehavior = {
 
   ownKeys (inner) {
     const names = AllNames(inner).filter(name => name[0] !== "_")
-    // return names.concat(ALLOWED_SYMBOLS_LIST)
+    // return names.concat(VISIBLE_SYMBOLS_LIST)
     return names
   },
 
