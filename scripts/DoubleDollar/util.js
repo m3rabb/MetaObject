@@ -92,7 +92,7 @@ function AsDir(name, directives) {
 }
 
 
-function Reverser(source) {
+function ReversedCopy(source) {
   let target = []
   let tIndex = 0
   let sIndex = source.length

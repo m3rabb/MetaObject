@@ -1,18 +1,35 @@
-- implement contexts/namerecs
+- implement contexts/NameRecs
 - figure out how to implement copy for type
-- objectify methods
 - replace {__proto__}, using spawnFrom instead
-- add JIT properties
 - change IsArray to   target.constructor === Object
-- make method objects
 - type function construction
-- enable alias within getters/lazies
-- Context/Name
 - _super
 
-- change _copy to [_COPY]
 - add permanent methods
-- [IS_FACT] as piercing accessor
 - make isImmutable lazy property
 
-- consider make constructors always return fact, and using new for immutable
+- NOTE: make ALL functions to be considered unique facts EXCEPT ThingWrapped funcs
+-- We should make all Krust created func immutable
+-- figure out how to make user specifiable func-things, and copy them
+
+- Go back to using parallel hierarchies for instances public/private. This is
+  now enable by the mutable write barrier. Whenever a function is added to an
+  instance, make sure to enkrust it on the public side
+
+  - Make enkrusted funcs - facts
+
+(typeof target)[1] === "b"
+
+- consider making isIdentical use value vs structure for immutables
+- switch back to using typeof instead of constructor
+
+- make type only answer public methods
+
+- make precalculated super methods
+
+- check how outer cache holds values that are created via getters from inner,
+  such as with span in List
+
+- Consider making a writerbarrier copy is made NOT copying the causal property
+
+- Add IID to obj before it becomes immutable

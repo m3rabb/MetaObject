@@ -28,7 +28,7 @@ FACT        = Symbol("FACT")
 IMMUTABLE   = Symbol("IMMUTABLE")
 
 AddGetter(Thing_root, function isFact() {
-  return (this[IS_FACT])
+  return (this[IS_FACT] != null)
 })
 
 AddGetter(Thing_root, function isImmutable() {
@@ -36,17 +36,19 @@ AddGetter(Thing_root, function isImmutable() {
 })
 
 
-function mutableCopy(visited_) {
-  return this[COPY](false, visited_)
-}
-
 function copy(visited_) {
   return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](false, visited_)
 }
 
-function nonCopy() {
-  return (this[IS_FACT] === IMMUTABLE) ? this._newBlank() : this
+function mutableCopy(visited_) {
+  return this[COPY](false, visited_)
 }
+
+
+// Thing.add(function _nonCopy() {
+//   return (this[IS_FACT] === IMMUTABLE) ? this._newBlank() : this
+// })
+
 
 
 AddGetter(Thing_root, function asCopy() {
@@ -61,140 +63,272 @@ AddGetter(Thing_root, function asMutable() {
   return (this[IS_FACT] === IMMUTABLE) ? this[COPY](false) : this
 }
 
+AddGetter(Thing_root, function asFact() {
+  return (this[IS_FACT]) ? this : this[COPY](true)
+}
+
 AddGetter(Thing_root, function asImmutable() {
   return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](true)
 })
 
 AddGetter(Thing_root, function beImmutable() {
-  return (this[IS_FACT] === IMMUTABLE) ? this :
-    this[COPY](true, undefined, this)
+  return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](true, undefined, this)
 })
 
+// AddGetter(Thing_root, function asImmutable() {
+//   if (this[IS_FACT] === IMMUTABLE) { return this }
+//   const copy = this[COPY](true)
+//   copy[IS_FACT] = IMMUTABLE
+//   return SetImmutable(copy)
+// })
+//
+// AddGetter(Thing_root, function beImmutable() {
+//   if (this[IS_FACT] === IMMUTABLE) { return this }
+//   const copy = this[COPY](true, undefined, this)
+//   copy[IS_FACT] = IMMUTABLE
+//   return SetImmutable(copy)
+// })
 
+Thing.add("_initFrom_", _InitFrom_)
 
+function _InitFrom_(_source, asImmutable, visited) {
+  let props, next, prop, value, traversed, inner
 
-function CopyFunc(Source, visited = new Map(), asFixedFacts) {
-  const target = function (...args) {
-    return Source.apply(this, ...args)
-  }
-  DefineProperty(target, "name", VisibleConfiguration)
-  target[ORIGINAL] = Source[ORIGINAL] || (Source[ORIGINAL] = Source)
+  // if (this[IS_FACT] || this.id !== undefined) { return this }
 
-  visited.set(source, target)
-  return _initFrom_.call(target, Source, visited, asFixedFacts, false)
-}
-
-function CopyObject(source, visited = new Map(), asFixedFacts) {
-  let isArray, target
-
-  switch (source.constructor) {
-    case Array  : isArray = true ; target = []; break
-    case Object : isArray = false; target = {}; break
-    default     : isArray = false; target = SpawnFrom(RootOf(source)); break
-  }
-
-  visited.set(source, target) // Prevents infinite recursion on cyclic objects
-  return _initFrom_.call(target, source, visited, asFixedFacts, isArray)
-}
-
-
-Thing.add("_initFrom_", _initFrom_)
-
-function _InitFrom_(source, visited, asFixedFacts_, isArray_) {
-  let props, next, prop, value, isFunc, traversed, inner, func, copy
-
-  if (isArray_) {
-    next = this.length = source.length
-  }
-  else {
-    props = source[KNOWN_PROPERTIES] || LocalProperties(source)
-    next  = props.length
-  }
+  props = _source[KNOWN_PROPERTIES] || LocalProperties(_source)
+  next  = props.length
 
   while (next--) {
-    prop  = isArray_ ? next : props[next]
-    value = source[prop]
+    prop  = props[next]
+    value = _source[prop]
 
-    switch (typeof value) {
-      default         : this[prop] = value; continue
-      case "object"   :
-        if (value === null) { this[prop] = value; continue }
-        isFunc = false; break
-      case "function" :
-        isFunc = true; break
-    }
-
-    if (value[IS_FACT] <= FACT) {
-      this[prop] = value
-    }
-    else if ((traversed = visited.get(value))) {
-      this[prop] = traversed
-    }
+    if (value === null || typeof value !== "object") { this[prop] = value }
+    else if (value.isFact && value.constructor !== Object) { this[prop] = value }
+    else if ((traversed = visited.pair(value)))  { this[prop] = traversed }
     else if ((inner = InterMap.get(value))) {
-      this[prop] = inner[COPY](asFixedFacts_, visited)
+      this[prop] = (inner[IS_FACT]) ? value : inner[COPY](asImmutable, visited)
     }
-    else if (value.id !== undefined) {
-      this[prop] = value
-    }
-    else if (value.constructor !== Object && (func = value.copy)) {
-      copy = (func.constructor === Function) ? value.copy(visited) : func
-
-      this[prop] = (asFixedFacts_) ? BeFixedFacts(copy) : copy
-      visited.set(value, copy)
-    }
-    else if (isFunc) {                               // is function
-      this[prop] = CopyFunc(value, asFixedFacts_, visited)
-    }
-    else {
-      this[prop] = CopyObject(value, asFixedFacts_, visited)
-    }
+    else { this[prop] = CopyObject(value, asImmutable, visited) }
   }
 
-  if (source !== this && this.id !== undefined) { this[SET_ID] }
-
-  if (asFixedFacts_) {
+  if (_source.id !== undefined && _source !== this) { this[SET_ID] }
+  if (asImmutable) {
+    this.isFact = true
     this[IS_FACT] = IMMUTABLE
-    BeImmutable(this)
+    SetImmutable(this)
   }
-
   return this
 }
 
 
-function BeFixedFacts(_target, visited = new Set()) {
-  let isArray, props, next, prop, value, traversed, inner
 
-  if ((isArray = (_target.constructor === Object))) {
-    next = _target.length
+function _NonKrustObject_copy(visited = CopyLog()) {
+  let target, props, prop, next, value, traversed, inner,
+
+  if (this.isFact || this.id !== undefined) { return this } // Ensure fact???
+
+  target = SpawnFrom(RootOf(this))
+  props = this[KNOWN_PROPERTIES] || LocalProperties(this)
+  next  = props.length
+
+  visited.pairing(this, target) // Handles cyclic objects
+
+  while (next--) {
+    prop  = props[next]
+    value = this[prop]
+
+    if (value === null || typeof value !== "object") { target[prop] = value }
+    else if (value.isFact && value.constructor !== Object) {target[prop] = value}
+    else if ((traversed = visited.pair(value)))  { target[prop] = traversed }
+    else if ((inner = InterMap.get(value))) {
+      target[prop] = (inner[IS_FACT]) ? value : inner[COPY](false, visited)
+    }
+    else { target[prop] = CopyObject(value, false, visited) }
+  }
+
+  InterMap.set(target, ConfirmedObject)
+  return target
+}
+
+IsFactConfiguration = {
+  __proto__    : null,
+  enumerable   : false,
+  writable     : false,
+  configurable : false,
+  value        : true
+}
+//
+// function EnsureFact(target) {
+//   if (!InterMap.get(target)) {
+//     DefineProperty(target, "isFact", LockedConfiguration)
+//     InterMap.set(target, ConfirmedFact)
+//   }
+//   return target
+// }
+
+function CopyObject(source, asFact, visited = CopyLog()) {
+  let target, next, value, traversed, inner, props, prop
+
+  switch (source.constructor) {
+    default :
+      sourceIsFact = source.isFact
+
+      if (sourceIsFact) {
+        // if (!InterMap.get(target)) {
+        //   DefineProperty(target, "isFact", LockedIsFactConfiguration)
+        //   InterMap.set(target, ConfirmedFact) // LOOK: Might not be!!!
+        // }
+        return source
+      }
+
+      if ((target = source.copy)) {
+        if (typeof target === "function") { target = source.copy(visited) }
+        if (asFact) { BeImmutable(target) } // target shouldn't has isFact = true
+
+        visited.pairing(source, target) // ensure logging, just in case
+        returns target
+      }
+
+      if (sourceIsFact === undefined) { return source }
+
+      target = SpawnFrom(RootOf(source))
+      // break omitted
+
+    case Object :
+      target = {}
+      props  = source[KNOWN_PROPERTIES] || LocalProperties(source)
+      next   = props.length
+
+      visited.pairing(source, target) // Handles cyclic objects
+
+      while (next--) {
+        prop  = props[next]
+        value = source[prop]
+
+        if (value === null || typeof value !== "object") { target[prop] = value }
+        else if (value.isFact && value.constructor !== Object) {target[prop] = value}
+        else if ((traversed = visited.pair(value)))  { target[prop] = traversed }
+        else if ((inner = InterMap.get(value))) {
+          target[prop] = (inner[IS_FACT]) ? value : inner[COPY](asFact, visited)
+        }
+        else { target[prop] = CopyObject(value, asFact, visited) }
+      }
+      break
+
+    case Array :
+      next = source.length
+
+      visited.pairing(source, (target = [])) // Handles cyclic objects
+
+      while (next--) {
+        value = source[next]
+
+        if (value === null || typeof value !== "object") { target[prop] = value }
+        else if (value.isFact && value.constructor !== Object) {target[prop] = value}
+        else if ((traversed = visited.pair(value)))  { target[next] = traversed }
+        else if ((inner = InterMap.get(value))) {
+          target[next] = (inner[IS_FACT]) ? value : inner[COPY](asFact, visited)
+        }
+        else { target[next] = CopyObject(value, asFact, visited) }
+      }
+
+      sourceIsFact = false
+      break
+  }
+
+  if (asFact) {
+    if (sourceIsFact === false) {
+      DefineProperty(target, "isFact", IsFactConfiguration)
+    }
+    InterMap.set(target, ConfirmedFact)
+    SetImmutable(target)
+  }
+  else {
+    InterMap.set(target, ConfirmedObject)
+  }
+  return target
+}
+
+function BeImmutable(_target, isInner, visited = new Set()) {
+  let next, value, inner, props, prop
+
+  visited.add(_target)
+
+  if (_target.constructor === Array) {
+    next  = _target.length
+
+    while (next--) {
+      value = _target[next]
+
+      if (value === null || typeof value !== "object")     { continue }
+      if (value.isFact && value.constructor !== Object)    { continue }
+      if (visited.has(value))                              { continue }
+      if ((inner = InterMap.get(value)) && inner[IS_FACT]) { continue }
+      BeImmutable(value, false, visited)
+    }
   }
   else {
     props = _target[KNOWN_PROPERTIES] || LocalProperties(_target)
     next  = props.length
-  }
 
-  visited.add(_target)
+    while (next--) {
+      prop  = props[next]
+      value = _target[prop]
 
-  while (next--) {
-    prop  = isArray_ ? next : props[next]
-    value = source[prop]
-
-    switch (typeof value) {
-      default         : continue
-      case "object"   : if (value === null) { continue }
-      case "function" : break
+      if (value === null || typeof value !== "object")     { continue }
+      if (value.isFact && value.constructor !== Object)    { continue }
+      if (visited.has(value))                              { continue }
+      if ((inner = InterMap.get(value)) && inner[IS_FACT]) { continue }
+      BeImmutable(value, false, visited)
     }
-
-    if (value[IS_FACT])                { continue }
-    if (visited.has(value))            { continue }
-    if (value.id !== undefined)        { continue }
-    if ((inner = InterMap.get(value))) { BeFixedFacts(inner, visited) }
-    else                               { BeFixedFacts(value, visited) }
   }
 
-  _target[IS_FACT] = IMMUTABLE
-  return BeImmutable(_target)
+  if (isInner) {
+    _target.isFact = true
+    _target[IS_FACT] = IMMUTABLE
+  }
+  else {
+    if (_target.isFact === false) {
+      DefineProperty(_target, "isFact", IsFactConfiguration)
+    }
+    if (confirmation = InterMap.get(_target)) {
+      InterMap.set(_target, ConfirmedFact)
+    }
+  }
+
+  return SetImmutable(_target)
 }
 
+
+function BeImmutableSpan(span) {
+  InterMap.set(span, ConfirmedFact)
+  return SetImmutable(span)
+}
+
+
+
+
+
+
+
+
+
+const ConfirmedFact = {
+  __proto__ : null,
+  [IS_FACT] = FACT,
+}
+
+const ConfirmedObject = {
+  __proto__ : null,
+  [IS_FACT] = null,
+}
+
+// const ConfirmedImmutable = {
+//   __proto__ : null,
+//   [IS_FACT] = IMMUTABLE,
+//   [IS_OBJECT] = true,
+// }
 
 
 
@@ -236,7 +370,7 @@ PutMethod(Method_root, function _init(namedFunc_name, func_, mode__) {
 
   this.selector = name
   this.handler  = handler
-  this.mode     = mode || STANDARD_METHOD
+  this.mode     = mode || STANDARD_METHOD_MODE
 })
 
 PutMethod(Type_root, function addSMethod(method_func__name, func__, mode___) {
@@ -254,9 +388,9 @@ PutMethod(Type_root, function addSMethod(method_func__name, func__, mode___) {
       break
 
     case LAZY_INSTALLER :
-      _AddGetter(target, Name, function _loader() {
-        DefineProperty(this, Name, InvisibleConfiguration)
-        return (this[Name] = Installer.call(this))
+      _AddGetter(this._instanceRoot, selector, function _loader() {
+        DefineProperty(this, selector, InvisibleConfiguration)
+        return (this[selector] = handler.call(this))
       })
       break
   }
@@ -310,7 +444,7 @@ class MethodLoader {
   }
 
   add (item, mode) {
-    switch (item) {
+    switch (mode) {
       case "STANDARD" :
         return this.type.addSMethod(item)
 
@@ -373,6 +507,7 @@ Type.add(function _initFrom_(_type, visited) {
   this._init(_type)
   this._method = _type._methods.copy(visited)
 })
+
 
 
 is(thing)

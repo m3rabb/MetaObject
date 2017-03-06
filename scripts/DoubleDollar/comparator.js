@@ -33,7 +33,6 @@ Thing.add(function isIdentical(that, comparator_) {
   if (this[IS_FACT]  !== IMMUTABLE)       { return false }
   if (_that[IS_FACT] !== IMMUTABLE)       { return false }
   if (this.type      !== _that.type)      { return false }
-  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
 
   ComparePropertiesUsing(this, _that, comparator_ || IsIdentical())
 })
@@ -45,7 +44,6 @@ Thing.add(function isExactly(that, comparator_) {
   if (_that          === undefined)       { return false }
   if (this[IS_FACT]  !== _that[IS_FACT])  { return false }
   if (this.type      !== _that.type)      { return false }
-  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
 
   ComparePropertiesUsing(this, _that, comparator_ || IsExactly())
 })
@@ -57,7 +55,6 @@ Thing.add(function isInterchangeable(that, comparator_) {
   if (_that          === undefined)       { return false }
   if (this[IS_FACT]  !== _that[IS_FACT])  { return false }
   if (this.type      !== _that.type)      { return false }
-  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
 
   ComparePropertiesUsing(this, _that, comparator_ || IsInterchangeable())
 })
@@ -68,7 +65,6 @@ Thing.add(function isEqual(that, comparator_) {
 
   if (_that          === undefined)       { return false }
   if (this.type      !== _that.type)      { return false }
-  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
 
   ComparePropertiesUsing(this, _that, comparator_ || IsEqual())
 })
@@ -77,16 +73,12 @@ Thing.add(function isEquivEqual(that, comparator_) {
   if (this.$ === that) { return true }
   const _that = InterMap.get(that) || that
 
-  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
-
   ComparePropertiesUsing(this, _that, comparator_ || IsEqual())
 })
 
 Thing.add(function isEquivalent(that, comparator_) {
   if (this.$ === that) { return true }
   const _that = InterMap.get(that) || that
-
-  if (this[ORIGINAL] !== _that[ORIGINAL]) { return false }
 
   ComparePropertiesUsing(this, _that, comparator_ || IsEquivalent())
 })
@@ -121,6 +113,7 @@ Krust.add(function areEquivalent(a, b) {
 })
 
 
+// NOTE: need to add isIdentical for JSObjects
 IsIdentical      .add("compare"              , CompareEquality)
 IsIdentical      .add("_compareObjects"      , CompareObjectsEquality)
 IsIdentical      .add("_compareObjects_2nd"  , AreObjectsExactly_2nd)
@@ -164,11 +157,9 @@ function CompareEquality(a, b) {
   // Weed out undefined and null to avoid primitives that can't has properties.
   if (a == null || b == null) { return false }
 
-  switch (a.constructor) {
-    case Boolean: case Symbol: case String: return false  // Easy out
-    case Number: return (a !== a) && (b !== b) // Check for NaN
-    case Function:   // Ensure function execution is the same
-      if (a[ORIGINAL] !== b[ORIGINAL]) { return false }
+  switch (typeof ) {
+    case "boolean": case "symbol": case "string": return false  // Easy out
+    case "number": return (a !== a) && (b !== b) // Check for NaN
   }
 
   return this._compareObjects(a, b)
@@ -176,42 +167,42 @@ function CompareEquality(a, b) {
 
 function CompareEquivalence(a, b) {
   if (a === b) { return true }
-  if (a == null) { return (a == b) ? this : null }
+  if (a == null) { return (a == b) }
 
-  switch (a.constructor) {
-    case Symbol:
+  switch (typeof a) {
+    case "symbol":
       strA = (a.slice(7, a.length - 1)
-      switch (b.constructor) {
-        case Symbol : return (strA === b.slice(7, a.length - 1)) ? this : null
-        case String : return (strA === b) ? this : null
-        case Number :
+      switch (typeof b) {
+        case "symbol" : return (strA === b.slice(7, a.length - 1))
+        case "string" : return (strA === b)
+        case "number" :
           m = +strA; n = b
-          return (m === n) || (m !== m) && (n !== n) ? this : null
-        default     : return null
+          return (m === n) || (m !== m) && (n !== n)
+        default     : return false
       }
-    case String:
-      switch (b.constructor) {
-        case Symbol : return (a === b.slice(7, a.length - 1)) ? this : null
-        case String : return (a === b) ? this : null
-        case Number :
+    case "string":
+      switch (typeof b) {
+        case "symbol" : return (a === b.slice(7, a.length - 1))
+        case "string" : return (a === b)
+        case "number" :
           m = +a; n = b
-          return (m === n) || (m !== m) && (n !== n) ? this : null
-        default     : return null
+          return (m === n) || (m !== m) && (n !== n)
+        default     : return false
       }
-    case Number:  // Check for NaN
+    case "number":  // Check for NaN
       m = a
-      switch (b.constructor) {
-        case Symbol : n = +(b.slice(7, a.length - 1)); break
-        case String : n = +b; break
-        case Number : n = b; break
-        default     : return null
+      switch (typeof b) {
+        case "symbol" : n = +(b.slice(7, a.length - 1)); break
+        case "string" : n = +b; break
+        case "number" : n = b; break
+        default     : return false
       }
-      return (m === n) || (m !== m) && (n !== n) ? this : null
-    case Function:
-      if (a[ORIGINAL] !== b[ORIGINAL]) { return false }
+      return (m === n) || (m !== m) && (n !== n)
+    case "object":
+      return this._compareObjects(a, b)
+    default :
+      return false
   }
-
-  return this._compareObjects(a, b)
 }
 
 
@@ -224,7 +215,7 @@ function CompareObjectsEquality(a, b) {
   const selector = this._equalitySelector
 
   return (a[selector] && a.constructor !== Object) ?
-    a[selector](b, this) : this._compareJSObjects(a, b)
+    a[selector](b, this.$) : this._compareJSObjects(a, b)
 }
 
 function CompareObjectsEquivalence(a, b) {
@@ -233,9 +224,9 @@ function CompareObjectsEquivalence(a, b) {
   this._compareObjects = this._compareObjects_2nd
 
   return (a.isEquivalent && a.constructor !== Object) ?
-    a.isEquivalent(b, this) :
+    a.isEquivalent(b, this.$) :
     (b.isEquivalent && b.constructor !== Object) ?
-      b.isEquivalent(a, this) : this._compareJSObjects(a, b)
+      b.isEquivalent(a, this.$) : this._compareJSObjects(a, b)
 }
 
 
@@ -248,6 +239,7 @@ function AreObjectsExactly_2nd(a, b) {
   this._ids            = ids
   this._nextId         = 2
   this._cohorts        = [cohort, cohort]
+
   this._pathA          = [-1,  ]
   this._pathB          = [  ,-1]
   this._pathCount      = 1
@@ -266,7 +258,7 @@ function CompareObjectsExactly_nth(a, b) {
   if (this._alreadyCompared(idA, idB)) { return true }
 
   return (a[selector] && a.constructor !== Object) ?
-    a[selector](b, this) : this._compareJSObjects(a, b)
+    a[selector](b, this.$) : this._compareJSObjects(a, b)
 }
 
 function AreObjectsInterchangeable_2nd(a, b) {
@@ -280,7 +272,9 @@ function AreObjectsInterchangeable_2nd(a, b) {
   this._ids            = ids
   this._nextId         = 2
   this._cohorts        = [cohort, cohort]
+
   this._compareObjects = AreObjectsInterchangeable_nth
+  // NOTE: should this be checking for isFact vs IsImmutable???
   [this._pathA, this._pathB, this._pathCount] = IsImmutable(rootA) ?
     [[], [], 0] : [[-1,  ], [  ,-1], 1]
 
@@ -292,11 +286,12 @@ function AreObjectsInterchangeable_nth(a, b) {
   const idA      = ids.get(a) || ids.set(a, (idA = this._nextId++))
   const idB      = ids.get(b) || ids.set(b, (idB = this._nextId++))
 
+  // NOTE: should this be checking for isFact vs IsImmutable???
   if ((!IsImmutable(a) && !this._haveEqualPaths(idA, idB)) { return false }
   if (this._alreadyCompared(idA, idB)) { return true }
 
   return (a.isInterchangeable && a.constructor !== Object) ?
-    a.isInterchangeable(b, this) : this._compareJSObjects(a, b)
+    a.isInterchangeable(b, this.$) : this._compareJSObjects(a, b)
 }
 
 function CompareObjectsEquality_2nd(a, b) {
@@ -308,6 +303,7 @@ function CompareObjectsEquality_2nd(a, b) {
   this._ids              = ids
   this._nextId           = 2
   this._cohorts          = [cohort, cohort]
+
   this._compareObjects   = this._compareObjects_nth
   this._compareJSObjects = this._compareJSObjects_nth
 
@@ -322,7 +318,7 @@ function AreObjectsEqual_nth(a, b) {
   if (this._alreadyCompared(idA, idB)) { return true }
 
   return (a.isEqual && a.constructor !== Object) ?
-    a.isEqual(b, this) : this._compareJSObjects(a, b)
+    a.isEqual(b, this.$) : this._compareJSObjects(a, b)
 }
 
 function AreObjectsEquivalent_nth(a, b) {
@@ -333,9 +329,9 @@ function AreObjectsEquivalent_nth(a, b) {
   if (this._alreadyCompared(idA, idB)) { return true }
 
   return (a.isEquivalent && a.constructor !== Object) ?
-    a.isEquivalent(b, this) :
+    a.isEquivalent(b, this.$) :
     (b.isEquivalent && b.constructor !== Object) ?
-      b.isEquivalent(a, this) : this._compareJSObjects(a, b)
+      b.isEquivalent(a, this.$) : this._compareJSObjects(a, b)
 }
 
 
@@ -364,7 +360,7 @@ function AreJSObjectsEquivalent(a, b) {
 }
 
 
-function ComparePropertiesUsing(_a, _b, comparator) {
+function ComparePropertiesUsing(_a, _b, _comparator) {
   // _a is an obj|fun and _b is an obj|func|num|str
 
   propsA = _a[KNOWN_PROPERTIES] || VisibleProperties(_a)
@@ -379,20 +375,20 @@ function ComparePropertiesUsing(_a, _b, comparator) {
     if (a === undefined && !(prop in _b)) { return false }
 
     b = _b[prop]
-    if (!comparator.compare(a, b)) { return false }
+    if (!_comparator.compare(a, b)) { return false }
   }
 
   return true
 }
 
 
-function CompareSequencesUsing(_a, _b, comparator) {
+function CompareSequencesUsing(_a, _b, _comparator) {
   let next = _a.length
 
   if (next !== _b.length) { return false }
 
   while (next--) {
-    if (!comparator.compare(_a[next], _b[next])) { return false }
+    if (!_comparator.compare(_a[next], _b[next])) { return false }
   }
 
   return true

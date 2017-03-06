@@ -64,12 +64,11 @@ Krust.set((context) => {
         return `List(${this._elements})`
       },
 
-      { GETTER :
-        function asString() {
-          return `List(${this._elements})`
-        },
-      }
+      "GETTER",
 
+      function asString() {
+        return `List(${this._elements})`
+      },
 
 
 
@@ -77,59 +76,51 @@ Krust.set((context) => {
 
       //// ACCESS : General
 
-      { GETTER : [
+      "GETTER", [
 
         function size() {  //
           return this._elements.length
         },
 
         function slots() {
-          const isImmutable = this[IMMUTABLE]
-          return this.map((value, index) => {
-            let slot = {index: index, element: value, key: index, value: value}
-
-            return isImmutable ? BeImmutable(slot) : slot
-          })
+          return this.map((value, index) =>
+            BeFact({ index: index, element: value, key: index, value: value }))
         },
 
         function elements() {
           return this.copy()
         },
 
-        { ALIAS : {
+        "ALIAS", {
           values: "elements"
-        } },
+        },
 
         function keys() {
           return this.map((value, index) => index)
         },
 
-        { ALIAS : {
+        "ALIAS", {
           indexes: "keys"
-        } },
+        },
 
 
-        // LOOK: Is explicit check fo immutability necessary???
         function span() {
-          const span = [0, this._elements.length, FWD]
-          return this[IMMUTABLE] ? Freeze(span) : span
+          return SpanBeFact([0, this._elements.length, FWD])
         },
 
         function inverseSpan() {
-          return [0, this._elements.length, BWD]
+          return SpanBeFact([0, this._elements.length, BWD])
         },
 
         function reversed() {
-          return this._new((result) => {
-            result._elements = Reverser(this.elements)
-          })
+          return this.type(BeImmutable(ReversedCopy(this._elements)))
         },
 
         function isEmpty() {
           return (this._elements.length === 0)
         },
 
-      ] },
+      ],
 
 
 
@@ -146,17 +137,29 @@ Krust.set((context) => {
       },
 
       function atEach(indexes_spans) {
-        return this.new((result) => {
-          Each(indexes_spans, (index_span) => {
-            result.add( this.at(index_span) )
-          })
+        let values = []
+        let next   = 0
+
+        Each(indexes_spans, (index_span, next) => {
+          values[next++] = this.at(index_span)
         })
+        return this.type(BeImmutable(values))
+      },
+
+      function atEach(indexes_spans) {
+        let values = []
+        let next   = 0
+
+        Each(indexes_spans, (index_span, next) => {
+          values[next++] = this.at(index_span)
+        })
+        return this.type(BeImmutable(values))
       },
 
       function reverse() {
-        return this._nonCopy((result) => {
-          result._elements = Reverser(this.elements)
-        })
+        const existing = this._elements
+        this._captureChanges._elements = ReversedCopy(existing)
+        return this
       },
 
 
@@ -166,11 +169,9 @@ Krust.set((context) => {
       function atIndex(index, absent_) {
         const target    = this._elements
         const size      = elements.length
-        const slotIndex = (index < 0) ? size - index : index
-
+        const slotIndex = (index >= 0) ? index : size + index
         return (slotIndex >= 0 && slotIndex < size) ? target[slotIndex] :
-          (typeof absent_ !== "function") ?
-            absent_ : absent_.call(this.$, index)
+          (typeof absent_ !== "function") ? absent_ : absent_.call(this.$, index)
       },
 
       "GETTER", [
@@ -184,7 +185,7 @@ Krust.set((context) => {
           return target[elements.length - 1]
         },
 
-      ] },
+      ],
 
 
       function _atIndex(justIndex) {
@@ -200,8 +201,9 @@ Krust.set((context) => {
           [span_start, ...end__direction__wrap]
         const readSpan = this._asNormalizedSpan(span)
 
-        if (this[IMMUTABLE] {
+        if (this[AS_FACT] === IMMUTABLE) {
           const [lo, hi, dir, wraps] = readSpan
+
           if (lo === 0 && hi === this.size && dir === FWD && !wrap) {
             return this
           }
@@ -262,14 +264,16 @@ Krust.set((context) => {
       },
 
       function _byFindEvery(Grip, scanDirective, Condition) {
-        return this.new((result) => {
-          this.withinDo(scanDirective, (value, index) => {
-            if (Conditional.call(this.$, value, index)) {
-              const slot = { index: index, value: value }
-              result.add( slot[Grip] )        // element: value, key: index,
-            }
-          })
+        let values = []
+        let next   = 0
+
+        this.withinDo(scanDirective, (value, index) => {
+          if (Conditional.call(this.$, value, index)) {
+            const slot = { index: index, value: value }
+            values[next++] = slot[Grip]  // element: value, key: index,
+          }
         })
+        return this.type(BeImmutable(values))
       },
 
 
@@ -373,21 +377,24 @@ Krust.set((context) => {
 
 
       function _byFindSub(grip, directives, subSize, condition) {
-        return this._overDo(false, directives, subSize, (sub, span) => {
-          if (Condition.call(this.$, sub, span)) {
-            return (grip === SUB) ? sub : span
-          }
-        })
+        return this._overDo(false, true, directives, subSize,
+          (sublist, span) => {
+            if (Condition.call(this.$, sublist, span)) {
+              return (grip === SUB) ? sublist : span
+            }
+          })
       },
 
       function _byFindEverySub(grip, distinct, directives, subSize, condition) {
-        return this.new((result) => {
-          this._overDo(distinct, directives, subSize, (sub, span) => {
-            if (Conditional.call(this.$, sub, span)) {
-              result.add( (grip === SUB) ? sub : span )
-            }
-          })
+        let values = []
+        let next   = 0
+
+        this._overDo(distinct, true, directives, subSize, (sublist, span) => {
+          if (Conditional.call(this.$, sublist, span)) {
+            values[next++]= (grip === SUB) ? sublist : span
+          }
         })
+        return this.type(BeImmutable(values))
       },
 
 
@@ -416,8 +423,8 @@ Krust.set((context) => {
         const matchSub   = AsArray(sub)
         const subSize    = matchSub.length
 
-        return this._overDo(false, directives_, subSize, (sub, span) => {
-          if (EqualArrays(sub, matchSub)) { return span }
+        return this._overDo(false, false, directives_, subSize, (sub, span) => {
+          if (EqualArrays(sub, matchSub)) { return BeImmutableSpan(span) }
         })
       },
 
@@ -429,8 +436,8 @@ Krust.set((context) => {
         return this.spanOf(sub, {scan: BACKWARD, sub: subDirection_})
       },
 
-      function spansOfDistinct(sub, directive_) {
-        return this._spansOfEvery(true, sub, directive_)
+      function spansOfDistinct(sub, directives_) {
+        return this._spansOfEvery(true, sub, directives_)
       },
 
       function spansOfIndistinct(sub, directives_) {
@@ -439,16 +446,17 @@ Krust.set((context) => {
 
 
       function _spansOfEvery(distinct, sub, directives_) {
-        const matchSub   = AsArray(sub)
-        const subSize    = matchSub.length
+        const matchSub = AsArray(sub)
+        const subSize  = matchSub.length
+        const spans   = []
+        let   next     = 0
 
-        return this.new((result) => {
-          this._overDo(distinct, directives_, subSize, (sub, span) => {
-            if (EqualArrays(sub, matchSub)) {
-              result.add( (grip === SUB) ? sub : span )
-            }
-          })
+        this._overDo(distinct, false, directives_, subSize, (sub, span) => {
+          if (EqualArrays(sub, matchSub)) {
+            spans[next++] = BeImmutableSpan(span)
+          }
         })
+        return this.type(BeImmutable(spans))
       },
 
 
@@ -512,13 +520,12 @@ Krust.set((context) => {
       },
 
       function withinMap(scanDirective, Action) {
-        return this.new((result) => {
-          const target = result._elements
+        let values = []
 
-          this.withinDo(scanDirective, (value, index) => {
-            target[index] = Action.call(this.$, value, index)
-          })
+        this.withinDo(scanDirective, (value, index) => {
+          values[index] = Action.call(this.$, value, index)
         })
+        return this.type(BeImmutable(values))
       },
 
       function withinReduce(directive, Accumulator_, Reducer) {
@@ -567,7 +574,7 @@ Krust.set((context) => {
       },
 
       function reduce(accumulator_, reducer) {
-        return this.withinReduce(null, accumulator_, reducer)
+        return this.withinReduce(undefined, accumulator_, reducer)
       },
 
       "ALIAS", {
@@ -583,11 +590,11 @@ Krust.set((context) => {
       //// ENUMERATION : by Subsequence & Span
 
       function distinctDo(directives_, subSize, action) {
-        return this._overDo(true, ...Justify(directives_, subSize, action))
+        return this._overDo(true, true, ...Justify(directives_, subSize, action))
       },
 
       function indistinctDo(directives_, subSize, action) {
-        return this._overDo(false, ...Justify(directives_, subSize, action))
+        return this._overDo(false, true, ...Justify(directives_, subSize, action))
       },
 
       function distinctMap(directives_, subSize, action) {
@@ -599,7 +606,7 @@ Krust.set((context) => {
       },
 
 
-      function _overDo(distinct, directives, subSize, action) {
+      function _overDo(distinct, asList, directives, subSize, action) {
         const target   = this._elements
         const readSpan = this._asNormalizedSpan(directives)
         const subDir   = directives && directives.sub || FWD
@@ -634,7 +641,10 @@ Krust.set((context) => {
               sIndex += sInc
             }
 
-            let result  = action.call(this.$, sub, span)
+            let result = (asList) ?
+              action.call(this.$, BeImmutable(sub), BeImmutableSpan(span)) :
+              action.call(this.$, sub, span)
+
             if (result !== undefined) { return result }
 
             start += startInc
@@ -651,11 +661,13 @@ Krust.set((context) => {
 
 
       function _overMap(distinct, directives, subSize, Action) {
-        return this.new((result) => {
-          this._overDo(distinct, directives, subSize, (sublist, span) => {
-            result.add( Action.call(this.$, sublist, span) )
-          })
+        let values = []
+        let next   = 0
+
+        this._overDo(distinct, true, directives, subSize, (sublist, span) => {
+          values[next++] = Action.call(this.$, sublist, span)
         })
+        return this.type(BeImmutable(values))
       },
 
 
@@ -668,29 +680,26 @@ Krust.set((context) => {
       // NOTE: Consider adding 'put' directives put: fan|fill|lay !!!
       function atPut(position, value) {
         return (position.length) ?
-          this.withinPut(position, value) :
+          this.putWithin(value, position) :
           this.putAtIndex(value, index)
       },
 
       function putAt(value, position) {
         return (position.length) ?
-          this.withinPut(position, value) :
+          this.putWithin(value, position) :
           this.putAtIndex(value, index)
       },
 
-      // LOOK check use of set vs _set!!!
       function putAtEach(value, positions) {
-        return this.set(function () {
-          Each(positions, (position) => this.putAt(value, position))
-        })
+        Each(positions, (position) => this.putAt(value, position))
+        return this
       },
 
       function putEachAtEach(Values, positions) {
-        return this.set(function () {
-          Each(positions, (position, next) => {
-            this.putAt(Values[next], positions)
-          })
+        Each(positions, (position, next) => {
+          this.putAt(Values[next], positions)
         })
+        return this
       },
 
       function fanAt(values, position) {
@@ -703,24 +712,25 @@ Krust.set((context) => {
       //// PUT : a Value at the Index
 
       function putAtIndex(value, index) {
-        return this._set(function () {
-          const target = this._elements
-          const slotIndex
+        const target = this._elements
+        const size   = target.length
+        const slotIndex
 
-          if   (index >= 0) { slotIndex = index }
-          else (index <  0) { slotIndex = target.length - index }
-          else              { return this }
+        if   (index >= 0) { slotIndex = index }
+        else (index <  0) { slotIndex = size + index }
+        else              { return this }
 
-          if (slotIndex >= 0) {
-            target[slotIndex] = value
-          }
-          else {
-            const right = -slotIndex
-            this.__subFromShiftTo(0, right)
-            this.__echoWithin(undefined, 1, right)
-            target[0] = value
-          }
-        })
+        if (slotIndex >= 0) {
+          this._captureChanges
+          target[slotIndex] = value
+        }
+        else {
+          const right = -slotIndex
+          this.__subFromShiftTo(0, right)
+          this.__echoWithin(undefined, 1, right)
+          target[0] = value
+        }
+        return this
       },
 
 
@@ -814,55 +824,53 @@ Krust.set((context) => {
       function _withinSetBy(
         [lo, hi, scanDir, wraps = false], source, selector, fillDir_
       ) {
-        return this._set(function () {
-          const target     = this._elements
-          const targetSize = target.length
-          const spanSize   = (hi - lo)
-          const sourceSize = source.length
-          const fillSize   = (scanDir === STRETCH) ? sourceSize : spanSize
-          let   left, right
+        const target     = this._elements
+        const targetSize = target.length
+        const spanSize   = (hi - lo)
+        const sourceSize = source.length
+        const fillSize   = (scanDir === STRETCH) ? sourceSize : spanSize
+        let   left, right
 
-          if (wraps) { return this.error("Wrapping is not implemented yet!")}
+        if (wraps) { return this.error("Wrapping is not implemented yet!")}
 
-          if (fillSize === 0) { return }
+        if (fillSize === 0) { return this }
 
-          if (lo > 0) {  //  A,B,C,D,E
-            left  = lo
-            right = left + fillSize
+        if (lo > 0) {  //  A,B,C,D,E
+          left  = lo
+          right = left + fillSize
 
-            if (fillSize !== spanSize) {
-              if (hi >= targetSize) {  // A,B,C,D
-                if (right < targetSize) { target.length = right }//clip capacity
-              } else {                 // E
-                this.__subFromShiftTo(hi, right)
-              }
+          if (fillSize !== spanSize) {
+            if (hi >= targetSize) {  // A,B,C,D
+              if (right < targetSize) { target.length = right }//clip capacity
+            } else {                 // E
+              this.__subFromShiftTo(hi, right)
             }
           }
-          else {   // lo <= 0
-            left = 0
+        }
+        else {   // lo <= 0
+          left = 0
 
-            if (hi < targetSize) {  // F,G,H
-              if (hi >= 0) {
-                right = fillSize
-
-                if (right !== hi) { this.__subFromShiftTo(hi, right) }
-              }
-              else { //  hi < 0     // I
-                right = fillSize - hi
-
-                this.__subFromShiftTo(hi, right)
-                this.__echoWithin(undefined, fillSize, right)
-              }
-            }
-            else { // hi >= targetSize //  J,K,L,M
+          if (hi < targetSize) {  // F,G,H
+            if (hi >= 0) {
               right = fillSize
 
-              if (right < targetSize) { target.length = right } // clip capacity
+              if (right !== hi) { this.__subFromShiftTo(hi, right) }
+            }
+            else { //  hi < 0     // I
+              right = fillSize - hi
+
+              this.__subFromShiftTo(hi, right)
+              this.__echoWithin(undefined, fillSize, right)
             }
           }
+          else { // hi >= targetSize //  J,K,L,M
+            right = fillSize
 
-          this[selector](source, left, right, scanDir, fillDir_)
-        })
+            if (right < targetSize) { target.length = right } // clip capacity
+          }
+        }
+
+        return this[selector](source, left, right, scanDir, fillDir_)
       }
 
 
@@ -882,20 +890,14 @@ Krust.set((context) => {
       },
 
       function putAtEvery(newValue, matchValue) {
-        return this._set((result) => {
-          let target = result._elements
-          let count = 0
+        if (newValue === matchValue) { return this }
 
-          this.withinDo(undefined, function (value, index) {
-            if (value === matchValue) {
-              target[index] = newValue
-              count++
-            }
-          })
-          if (count === 0) { return this }
+        return this.withinDo(undefined, function (value, index) {
+          if (value === matchValue) {
+            this._captureChanges._elements[index] = newValue
+          }
         })
       },
-
 
 
       //// PUT : a Sequence over a Subsequence
@@ -938,22 +940,22 @@ Krust.set((context) => {
         const fillerSize   = original.length
         const fillDir      = directives.fill
 
-        return this._nonCopy((result) => {
-          if (matchSize === fillerSize && this === result) {
-            this._overDo(true, directives, matchSize, (sub, [lo, hi, dir]) => {
+        if (matchSize === fillerSize && this[AS_FACT] !== IMMUTABLE) {
+          this._overDo(true, false, directives, matchSize,
+            (sub, [lo, hi, dir]) => {
               if (EqualArrays(sub, matchSub)) {
                 this.__fillWithin(filler, lo, hi, FORWARD, fillDir)
               }
             })
-            return this
-          }
+          return this
+        }
 
-          const spans = this._spansOfEvery(true, matchSub, directives)
+        const spans = this._spansOfEvery(true, matchSub, directives)
 
-          if (spans.size === 0)    { return this }
-          if (AsDirection(SCAN, directives) < 0) { spans = spans.reversed }
+        if (spans.size === 0)    { return this }
+        if (AsDirection(SCAN, directives) < 0) { spans.reverse }
 
-          this.__fanAcrossWithinAll(filler, original, spans, fillDir)
+        return this.__fanAcrossWithinAll(filler, original, spans, fillDir)
         })
       },
 
@@ -974,31 +976,29 @@ Krust.set((context) => {
       //// ADD : a Value at a Position
 
       function addFirst(value) {
-        return this._set(function () {
-          this.__subFromShiftTo(0, 1)
-          this._elements[0] = value
-        })
+        this.__subFromShiftTo(0, 1)
+        this._elements[0] = value
+        return this
       },
 
       function addLast(value) {
-        return this._set(function () {
-          const target = this._elements
-          target[elements.length] = value
-        }
+        const target = this._elements
+        target[target.length] = value
+        return this
       },
 
       function addBefore(value, matchValue, scanDirective_) {
         const index = this.indexOf(matchValue, scanDirective_)
         if (index === undefined) { return this }
 
-        return this.withinPut([index], value)
+        return this.putWithin(value, [index])
       },
 
       function addAfter(value, matchValue, scanDirective_) {
         const index = this.indexOf(matchValue, scanDirective_)
         if (index === undefined) { return this }
 
-        return this.withinPut([++index], value)
+        return this.putWithin(value, [++index])
       },
 
 
@@ -1038,23 +1038,23 @@ Krust.set((context) => {
       },
 
       function removeAtEach(positions) {
-        return this.set((result) => {
-          Each(positions, (position) => { result.removeAt( position ) })
-        })
+        Each(positions, (position) => { this.removeAt( position ) })
+        return this
       },
 
       function removeEach(values) {
-        return this.set((result) => {
-          Each(values, (value) => { result.remove( value ) })
-        })
+        Each(values, (value) => { this.remove( value ) })
+        return this
       },
 
       function removeAll() {
-        return this._nonCopy((result) => { result._elements = [] })
+        this._captureOverwrite._elements = []
+        return this
       },
 
       "GETTER", function empty() {
-        return this._new((result) => {})
+        this._captureOverwrite._elements = []
+        return this
       },
 
 
@@ -1063,7 +1063,7 @@ Krust.set((context) => {
 
       function removeAtIndex(index) {
         const size      = this._elements.length
-        const slotIndex = (index < 0) ? size - index : index
+        const slotIndex = (index >= 0) ? index : size + index
 
         return (slotIndex >= 0 && slotIndex < size) ?
           this._set(this.__subFromShiftTo, slotIndex + 1, slotIndex) : this
@@ -1118,16 +1118,13 @@ Krust.set((context) => {
       },
 
       function removeEveryWhere(scanDirective_, test) {
-        return this._new((result) => {
-          const indexes = this.indexesWhere(...Justify(scanDirective_, test))
+        const indexes = this.indexesWhere(...Justify(scanDirective_, test))
+        if (indexes.size === 0) { return this }
 
-          if (indexes.size === 0) { return this }
+        const mapDir = readSpan[DIR]
+        const spans  = indexes.map(mapDir, (index) => [index, index + 1])
 
-          const mapDir = readSpan[DIR]
-          const spans  = indexes.map(mapDir, (index) => [index, index + 1])
-
-          this.__fanAcrossWithinAll([], this._elements, spans)
-        })
+        return this.__fanAcrossWithinAll([], this._elements, spans)
       },
 
       function removeEveryWhereNot(scanDirective_, condition) {
@@ -1190,8 +1187,10 @@ Krust.set((context) => {
       //   number       +/- direction
       //   [Infinity]   +/- direction
       //   [1]          relative edge
+      //   [null]       right edge
       //   [1,,]        relative index
       //   [2,-1]       relative span
+      //   [3,null]     relative span
       //   [1,,,]       linear index
       //   [7,2,-1]     linear span
       //   [x,,1]       +/- direction
@@ -1254,8 +1253,9 @@ Krust.set((context) => {
         return (wraps) ? [lo, hi, dir, wraps] : [lo, hi, dir]
       },
 
+
       function __fillWithin(source, lo, hi, scanDir, fillDir_, sIndex__) {
-        const target = this._elements
+        const target = this._captureChanges._elements
 
         let [tIndex, tLimit, tInc, sInc                      ] = (scanDir < 0) ?
             [hi - 1, lo - 1, BWD , (fillDir_ < 0 ? FWD : BWD)] :
@@ -1274,13 +1274,14 @@ Krust.set((context) => {
       },
 
       function __echoWithin(value, lo, hi) {
-        for (let target = this._elements, index = lo; index < hi; index++) {
-          target[index] = value
-        }
+        let target = this._captureChanges._elements
+        let index  = lo
+
+        while (index < hi) { target[index++] = value }
       },
 
       function __echoFillWithin(source, lo, hi, scanDir, fillDir_) {
-        const target = this._elements
+        const target = this._captureChanges._elements
 
         let [tIndex, tLimit, tInc, sInc] = (scanDir < 0) ?
         [hi - 1, lo - 1, BWD, (fillDir_ < 0) ? FWD : BWD] :
@@ -1297,7 +1298,7 @@ Krust.set((context) => {
       },
 
       function __subFromShiftTo(sourceEdge, targetEdge) {
-        const target  = this._elements
+        const target  = this._captureChanges._elements
         const endEdge = elements.length
         const size    = endEdge - sourceEdge
         let   tIndex, sIndex
@@ -1320,29 +1321,32 @@ Krust.set((context) => {
       },
 
       function __fanAcrossWithinAll(filler, original, spans, fillDir_) {
-          const target     = this._elements
-          const fillerSize = filler.length
-          const limit      = original.length   // final original edge
-          let   next       = 0                 // edge traversing original
-          let   start      = 0                 // target insertion edge
-          let   target     = []
+        const target     = this._elements
+        const fillerSize = filler.length
+        const limit      = original.length   // final original edge
+        let   next       = 0                 // edge traversing original
+        let   start      = 0                 // target insertion edge
+        let   target     = []
 
-          spans.eachDo(([left, right]) => {
-            let skipSize = left - next        // skipped elements from original
-            let end      = start + skipSize   // target trailing edge
+        this._captureOverwrite
 
-            start = this.__fillWithin(original, start, end, FWD, fillDir_, next)
-            end   = start + fillerSize
+        spans.eachDo(([left, right]) => {
+          let skipSize = left - next        // skipped elements from original
+          let end      = start + skipSize   // target trailing edge
 
-            start = this.__fillWithin(filler, start, end, FWD, fillDir_)
-            next  = right
-          })
+          start = this.__fillWithin(original, start, end, FWD, fillDir_, next)
+          end   = start + fillerSize
 
-          if ((skipSize = limit - next)) {
-            end = start + skipSize
-            this.__fillWithin(original, start, end, FWD, fillDir_, next)
-          }
+          start = this.__fillWithin(filler, start, end, FWD, fillDir_)
+          next  = right
         })
+
+        if ((skipSize = limit - next)) {
+          end = start + skipSize
+          this.__fillWithin(original, start, end, FWD, fillDir_, next)
+        }
+
+        return this
       },
 
     ]

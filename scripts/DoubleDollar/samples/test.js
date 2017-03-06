@@ -7,30 +7,21 @@ const InterMap = new WeakMap()
 const ANSWER_FALSE = () => false
 const ANSWER_NULL = () => null
 
-const KrustBehavior = {
+const KrustPrivacyBehavior = {
   __proto__ : null,
 
   get (inner, selector, outer_) {
+    let value, index
+
     switch (selector[0]) {
       case "_"       :
         return inner._externalPrivateRead(selector) || undefined
       case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return undefined }
     }
 
-    if (inner.atIndex) {
-      let index = +selector
-      if (index === index || selector === "null") {
-        return inner.atIndex(index)
-      }
-    }
-
-    let value = inner[selector]
-
-    return (value.constructor === Function) ? value[OUTER] || value :
-      (value === inner) ? value.$ : value
-
-    // return value.$ || value
-    // return (value === inner) ? value.$ : value
+    value = (inner.atIndex && ((index = +selector) === index)) ?
+      inner.atIndex(index) : inner[selector]
+    return (value === inner) ? inner.$ : value
   },
 
   // Setting on things in not allowed because the setting semantics are broken.
@@ -76,128 +67,166 @@ const KrustBehavior = {
   // preventExtensions ???
 }
 
-SetBarrierBehavior = {
-  set (inner, selector, value, outer_) {
-    if (inner[selector] !== value) {
-      inner[selector] = value
-      if (inner[selector] !== value) {
-        (this.target = inner.copy)[selector] = value  // LOOK: check this!!!
-        this.set = this.setMutableCopy
-        this.get = this.getMutableCopy
-      }
-    }
-    return true
-  }
-}
+// SetBarrierBehavior = {
+//   set (inner, selector, value, outer_) {
+//     if (inner[selector] !== value) {
+//       inner[selector] = value
+//       // check to see if it was successfully set
+//       if (inner[selector] !== value) {
+//         (this.target = inner.copy)[selector] = value  // LOOK: check this!!!
+//         this.set = this.setMutableCopy
+//         this.get = this.getMutableCopy
+//       }
+//     }
+//     return true
+//   }
+// }
+
+
 
 const MutableWriteBarrierBehavior = {
   __proto__ : null,
 
   set (target, selector, value, outer_) {
-    let isFunc, firstChar, asFixedFacts, isPublic, inner
-
-    if (target[selector] === value) { return true }
-
-    switch (typeof value) {
-      default          :      target[selector] = value; return true
-      case "function"  :      isFunc = true           ; break
-      case "object"    :
-        if (value === null) { target[selector] = value; return true }
+    if (target[selector] !== value) {
+      return true
     }
-
-    if (value[IS_FACT]) { target[selector] = value; return true }
-
-    firstChar    = selector[0]
-    isPublic     = (firstChar !== "_" && firstChar !== undefined)
-    asFixedFacts = isPublic
-
+    if (value === null || typeof value !== "object" || value.isFact) {
+      target[selector] = value; return true
+    }
     if ((inner = InterMap.get(value))) {
-      target[selector] = inner[COPY](asFixedFacts)
-    }
-    else if (value.id !== undefined) {
-      target[selector] = value
-    }
-    else if (value.constructor !== Object && (copy = value.copy)) {
-      if (typeof copy === "function") { copy = value.copy() }
-
-      target[selector] = (asFixedFacts) ? BeFixedFacts(copy) : copy
-    }
-    else if (isFunc) {                               // is function
-      target[selector] = CopyFunc(value, undefined, asFixedFacts)
-    }
-    else {
-      target[selector] = CopyObject(value, undefined, asFixedFacts)
+      if (inner[IS_FACT]) { target[selector] = value; return true }
     }
 
+    const firstChar    = selector[0]
+    const isPublic     = (firstChar !== "_" && firstChar !== undefined)
+
+    target[selector] = (inner) ?
+      inner[COPY](isPublic) :     // as immutable
+      CopyObject(value, isPublic) // as fact
     return true
   }
 }
+
+
+Thing.addSGetter(function _captureChanges() {
+  if (this[IS_FACT] === IMMUTABLE) {
+    delete this._$captureChangesLock
+    return this
+  }
+  DefineProperty(this, "_captureChanges", InvisibleConfiguration)
+  return (this._captureChanges = this)
+})
+
+Thing.addSGetter(function _captureOverwrite() {
+  if (this[IS_FACT] === IMMUTABLE) {
+    delete this._$captureOverwriteLock
+    return this
+  }
+  DefineProperty(this, "_captureOverwrite", InvisibleConfiguration)
+  return (this._captureOverwrite = this)
+})
+
 
 class ImmutableWriteBarrierBehavior {
   constructor (target) {
     this.target = target
+    this.isInUse = false
+    this.proxy = new Proxy(target, this)
   }
 
   set (inner, selector, value, outer_) {
     if (inner[selector] !== value) {
-      (this.target = inner.mutableCopy)[selector] = value
-      this.set = this.setMutableCopy
-      this.get = this.getMutableCopy
+      (this.target = inner.asMutableCopy)[selector] = value
+      this.set = this.detourSet
+      this.get = this.detourGet
     }
     return true
   }
 
-  setMutableCopy (inner, selector, value, outer_) {
+  deleteProperty (inner, selector, outer_) {
+    if (inner[selector] !== undefined) {
+      delete (this.target = inner.asMutableCopy)[selector]
+    }
+    else if (selector === "_$captureChangesLock") {
+      this.target = inner.asMutableCopy
+    }
+    else if (selector === "_$captureOverwriteLock") {
+      this.target = inner._newBlank()
+    }
+    else if (IsLocalProperty.call(target, selector)) {
+      delete (this.target = inner.asMutableCopy)[selector]
+    }
+    else { return true }
+
+    this.set = this.detourSet
+    this.get = this.detourGet
+    this.deleteProperty = this.detourDelete
+    return true
+  }
+
+  detourSet (inner, selector, value, outer_) {
     this.target[selector] = value
     return true
   }
 
-  getMutableCopy (inner, selector, outer_) {
+  detourGet (inner, selector, outer_) {
     return this.target[selector]
+  }
+
+  detourDelete (inner, selector, outer_) {
+    delete this.target[selector]
+    return true
   }
 }
 
+
+
 function EnkrustMethod(OriginalMethod) {
   const method = function (...args) {
-    let innerReceiver, handlers, receiver, result, isFunc, inner
+    let receiver, barrier, handlers, result, inner
 
-    innerReceiver = InterMap.get(this)
+    receiver = InterMap.get(this)
 
-    if (innerReceiver[IS_FACT] === IMMUTABLE) {
-      handlers = new ImmutableWriteBarrierBehavior(innerReceiver)
-      receiver = new Proxy(innerReceiver, handlers)
+    if (receiver[IS_FACT] !== IMMUTABLE) {
+      target = receiver
     }
-    else { receiver = innerReceiver }
+    else {
+      barrier = receiver[WRITE_BARRIER]
+      if (barrier.isInUse) {
+        barrier = new ImmutableWriteBarrierBehavior(receiver)
+      }
+      else {
+        barrier.isInUse = true
+      }
+      target = barrier.proxy
+    }
 
     result = OriginalMethod.apply(receiver, ...args)
 
-    switch (typeof result) {
-      default          : return result
-      case "function"  : isFunc = true; break
-      case "object"    : if (result === null) { return result } break
+    if (result === null || typeof result !== "object") { return result }
+    if (result === target) {
+      if (barrier) {
+        result = barrier.target
+        if (result !== receiver) {
+          barrier.target = receiver
+          result.beImmutable
+        }
+        barrier.isInUse = false
+      }
+      return result.$
     }
-
-    if (result === receiver) {
-      return (handlers) ? handlers.target.beImmutable.$ : innerReceiver.$
-    }
-    if (result[IS_FACT]) { return result }
-    if ((inner = InterMap.get(result))) { return inner.asImmutable }
-    if (result.id !== undefined) { return result }
-    if (value.constructor !== Object && (copy = value.copy)) {
-      if (typeof copy === "function") { copy = value.copy() }
-
-      return BeFixedFacts(copy)
-    }
-    return (isFunc) ?
-      CopyFunc(result, undefined, true) : CopyObject(result, undefined, true)
+    if (result.isFact) { return result }
+    return ((inner = InterMap.get(result))) ?
+      (inner[IS_FACT] ? result : inner.asImmutable) : CopyObject(result, true)
   }
 
   DefineProperty(method, "name", VisibleConfiguration)
-  method.name        = OriginalMethod.name
+  method.name = OriginalMethod.name
   // method[ORIGINAL]   = OriginalMethod[ORIGINAL] || OriginalMethod
   method[IS_FACT] = IMMUTABLE
 
-  return BeImmutable(method)
+  return SetImmutable(method)
 }
 
 
@@ -208,7 +237,7 @@ function ConstructorForNamingInDebugger(typeName) {
   const constructor = Function(funcBody)()
   delete constructor.prototype
   constructor[IS_FACT] = IMMUTABLE
-  return BeImmutable(constructor)
+  return SetImmutable(constructor)
 }
 
 function CreateEmptyNamelessFunction() {
@@ -219,7 +248,7 @@ function BlankConstructorFor(instanceRoot) {
   const constructor = CreateEmptyNamelessFunction()
   constructor.prototype = instanceRoot
   constructor[IS_FACT] = IMMUTABLE
-  return BeImmutable(constructor)
+  return SetImmutable(constructor)
 }
 
 function CreateFactory(_Blank, isDisguised) {
@@ -233,7 +262,7 @@ function CreateFactory(_Blank, isDisguised) {
 
 function Create_new(_Blank) {
   const target = {}
-  target.new = function (...args) {
+  target.new =function (...args) {
     const instance = new _Blank()
     instance._init(...args)
     return instance.$
@@ -242,19 +271,36 @@ function Create_new(_Blank) {
 }
 
 function Create__copy(_Blank) {
-  return function _copy(asImmutable, visited = new Map(), _target = _Blank()) {
+  return function COPY(asImmutable, visited = CopyLog(), _target = _Blank()) {
     const  target = _target.$
 
-    visited.set(this.$, target)  // Prevents infinite recursion on cyclic objects
-    if (asImmutable && _target._initFrom_ !== _InitFrom_) {
-      BeFixedFacts(_target._initFrom_(this, visited))
+    visited.pairing(this.$, target) // to manage cyclic objects
+
+    if (_target._initFrom_ !== _InitFrom_) {
+      _target._initFrom_(this, visited)
+      if (asImmutable) { BeImmutable(_target, true) }
     }
     else {
-      _target._initFrom_(this, visited, asImmutable)
+      _target._initFrom_(this, asImmutable, visited)
     }
     return target
   }
 }
+
+// function Create__copy(_Blank) {
+//   return function _copy(asImmutable, log = CopyLog.new(), _target = _Blank()) {
+//     const  target = _target.$
+//
+//     visited.set(this.$, target)  // Prevents infinite recursion on cyclic objects
+//     if (asImmutable && _target._initFrom_ !== _InitFrom_) {
+//       BeFixedFacts(_target._initFrom_(this, visited), IS_INNER)
+//     }
+//     else {
+//       _target._initFrom_(this, visited, asImmutable, IS_INNER)
+//     }
+//     return target
+//   }
+// }
 
 class DisguiseBehavior {
   constructor (disguised) {
@@ -299,7 +345,7 @@ Thing.addSLazyProperty(IID, function() {
 
 This.addSGetter(function basicId() {
   const prefix = this.context ? this.context.id + "@" : ""
-  return NewUniqueId(`${prefix}${this[IID]}.Type`)
+  return `${prefix}${this[IID]}.${this.type.name}`
 })
 
 function _setId(newId_) {
@@ -318,13 +364,15 @@ PutMethod(Type_root, function _init(spec, _root_, context__) {
   const disguise = new Proxy(_factory, behavior)
 
   _factory[Symbol.hasInstance] = (instance) => (instance.type === this)
-  BeImmutable(_factory.prototype)
-  BeImmutable(_factory)
+  SetImmutable(_factory.prototype)
+  SetImmutable(_factory)
 
   _root.type         = disguise.$
   _root[ROOT]        = _root
   _root._newBlank    = () => (new _Blank()).$
   _root[COPY]        = Create__copy(_Blank)
+
+  this.new           = _root.new = Create_new(_Blank)
 
   this._instanceRoot = _root
   this._constructor  = _Blank
@@ -336,7 +384,6 @@ PutMethod(Type_root, function _init(spec, _root_, context__) {
 
   this._setId()
 
-  this.new           = Create_new(_Blank)
   this.prototype     = _root.$
   this.context       = context__.$ || null
 
@@ -383,9 +430,9 @@ PutMethod(Type_root, function setName(name) {
 
 
 function EnkrustThing(thing) {
-  const krust = new Proxy(thing, KrustBehavior)
+  const krust = new Proxy(thing, KrustPrivacyBehavior)
   InterMap.set(krust, thing)
-  return (thing.$ = krust)
+  return (thing.$ = thing[OUTER] = krust)
 }
 
 AddLazilyInstalledProperty(_Thing_root, "$", EnkrustThing)

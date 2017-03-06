@@ -37,12 +37,12 @@ function Inner ()          { ConstructorError(Inner)          }
 Implementation.prototype = Implementation_root
 Inner.prototype          = Inner_root
 
-ShallowFreeze(Base_root)
-ShallowFreeze(Stash_root)
-ShallowFreeze(Implementation_root)
-ShallowFreeze(Inner_root)
-ShallowFreeze(Implementation)
-ShallowFreeze(Inner)
+SetImmutable(Base_root)
+SetImmutable(Stash_root)
+SetImmutable(Implementation_root)
+SetImmutable(Inner_root)
+SetImmutable(Implementation)
+SetImmutable(Inner)
 
 
 let HandleErrorsQuietly        = false
@@ -161,7 +161,7 @@ PutMethod(Type_root, function _init(name, supertypes, _root_) {
   _root.type     = this
   _root[ROOT]    = _root
   SeedInstanceRootMethodHandlers(_root, _ancestors)
-  _root.ancestry = ShallowFreeze(_ancestors.push(this))
+  _root.ancestry = SetImmutable(_ancestors.push(this))
 })
 
 Type.addSGetter(function copy() {
@@ -223,7 +223,8 @@ Type  .addSMethod(       Type_root  ._instanceRoot.addSMethod)
 Method.addSMethod(       Method_root._instanceRoot._init     )
 
 Thing.addSMethod(function _noSuchProperty(name) {
-  return this.error(`No such property: ${name}!`)
+  return undefined
+  // return this.error(`No such property: ${name}!`)
 })
 
 Nothing.addSMethod(Thing_root.is)
@@ -241,3 +242,15 @@ Thing.addSMethod(function addOMethod(method_func__name, func_) {
   this[selector] = method.handler
   return this
 })
+
+
+SuperMethodsBase = { __proto__ : null }
+SuperMethodsBase
+
+function CreateSuperHandler(Selector) {
+  return function (...args) {
+    const _target = this._target
+    const superHandler = _target[SUPERS][Selector]
+    return superHandler.apply(_target, ...args)
+  }
+}

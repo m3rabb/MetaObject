@@ -192,6 +192,24 @@ _set
 _new
 _copy
 _nonCopy
+_asMutable
+
+_beNonCopy
+_beMutable
+
+_clone
+_touch
+
+_beMutable/_beWritable/_beWritableCopy/_beCopy/_beNonCopy/_beWritableNonCopy
+_beWritable/_beNonCopy
+
+_enableEffect
+_enableNonCopy
+_captureChanges
+_captureOverwrite/_captureNonCopying/_captureChangesNonCopying/
+_targetChanges
+_targetNonCopy
+
 
 
 past|until
