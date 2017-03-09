@@ -171,7 +171,7 @@ function CopyObject(source, asFact, visited = CopyLog()) {
   let target, next, value, traversed, inner, props, prop
 
   switch (source.constructor) {
-    default :
+    default : // Custom Object
       sourceIsFact = source.isFact
 
       if (sourceIsFact) {
@@ -183,6 +183,11 @@ function CopyObject(source, asFact, visited = CopyLog()) {
       }
 
       if ((target = source.copy)) {
+        if (target === _NonKrustObject_copy) {
+          target = _NonKrustObject_copy.call(source, visited)
+          visited.pairing(source, target)
+          break
+        }
         if (typeof target === "function") { target = source.copy(visited) }
         if (asFact) { BeImmutable(target) } // target shouldn't has isFact = true
 
@@ -191,16 +196,15 @@ function CopyObject(source, asFact, visited = CopyLog()) {
       }
 
       if (sourceIsFact === undefined) { return source }
-
+      // sourceIsFact === false
       target = SpawnFrom(RootOf(source))
       // break omitted
 
     case Object :
-      target = {}
       props  = source[KNOWN_PROPERTIES] || LocalProperties(source)
       next   = props.length
 
-      visited.pairing(source, target) // Handles cyclic objects
+      visited.pairing(source, (target = {})) // Handles cyclic objects
 
       while (next--) {
         prop  = props[next]
@@ -233,7 +237,7 @@ function CopyObject(source, asFact, visited = CopyLog()) {
         else { target[next] = CopyObject(value, asFact, visited) }
       }
 
-      sourceIsFact = false
+      target.isFact = sourceIsFact = false
       break
   }
 
@@ -310,6 +314,62 @@ function BeImmutableSpan(span) {
 
 
 
+Parameters
+  nonObject               is always a factory
+  obj.isFact              is (unconfimed) fact
+  object
+
+    known  JSObject
+
+  Outer         --->  IS_WRAPPED
+
+  External      --->  IS_WRAPPED
+    JSObj
+    Thing
+
+  Inner
+
+  KnownObjData
+
+  JSObject -->
+  JSObj
+
+  ConfirmedObject        (isfact or not)
+
+  isFact      ---> is (unconfimed) fact
+  IS_EXTERNAL ---> is passed in an my be referenced by other objs
+  IS_FACT     ---> immutable or has id
+  IS_KNOWN    ---> created or copied by krust
+
+
+passed in jsObject
+- wrap as param so it is marked as needing to be copied
+  AND to ensure it doesnt capture private part
+
+
+passed in safeCopy
+- wrap as param so it is marked as needing to be copied
+
+passed in melon object
+- wrap as param so it is marked as needing to be copied
+  AND to ensure it doesnt capture private part
+
+passed in person object (with id)
+- wrap to ensure it doesnt capture private part
+
+passed in inner immutable object
+- use outer instead
+
+passed in inner mutable object
+- wrap as param so it is marked as needing to be copied
+- use outer instead
+
+passed in immutable List
+- nothing do to
+
+
+passed in mutable List
+- wrap as param so it is marked as needing to be copied
 
 
 
@@ -535,3 +595,10 @@ isA(type)
 //   CopyFunc(value, asFixedFacts_, visited) :
 //   CopyObject(value, asFixedFacts_, visited)
 // }
+
+
+instanceMethods
+instanceProperties
+methods
+properties
+supertypes

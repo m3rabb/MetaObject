@@ -44,9 +44,9 @@ Krust.set((context) => {
 
     instanceMethods: [
 
-      function _init(elements_) {
+      function _init(...elements_) {
         this._elements = []
-        elements_ && this.addAll(elements_)
+        elements_.length && this.addAll(elements_)
       },
 
 
@@ -82,6 +82,10 @@ Krust.set((context) => {
           return this._elements.length
         },
 
+        function length() {  //
+          return this._elements.length
+        },
+
         function slots() {
           return this.map((value, index) =>
             BeFact({ index: index, element: value, key: index, value: value }))
@@ -113,7 +117,7 @@ Krust.set((context) => {
         },
 
         function reversed() {
-          return this.type(BeImmutable(ReversedCopy(this._elements)))
+          return this.type(...BeImmutable(ReversedCopy(this._elements)))
         },
 
         function isEmpty() {
@@ -143,7 +147,7 @@ Krust.set((context) => {
         Each(indexes_spans, (index_span, next) => {
           values[next++] = this.at(index_span)
         })
-        return this.type(BeImmutable(values))
+        return this.type(...BeImmutable(values))
       },
 
       function atEach(indexes_spans) {
@@ -153,7 +157,7 @@ Krust.set((context) => {
         Each(indexes_spans, (index_span, next) => {
           values[next++] = this.at(index_span)
         })
-        return this.type(BeImmutable(values))
+        return this.type(...BeImmutable(values))
       },
 
       function reverse() {
@@ -273,7 +277,7 @@ Krust.set((context) => {
             values[next++] = slot[Grip]  // element: value, key: index,
           }
         })
-        return this.type(BeImmutable(values))
+        return this.type(...BeImmutable(values))
       },
 
 
@@ -394,7 +398,7 @@ Krust.set((context) => {
             values[next++]= (grip === SUB) ? sublist : span
           }
         })
-        return this.type(BeImmutable(values))
+        return this.type(...BeImmutable(values))
       },
 
 
@@ -456,7 +460,7 @@ Krust.set((context) => {
             spans[next++] = BeImmutableSpan(span)
           }
         })
-        return this.type(BeImmutable(spans))
+        return this.type(...BeImmutable(spans))
       },
 
 
@@ -525,7 +529,7 @@ Krust.set((context) => {
         this.withinDo(scanDirective, (value, index) => {
           values[index] = Action.call(this.$, value, index)
         })
-        return this.type(BeImmutable(values))
+        return this.type(...BeImmutable(values))
       },
 
       function withinReduce(directive, Accumulator_, Reducer) {
@@ -667,7 +671,7 @@ Krust.set((context) => {
         this._overDo(distinct, true, directives, subSize, (sublist, span) => {
           values[next++] = Action.call(this.$, sublist, span)
         })
-        return this.type(BeImmutable(values))
+        return this.type(...BeImmutable(values))
       },
 
 

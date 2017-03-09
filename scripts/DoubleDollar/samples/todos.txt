@@ -33,3 +33,8 @@
 - Consider making a writerbarrier copy is made NOT copying the causal property
 
 - Add IID to obj before it becomes immutable
+
+- remove _elements from Lists
+
+
+- parameters are to be treated as a virtual copy!!

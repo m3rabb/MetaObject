@@ -2,6 +2,8 @@
 - Controlled abstraction of the object creation process
 - Full control of method creation
 - Consistent object model
+- Consistent handling of immutability/facts
+- thoughtful management of object properties
 - Fully formed types
 - Multiple typing (multi-inheritance)
 - Full object state privacy (efficient)
@@ -11,11 +13,9 @@
 - General purpose, fully formed object equality
 - General purpose deep object copying
 - proper treatment of _noSuchMethod
-- Naming infrastructure
 - Consistent Collections/span framework
-- Consistent handlingof immutability
-- Write-once object properties
-- smart sharing of properties
-- CSS style context name mapping
 
 - simple flyweight types
+
+- Naming infrastructure
+- CSS style context name mapping
