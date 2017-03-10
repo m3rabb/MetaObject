@@ -38,3 +38,16 @@
 
 
 - parameters are to be treated as a virtual copy!!
+- instead of multiple layers of proxies, change the barrierRules as necessary
+
+transport
+
+https://www.slideshare.net/lizza919/types-of-movement-across-the-cell-membrane
+
+passive/active/permeability/diffusion/osmosis/hypotonic/hypertonic/isotonic
+
+active is setting
+passive is getting
+
+integument
+blubber/flubber

@@ -14,7 +14,7 @@
 
 - faking immutability!!!
 
-
+- grocery bag example
 
 function CreateFactory(typeName, basicConstructor) {
   const funcBody =

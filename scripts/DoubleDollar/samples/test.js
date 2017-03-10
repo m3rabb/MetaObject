@@ -85,63 +85,59 @@ const KrustPrivacyBehavior = {
 
 
 
-const MutableWriteBarrierBehavior = {
+const MutableWritePermeability = {
   __proto__ : null,
 
-  set (target, selector, value, outer_) {
+  set (target, selector, value, barrier_) {
+    if (target[selector] === value) {
+      target[OUTER][selector] = value
+      return true
+    }
+
     const firstChar = selector[0]
     const isPublic  = (firstChar !== "_" && firstChar !== undefined)
 
-    if (typeof value === "object" && value !== null &&
-        target[selector] !== value) {
-      switch (value[SECRET]) {
-        case FACT_EXTERNAL_JS_PARAM :
-          break  // value is enkrusted external object
-
-        case NON_FACT_EXTERNAL_JS_PARAM :
-          copy = CopyObject(InterMap.get(value), isPublic)
-          value = (InterMap.get(copy)) ? copy : new ExternalJSBarrier(copy)
-          break
-
-        case NON_FACT_INTERNAL_JS_PARAM :
-          value = CopyObject(InterMap.get(value), isPublic)
-          break
-
-        case NON_FACT_THING_PARAM :
-          value = InterMap.get(value)[COPY](isPublic)[OUTER_BARRIER]
-          break
-
-        case INNER :
-          // Handle if inner object (this) was accidentally passed
-          // LOOK: check for === this!!!
-          value = (!isPublic || value.isFact) ?
-            value[OUTER_BARRIER] : value[COPY](true)[OUTER_BARRIER]
-          break
-
-        default :  // value is outer or locally created|exposed object
-          if (isPublic || !value.isFact) {
-            if ((const objData = InterMap.get(value))) {
-              value = (objData[SECRET] === INNER) ?
-                objData[COPY](true)[OUTER_BARRIER] : // value is nonfact-outer
-                (objData[IS_FACT] ? value : CopyObject(value, true))
-                // catch pure JS objects that are facts but aren't labeled with isFact
-            }
-            else {
-              value = CopyObject(value, true)
-            }
-          }
-          break
-      }
-      target[selector] = value
+    if (typeof value !== "object" || value === null) {
+      target[selector] = (isPublic) ? (target[OUTER][selector] = value) : value
+      return true
     }
 
-    if (isPublic) { target[OUTER][selector] = value }
+    switch (value[SECRET]) {
+      case PARAM :
+        target[selector] = (isPublic) ?
+          (target[OUTER][selector] = value[TARGET]) :
+          value[TARGET]
+        return true
+
+      case INNER :
+        target[selector] = (isPublic && !value.isFact) ?
+          (target[OUTER][selector] = value[COPY](true)[OUTER_BARRIER]) :
+          value[OUTER_BARRIER]
+        return true
+    }
+
+    if (isPublic && !value.isFact) {
+      if ((const objData = InterMap.get(value))) {
+        if (objData[SECRET] === INNER) {
+          target[selector] = target[OUTER][selector] = value[COPY](true)
+          return true
+        }
+        if (objData[IS_FACT]) {
+          target[selector] = target[OUTER][selector] = value
+          return true
+        }
+      }
+      target[selector] = target[OUTER][selector] = CopyObject(value, true)
+      return true
+    }
+
+    target[selector] = value
     return true
   }
 }
 
 
-const InternalNonFactJSParamBarrierBehavior = {
+const InternalNonFactJSParamPermeability = {
   __proto__ : null,
 
   get (target, selector, barrier) {
@@ -149,7 +145,7 @@ const InternalNonFactJSParamBarrierBehavior = {
   }
 }
 
-const NonFactThingParamBarrierBehavior = {
+const NonFactThingParamPermeability = {
   __proto__ : null,
 
   get (target, selector, barrier) {
@@ -160,6 +156,7 @@ const NonFactThingParamBarrierBehavior = {
 
 class ExternalJSObjBarrier {
   constructor (target) {
+    this[TARGET] = target
     this.outer = SpawnFrom(null)
     return new Proxy(target, this)
   }
@@ -171,65 +168,70 @@ class ExternalJSObjBarrier {
     if (selector in outer) { return undefined }
 
     value = target[selector]
+
     if (typeof value !== "object" || value === null) {
       return (outer[selector] = value)
     }
 
-    objData = InterMap.get(value)
-    return (outer[selector] = (objData && objData[SECRET] === INNER) ?
+    let objData = InterMap.get(value)
+
+    return (outer[selector] =
+      (objData && objData[SECRET] === INNER) ?
         value : new ExternalJSBarrier(value, objData))
   }
 
-  set (target, selector, value, barrier_) {
-    if (typeof value !== "object" || value === null) {
-      this.outer[selector] = target[selector] = value
-      return true
-    }
-    if (target[selector] === value) {
+  set (source, selector, value, barrier_) {
+    if (source[selector] === value) {
       this.outer[selector] = value
       return true
     }
 
+    const target   = CopyObject(source)
+    // Handle targeting proper this.outer!!!
+    const isCopied = (target !== source)
+
+    if (isCopied) {
+      this[TARGET] = target
+      this.set = this.detourSet
+      this.get = this.detourGet
+      this.deleteProperty = this.detourDelete
+    }
+
+    if (typeof value !== "object" || value === null) {
+      outer[selector] = target[selector] = value
+      return true
+    }
+
     switch (value[SECRET]) {
-      case FACT_EXTERNAL_JS_PARAM :
-        target[selector] = InterMap.get(value)
-        this.outer[selector] = value // enkrusted external object
+      case PARAM :
+        newValue = value[TARGET](isCopied)
+        outer[selector] = newValue // isCopied ?
+        //   newValue : new ExternalJSObjParamBarrier(newValue)
+        target[selector] = InterMap.get(newValue)
         return true
 
-      case NON_FACT_EXTERNAL_JS_PARAM :
-      case NON_FACT_INTERNAL_JS_PARAM :
-        obj  = InterMap.get(value)
-        copy = CopyObject(obj)
-        target[selector] = copy
-        this.outer[selector] = (copy === obj) ?
-          value : new ExternalJSBarrier(copy)
-        return true
-
-      case NON_FACT_THING_PARAM :
-        this.outer[selector] = target[selector] = value.copy()
-        return true
-
-      case INNER :  // This distinction might not be necessary
-        this.outer[selector] = target[selector] = value.copy()[OUTER_BARRIER]
+      case INNER :  // this inner
+        outer[selector] = target[selector] = (value.isFact) ?
+          value[OUTER_BARRIER] : value[COPY](false)[OUTER_BARRIER]
         return true
     }
 
     // value is outer or locally created|exposed object
     if ((const objData = InterMap.get(value))) {
       if (objData[SECRET] === INNER) {
-        this.outer[selector] = target[selector] = (objData[IS_FACT]) ?
-           value : objData.copy()[OUTER_BARRIER]
+        outer[selector] = target[selector] = (objData[IS_FACT]) ?
+           value : objData[COPY](false)[OUTER_BARRIER]
         return true
       }
       if (objData[IS_FACT]) {
         target[selector] = value
-        this.outer[selector] = new ExternalJSBarrier(value, objData)
+        outer[selector] = new ExternalJSBarrier(value, objData)
         return true
       }
     }
-    copy = CopyObject(value)
-    target[selector] = copy
-    this.outer[selector] = new ExternalJSBarrier(copy)
+    newValue = CopyObject(value)
+    target[selector] = newValue
+    outer[selector] = new ExternalJSBarrier(copy)
     return true
   }
 }
@@ -260,16 +262,16 @@ Thing.addSGetter(function _captureOverwrite() {
 })
 
 
-class ImmutableWriteBarrierBehavior {
+class ImmutableWritePermeability {
   constructor (target) {
-    this.target = target
+    this[TARGET] = target
     this.isInUse = false
     this.barrier = new Proxy(target, this)
   }
 
   set (inner, selector, value, outer_) {
     if (inner[selector] !== value) {
-      (this.target = inner.asMutableCopy)[selector] = value
+      (this[TARGET] = inner.asMutableCopy)[selector] = value
       this.set = this.detourSet
       this.get = this.detourGet
     }
@@ -278,16 +280,16 @@ class ImmutableWriteBarrierBehavior {
 
   deleteProperty (inner, selector, outer_) {
     if (inner[selector] !== undefined) {
-      delete (this.target = inner.asMutableCopy)[selector]
+      delete (this[TARGET] = inner.asMutableCopy)[selector]
     }
     else if (selector === "_$captureChangesLock") {
-      this.target = inner.asMutableCopy
+      this[TARGET] = inner.asMutableCopy
     }
     else if (selector === "_$captureOverwriteLock") {
-      this.target = inner._newBlank()
+      this[TARGET] = inner._newBlank()
     }
     else if (IsLocalProperty.call(target, selector)) {
-      delete (this.target = inner.asMutableCopy)[selector]
+      delete (this[TARGET] = inner.asMutableCopy)[selector]
     }
     else { return true }
 
@@ -298,16 +300,16 @@ class ImmutableWriteBarrierBehavior {
   }
 
   detourSet (inner, selector, value, outer_) {
-    this.target[selector] = value
+    this[TARGET][selector] = value
     return true
   }
 
   detourGet (inner, selector, outer_) {
-    return this.target[selector]
+    return this[TARGET][selector]
   }
 
   detourDelete (inner, selector, outer_) {
-    delete this.target[selector]
+    delete this[TARGET][selector]
     return true
   }
 }
@@ -326,7 +328,7 @@ function EnkrustMethod(OriginalMethod) {
     else {
       behavior = receiver[PRIMARY_WRITE_BEHAVIOR]
       if (behavior.isInUse) {
-        behavior = new ImmutableWriteBarrierBehavior(receiver)
+        behavior = new ImmutableWritePermeability(receiver)
       }
       else {
         behavior.isInUse = true

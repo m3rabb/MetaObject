@@ -1,0 +1,14 @@
+Initially, I made it so that when setting _ivars it would make a copy of the nonfact value.  This was too onerous, particularly when initialize the state of an object.  On the other hand, making all passed in nonfact params seemd too extreme as well.  My initial compromise was keeping track of all passed in param objects by wrapping them in proxies, and only causing a copy when their written to an _ivar.  Unfortunately, the semantics of this seem to complex to be easy to use (not to mention the complexity of the implementation).  Further, what are the best semantics for writes back to parameter objects? It is considered a best practice not to modify param arguments, however we sometimes do.  I thought for a moment about making all params (effectively) immutable, but what about fact objects? What about mutating method calls?
+
+My new solution entails treating all params to public methods as copies, but using lazy copying on demand, similar to what we do for mutation methods on immutable objects.  This has the important benefit of moving the complexity from the setting mechanism, to the copying mechanism where it is more apt. In the prior version there was tension in that responsibility was split ackwardly between the setting and copying.
+
+abc-0
+
+<1>abc-0
+
+<2>abc-0
+
+
+<abc-1>abc-0
+
+<>abc-1
