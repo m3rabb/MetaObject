@@ -32,3 +32,19 @@ function CreateFactory(typeName, basicConstructor) {
   BeImmutable(factory.prototype)
   return BeImmutable(factory)
 }
+
+====
+
+approaches to isFact
+
+straight isFact
+
+isFact && object.constructor !== Object || (objData = InterMap.get(object) && objData.isFact)
+
+
+[IS_FACT]
+
+customs getter/setter to ensure security of objData rep of isFact as sole truth
+
+isFact with special case symbol for object
+(isFact && (object.constructor !== Object || isFact === FACTUAL))

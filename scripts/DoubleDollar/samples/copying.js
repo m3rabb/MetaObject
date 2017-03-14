@@ -174,13 +174,7 @@ function CopyObject(source, asFact, visited = CopyLog()) {
     default : // Custom Object
       sourceIsFact = source.isFact
 
-      if (sourceIsFact) {
-        // if (!InterMap.get(target)) {
-        //   DefineProperty(target, "isFact", LockedIsFactConfiguration)
-        //   InterMap.set(target, ConfirmedFact) // LOOK: Might not be!!!
-        // }
-        return source
-      }
+      if (sourceIsFact) { return source }
 
       if ((target = source.copy)) {
         if (target === _NonKrustObject_copy) {
@@ -201,6 +195,8 @@ function CopyObject(source, asFact, visited = CopyLog()) {
       // break omitted
 
     case Object :
+      if (source.isFact === FACTUAL) { return source }
+
       props  = source[KNOWN_PROPERTIES] || LocalProperties(source)
       next   = props.length
 
@@ -213,14 +209,13 @@ function CopyObject(source, asFact, visited = CopyLog()) {
         if (value === null || typeof value !== "object") { target[prop] = value }
         else if (value.isFact && value.constructor !== Object) {target[prop] = value}
         else if ((traversed = visited.pair(value)))  { target[prop] = traversed }
-        else if ((inner = InterMap.get(value))) {
-          target[prop] = (inner[IS_FACT]) ? value : inner[COPY](asFact, visited)
-        }
         else { target[prop] = CopyObject(value, asFact, visited) }
       }
       break
 
     case Array :
+      if (source.isFact) { return source }
+
       next = source.length
 
       visited.pairing(source, (target = [])) // Handles cyclic objects
@@ -231,9 +226,6 @@ function CopyObject(source, asFact, visited = CopyLog()) {
         if (value === null || typeof value !== "object") { target[prop] = value }
         else if (value.isFact && value.constructor !== Object) {target[prop] = value}
         else if ((traversed = visited.pair(value)))  { target[next] = traversed }
-        else if ((inner = InterMap.get(value))) {
-          target[next] = (inner[IS_FACT]) ? value : inner[COPY](asFact, visited)
-        }
         else { target[next] = CopyObject(value, asFact, visited) }
       }
 
@@ -245,15 +237,16 @@ function CopyObject(source, asFact, visited = CopyLog()) {
     if (sourceIsFact === false) {
       DefineProperty(target, "isFact", IsFactConfiguration)
     }
-    InterMap.set(target, ConfirmedFact)
+    InterMap.set(target, ConfirmedImmutable)
     SetImmutable(target)
   }
   else {
-    InterMap.set(target, ConfirmedObject)
+    InterMap.set(target, ConfirmedInsider)
   }
   return target
 }
 
+// REVISIT THIS!!!
 function BeImmutable(_target, isInner, visited = new Set()) {
   let next, value, inner, props, prop
 

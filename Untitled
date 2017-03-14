@@ -1,0 +1,129 @@
+Parameters
+  nonObject               is always a factory
+  obj.isFact              is (unconfimed) fact
+  object
+
+    known  JSObject
+
+  Outer         --->  IS_WRAPPED
+
+  External      --->  IS_WRAPPED
+    JSObj
+    Thing
+
+  Inner
+
+  KnownObjData
+
+  JSObject -->
+  JSObj
+
+  ConfirmedObject        (isfact or not)
+
+  isFact      ---> is (unconfimed) fact
+  IS_EXTERNAL ---> is passed in an my be referenced by other objs
+  IS_FACT     ---> immutable or has id
+  IS_KNOWN    ---> created or copied by krust
+
+
+
+  case OUTSIDER :
+    barrier = value
+    object  = value[TARGET]
+
+    if (object.isFact && object.constructor !== Object) {
+      target[selector] = object
+      outer [selector] = barrier
+    }
+    else {
+      copy             = CopyObject(object, barrier)
+      target[selector] = copy
+      outer [selector] = (copy === object) ?
+        barrier : new OutsideBarrier(copy)
+    }
+    return true
+
+
+
+
+const MutableWritePermeability = {
+  __proto__ : null,
+
+  set (target, selector, value, barrier_) {
+    const firstChar = selector[0]
+    const isPublic  = (firstChar !== "_" && firstChar !== undefined)
+
+    if (typeof value !== "object" || value === null) {
+      target[selector] = value
+      if (isPublic) { target[OUTER][selector] = value }
+      return true
+    }
+
+    if (target[selector] === value && IsLocalProperty.call(target, selector)) {
+      if (isPublic) { target[OUTER][selector] = value }
+      return true
+    }
+
+    do {
+      switch (value[SECRET]) {
+        case PARAM :
+          value = value[isPublic ? WRITE_PARAM_AS_FACT : WRITE_PARAM]
+          continue
+
+        case INNER :
+          if (isPublic) {
+            inner = value.isFact ? value : value[COPY](true)
+            target[selector] = inner
+            target[OUTER][selector] = inner[OUTER_BARRIER]
+          }
+          else {
+            target[selector] = value
+          }
+          return true
+
+        case OUTSIDER :
+          barrier = value
+          object  = value[TARGET]
+
+          if (isPublic) {
+            if (!object.isFact || object.constructor === Object) {
+              copy = CopyObject(object, true)
+              barrier = (copy === object) ? barrier : new OutsideBarrier(copy)
+            }
+            target[OUTER][selector] = target[selector] = barrier
+          }
+          else {
+            target[selector] = barrier
+          }
+          return true
+
+        default :
+          objData = InterMap.get(value)
+
+          if (objData) {
+            if (objData[SECRET] === INNER) { value = objData; continue }
+            if (isPublic && !objData.isFact) {
+              copy = CopyObject(object, true)
+              barrier = (copy === object) ? barrier : new OutsideBarrier(copy)
+          }
+      }
+
+      if (isPublic && !value.isFact) {
+        if ((const objData = InterMap.get(value))) {
+          if (objData[SECRET] === INNER) {
+            target[selector] = target[OUTER][selector] = value[COPY](true)
+            return true
+          }
+          if (objData[IS_FACT]) {
+            target[selector] = target[OUTER][selector] = value
+            return true
+          }
+        }
+        target[selector] = target[OUTER][selector] = CopyObject(value, true)
+        return true
+      }
+
+    target[selector] = value
+    return true
+  }
+}
