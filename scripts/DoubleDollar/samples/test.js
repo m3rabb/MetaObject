@@ -323,6 +323,7 @@ class ParamBarrier = {
     }
   }
 
+  // LOOK: I don't think this proxy can intercept the set at the lower level!!!
   setOnFixed (param_, selector, value, barrier_) {
     inner = this.inner
     param = this.param
@@ -496,6 +497,7 @@ function MethodBarrier(OriginalMethod, IsOuter) {
 
     next = args.length
     params = []
+
     while (next--) {
       arg = args[next]
 
@@ -505,9 +507,9 @@ function MethodBarrier(OriginalMethod, IsOuter) {
           break
 
         case "function" :
-          objData = InterMap.get(value)
-          params[next] = (objData && objData.isOuter === IsOuter) ?
-            value : FuncBarrier(value, IsOuter)
+          objData = InterMap.get(value)  WrapInputs InputsAreVirtualC
+          params[next] = (objData && objData.wrapsOutsider) ?
+            value : FuncBarrier(value) WrapOutsiders
           break
 
         case "object" :
@@ -526,16 +528,16 @@ function MethodBarrier(OriginalMethod, IsOuter) {
 
             default :
               if ((objData = InterMap.get(arg))) {
-                if (objData[SECRET]) {
+                if (objData[SECRET]) {  // outer
                   params[next] = objData.isFact ? arg : new OuterParamBarrier(arg)
                   break
                 }
-                if (objData.isImmutable) {
+                if (objData.isImmutable) { // confirmed immutable object
                   params[next] = arg
                   break
                 }
               }
-              if (IsOuter) { arg = new OutsideBarrier(arg) }
+              if (MarkOutsiders) { arg = new OutsideBarrier(arg) }
               params[next] = new ObjectParamBarrier(arg)
               break
           }
@@ -546,6 +548,12 @@ function MethodBarrier(OriginalMethod, IsOuter) {
     result = OriginalMethod.apply(target, ...params)
 
     if (typeof result !== "object" || result === null) { return result }
+    switch (typeof arg) {
+      default : return result
+      case "function" :
+        return ((objData = InterMap.get(result)) && objData.isOuter) ?
+          result : FuncBarrier(value) ProtectOutput
+
 
     if (result === target) {
       if (permeability) {
@@ -571,113 +579,6 @@ function MethodBarrier(OriginalMethod, IsOuter) {
 
   DefineProperty($public, "name", VisibleConfiguration)
   $public.name = OriginalMethod.name
-  $public.isFact = $public.isImmutable = true
-  return SetImmutable($public)
-}
-
-function FuncBarrier(OriginalFunc, IsOuter) {
-  const $public = function (...args) {
-
-    receiver = InterMap.get(this)
-
-    if (receiver && (permeability = receiver[IMMUTABLE_WRITE_PERMEABILITY])) {
-      if (permeability.isInUse) {
-        permeability = new ImmutableWritePermeability(receiver)
-      }
-      permeability.isInUse = true
-      target = permeability.barrier
-    }
-    else {
-      target = receiver
-    }
-
-    next = args.length
-    params = []
-    while (next--) {
-      arg = args[next]
-
-      switch (typeof arg) {
-        default :
-          params[next] = value
-          break
-
-        case "function" :
-          objData = InterMap.get(value)
-          params[next] = (objData && !IsOuter || objData.isOuter) ?
-            value : FuncBarrier(value, IsOuter)
-          break
-
-        case "object" :
-          do {
-            switch (arg[SECRET]) {
-              case PARAM :
-                arg = IsOuter ? arg[CURRENT] : // this needs to do a lot!!!
-                  new arg[PARAM_TYPE](arg[OBJECT], arg[FACT])
-                continue
-
-              case OUTSIDER :
-                params[next] = IsOuter ? CopyObject(arg[OBJECT], false) :
-                  new ObjectParamBarrier(arg)
-                break
-
-              case INNER :
-                params[next] = IsOuter ?
-                  arg.isFact ? arg : arg[COPY](false)[OUTER_BARRIER] :
-                  new InnerParamBarrier(arg)
-                break
-
-              default :
-                if ((objData = InterMap.get(arg))) {
-                  if (objData[SECRET]) {
-                    params[next] =
-                      objData.isFact ? arg :
-                      IsOuter ?
-                        objData[COPY](false)[OUTER_BARRIER] :
-                        new OuterParamBarrier(arg)
-                    break
-                  }
-                  if (objData.isImmutable) {
-                    params[next] = arg
-                    break
-                  }
-                }
-                params[next] = (IsOuter) ?
-                  CopyObject(arg, false) : new ObjectParamBarrier(arg)
-                break
-            }
-          } while (true)
-          break
-      }
-    }
-
-    result = OriginalFunc.apply(target, ...params)
-
-    if (typeof result !== "object" || result === null) { return result }
-
-    if (result === target) {
-      if (permeability) {
-        result = permeability.inner
-        if (result !== receiver) {
-          permeability.inner = receiver  // reset permeability
-          result.beImmutable
-        }
-        permeability.isInUse = false
-      }
-      return result[OUTER_BARRIER]
-    }
-
-    if (result[SECRET]) {  // Inner
-      final = (result.isFact) ? result : result[COPY](true)
-      return final[OUTER_BARRIER]
-    }
-    if ((objData = InterMap.get(result))) {
-      return (objData.isFact) ? result : objData[COPY](true)[OUTER_BARRIER]
-    }
-    return CopyObject(result, true)
-  }
-
-  DefineProperty($public, "name", VisibleConfiguration)
-  $public.name = OriginalFunc.name
   $public.isFact = $public.isImmutable = true
   return SetImmutable($public)
 }

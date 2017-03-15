@@ -1,0 +1,101 @@
+                      args        result
+                      prior_param  outsider
+FuncBarrier  outer    prior_param  NA
+FuncBarrier  inner    NA
+
+ARGS                  outer_method     inner_method     outer_func inner_func
+wrapped_param         param(orig)      param(orig)      unwrap
+wrapped_outsider      param(wrapped_o) param(wrapped_o) unwrap
+wrapped_outer_func
+wrapped_inner_func
+local_func
+local_obj             param(local_obj) param(local_obj)
+confirmed_imm         confirmed_imm    confirmed_imm
+outer_fact            outer_fact       outer_fact
+outer_mut             param(outer_mut) param(outer_mut)
+inner_fact            inner_fact       inner_fact
+inner_mut             param(inner_mut) param(inner_mut)
+this_imm              this_imm         this_imm
+this_mut              param(this_mut)  param(this_mut)
+
+RESULT
+
+
+
+when a func is marker as having suspiciousArgs
+- all naked objects are wrapped as outsiders,
+- all naked funcs are wrapped to
+-- censor all inputs
+-- mutables are copied, to avoid side-effects
+-- be suspicious of its answer
+
+outsiders, on assignment wrap naked funcs to ensure
+- mutables are virtual copied, to avoid side-effects
+- return censored facts, so no secrets are returned
+
+inners, on assignment to public props, wrap naked funcs to ensure
+- mutables are virtual copied, to avoid side-effects
+- they return uncensored facts
+
+outer, on assignment, wrap funcs to ensure, suspiciousArgs & censoredOutput
+- all naked objects are wrapped as outsiders,
+- all naked funcs are wrapped as censoredInputs & suspiciousOutput
+- mutables are virtual copied
+- return censored facts, so no secrets are returned
+
+
+
+
+wrapArgs, censoredAllArgs
+virtualArgs, copiedArgs
+answersWrap, answersUncensoredFact, answersCensoredFact
+
+
+When a function is assigned to an outer
+- wrap it in a new immutable function
+- virtualArgs
+- wrapArgs
+-- objects are wrapped as outsider
+-- funcs are wrapped as outsider: censoredAllArgs, copiedArgs, answersSuspicious
+- answersCensoredFact
+-- funcs are wrapped to answersCensoredFact
+-- outsider objects are unwrapped
+
+When a function is assigned to an inner public prop
+- wrap it in a new immutable function
+- virtualArgs
+- answersUncensoredFact
+
+When a function is assigned to an outsider
+- wrap it in a new immutable function
+- virtualArgs
+- wrapArgs
+-- objects are wrapped as outsider
+-- funcs are wrapped as outsider: censoredAllArgs, copiedArgs, answersSuspicious
+- answersCensoredFact
+-- funcs are wrapped to answersCensoredFact
+-- outsider objects are unwrapped
+
+
+When a function is wrapped as an outsider
+- copiedArgs
+- censoredAllArgs
+- answersWrap
+
+
+param proxy
+  outer proxy
+
+
+
+function publicMethodABC(badObj, otherThing) {
+  const that = this
+  const func = function () {
+    return that._xyz
+  }
+  func.qrs = this
+  badObj.func = func
+  otherThing.exec(func)
+}
+
+out
