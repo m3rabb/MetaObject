@@ -147,6 +147,15 @@ MagicShell
 MagicShield
 MagicKrust
 
+Skins
+Gourd
+Cassava/Manniac
+Soursop/Guanabana/pumkin
+Abacaxi
+Swolt
+
+rind,pulp,seed
+
 chaperon
 
 Klobal

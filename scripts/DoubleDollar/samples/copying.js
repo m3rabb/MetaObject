@@ -44,6 +44,10 @@ function mutableCopy(visited_) {
   return this[COPY](false, visited_)
 }
 
+function mutableCopyExcept(selector) {
+  return this[COPY](false, undefined, undefined, selector)
+}
+
 
 // Thing.add(function _nonCopy() {
 //   return (this[IS_FACT] === IMMUTABLE) ? this._newBlank() : this
@@ -91,7 +95,7 @@ AddGetter(Thing_root, function beImmutable() {
 
 Thing.add("_initFrom_", _InitFrom_)
 
-function _InitFrom_(_source, asImmutable, visited) {
+function _InitFrom_(_source, visited, exceptSelector, asImmutable) {
   let props, next, prop, value, traversed, inner
 
   // if (this[IS_FACT] || this.id !== undefined) { return this }
@@ -100,9 +104,10 @@ function _InitFrom_(_source, asImmutable, visited) {
   next  = props.length
 
   while (next--) {
-    prop  = props[next]
-    value = _source[prop]
+    prop = props[next]
+    if (prop === exceptSelector) { continue }
 
+    value = _source[prop]
     if (value === null || typeof value !== "object") { this[prop] = value }
     else if (value.isFact && value.constructor !== Object) { this[prop] = value }
     else if ((traversed = visited.pair(value)))  { this[prop] = traversed }
@@ -174,7 +179,7 @@ function CopyObject(source, asFact, visited = CopyLog()) {
     default : // Custom Object
       sourceIsFact = source.isFact
 
-      if (sourceIsFact) { return source }
+      // if (sourceIsFact) { return source }
 
       if ((target = source.copy)) {
         if (target === _NonKrustObject_copy) {
@@ -195,7 +200,7 @@ function CopyObject(source, asFact, visited = CopyLog()) {
       // break omitted
 
     case Object :
-      if (source.isFact === FACTUAL) { return source }
+      // if (source.isFact === FACTUAL) { return source }
 
       props  = source[KNOWN_PROPERTIES] || LocalProperties(source)
       next   = props.length
@@ -214,7 +219,7 @@ function CopyObject(source, asFact, visited = CopyLog()) {
       break
 
     case Array :
-      if (source.isFact) { return source }
+      // if (source.isFact) { return source }
 
       next = source.length
 

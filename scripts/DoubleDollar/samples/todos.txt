@@ -51,3 +51,7 @@ passive is getting
 
 integument
 blubber/flubber
+
+
+- consider making things cache the selectors of all set properties.
+- consider using rind,pulp,seed architecture instead of krust,outer,inner,core

@@ -162,7 +162,7 @@ Krust.set((context) => {
 
       function reverse() {
         const existing = this._elements
-        this._captureChanges._elements = ReversedCopy(existing)
+        this._elements = ReversedCopy(existing)
         return this
       },
 
@@ -716,7 +716,6 @@ Krust.set((context) => {
       //// PUT : a Value at the Index
 
       function putAtIndex(value, index) {
-        const target = this._elements
         const size   = target.length
         const slotIndex
 
@@ -724,8 +723,9 @@ Krust.set((context) => {
         else (index <  0) { slotIndex = size + index }
         else              { return this }
 
+        const target = this._captureChanges._elements
+
         if (slotIndex >= 0) {
-          this._captureChanges
           target[slotIndex] = value
         }
         else {
@@ -895,6 +895,7 @@ Krust.set((context) => {
 
       function putAtEvery(newValue, matchValue) {
         if (newValue === matchValue) { return this }
+        let notFound = true
 
         return this.withinDo(undefined, function (value, index) {
           if (value === matchValue) {
@@ -937,11 +938,10 @@ Krust.set((context) => {
       },
 
       function fanOverEvery(values, subSeq, directives = FORWARD) {
-        const original     = this._elements
         const matchSub     = AsArray(subSeq)
         const matchSize    = matchSub.length
         const filler       = AsArray(values)
-        const fillerSize   = original.length
+        const fillerSize   = filler.length
         const fillDir      = directives.fill
 
         if (matchSize === fillerSize && this[AS_FACT] !== IMMUTABLE) {
@@ -959,7 +959,7 @@ Krust.set((context) => {
         if (spans.size === 0)    { return this }
         if (AsDirection(SCAN, directives) < 0) { spans.reverse }
 
-        return this.__fanAcrossWithinAll(filler, original, spans, fillDir)
+        return this.__fanWithinAll(filler, spans, fillDir)
         })
       },
 
@@ -1052,12 +1052,12 @@ Krust.set((context) => {
       },
 
       function removeAll() {
-        this._captureOverwrite._elements = []
+        this._elements = []
         return this
       },
 
       "GETTER", function empty() {
-        this._captureOverwrite._elements = []
+        this._elements = []
         return this
       },
 
@@ -1128,7 +1128,7 @@ Krust.set((context) => {
         const mapDir = readSpan[DIR]
         const spans  = indexes.map(mapDir, (index) => [index, index + 1])
 
-        return this.__fanAcrossWithinAll([], this._elements, spans)
+        return this.__fanWithinAll([], spans)
       },
 
       function removeEveryWhereNot(scanDirective_, condition) {
@@ -1324,15 +1324,14 @@ Krust.set((context) => {
         }
       },
 
-      function __fanAcrossWithinAll(filler, original, spans, fillDir_) {
-        const target     = this._elements
+      function __fanWithinAll(filler, spans, fillDir_) {
+        const original   = this._elements
         const fillerSize = filler.length
         const limit      = original.length   // final original edge
         let   next       = 0                 // edge traversing original
-        let   start      = 0                 // target insertion edge
-        let   target     = []
+        let   start      = 0
 
-        this._captureOverwrite
+        this._elements = []
 
         spans.eachDo(([left, right]) => {
           let skipSize = left - next        // skipped elements from original

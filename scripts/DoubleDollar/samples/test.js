@@ -10,18 +10,11 @@ const ALWAYS_NULL = () => null
 const PrivacyPermeability = {
   __proto__ : null,
 
-  get (inner, selector, barrier_) {
-    let value, index
+  get (outer, selector, krust) {
+    let target, index
 
-    switch (selector[0]) {
-      case "_"       :
-        return inner._externalPrivateRead(selector) || undefined
-      case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return undefined }
-    }
-
-    value = (inner.atIndex && ((index = +selector) === index)) ?
-      inner.atIndex(index) : inner[selector]
-    return (value === inner) ? inner.$ : value
+    return (outer.atIndex && ((index = +selector) === index)) ?
+      outer.atIndex(index) : outer[selector]
   },
 
   // Setting on things in not allowed because the setting semantics are broken.
@@ -31,30 +24,30 @@ const PrivacyPermeability = {
   // Further, note that the return value of a set always returns the value that
   // was tried to be set to, regardless of whether it was successful or not.
 
-  set (inner, selector, value, barrier_) {
-    return inner._externalWrite(selector, value) || false
+  set (outer, selector, value, barrier_) {
+    return outer._externalWrite(selector, value) || false
   },
 
-  has (inner, selector) {
+  has (outer, selector) {
     switch (selector[0]) {
-      case "_"       : return inner._externalPrivateRead(selector) || false
+      case "_"       : return outer._externalPrivateRead(selector) || false
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       case undefined : return false
     }
-    return (selector in inner)
+    return (selector in outer)
   },
 
-  getOwnPropertyDescriptor (inner, selector) {
+  getOwnPropertyDescriptor (outer, selector) {
     switch (selector[0]) {
-      case "_"       : return inner._externalPrivateRead(selector) || undefined
+      case "_"       : return outer._externalPrivateRead(selector) || undefined
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       case undefined : return undefined
     }
-    return GetOwnPropertyDescriptor(inner, selector)
+    return GetOwnPropertyDescriptor(outer, selector)
   },
 
-  ownKeys (inner) {
-    const names = AllNames(inner).filter(name => name[0] !== "_")
+  ownKeys (outer) {
+    const names = AllNames(outer).filter(name => name[0] !== "_")
     // return names.concat(VISIBLE_SYMBOLS_LIST)
     return names
   },
@@ -105,328 +98,52 @@ const PrivacyPermeability = {
 // }
 
 
-class OutsideBarrier {
-  constructor (target) {
-    const outer   = SpawnFrom(null)
-    outer[OBJECT] = target
-    this.outer    = outer
-    return new Proxy(target, this)
-  }
-
-  get (target, selector, barrier_) {
-    let outer = this.outer
-    let value = outer[selector]
-    if (value !== undefined) { return value }
-
-    value = target[selector]
-
-    switch (typeof value) {
-      default : return (outer[selector] = value)
-      case "function" :
-        return (outer[selector] =
-                  (InterMap.get(value)) ? value : AsOutsideFunc(value))
-      case "object" :
-        if (value !== null) { break }
-        return (outer[selector] = null)
-    }
-
-    objData = InterMap.get(value)
-
-    return (outer[selector] =
-      (objData && objData.isImmutable || objData[SECRET])
-        ? value : new OutsideBarrier(value, objData))
-  }
-
-  set (source, selector, value, barrier_) {
-    switch (typeof value) {
-      default :
-        outer[selector] = target[selector] = value
-        return true
-
-      case "function" :
-        outer[selector] = (InterMap.get(value)) ? value : AsOutsideFunc(value)
-        return true
-
-      case "object" :
-        if (value !== null) { break }
-        outer[selector] = target[selector] = null
-        return true
-    }
-
-    do {
-      // Consider moving this check into each branch below!!!
-      if (source[selector] === value && IsLocalProperty.call(source, selector)) {
-        this.outer[selector] = value
-        return true
-      }
-
-      switch (value[SECRET]) {
-        case PARAM :
-          value = value[WRITE_PARAM]
-          continue
-
-        case INNER :
-          outer[selector] = target[selector] = (inner.isFact) ?
-            value[OUTER_BARRIER] : value[COPY](false)[OUTER_BARRIER]
-          return true
-
-        case OUTSIDER :
-          barrier = value
-          object  = value[OBJECT]
-          copy = CopyObject(object, false)
-          target[selector] = copy
-          outer [selector] = (copy === object) ?
-            barrier : new OutsideBarrier(copy)
-          return true
-
-        default :  // value is outer or locally created|exposed object
-          if ((objData = InterMap.get(value))) {
-            if (objData[SECRET]) { value = objData; continue }
-            if (objData.isImmutable) {
-              outer[selector] = target[selector] = value
-              return true
-            }
-          }
-          copy = CopyObject(value, false)
-          target[selector] = copy
-          outer[selector] = new OutsideBarrier(copy, objData)
-          return true
-      }
-    } while (true)
-  }
-}
-
-OutsideBarrier.prototype[SECRET] = OUTSIDER
-
-
-const MutableWritePermeability = {
+const MutableInnerPermeability = {
   __proto__ : null,
 
-  set (target, selector, value, barrier_) {
+  set (core, selector, value, inner_) {
     const firstChar = selector[0]
     const isPublic  = (firstChar !== "_" && firstChar !== undefined)
 
-    switch (typeof value) {
-      default :
-        target[selector] = value
-        if (isPublic) { target[OUTER][selector] = value }
-        return true
-
-      case "function" :
-        target[selector] = value
-        if (isPublic) {
-          target[OUTER][selector] =
-            (InterMap.get(value)) ? value : AsOutsideFunc(value)
-        }
-        return true
-
-      case "object" :
-        if (value !== null) { break }
-        target[selector] = null
-        if (isPublic) { target[OUTER][selector] = null }
-        return true
+    if (typeof value !== "object" || value === null) {
+      core[selector] = value
+    }
+    else if (core[selector] === value) { // && IsLocalProperty.call(core, selector)
+      // NOP
+    }
+    else if (value === core) { // LOOK or value === outer
+      core[selector] = core
+      value = core[OUTER]
+    }
+    else if ((isFact = value.isFact) &&
+        (value.constructor !== Object || isFact === FACTUAL) {
+      core[selector] = value
+    }
+    else if ((inner_rec = InterMap.get(value))) {
+      value = core[selector] = isPublic && inner_rec[INNER] ?
+        inner_rec[COPY](true)[KRUST] : value
+    }
+    else {
+      value = core[selector] = isPublic ? CopyObject(value, true) : value
     }
 
-    do {
-      // Consider moving this check into each branch below!!!
-      if (target[selector] === value) { // && IsLocalProperty.call(target, selector)
-        if (isPublic) { target[OUTER][selector] = value }
-        return true
-      }
-
-      switch (value[SECRET]) {
-        case PARAM :
-          value = value[isPublic ? WRITE_PARAM_AS_FACT : WRITE_PARAM]
-          continue
-
-        case INNER :
-          if (isPublic) {
-            inner = value.isFact ? value : value[COPY](true)
-            target[selector] = inner
-            target[OUTER][selector] = inner[OUTER_BARRIER]
-          }
-          else {
-            target[selector] = value
-          }
-          return true
-
-        case OUTSIDER :
-          barrier = value
-          object  = value[OBJECT]
-
-          if (isPublic) {
-            copy = CopyObject(object, true)
-            if (copy === object) { barrier = new OutsideBarrier(copy) }
-            target[OUTER][selector] = target[selector] = barrier
-          }
-          else {
-            target[selector] = barrier
-          }
-          return true
-
-        default :  // value is outer or locally created|exposed object
-          if (isPublic) {
-            target[OUTER][selector] = target[selector] =
-              ((objData = InterMap.get(value))) ?
-                (objData.isFact ? value : objData[COPY](true)[OUTER_BARRIER]) :
-                CopyObject(value, true)
-          }
-          else {
-            target[selector] = value
-          }
-          return true
-      }
-    } while (true)
-  }
-}
-
-
-
-class ParamBarrier = {
-  // When outer, set both
-  // When inner, only set inner
-  // When obj, only set param
-  constructor (param, inner) {
-    this.param = param
-    this.inner = inner
-    return new Proxy(param, this)
-  }
-
-  setMutableCopy (param, inner) {
-    copy = (inner) ?
-      (param ? inner[COPY](false)[OUTER_BARRIER] : inner[COPY](false)) :
-      CopyObject(this.param, false))
-
-    this.set = this.setOnFact
-    this.get = this.getOnFact
-    this.deleteProperty = this.deleteOnFact
-    return (this.param = copy)
-  }
-
-  setFactCopy (param, inner) {
-    copy = (inner) ?
-      (param ? inner[COPY](true)[OUTER_BARRIER] : inner[COPY](true)) :
-      CopyObject(this.param, true))
-
-    this.set = this.setOnFact
-    this.get = this.getOnFact
-    this.deleteProperty = this.deleteOnFact
-    return (this.fact = copy)
-  }
-
-  getOnFixed (param_, selector, barrier_) {
-    switch (selector) {
-      case SECRET              : return PARAM
-      case WRITE_PARAM_AS_FACT : return this.setFactCopy(this.param, this.inner)
-      case WRITE_PARAM      : return this.setMutableCopy(this.param, this.inner)
-      default                  : return param[selector]
-    }
-  }
-
-  // LOOK: I don't think this proxy can intercept the set at the lower level!!!
-  setOnFixed (param_, selector, value, barrier_) {
-    inner = this.inner
-    param = this.param
-    target = inner || param
-    if (target[selector] !== value || !IsLocalProperty.call(target, selector)) {
-      this.setMutableCopy(param, inner)[selector] = value
-    }
-    return true
-  }
-
-  deleteOnFixed (param_, selector, barrier_) {
-    inner = this.inner
-    param = this.param
-    if (IsLocalProperty.call(inner || param, selector)) {
-      delete setMutableCopy(param, inner)[selector]
-    }
-    return true
-  }
-
-  getOnMutable (param_, selector, barrier_) {
-    switch (selector) {
-      case SECRET              : return PARAM
-      case WRITE_PARAM_AS_FACT : return this.setFactCopy(this.target, this.inner)
-      case WRITE_PARAM      : return this.setMutableCopy(this.param, this.inner)
-      default                  : return param[selector]
-    }
-  }
-
-  setOnCopy (param_, selector, value, barrier_) {
-    this.param[selector] = value
-    return true
-  }
-
-  deleteOnCopy (param_, selector, barrier_) {
-    delete this.param[selector]
-    return true
-  }
-
-  getOnFact (param, selector, barrier_) {
-    switch (selector) {
-      case SECRET :
-        return PARAM
-
-      case WRITE_PARAM_AS_FACT :
-        return this.param
-
-      case WRITE_PARAM :
-        inner = this.inner
-        copy = inner ? this.param[COPY](false) : CopyObject(this.param, false))
-        this.set = this.setOnCopy
-        this.get = this.getOnCopy
-        this.deleteProperty = this.detourDelete
-        return (this.param = copy)
-
-      default :
-        return this.param[selector]
-    }
-  }
-
-  factSet (param, selector, value, barrier_) {
-    this.param[selector] = value
-    return true
-  }
-
-  factDelete (param, selector, barrier_) {
-    delete this.param[selector]
+    if (isPublic) { core[OUTER][selector] = value }
     return true
   }
 }
 
-
-
-
-Thing.addSGetter(function _captureChanges() {
-  if (this[IS_FACT] === IMMUTABLE) {
-    delete this._$captureChanges_triggerPin
-    return this
-  }
-  DefineProperty(this, "_captureChanges", InvisibleConfiguration)
-  return (this._captureChanges = this)
-})
-
-Thing.addSGetter(function _captureOverwrite() {
-  if (this[IS_FACT] === IMMUTABLE) {
-    delete this._$captureOverwrite_triggerPin
-    return this
-  }
-  DefineProperty(this, "_captureOverwrite", InvisibleConfiguration)
-  return (this._captureOverwrite = this)
-})
-
-
-
-class ImmutableWritePermeability {
-  constructor (inner) {
-    this.inner = inner
-    this.isInUse = false
-    this.barrier = new Proxy(target, this)
+class ImmutableInnerPermeability {
+  constructor (core) {
+    this.inUse = false
+    this.target = this.inner =new Proxy(core, this)
   }
 
-  set (inner, selector, value, barrier_) {
-    if (inner[selector] !== value) {
-      (this.inner = inner.asMutableCopy)[selector] = value
+  set (core, selector, value, inner) {
+    if (core[selector] !== value) {
+      const copy = inner.mutableCopyExcept(selector)
+      copy[selector] = value
+      this.target = copy
+
       this.set = this.detourSet
       this.get = this.detourGet
       this.deleteProperty = this.detourDelete
@@ -434,17 +151,15 @@ class ImmutableWritePermeability {
     return true
   }
 
-  deleteProperty (inner, selector, barrier_) {
-    if (selector === "_$captureChanges_triggerPin") {
-      this.inner = inner.asMutableCopy
+  deleteProperty (core, selector, inner) {
+    switch (selector) {
+      case "_IMMUTABILITY" : this.target = core.asMutableCopy; break
+      case "_ALL"          : this.target = core._newBlank()  ; break
+      default :
+        if (!IsLocalProperty.call(core, selector)) { return true }
+        this.target = inner.mutableCopyExcept(selector)
+        break
     }
-    else if (selector === "_$captureOverwrite_triggerPin") {
-      this.inner = inner._newBlank()
-    }
-    else if (IsLocalProperty.call(inner, selector)) {
-      delete (this.inner = inner.asMutableCopy)[selector]
-    }
-    else { return true }
 
     this.set = this.detourSet
     this.get = this.detourGet
@@ -452,20 +167,112 @@ class ImmutableWritePermeability {
     return true
   }
 
-  detourSet (inner_, selector, value, barrier_) {
-    this.inner[selector] = value
+  detourSet (core_, selector, value, inner_) {
+    this.target[selector] = value
     return true
   }
 
-  detourGet (inner_, selector, barrier_) {
-    return this.inner[selector]
+  detourGet (core_, selector, inner_) {
+    return this.target[selector]
   }
 
-  detourDelete (inner_, selector, barrier_) {
-    delete this.inner[selector]
+  detourDelete (core_, selector, inner_) {
+    delete this.target[selector]
     return true
   }
 }
+
+ImmutableInnerPermeability.prototype = SpwanFrom(null)
+
+
+Thing.addSGetter(function _captureChanges() {
+  if (this.isImmutable) { delete this._IMMUTABILITY }
+  return this
+}
+
+
+Thing.addSGetter(function _captureOverwrite() {
+  if (this.isImmutable) { delete this._ALL }
+  return this
+})
+
+
+
+function PublicMethodBarrier(OriginalFunc, IsOuter) {
+  const $publicMethod = function (...args) {
+
+    if (IsOuter) {
+      inner = InterMap.get(this)
+
+      if ((permeability = inner[INNER_PERMEABILITY])) {
+        if (permeability.inUse) {
+          permeability = new ImmutableInnerPermeability(inner[CORE])
+        }
+        permeability.inUse = true
+        receiver = permeability.target
+      }
+      else {
+        receiver = inner
+      }
+    }
+    else {
+      receiver = this
+    }
+
+    next = args.length
+    params = []
+    while (next--) {
+      arg = args[next]
+
+      if (typeof arg === "object" || arg === null) {
+        params[next] = arg
+      }
+      else if ((isFact = arg.isFact) &&
+          (arg.constructor !== Object || isFact === FACTUAL) {
+        params[next] = arg
+      }
+      else if ((inner_rec = InterMap.get(arg))) {
+        params[next] = inner_rec[INNER] ? inner_rec[COPY](true)[KRUST] : arg
+      }
+      else {
+        params[next] = CopyObject(value, true)
+      }
+    }
+
+    result = OriginalFunc.apply(receiver, params)
+
+    if (typeof result === "object" || result === null) {
+      return result
+    }
+
+    if (result === receiver) {
+      if (permeability) {
+        result = permeability.target
+        if (result !== inner) {
+          permeability.target = inner  // reset permeability
+          result.beImmutable
+        }
+        permeability.inUse = false
+      }
+      return IsOuter ? result[KRUST] : result
+    }
+
+    if ((isFact = result.isFact) &&
+        (result.constructor !== Object || isFact === FACTUAL) {
+      return result
+    }
+    if ((inner_rec = InterMap.get(result))) {
+      return inner_rec[INNER] ? inner_rec[COPY](true)[KRUST] : result
+    }
+    return CopyObject(result, true)
+  }
+
+  DefineProperty($publicMethod, "name", VisibleConfiguration)
+  $publicMethod.name = OriginalFunc.name
+  $publicMethod.isFact = $publicMethod.isImmutable = true
+  return SetImmutable($publicMethod)
+}
+
 
 
 function EnkrustThing(thing) {
@@ -477,111 +284,6 @@ function EnkrustThing(thing) {
 AddLazilyInstalledProperty(_Thing_root, "$", EnkrustThing)
 
 
-
-
-function MethodBarrier(OriginalMethod, IsOuter) {
-  const $public = function (...args) {
-
-    receiver = InterMap.get(this)
-
-    if (receiver && (permeability = receiver[IMMUTABLE_WRITE_PERMEABILITY])) {
-      if (permeability.isInUse) {
-        permeability = new ImmutableWritePermeability(receiver)
-      }
-      permeability.isInUse = true
-      target = permeability.barrier
-    }
-    else {
-      target = receiver
-    }
-
-    next = args.length
-    params = []
-
-    while (next--) {
-      arg = args[next]
-
-      switch (typeof arg) {
-        default :
-          params[next] = value
-          break
-
-        case "function" :
-          objData = InterMap.get(value)  WrapInputs InputsAreVirtualC
-          params[next] = (objData && objData.wrapsOutsider) ?
-            value : FuncBarrier(value) WrapOutsiders
-          break
-
-        case "object" :
-          switch (arg[SECRET]) {
-            case PARAM :
-              params[next] = new arg[PARAM_TYPE](arg[OBJECT], arg[FACT])
-              break
-
-            case OUTSIDER :
-              params[next] = new ObjectParamBarrier(arg)
-              break
-
-            case INNER :
-              params[next] = new InnerParamBarrier(arg)
-              break
-
-            default :
-              if ((objData = InterMap.get(arg))) {
-                if (objData[SECRET]) {  // outer
-                  params[next] = objData.isFact ? arg : new OuterParamBarrier(arg)
-                  break
-                }
-                if (objData.isImmutable) { // confirmed immutable object
-                  params[next] = arg
-                  break
-                }
-              }
-              if (MarkOutsiders) { arg = new OutsideBarrier(arg) }
-              params[next] = new ObjectParamBarrier(arg)
-              break
-          }
-          break
-      }
-    }
-
-    result = OriginalMethod.apply(target, ...params)
-
-    if (typeof result !== "object" || result === null) { return result }
-    switch (typeof arg) {
-      default : return result
-      case "function" :
-        return ((objData = InterMap.get(result)) && objData.isOuter) ?
-          result : FuncBarrier(value) ProtectOutput
-
-
-    if (result === target) {
-      if (permeability) {
-        result = permeability.inner
-        if (result !== receiver) {
-          permeability.inner = receiver  // reset permeability
-          result.beImmutable
-        }
-        permeability.isInUse = false
-      }
-      return IsOuter ? result[OUTER_BARRIER] : result
-    }
-
-    if (result[SECRET]) {  // Inner
-      final = (result.isFact) ? result : result[COPY](true)
-      return IsOuter ? final[OUTER_BARRIER] : final
-    }
-    if ((objData = InterMap.get(result))) {
-      return (objData.isFact) ? result : objData[COPY](true)[OUTER_BARRIER]
-    }
-    return CopyObject(result, true)
-  }
-
-  DefineProperty($public, "name", VisibleConfiguration)
-  $public.name = OriginalMethod.name
-  $public.isFact = $public.isImmutable = true
-  return SetImmutable($public)
-}
 
 //
 // function CreateInnerPublicMethod(methodName) {
@@ -661,17 +363,18 @@ function Create_new(_Blank) {
 }
 
 function Create__copy(_Blank) {
-  return function COPY(asImmutable, visited = CopyLog(), _target = _Blank()) {
+  return function COPY(
+    asImmutable, visited = CopyLog(), _target = _Blank(), exceptSelector
+  ) {
     const  target = _target.$
 
     visited.pairing(this.$, target) // to manage cyclic objects
 
-    if (_target._initFrom_ !== _InitFrom_) {
-      _target._initFrom_(this, visited)
+    if (_target._initFrom_ === _InitFrom_) {
+      _target._initFrom_(this, visited, exceptSelector, asImmutable)
+    } else {
+      _target._initFrom_(this, visited, exceptSelector)
       if (asImmutable) { BeImmutable(_target, true) }
-    }
-    else {
-      _target._initFrom_(this, asImmutable, visited)
     }
     return target
   }
