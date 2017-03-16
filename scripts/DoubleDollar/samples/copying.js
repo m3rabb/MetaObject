@@ -98,29 +98,38 @@ Thing.add("_initFrom_", _InitFrom_)
 function _InitFrom_(_source, visited, exceptSelector, asImmutable) {
   let props, next, prop, value, traversed, inner
 
-  // if (this[IS_FACT] || this.id !== undefined) { return this }
+  targetOuter = this[OUTER]
+  count = 1
+  propsKind = PROPS
 
-  props = _source[KNOWN_PROPERTIES] || LocalProperties(_source)
-  next  = props.length
+  do {
+    sourceProps = _source[propsKind]
+    targetProps = this[propsKind]
 
-  while (next--) {
-    prop = props[next]
-    if (prop === exceptSelector) { continue }
+    for (prop in sourceProps) {
+      if (prop !== exceptSelector) {
+        value = _source[prop]
 
-    value = _source[prop]
-    if (value === null || typeof value !== "object") { this[prop] = value }
-    else if (value.isFact && value.constructor !== Object) { this[prop] = value }
-    else if ((traversed = visited.pair(value)))  { this[prop] = traversed }
-    else if ((inner = InterMap.get(value))) {
-      this[prop] = (inner[IS_FACT]) ? value : inner[COPY](asImmutable, visited)
+        if (typeof value !== "object" || value === null) {}
+        else if ((isFact = value.isFact) &&
+            (value.constructor !== Object || isFact === FACTUAL) {}
+        else if ((traversed = visited.pair(value)))  { value = traversed }
+        else if ((inner_rec = InterMap.get(value)) && inner_rec[INNER]) {
+          value = inner_rec[COPY](asImmutable, visited)[KRUST]
+        }
+        else { value = CopyObject(value, asImmutable, visited) }
+
+        targetProps[prop] = true
+        this[prop] = value
+        if (count) { targetOuter[prop] = value }
+      }
     }
-    else { this[prop] = CopyObject(value, asImmutable, visited) }
-  }
+    propsKind = _PROPS
+  } while (count--)
 
-  if (_source.id !== undefined && _source !== this) { this[SET_ID] }
+  if (_source !== this && _source.id !== undefined) { this[SET_ID] }
   if (asImmutable) {
-    this.isFact = true
-    this[IS_FACT] = IMMUTABLE
+    this.isImmutable = this.isFact = true
     SetImmutable(this)
   }
   return this

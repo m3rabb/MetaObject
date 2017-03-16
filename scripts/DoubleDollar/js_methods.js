@@ -1,18 +1,21 @@
 "use strict"
 
-exports.RootOf             = Object.getPrototypeOf
-exports.SpawnFrom          = Object.create
-exports.IsArray            = Array.isArray
-exports.Floor              = Math.floor
-exports.RandomUnitValue    = Math.random
-exports.DefineProperty     = Object.defineProperty
-exports.LocalProperties    = Object.keys
-exports.AllProperties      = Reflect.ownKeys
-exports.AllNames           = Object.getOwnPropertyNames
-exports.AllSymbols         = Object.getOwnPropertySymbols
-exports.SetImmutable       = Object.freeze
-exports.IsImmutable        = Object.isFrozen
-exports.Object_prototype   = Object.prototype
-exports.IsLocalProperty    = Object_prototype.hasOwnProperty
-exports.PropertyDescriptor = Object.getOwnPropertyDescriptor
-exports.Apply              = Reflect.apply
+const RootOf             = Object.getPrototypeOf
+const SpawnFrom          = Object.create
+const IsArray            = Array.isArray
+const Floor              = Math.floor
+const RandomUnitValue    = Math.random
+const DefineProperty     = Object.defineProperty
+const LocalProperties    = Object.keys
+const AllLocalSelectors  = Reflect.ownKeys
+const AllLocalNames      = Object.getOwnPropertyNames
+const AllLocalSymbols    = Object.getOwnPropertySymbols
+const SetImmutable       = Object.freeze
+const IsImmutable        = Object.isFrozen
+const Object_prototype   = Object.prototype
+const IsLocalProperty    = Object_prototype.hasOwnProperty
+const PropertyDescriptor = Object.getOwnPropertyDescriptor
+const Apply              = Reflect.apply
+
+
+// Reflect.ownKeys === Object.getOwnPropertyNames(target).concat(Object.getOwnPropertySymbols(target)

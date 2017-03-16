@@ -43,13 +43,11 @@ const PrivacyPermeability = {
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       case undefined : return undefined
     }
-    return GetOwnPropertyDescriptor(outer, selector)
+    return PropertyDescriptor(outer, selector)
   },
 
   ownKeys (outer) {
-    const names = AllNames(outer).filter(name => name[0] !== "_")
-    // return names.concat(VISIBLE_SYMBOLS_LIST)
-    return names
+    return AllLocalSelectors(outer)
   },
 
   getPrototypeOf : ALWAYS_NULL,
@@ -102,15 +100,14 @@ const MutableInnerPermeability = {
   __proto__ : null,
 
   set (core, selector, value, inner_) {
-    const firstChar = selector[0]
-    const isPublic  = (firstChar !== "_" && firstChar !== undefined)
+    const isPublic = (selector[0] !== "_")
 
     switch (typeof value) {
       default :
         core[selector] = value
         break
 
-      case "function" :
+      case "function" : // LOOK: will catch Type things!!!
         core[selector] = InterMap.get(value) ? value : WrapFunc(value, OUTSIDE)
         break
 
@@ -139,7 +136,13 @@ const MutableInnerPermeability = {
         break
     }
 
-    if (isPublic) { core[OUTER][selector] = value }
+    if (isPublic) {
+      core[OUTER][selector] = value
+      core[PROPS][selector] = true
+    }
+    else {
+      core[_PROPS][selector] = true
+    }
     return true
   }
 }
@@ -219,7 +222,7 @@ function WrapFunc(OriginalFunc, funcType) {
             receiver = this
             break
 
-          case "function" :
+          case "function" : // LOOK: will catch Type things!!!
             receiver = (InterMap.get(this)) ? this : WrapFunc(this, OUTSIDE)
             break
 
@@ -273,7 +276,7 @@ function WrapFunc(OriginalFunc, funcType) {
           params[next] = arg
           break
 
-        case "function" :
+        case "function" : // LOOK: will catch Type things!!!
           params[next] = (InterMap.get(arg)) ? arg : WrapFunc(arg, OUTSIDE)
           break
 
@@ -295,7 +298,7 @@ function WrapFunc(OriginalFunc, funcType) {
     switch (typeof result) {
       default         : return result
       case "object"   : break
-      case "function" :
+      case "function" : // LOOK: will catch Type things!!!
         return InterMap.get(result) ? result : WrapFunc(result, OUTSIDE)
     }
     if (result === null) { return result }
@@ -420,11 +423,11 @@ function Create_new(_Blank) {
 
 function Create_COPY(_Blank) {
   return function COPY(
-    asImmutable, visited = CopyLog(), _target = _Blank(), exceptSelector
+    asImmutable, visited = CopyLog(), _targetInner = _Blank(), exceptSelector
   ) {
-    const  target = _target.$
+    const  targetKrust = _target.$
 
-    visited.pairing(this.$, target) // to manage cyclic objects
+    visited.pairing(this.$, targetKrust) // to manage cyclic objects
 
     if (_target._initFrom_ === _InitFrom_) {
       _target._initFrom_(this, visited, exceptSelector, asImmutable)
@@ -432,7 +435,7 @@ function Create_COPY(_Blank) {
       _target._initFrom_(this, visited, exceptSelector)
       if (asImmutable) { BeImmutable(_target, true) }
     }
-    return target
+    return targetKrust
   }
 }
 
