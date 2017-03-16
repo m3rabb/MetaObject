@@ -172,6 +172,12 @@ IsFactConfiguration = {
 //   return target
 // }
 
+// NOTE: The following is always executed before calling CopyObject
+//
+// if ((isFact = value.isFact) &&
+//  (value.constructor !== Object || isFact === FACTUAL) {
+
+
 function CopyObject(source, asFact, visited = CopyLog()) {
   let target, next, value, traversed, inner, props, prop
 

@@ -105,26 +105,38 @@ const MutableInnerPermeability = {
     const firstChar = selector[0]
     const isPublic  = (firstChar !== "_" && firstChar !== undefined)
 
-    if (typeof value !== "object" || value === null) {
-      core[selector] = value
-    }
-    else if (core[selector] === value) { // && IsLocalProperty.call(core, selector)
-      // NOP
-    }
-    else if (value === core) { // LOOK or value === outer
-      core[selector] = core
-      value = core[OUTER]
-    }
-    else if ((isFact = value.isFact) &&
-        (value.constructor !== Object || isFact === FACTUAL) {
-      core[selector] = value
-    }
-    else if ((inner_rec = InterMap.get(value))) {
-      value = core[selector] = isPublic && inner_rec[INNER] ?
-        inner_rec[COPY](true)[KRUST] : value
-    }
-    else {
-      value = core[selector] = isPublic ? CopyObject(value, true) : value
+    switch (typeof value) {
+      default :
+        core[selector] = value
+        break
+
+      case "function" :
+        core[selector] = InterMap.get(value) ? value : WrapFunc(value, OUTSIDE)
+        break
+
+      case "object" :
+        if (value === null) {
+          core[selector] = value
+        }
+        else if (core[selector] === value) { // && IsLocalProperty.call(core, selector)
+          // NOP
+        }
+        else if (value === core) { // LOOK or value === outer
+          core[selector] = core
+          value = core[OUTER]
+        }
+        else if ((isFact = value.isFact) &&
+            (value.constructor !== Object || isFact === FACTUAL) {
+          core[selector] = value
+        }
+        else if ((inner_rec = InterMap.get(value))) {
+          value = core[selector] = isPublic && inner_rec[INNER] ?
+            inner_rec[COPY](true)[KRUST] : value
+        }
+        else {
+          value = core[selector] = isPublic ? CopyObject(value, true) : value
+        }
+        break
     }
 
     if (isPublic) { core[OUTER][selector] = value }
@@ -198,25 +210,57 @@ Thing.addSGetter(function _captureOverwrite() {
 
 
 
-function PublicMethodBarrier(OriginalFunc, IsOuter) {
-  const $publicMethod = function (...args) {
+function WrapFunc(OriginalFunc, funcType) {
+  const $func = function (...args) {
+    switch (funcType) {
+      case OUTSIDE :
+        switch (typeof this) {
+          default :
+            receiver = this
+            break
 
-    if (IsOuter) {
-      inner = InterMap.get(this)
+          case "function" :
+            receiver = (InterMap.get(this)) ? this : WrapFunc(this, OUTSIDE)
+            break
 
-      if ((permeability = inner[INNER_PERMEABILITY])) {
-        if (permeability.inUse) {
-          permeability = new ImmutableInnerPermeability(inner[CORE])
+          case "object" :
+            if (this === null) { receiver = null }
+            else if ((isFact = this.isFact) &&  // LOOK: See if immutable
+                (this.constructor !== Object || isFact === FACTUAL) {
+              receiver = this[KRUST]
+            }
+            else if ((inner_rec = InterMap.get(this))) {
+              if (inner_rec[INNER]) {
+                if ((permeability = inner[INNER_PERMEABILITY])) {
+                  if (permeability.inUse) {
+                    permeability = new ImmutableInnerPermeability(inner[CORE])
+                  }
+                  permeability.inUse = true
+                  receiver = permeability.target
+                }
+              }
+              else { receiver = inner_rec[COPY](true)[KRUST] }
+            }
+            else { receiver = CopyObject(this, true) }
         }
-        permeability.inUse = true
-        receiver = permeability.target
-      }
-      else {
-        receiver = inner
-      }
-    }
-    else {
-      receiver = this
+        break
+
+      case OUTER :
+        inner = InterMap.get(this)
+
+        if ((permeability = inner[INNER_PERMEABILITY])) {
+          if (permeability.inUse) {
+            permeability = new ImmutableInnerPermeability(inner[CORE])
+          }
+          permeability.inUse = true
+          receiver = permeability.target
+        }
+        else { receiver = inner }
+        break
+
+      case INNER :
+        receiver = this
+        break
     }
 
     next = args.length
@@ -224,26 +268,37 @@ function PublicMethodBarrier(OriginalFunc, IsOuter) {
     while (next--) {
       arg = args[next]
 
-      if (typeof arg === "object" || arg === null) {
-        params[next] = arg
-      }
-      else if ((isFact = arg.isFact) &&
-          (arg.constructor !== Object || isFact === FACTUAL) {
-        params[next] = arg
-      }
-      else if ((inner_rec = InterMap.get(arg))) {
-        params[next] = inner_rec[INNER] ? inner_rec[COPY](true)[KRUST] : arg
-      }
-      else {
-        params[next] = CopyObject(value, true)
+      switch (typeof arg) {
+        default :
+          params[next] = arg
+          break
+
+        case "function" :
+          params[next] = (InterMap.get(arg)) ? arg : WrapFunc(arg, OUTSIDE)
+          break
+
+        case "object" :
+          if (value === null) { params[next] = null }
+          else if ((isFact = arg.isFact) &&
+              (arg.constructor !== Object || isFact === FACTUAL) {
+            params[next] = arg
+          }
+          else if ((inner_rec = InterMap.get(arg))) {
+            params[next] = inner_rec[INNER] ? inner_rec[COPY](true)[KRUST] : arg
+          }
+          else { params[next] = CopyObject(value, true) }
       }
     }
 
     result = OriginalFunc.apply(receiver, params)
 
-    if (typeof result === "object" || result === null) {
-      return result
+    switch (typeof result) {
+      default         : return result
+      case "object"   : break
+      case "function" :
+        return InterMap.get(result) ? result : WrapFunc(result, OUTSIDE)
     }
+    if (result === null) { return result }
 
     if (result === receiver) {
       if (permeability) {
@@ -254,7 +309,7 @@ function PublicMethodBarrier(OriginalFunc, IsOuter) {
         }
         permeability.inUse = false
       }
-      return IsOuter ? result[KRUST] : result
+      return (funcType === INNER) ? result : result[KRUST]
     }
 
     if ((isFact = result.isFact) &&
@@ -267,11 +322,12 @@ function PublicMethodBarrier(OriginalFunc, IsOuter) {
     return CopyObject(result, true)
   }
 
-  DefineProperty($publicMethod, "name", VisibleConfiguration)
-  $publicMethod.name = OriginalFunc.name
-  $publicMethod.isFact = $publicMethod.isImmutable = true
-  return SetImmutable($publicMethod)
+  DefineProperty($func, "name", VisibleConfiguration)
+  $func.name = OriginalFunc.name
+  $func.isFact = $func.isImmutable = true
+  return SetImmutable($func)
 }
+
 
 
 
@@ -362,7 +418,7 @@ function Create_new(_Blank) {
   return target.new
 }
 
-function Create__copy(_Blank) {
+function Create_COPY(_Blank) {
   return function COPY(
     asImmutable, visited = CopyLog(), _target = _Blank(), exceptSelector
   ) {
@@ -463,7 +519,7 @@ PutMethod(Type_root, function _init(spec, _root_, context__) {
   _root.type         = disguise.$
   _root[ROOT]        = _root
   _root._newBlank    = () => (new _Blank()).$
-  _root[COPY]        = Create__copy(_Blank)
+  _root[COPY]        = Create_COPY(_Blank)
 
   this.new           = _root.new = Create_new(_Blank)
 
