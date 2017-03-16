@@ -55,4 +55,27 @@ blubber/flubber
 
 - consider making things cache the selectors of all set properties.
 - consider using rind,pulp,seed architecture instead of krust,outer,inner,core
-- reconcile _Blank and _NewCore 
+- reconcile _Blank and _NewCore
+
+- When a thing is immutable, the outer is immutable but the core is mutable to enable after the fact setting of the iid, and such.
+
+
+- Consider including outsider immutability confimation recs within the InterMap
+  After careful thought, I don't think we need to ensure the vality of immutables
+  since an outside can simply set the id of an object to make it a fact which is
+  effectively the same as setting it as immutable.
+
+InterMap
+key               value
+Krust             Core
+WrappedFunc       CONFIRMED_IMMUTABLE
+immutableObj      CONFIRMED_IMMUTABLE
+internalCopiedObj CONFIRMED_INTERNALLY_COPIED
+
+IsFactConfiguration = {
+  __proto__    : null,
+  enumerable   : false,
+  writable     : false,
+  configurable : false,
+  value        : true
+}

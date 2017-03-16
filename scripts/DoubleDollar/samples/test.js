@@ -58,48 +58,12 @@ const PrivacyPermeability = {
   // preventExtensions ???
 }
 
-// SetBarrierBehavior = {
-//   set (inner, selector, value, barrier_) {
-//     if (inner[selector] !== value) {
-//       inner[selector] = value
-//       // check to see if it was successfully set
-//       if (inner[selector] !== value) {
-//         (this.target = inner.copy)[selector] = value  // LOOK: check this!!!
-//         this.set = this.setMutableCopy
-//         this.get = this.getMutableCopy
-//       }
-//     }
-//     return true
-//   }
-// }
-
-
-
-
-
-
-//
-// const InternalNonFactJSParamPermeability = {
-//   __proto__ : null,
-//
-//   get (target, selector, barrier) {
-//     return (selector === SECRET) ? INTERNAL_MUTABLE_JS_OBJ : target[selector]
-//   }
-// }
-//
-// const NonFactThingParamPermeability = {
-//   __proto__ : null,
-//
-//   get (target, selector, barrier) {
-//     return (selector === KRUST) ? MUTABLE_THING_PARAM : target[selector]
-//   }
-// }
 
 
 const MutableInnerPermeability = {
   __proto__ : null,
 
-  set (core, selector, value, inner_) {
+  set (core, selector, value, inner) {
     const isPublic = (selector[0] !== "_")
 
     switch (typeof value) {
@@ -118,39 +82,53 @@ const MutableInnerPermeability = {
         else if (core[selector] === value) { // && IsLocalProperty.call(core, selector)
           // NOP
         }
-        else if (value === core) { // LOOK or value === outer
-          core[selector] = core
-          value = core[OUTER]
+        else if (value === inner) {
+          core[selector] = inner
+          value = core.$
         }
-        else if ((isFact = value.isFact) &&
-            (value.constructor !== Object || isFact === FACTUAL) {
+        else if (value.id != null) {
           core[selector] = value
         }
-        else if ((inner_rec = InterMap.get(value))) {
-          value = core[selector] = isPublic && inner_rec[INNER] ?
-            inner_rec[COPY](true)[KRUST] : value
+        else if ((core_tag = InterMap.get(value))) {
+          core[selector] = isPublic && core_tag[INNER] ?
+            (value = core_tag[COPY](true).$) : value
         }
         else {
-          value = core[selector] = isPublic ? CopyObject(value, true) : value
+          core[selector] = isPublic ? (value = CopyObject(value, true)) : value
         }
         break
     }
 
     if (isPublic) {
       core[OUTER][selector] = value
-      core[PROPS][selector] = true
+      if (!core[KNOWN_PROPERTIES]) { core[PROPS][selector] = true }
     }
     else {
-      core[_PROPS][selector] = true
+      if (!core[KNOWN_PROPERTIES]) { core[_PROPS][selector] = true }
     }
+    return true
+  },
+
+  deleteProperty (core, selector, inner) {
+    if (selector[0] !== "_") {
+      delete core[OUTER][selector]
+      if (!core[KNOWN_PROPERTIES]) { delete core[PROPS][selector] }
+    }
+    else {
+      if (!core[KNOWN_PROPERTIES]) { delete core[_PROPS][selector] }
+    }
+    delete core[selector]
     return true
   }
 }
 
+
+
 class ImmutableInnerPermeability {
   constructor (core) {
     this.inUse = false
-    this.target = this.inner =new Proxy(core, this)
+    // this.target = new Proxy(core, this)
+    this.target = this.inner = new Proxy(core, this)
   }
 
   set (core, selector, value, inner) {
@@ -182,16 +160,16 @@ class ImmutableInnerPermeability {
     return true
   }
 
-  detourSet (core_, selector, value, inner_) {
+  detourSet (core, selector, value, inner) {
     this.target[selector] = value
     return true
   }
 
-  detourGet (core_, selector, inner_) {
+  detourGet (core, selector, inner) {
     return this.target[selector]
   }
 
-  detourDelete (core_, selector, inner_) {
+  detourDelete (core, selector, inner) {
     delete this.target[selector]
     return true
   }
@@ -228,37 +206,31 @@ function WrapFunc(OriginalFunc, funcType) {
 
           case "object" :
             if (this === null) { receiver = null }
-            else if ((isFact = this.isFact) &&  // LOOK: See if immutable
-                (this.constructor !== Object || isFact === FACTUAL) {
-              receiver = this[KRUST]
+            else if (this.id != null) {
+              receiver = (this[SECRET] === INNER) ? this.$ : this
             }
-            else if ((inner_rec = InterMap.get(this))) {
-              if (inner_rec[INNER]) {
-                if ((permeability = inner[INNER_PERMEABILITY])) {
-                  if (permeability.inUse) {
-                    permeability = new ImmutableInnerPermeability(inner[CORE])
-                  }
-                  permeability.inUse = true
-                  receiver = permeability.target
-                }
-              }
-              else { receiver = inner_rec[COPY](true)[KRUST] }
+            else if (this[SECRET] === INNER) {
+              receiver = this[COPY](true).$
+            }
+            else if ((core_tag = InterMap.get(arg))) {
+              receiver = core_tag[INNER] ? core_tag[COPY](true).$ : this
             }
             else { receiver = CopyObject(this, true) }
+            break
         }
         break
 
-      case OUTER :
-        inner = InterMap.get(this)
+      case KRUST :
+        core = InterMap.get(this)
 
-        if ((permeability = inner[INNER_PERMEABILITY])) {
+        if ((permeability = core[INNER_PERMEABILITY])) {
           if (permeability.inUse) {
-            permeability = new ImmutableInnerPermeability(inner[CORE])
+            permeability = new ImmutableInnerPermeability(core)
           }
           permeability.inUse = true
           receiver = permeability.target
         }
-        else { receiver = inner }
+        else { receiver = core[INNER] }
         break
 
       case INNER :
@@ -281,15 +253,12 @@ function WrapFunc(OriginalFunc, funcType) {
           break
 
         case "object" :
-          if (value === null) { params[next] = null }
-          else if ((isFact = arg.isFact) &&
-              (arg.constructor !== Object || isFact === FACTUAL) {
-            params[next] = arg
+          if (arg === null) { params[next] = null }
+          else if (arg.id != null) { params[next] = arg }
+          else if ((core_tag = InterMap.get(arg))) {
+            params[next] = core_tag[INNER] ? core_tag[COPY](true).$ : arg
           }
-          else if ((inner_rec = InterMap.get(arg))) {
-            params[next] = inner_rec[INNER] ? inner_rec[COPY](true)[KRUST] : arg
-          }
-          else { params[next] = CopyObject(value, true) }
+          else { params[next] = CopyObject(arg, true) }
       }
     }
 
@@ -304,30 +273,35 @@ function WrapFunc(OriginalFunc, funcType) {
     if (result === null) { return result }
 
     if (result === receiver) {
-      if (permeability) {
-        result = permeability.target
-        if (result !== inner) {
-          permeability.target = inner  // reset permeability
-          result.beImmutable
+      if (funcType === KRUST) {
+        if (permeability) {
+          result = permeability.target
+          if (result !== inner) {
+            permeability.target = permeability.inner  // reset permeability
+            result.beImmutable
+          }
+          permeability.inUse = false
         }
-        permeability.inUse = false
+        return result.$
       }
-      return (funcType === INNER) ? result : result[KRUST]
-    }
-
-    if ((isFact = result.isFact) &&
-        (result.constructor !== Object || isFact === FACTUAL) {
       return result
     }
-    if ((inner_rec = InterMap.get(result))) {
-      return inner_rec[INNER] ? inner_rec[COPY](true)[KRUST] : result
+
+    if (result.id != null) { return result }
+
+    if ((core_tag = InterMap.get(result))) {
+      return core_tag[INNER] ? core_tag[COPY](true).$ : result
     }
     return CopyObject(result, true)
   }
 
-  DefineProperty($func, "name", VisibleConfiguration)
-  $func.name = OriginalFunc.name
-  $func.isFact = $func.isImmutable = true
+  if (funcType !== OUTSIDE) {
+    DefineProperty($func, "name", VisibleConfiguration)
+    $func.name = OriginalFunc.name
+  }
+  $func.id = null
+  $func.isImmutable = true
+  InterMap.set($func, CONFIRMED_IMMUTABLE)
   return SetImmutable($func)
 }
 
@@ -406,7 +380,7 @@ function CreateFactory(_Blank, isDisguised) {
   return function (...args) {
     const instance = new _Blank()
     instance._init(...args)
-    if (args.length && instance.id === undefined) { instance.beImmutable }
+    if (args.length && instance.id == null) { instance.beImmutable }
     return instance.$
   }
 }
@@ -423,17 +397,17 @@ function Create_new(_Blank) {
 
 function Create_COPY(_Blank) {
   return function COPY(
-    asImmutable, visited = CopyLog(), _targetInner = _Blank(), exceptSelector
+    asImmutable, visited = CopyLog(), _targetInner = _Blank(), exceptSelector_
   ) {
-    const  targetKrust = _target.$
+    const targetKrust = _target.$
 
     visited.pairing(this.$, targetKrust) // to manage cyclic objects
 
-    if (_target._initFrom_ === _InitFrom_) {
-      _target._initFrom_(this, visited, exceptSelector, asImmutable)
+    if (_targetInner._initFrom_ === _InitFrom_) {
+      _targetInner._initFrom_(this, visited, exceptSelector_, asImmutable)
     } else {
-      _target._initFrom_(this, visited, exceptSelector)
-      if (asImmutable) { BeImmutable(_target, true) }
+      _targetInner._initFrom_(this, visited, exceptSelector_)
+      if (asImmutable) { ThenBeImmutable(_targetInner, true) }
     }
     return targetKrust
   }

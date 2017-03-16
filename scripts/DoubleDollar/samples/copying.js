@@ -27,17 +27,16 @@ MUTABLE     = null
 FACT        = Symbol("FACT")
 IMMUTABLE   = Symbol("IMMUTABLE")
 
+
 AddGetter(Thing_root, function isFact() {
-  return (this[IS_FACT] != null)
+  return (this.id != null)
 })
 
-AddGetter(Thing_root, function isImmutable() {
-  return (this[IS_FACT] === IMMUTABLE)
-})
+// set isImmutable = false in Core_root
 
 
 function copy(visited_) {
-  return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](false, visited_)
+  return this.isImmutable ? this : this[COPY](false, visited_)
 }
 
 function mutableCopy(visited_) {
@@ -56,7 +55,7 @@ function mutableCopyExcept(selector) {
 
 
 AddGetter(Thing_root, function asCopy() {
-  return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](false)
+  return this.isImmutable ? this : this[COPY](false)
 }
 
 AddGetter(Thing_root, function asMutableCopy() {
@@ -64,87 +63,99 @@ AddGetter(Thing_root, function asMutableCopy() {
 }
 
 AddGetter(Thing_root, function asMutable() {
-  return (this[IS_FACT] === IMMUTABLE) ? this[COPY](false) : this
+  return this.isImmutable ? this[COPY](false) : this
 }
 
 AddGetter(Thing_root, function asFact() {
-  return (this[IS_FACT]) ? this : this[COPY](true)
+  return (this.id != null) ? this : this[COPY](true)
 }
 
 AddGetter(Thing_root, function asImmutable() {
-  return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](true)
+  return this.isImmutable ? this : this[COPY](true)
 })
 
 AddGetter(Thing_root, function beImmutable() {
-  return (this[IS_FACT] === IMMUTABLE) ? this : this[COPY](true, undefined, this)
+  return this.isImmutable ? this : this[COPY](true, undefined, this)
 })
 
-// AddGetter(Thing_root, function asImmutable() {
-//   if (this[IS_FACT] === IMMUTABLE) { return this }
-//   const copy = this[COPY](true)
-//   copy[IS_FACT] = IMMUTABLE
-//   return SetImmutable(copy)
-// })
-//
-// AddGetter(Thing_root, function beImmutable() {
-//   if (this[IS_FACT] === IMMUTABLE) { return this }
-//   const copy = this[COPY](true, undefined, this)
-//   copy[IS_FACT] = IMMUTABLE
-//   return SetImmutable(copy)
-// })
+
 
 Thing.add("_initFrom_", _InitFrom_)
 
 function _InitFrom_(_source, visited, exceptSelector, asImmutable) {
   let props, next, prop, value, traversed, inner
 
-  targetOuter = this[OUTER]
-  count = 1
-  propsKind = PROPS
+  if ((props = this[KNOWN_PROPERTIES])) {
+    next   = props.length
 
-  do {
-    sourceProps = _source[propsKind]
-    targetProps = this[propsKind]
+    while (next--) {
+      prop  = props[next]
+      value = _source[prop]
 
-    for (prop in sourceProps) {
-      if (prop !== exceptSelector) {
-        value = _source[prop]
-
-        if (typeof value !== "object" || value === null) {}
-        else if ((isFact = value.isFact) &&
-            (value.constructor !== Object || isFact === FACTUAL) {}
-        else if ((traversed = visited.pair(value)))  { value = traversed }
-        else if ((inner_rec = InterMap.get(value)) && inner_rec[INNER]) {
-          value = inner_rec[COPY](asImmutable, visited)[KRUST]
-        }
-        else { value = CopyObject(value, asImmutable, visited) }
-
-        targetProps[prop] = true
-        this[prop] = value
-        if (count) { targetOuter[prop] = value }
+      if (typeof value !== "object" || value === null || value.id != null) {}
+      else if ((traversed = visited.pair(value))) { value = traversed }
+      else if ((core_tag = InterMap.get(value))) {
+        if (core_tag[INNER]) { value = core_tag[COPY](asImmutable, visited).$ }
       }
-    }
-    propsKind = _PROPS
-  } while (count--)
+      else { value = CopyObject(value, asImmutable, visited) }
 
-  if (_source !== this && _source.id !== undefined) { this[SET_ID] }
+      this[prop] = value
+    }
+  }
+  else {
+    targetOuter = this[OUTER]
+    count = 1
+    propsKind = PROPS
+
+    do {
+      sourceProps = _source[propsKind]
+      targetProps = this[propsKind]
+
+      for (prop in sourceProps) {
+        if (prop !== exceptSelector) {
+          value = _source[prop]
+
+          if (typeof value !== "object" || value === null || value.id != null) {}
+          else if ((traversed = visited.pair(value))) { value = traversed }
+          else if ((core_tag = InterMap.get(value))) {
+            if (core_tag[INNER]) {
+              value = core_tag[COPY](asImmutable, visited).$
+            }
+          }
+          else { value = CopyObject(value, asImmutable, visited) }
+
+          targetProps[prop] = true
+          this[prop] = value
+          if (count) { targetOuter[prop] = value }
+        }
+      }
+      propsKind = _PROPS
+    } while (count--)
+  }
+
   if (asImmutable) {
-    this.isImmutable = this.isFact = true
+    if (_source.id != null) {
+      if (_source !== this) { this._setId() }
+    }
+    else { this.id = "" } // NON_UNIQUE_IMMUTABLE
+
+    this.isImmutable = true
     SetImmutable(this)
   }
+
   return this
 }
 
 
 
-function _NonKrustObject_copy(visited = CopyLog()) {
+function _GeneralPurposeObjectCopy(visited = CopyLog()) {
   let target, props, prop, next, value, traversed, inner,
 
-  if (this.isFact || this.id !== undefined) { return this } // Ensure fact???
+  if (this.id != null) { return this }
 
   target = SpawnFrom(RootOf(this))
-  props = this[KNOWN_PROPERTIES] || LocalProperties(this)
-  next  = props.length
+  props  = this[KNOWN_PROPERTIES] || VisibleLocalNames(this)
+  next   = props.length
 
   visited.pairing(this, target) // Handles cyclic objects
 
@@ -152,72 +163,52 @@ function _NonKrustObject_copy(visited = CopyLog()) {
     prop  = props[next]
     value = this[prop]
 
-    if (value === null || typeof value !== "object") { target[prop] = value }
-    else if (value.isFact && value.constructor !== Object) {target[prop] = value}
-    else if ((traversed = visited.pair(value)))  { target[prop] = traversed }
-    else if ((inner = InterMap.get(value))) {
-      target[prop] = (inner[IS_FACT]) ? value : inner[COPY](false, visited)
+    if (typeof value !== "object" || value === null || value.id != null) {}
+    else if ((traversed = visited.pair(value))) { value = traversed }
+    else if ((core_tag = InterMap.get(value))) {
+      if (core_tag[INNER]) { value = core_tag[COPY](false, visited).$ }
     }
-    else { target[prop] = CopyObject(value, false, visited) }
+    else { value = CopyObject(value, false, visited) }
+
+    target[prop] = value
   }
 
-  InterMap.set(target, ConfirmedObject)
   return target
 }
 
-IsFactConfiguration = {
-  __proto__    : null,
-  enumerable   : false,
-  writable     : false,
-  configurable : false,
-  value        : true
-}
-//
-// function EnsureFact(target) {
-//   if (!InterMap.get(target)) {
-//     DefineProperty(target, "isFact", LockedConfiguration)
-//     InterMap.set(target, ConfirmedFact)
-//   }
-//   return target
-// }
-
-// NOTE: The following is always executed before calling CopyObject
-//
-// if ((isFact = value.isFact) &&
-//  (value.constructor !== Object || isFact === FACTUAL) {
 
 
-function CopyObject(source, asFact, visited = CopyLog()) {
+// NOTE: The CopyObject is only called AFTER confirming that the source
+//       is NOT a fact!!!
+
+function CopyObject(source, asImmutable, visited = CopyLog()) {
   let target, next, value, traversed, inner, props, prop
 
   switch (source.constructor) {
     default : // Custom Object
-      sourceIsFact = source.isFact
-
-      // if (sourceIsFact) { return source }
-
       if ((target = source.copy)) {
-        if (target === _NonKrustObject_copy) {
-          target = _NonKrustObject_copy.call(source, visited)
-          visited.pairing(source, target)
-          break
+        if (target === _GeneralPurposeObjectCopy) {
+          target = _GeneralPurposeObjectCopy.call(source, visited)
         }
-        if (typeof target === "function") { target = source.copy(visited) }
-        if (asFact) { BeImmutable(target) } // target shouldn't has isFact = true
-
-        visited.pairing(source, target) // ensure logging, just in case
-        returns target
+        else {
+          if (typeof target === "function") { target = source.copy(visited) }
+          visited.pairing(source, target) // ensure logging, just in case
+        }
+        returns (asImmutable && target !== source) ?
+          ThenBeImmutable(target, false) : target
       }
 
-      if (sourceIsFact === undefined) { return source }
-      // sourceIsFact === false
+      if (!(props = source[KNOWN_PROPERTIES]) && source.id === undefined) {
+        return source   // Never copy ordinary object without an
+                        // expressed intention from their creators
+      }                 // e.g. setting copy|KNOWN_PROPERTIES|id = null
+      // source.id === null
+
       target = SpawnFrom(RootOf(source))
       // break omitted
 
     case Object :
-      // if (source.isFact === FACTUAL) { return source }
-
-      props  = source[KNOWN_PROPERTIES] || LocalProperties(source)
+      props  = props || VisibleLocalNames(source)
       next   = props.length
 
       visited.pairing(source, (target = {})) // Handles cyclic objects
@@ -226,10 +217,16 @@ function CopyObject(source, asFact, visited = CopyLog()) {
         prop  = props[next]
         value = source[prop]
 
-        if (value === null || typeof value !== "object") { target[prop] = value }
-        else if (value.isFact && value.constructor !== Object) {target[prop] = value}
-        else if ((traversed = visited.pair(value)))  { target[prop] = traversed }
-        else { target[prop] = CopyObject(value, asFact, visited) }
+        if (typeof value !== "object" || value === null || value.id != null) {}
+        else if ((traversed = visited.pair(value))) { value = traversed }
+        else if ((core_tag = InterMap.get(value)) {
+          if (core_tag[INNER]) {
+            value = core_tag[COPY](asImmutable, visited).$
+          }
+        }
+        else { value = CopyObject(value, asImmutable, visited) }
+
+        target[prop] = value
       }
       break
 
@@ -243,31 +240,28 @@ function CopyObject(source, asFact, visited = CopyLog()) {
       while (next--) {
         value = source[next]
 
-        if (value === null || typeof value !== "object") { target[prop] = value }
-        else if (value.isFact && value.constructor !== Object) {target[prop] = value}
-        else if ((traversed = visited.pair(value)))  { target[next] = traversed }
-        else { target[next] = CopyObject(value, asFact, visited) }
-      }
+        if (typeof value !== "object" || value === null || value.id != null) {}
+        else if ((traversed = visited.pair(value))) { value = traversed }
+        else if ((core_tag = InterMap.get(value)) {
+          if (core_tag[INNER]) {
+            value = core_tag[COPY](asImmutable, visited).$
+          }
+        }
+        else { value = CopyObject(value, asImmutable, visited) }
 
-      target.isFact = sourceIsFact = false
+        target[prop] = value
+      }
       break
   }
 
-  if (asFact) {
-    if (sourceIsFact === false) {
-      DefineProperty(target, "isFact", IsFactConfiguration)
-    }
-    InterMap.set(target, ConfirmedImmutable)
-    SetImmutable(target)
-  }
-  else {
-    InterMap.set(target, ConfirmedInsider)
-  }
+  if (asImmutable) { InterMap.set(SetImmutable(target), CONFIRMED_IMMUTABLE) }
   return target
 }
 
+CopyObject(source, asImmutable, visited = CopyLog()) {
+
 // REVISIT THIS!!!
-function BeImmutable(_target, isInner, visited = new Set()) {
+function ThenBeImmutable(_target, isInner, visited = new Set()) {
   let next, value, inner, props, prop
 
   visited.add(_target)
@@ -278,15 +272,17 @@ function BeImmutable(_target, isInner, visited = new Set()) {
     while (next--) {
       value = _target[next]
 
-      if (value === null || typeof value !== "object")     { continue }
-      if (value.isFact && value.constructor !== Object)    { continue }
-      if (visited.has(value))                              { continue }
-      if ((inner = InterMap.get(value)) && inner[IS_FACT]) { continue }
+      if (typeof value !== "object" || value === null || value.id != null) {}
+      else if (visited.has(value)) {}
+      else if ((core_tag = InterMap.get(value))) {
+        if (core_tag[INNER]) { BeImmutable(value, false, visited) }
+      }
+
       BeImmutable(value, false, visited)
     }
   }
   else {
-    props = _target[KNOWN_PROPERTIES] || LocalProperties(_target)
+    props = _target[KNOWN_PROPERTIES] || VisibleLocalNames(_target)
     next  = props.length
 
     while (next--) {
@@ -542,7 +538,7 @@ class MethodLoader {
   }
 
   addAliases (aliases) {
-    const aliasNames = LocalProperties(aliases)
+    const aliasNames = VisibleLocalNames(aliases)
     const next       = aliasNames.length
     const saved      = this.aliases
 
