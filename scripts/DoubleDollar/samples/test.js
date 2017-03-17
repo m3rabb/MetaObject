@@ -89,33 +89,33 @@ const MutableInnerPermeability = {
         else if (value.id != null) {
           core[selector] = value
         }
-        else if ((core_tag = InterMap.get(value))) {
-          core[selector] = isPublic && core_tag[INNER] ?
-            (value = core_tag[COPY](true).$) : value
+        else if (isPublic) {
+          core[selector] = value = (valueCore = InterMap.get(value)) ?
+            valueCore[COPY](true).$ : CopyObject(value, true)
         }
         else {
-          core[selector] = isPublic ? (value = CopyObject(value, true)) : value
+          core[selector] = value
         }
         break
     }
 
-    if (isPublic) {
-      core[OUTER][selector] = value
-      if (!core[KNOWN_PROPERTIES]) { core[PROPS][selector] = true }
-    }
-    else {
-      if (!core[KNOWN_PROPERTIES]) { core[_PROPS][selector] = true }
+    propsKind = (isPublic) ? (core[OUTER][selector] = value, PROPS) : _PROPS
+
+    if (!core[ROOT][KNOWN_PROPERTIES]) {
+      props = core[propsKind]
+      if (!props[selector]) { props[PROPS_COUNT]++ }
+      props[selector] = true
     }
     return true
   },
 
   deleteProperty (core, selector, inner) {
-    if (selector[0] !== "_") {
-      delete core[OUTER][selector]
-      if (!core[KNOWN_PROPERTIES]) { delete core[PROPS][selector] }
-    }
-    else {
-      if (!core[KNOWN_PROPERTIES]) { delete core[_PROPS][selector] }
+    propsKind = (selector[0] !== "_") ?
+      (delete core[OUTER][selector], PROPS) : _PROPS
+    if (!core[KNOWN_PROPERTIES]) {
+      props = core[propsKind]
+      if (!props[selector]) { props[PROPS_COUNT]-- }
+      delete props[selector]
     }
     delete core[selector]
     return true
@@ -207,13 +207,13 @@ function WrapFunc(OriginalFunc, funcType) {
           case "object" :
             if (this === null) { receiver = null }
             else if (this.id != null) {
-              receiver = (this[SECRET] === INNER) ? this.$ : this
+              receiver = (this[SECRET] === INNER) ? this.$ : this // or CORE???
             }
-            else if (this[SECRET] === INNER) {
+            else if (this[SECRET] === INNER) { // or CORE???
               receiver = this[COPY](true).$
             }
-            else if ((core_tag = InterMap.get(arg))) {
-              receiver = core_tag[INNER] ? core_tag[COPY](true).$ : this
+            else if ((argCore = InterMap.get(arg))) {
+              receiver = argCore[COPY](true).$
             }
             else { receiver = CopyObject(this, true) }
             break
@@ -255,8 +255,8 @@ function WrapFunc(OriginalFunc, funcType) {
         case "object" :
           if (arg === null) { params[next] = null }
           else if (arg.id != null) { params[next] = arg }
-          else if ((core_tag = InterMap.get(arg))) {
-            params[next] = core_tag[INNER] ? core_tag[COPY](true).$ : arg
+          else if ((argCore = InterMap.get(arg))) {
+            params[next] = argCore[COPY](true).$
           }
           else { params[next] = CopyObject(arg, true) }
       }
@@ -289,9 +289,8 @@ function WrapFunc(OriginalFunc, funcType) {
 
     if (result.id != null) { return result }
 
-    if ((core_tag = InterMap.get(result))) {
-      return core_tag[INNER] ? core_tag[COPY](true).$ : result
-    }
+    if ((argCore = InterMap.get(result))) { return argCore[COPY](true).$ }
+
     return CopyObject(result, true)
   }
 
@@ -407,7 +406,7 @@ function Create_COPY(_Blank) {
       _targetInner._initFrom_(this, visited, exceptSelector_, asImmutable)
     } else {
       _targetInner._initFrom_(this, visited, exceptSelector_)
-      if (asImmutable) { ThenBeImmutable(_targetInner, true) }
+      if (asImmutable) { ThenBeImmutable(_targetInner) }
     }
     return targetKrust
   }

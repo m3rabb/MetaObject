@@ -59,6 +59,7 @@ blubber/flubber
 
 - When a thing is immutable, the outer is immutable but the core is mutable to enable after the fact setting of the iid, and such.
 
+- Streams
 
 - Consider including outsider immutability confimation recs within the InterMap
   After careful thought, I don't think we need to ensure the vality of immutables

@@ -90,12 +90,13 @@ function _InitFrom_(_source, visited, exceptSelector, asImmutable) {
 
     while (next--) {
       prop  = props[next]
+      if (prop === exceptSelector) { continue }
       value = _source[prop]
 
       if (typeof value !== "object" || value === null || value.id != null) {}
       else if ((traversed = visited.pair(value))) { value = traversed }
-      else if ((core_tag = InterMap.get(value))) {
-        if (core_tag[INNER]) { value = core_tag[COPY](asImmutable, visited).$ }
+      else if ((valueCore = InterMap.get(value))) {
+        value = valueCore[COPY](asImmutable, visited).$
       }
       else { value = CopyObject(value, asImmutable, visited) }
 
@@ -117,10 +118,8 @@ function _InitFrom_(_source, visited, exceptSelector, asImmutable) {
 
           if (typeof value !== "object" || value === null || value.id != null) {}
           else if ((traversed = visited.pair(value))) { value = traversed }
-          else if ((core_tag = InterMap.get(value))) {
-            if (core_tag[INNER]) {
-              value = core_tag[COPY](asImmutable, visited).$
-            }
+          else if ((valueCore = InterMap.get(value))) {
+            value = valueCore[COPY](asImmutable, visited).$
           }
           else { value = CopyObject(value, asImmutable, visited) }
 
@@ -137,9 +136,9 @@ function _InitFrom_(_source, visited, exceptSelector, asImmutable) {
     if (_source.id != null) {
       if (_source !== this) { this._setId() }
     }
-    else { this.id = "" } // NON_UNIQUE_IMMUTABLE
+    else { DefineProperty(target, "id", EmptyIdConfiguration) } // NON_UNIQUE_IMMUTABLE
 
-    this.isImmutable = true
+    DefineProperty(object, "isImmutable", IsImmutableConfiguration)
     SetImmutable(this)
   }
 
@@ -165,8 +164,8 @@ function _GeneralPurposeObjectCopy(visited = CopyLog()) {
 
     if (typeof value !== "object" || value === null || value.id != null) {}
     else if ((traversed = visited.pair(value))) { value = traversed }
-    else if ((core_tag = InterMap.get(value))) {
-      if (core_tag[INNER]) { value = core_tag[COPY](false, visited).$ }
+    else if ((valueCore = InterMap.get(value))) {
+      value = valueCore[COPY](false, visited).$
     }
     else { value = CopyObject(value, false, visited) }
 
@@ -195,7 +194,7 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
           visited.pairing(source, target) // ensure logging, just in case
         }
         returns (asImmutable && target !== source) ?
-          ThenBeImmutable(target, false) : target
+          ThenBeImmutable(target) : target
       }
 
       if (!(props = source[KNOWN_PROPERTIES]) && source.id === undefined) {
@@ -219,10 +218,8 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
 
         if (typeof value !== "object" || value === null || value.id != null) {}
         else if ((traversed = visited.pair(value))) { value = traversed }
-        else if ((core_tag = InterMap.get(value)) {
-          if (core_tag[INNER]) {
-            value = core_tag[COPY](asImmutable, visited).$
-          }
+        else if ((valueCore = InterMap.get(value)) {
+          value = valueCore[COPY](asImmutable, visited).$
         }
         else { value = CopyObject(value, asImmutable, visited) }
 
@@ -231,8 +228,6 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
       break
 
     case Array :
-      // if (source.isFact) { return source }
-
       next = source.length
 
       visited.pairing(source, (target = [])) // Handles cyclic objects
@@ -242,10 +237,8 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
 
         if (typeof value !== "object" || value === null || value.id != null) {}
         else if ((traversed = visited.pair(value))) { value = traversed }
-        else if ((core_tag = InterMap.get(value)) {
-          if (core_tag[INNER]) {
-            value = core_tag[COPY](asImmutable, visited).$
-          }
+        else if ((valueCore = InterMap.get(value)) {
+          value = valueCore[COPY](asImmutable, visited).$
         }
         else { value = CopyObject(value, asImmutable, visited) }
 
@@ -254,64 +247,102 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
       break
   }
 
-  if (asImmutable) { InterMap.set(SetImmutable(target), CONFIRMED_IMMUTABLE) }
+  if (asImmutable) {
+    if (target.id == null) { // NON_UNIQUE_IMMUTABLE
+      DefineProperty(target, "id", EmptyIdConfiguration) // ""
+    }
+    if (!target.isImmutable) { // Ensures we don't overwrite existing isImmutable
+      DefineProperty(target, "isImmutable", IsImmutableConfiguration)
+    }
+    SetImmutable(this)
+  }
+
   return target
 }
 
-CopyObject(source, asImmutable, visited = CopyLog()) {
 
-// REVISIT THIS!!!
-function ThenBeImmutable(_target, isInner, visited = new Set()) {
+
+function ThenBeImmutable(target, visited = new Set()) {
   let next, value, inner, props, prop
 
-  visited.add(_target)
+  visited.add(target)
 
-  if (_target.constructor === Array) {
-    next  = _target.length
+  switch (target.constructor) {
+    default : // Custom Object
+      if ((props = target[KNOWN_PROPERTIES])) { }
+      else if (target[SECRET] === CORE) {
+        targetOuter = target[OUTER]
+        count = 1
+        propsKind = PROPS
 
-    while (next--) {
-      value = _target[next]
+        do {
+          targetProps = target[propsKind]
 
-      if (typeof value !== "object" || value === null || value.id != null) {}
-      else if (visited.has(value)) {}
-      else if ((core_tag = InterMap.get(value))) {
-        if (core_tag[INNER]) { BeImmutable(value, false, visited) }
+          for (prop in targetProps) {
+            value = _source[prop]
+
+            if (typeof value !== "object" || value === null) {}
+            else if (value.id != null || visited.has(value)) {}
+            else if ((valueCore = InterMap.get(value))) {
+              ThenBeImmutable(valueCore, visited)
+            }
+            else { ThenBeImmutable(value, visited }
+          }
+          propsKind = _PROPS
+        } while (count--)
+        break
+      } // LOOK: check this below!!!
+      else if (target.id === null || ("copy" in target)) { }
+      else { return target }
+
+    case Object :
+      props = props || VisibleLocalNames(target)
+      next  = props.length
+
+      while (next--) {
+        prop  = props[next]
+        value = source[prop]
+
+        if (typeof value !== "object" || value === null) {}
+        else if (value.id != null || visited.has(value)) {}
+        else if ((valueCore = InterMap.get(value))) {
+          ThenBeImmutable(valueCore, visited)
+        }
+        else { ThenBeImmutable(value, visited }
       }
+      break
 
-      BeImmutable(value, false, visited)
-    }
-  }
-  else {
-    props = _target[KNOWN_PROPERTIES] || VisibleLocalNames(_target)
-    next  = props.length
+    case Array :
+      next = target.length
 
-    while (next--) {
-      prop  = props[next]
-      value = _target[prop]
+      while (next--) {
+        value = target[next]
 
-      if (value === null || typeof value !== "object")     { continue }
-      if (value.isFact && value.constructor !== Object)    { continue }
-      if (visited.has(value))                              { continue }
-      if ((inner = InterMap.get(value)) && inner[IS_FACT]) { continue }
-      BeImmutable(value, false, visited)
-    }
+        if (typeof value !== "object" || value === null) {}
+        else if (value.id != null || visited.has(value)) {}
+        else if ((valueCore = InterMap.get(value))) {
+          ThenBeImmutable(valueCore, visited)
+        }
+        else { ThenBeImmutable(value, visited }
+      }
+      break
   }
 
-  if (isInner) {
-    _target.isFact = true
-    _target[IS_FACT] = IMMUTABLE
+  if (target.id == null) { // NON_UNIQUE_IMMUTABLE
+    DefineProperty(target, "id", EmptyIdConfiguration) // ""
   }
-  else {
-    if (_target.isFact === false) {
-      DefineProperty(_target, "isFact", IsFactConfiguration)
-    }
-    if (confirmation = InterMap.get(_target)) {
-      InterMap.set(_target, ConfirmedFact)
-    }
+  if (!target.isImmutable) { // Ensures we don't overwrite existing isImmutable
+    DefineProperty(target, "isImmutable", IsImmutableConfiguration)
   }
-
-  return SetImmutable(_target)
+  return SetImmutable(target)
 }
+
+
+
+
+
+
+
 
 
 function BeImmutableSpan(span) {

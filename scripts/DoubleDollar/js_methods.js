@@ -13,7 +13,7 @@ const AllLocalSelectors  = Reflect.ownKeys
 const SetImmutable       = Object.freeze
 const IsImmutable        = Object.isFrozen
 const Object_prototype   = Object.prototype
-const IsLocalProperty    = Object_prototype.hasOwnProperty
+const IsLocalSelector    = Object_prototype.hasOwnProperty
 const PropertyDescriptor = Object.getOwnPropertyDescriptor
 const Apply              = Reflect.apply
 

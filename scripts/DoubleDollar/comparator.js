@@ -1,6 +1,6 @@
-LocalProperties    = Object.keys
+VisibleLocalNames    = Object.keys
 
-AllProperties      = Reflect.ownKeys
+AllLocalSelectors      = Reflect.ownKeys
 
 function VisibleProperties(target) {
   let props = []
@@ -8,12 +8,12 @@ function VisibleProperties(target) {
 
   if (target == null) { return props }
   if (target.constructor !== Object || RootOf(target) === Object_prototype) {
-    return LocalProperties(target)
+    return VisibleLocalNames(target)
   }
 
   for (let name in target) {
     let value = target[name]
-    if (value !== Object_prototype[name] || IsLocalProperty.call(target,name)) {
+    if (value !== Object_prototype[name] || IsLocalSelector.call(target,name)) {
       props[next++] = value
     }
   }
@@ -118,6 +118,7 @@ IsIdentical      .add("compare"              , CompareEquality)
 IsIdentical      .add("_compareObjects"      , CompareObjectsEquality)
 IsIdentical      .add("_compareObjects_2nd"  , AreObjectsExactly_2nd)
 IsIdentical      .add("_compareJSObjects"    , AreJSObjectsStrictlyEqual)
+IsIdentical      .addInstanceProperty("_equalitySelector", "isIdentical")
 
 IsExactly        .add("compare"              , CompareEquality)
 IsExactly        .add("_compareObjects"      , CompareObjectsEquality)
