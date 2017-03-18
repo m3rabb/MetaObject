@@ -105,3 +105,22 @@ do {
       return true
   }
 } while (true)
+
+
+===
+Naming
+
+For hasOwnProperty -> IsLocalSelector -> HasOwnSelector -> ContainsSelector
+
+
+KNOWN_PROPERTIES -> KNOWN_SELECTORS
+
+Hidden|Shown| VisibleConfiguration|InvisibleConfiguration
+
+own|known|unknown
+
+KNOWN_SELECTORS
+UNKNOWNS_SELECTORS
+OWN
+
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Enumerability_and_ownership_of_properties

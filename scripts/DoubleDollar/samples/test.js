@@ -1,6 +1,11 @@
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
+const ALL_IDS     = Symbol("ALL_IDS")
+const MUTABLE     = null
+const FACT        = Symbol("FACT")
+const IMMUTABLE   = Symbol("IMMUTABLE")
+
 
 const InterMap = new WeakMap()
 
@@ -66,6 +71,11 @@ const MutableInnerPermeability = {
   set (core, selector, value, inner) {
     const isPublic = (selector[0] !== "_")
 
+    if ((core[selector] === undefined) && !core._has(selector)) {
+      delete core[KNOWN_SELECTORS]
+      delete core[PUBLIC_SELECTORS]
+    }
+
     switch (typeof value) {
       default :
         core[selector] = value
@@ -76,48 +86,39 @@ const MutableInnerPermeability = {
         break
 
       case "object" :
-        if (value === null) {
-          core[selector] = value
-        }
-        else if (core[selector] === value) { // && IsLocalProperty.call(core, selector)
-          // NOP
-        }
+        if (value === null) { core[selector] = value }
+
+        else if (core[selector] === value) { core[selector] = value }
+
         else if (value === inner) {
           core[selector] = inner
           value = core.$
         }
-        else if (value.id != null) {
-          core[selector] = value
-        }
+
+        else if (value.id != null) { core[selector] = value }
+
         else if (isPublic) {
-          core[selector] = value = (valueCore = InterMap.get(value)) ?
-            valueCore[COPY](true).$ : CopyObject(value, true)
+          core[selector] = value =
+            (valueCore = InterMap.get(value)) ?
+              valueCore[COPY](true).$ : CopyObject(value, true)
         }
-        else {
-          core[selector] = value
-        }
+
+        else { core[selector] = value }
         break
     }
 
-    propsKind = (isPublic) ? (core[OUTER][selector] = value, PROPS) : _PROPS
+    if (isPublic) { core[OUTER][selector] = value }
 
-    if (!core[ROOT][KNOWN_PROPERTIES]) {
-      props = core[propsKind]
-      if (!props[selector]) { props[PROPS_COUNT]++ }
-      props[selector] = true
-    }
     return true
   },
 
   deleteProperty (core, selector, inner) {
-    propsKind = (selector[0] !== "_") ?
-      (delete core[OUTER][selector], PROPS) : _PROPS
-    if (!core[KNOWN_PROPERTIES]) {
-      props = core[propsKind]
-      if (!props[selector]) { props[PROPS_COUNT]-- }
-      delete props[selector]
+    if ((core[selector] !== undefined) || core._has(selector)) {
+      delete core[KNOWN_SELECTORS]
+      delete core[PUBLIC_SELECTORS]
+      delete core[selector]
     }
-    delete core[selector]
+
     return true
   }
 }
@@ -149,7 +150,7 @@ class ImmutableInnerPermeability {
       case "_IMMUTABILITY" : this.target = core.asMutableCopy; break
       case "_ALL"          : this.target = core._newBlank()  ; break
       default :
-        if (!IsLocalProperty.call(core, selector)) { return true }
+        if (!ContainsSelector.call(core, selector)) { return true }
         this.target = inner.mutableCopyExcept(selector)
         break
     }
@@ -175,7 +176,7 @@ class ImmutableInnerPermeability {
   }
 }
 
-ImmutableInnerPermeability.prototype = SpwanFrom(null)
+ImmutableInnerPermeability.prototype = SpawnFrom(null)
 
 
 Thing.addSGetter(function _captureChanges() {
@@ -298,9 +299,8 @@ function WrapFunc(OriginalFunc, funcType) {
     DefineProperty($func, "name", VisibleConfiguration)
     $func.name = OriginalFunc.name
   }
-  $func.id = null
-  $func.isImmutable = true
-  InterMap.set($func, CONFIRMED_IMMUTABLE)
+  DefineProperty($func, "id", EmptyIdConfiguration)
+  DefineProperty(object, "isImmutable", IsImmutableConfiguration)
   return SetImmutable($func)
 }
 
@@ -314,6 +314,52 @@ function EnkrustThing(thing) {
 }
 
 AddLazilyInstalledProperty(_Thing_root, "$", EnkrustThing)
+
+function GetKnownSelectors() {
+  DefineProperty(Core_root, KNOWN_SELECTORS, VisibleConfiguration)
+  return (this[KNOWN_SELECTORS] = VisibleLocalNames(this))
+}
+
+function SetKnownSelectors(selectors) {
+  DefineProperty(this, KNOWN_SELECTORS, VisibleConfiguration)
+  this[KNOWN_SELECTORS] = selectors
+}
+
+DefineProperty(Core_root, KNOWN_SELECTORS, {
+  enumerable   : false,
+  configurable : true,
+  set          : SetKnownSelectors
+  get          : GetKnownSelectors
+})
+
+function GetPublicSelectors() {
+  DefineProperty(Core_root, PUBLIC_SELECTORS, VisibleConfiguration)
+  return (this[PUBLIC_SELECTORS] = VisibleLocalNames(this))
+}
+
+function SetPublicSSelectors(selectors) {
+  DefineProperty(this, PUBLIC_SELECTORS, VisibleConfiguration)
+  this[PUBLIC_SELECTORS] = selectors
+}
+
+DefineProperty(Core_root, PUBLIC_SELECTORS, {
+  enumerable   : false,
+  configurable : true,
+  set          : SetPublicSSelectors
+  get          : GetPublicSSelectors
+})
+
+
+AddLazilyInstalledProperty(Core_root, PUBLIC_SELECTORS, function () {
+  let knownSelectors = this[KNOWN_SELECTORS]
+  let next = props.length
+  let publicSelectors  = []
+  while (next--) {
+    selector = publicSelectors[next]
+    if (selector[0] !== "_") { publicSelectors[next] = selector }
+  }
+  return knownSelectors
+})
 
 
 
@@ -375,43 +421,40 @@ function BlankConstructorFor(instanceRoot) {
   return SetImmutable(constructor)
 }
 
-function CreateFactory(_Blank, isDisguised) {
+function CreateFactory(_NewCore, isDisguised) {
   return function (...args) {
-    const instance = new _Blank()
-    instance._init(...args)
-    if (args.length && instance.id == null) { instance.beImmutable }
+    const core = new _NewCore()
+    core[INNER]._init(...args)
+    if (args.length && core.id == null) { core.beImmutable } // LOOK!!!
     return instance.$
   }
 }
 
-function Create_new(_Blank) {
+function Create_new(_NewCore) {
   const target = {}
   target.new =function (...args) {
-    const instance = new _Blank()
+    const instance = new _NewCore()
     instance._init(...args)
     return instance.$
   }
   return target.new
 }
 
-function Create_COPY(_Blank) {
-  return function COPY(
-    asImmutable, visited = CopyLog(), _targetInner = _Blank(), exceptSelector_
-  ) {
-    const targetKrust = _target.$
+function Create_COPY(_NewCore) {
+  return function COPY(asImmutable, visited = CopyLog(), exceptSelector_) {
+    const target = new _NewCore()
 
-    visited.pairing(this.$, targetKrust) // to manage cyclic objects
+    visited.pairing(this.$, target.$) // to manage cyclic objects
 
-    if (_targetInner._initFrom_ === _InitFrom_) {
-      _targetInner._initFrom_(this, visited, exceptSelector_, asImmutable)
+    if (target._initFrom_ === _InitFrom_) {
+      return target._initFrom_(this, visited, exceptSelector_, asImmutable)
     } else {
-      _targetInner._initFrom_(this, visited, exceptSelector_)
-      if (asImmutable) { ThenBeImmutable(_targetInner) }
+      targetInner = target[INNER]
+      targetInner._initFrom_(this, visited, exceptSelector_)
+      return asImmutable ? BecomeImmutable(target, true, true) : targetInner
     }
-    return targetKrust
   }
 }
-
 // function Create__copy(_Blank) {
 //   return function _copy(asImmutable, log = CopyLog.new(), _target = _Blank()) {
 //     const  target = _target.$
@@ -427,21 +470,21 @@ function Create_COPY(_Blank) {
 //   }
 // }
 
-class DisguiseBehavior {
+class DisguisePermeability {
   constructor (disguised) {
     this.disguised = disguised
   }
 
-  get (_factory, selector, _disguise) {
+  get (func, selector, disguise) {
     return this.disguised[selector]
   }
 
-  set (_factory, selector, value, _disguise) {
+  set (func, selector, value, disguise) {
     this.disguised[selector] = value
     return false
   }
 
-  has (_factory, selector) {
+  has (func, selector, disguise) {
     return (selector in this.disguised)
   }
 }
@@ -462,7 +505,25 @@ function Type(spec_typeName, supertypes_) {
 
 
 
+function _setId(newId_) {
+  const newId = (arguments.length) ? newId_ : NewUniqueId(this.basicId() + "-")
 
+  const id = this.id
+
+  if (id !== undefined) {
+    let ids
+
+    if (newId === existingId) { return this }
+    if (!(ids = this[ALL_IDS])) {
+      this[ALL_IDS] = ids = SpawnFrom(null)
+      ids[existingId] = existingId
+    }
+    ids[newId] = newId
+  }
+
+  this.id = newId
+  return this
+},
 
 Thing.addSLazyProperty(IID, function() {
   return InterMap.get(this.type)._nextIID++
@@ -483,10 +544,10 @@ function _setId(newId_) {
 
 PutMethod(Type_root, function _init(spec, _root_, context__) {
   const _root    = _root_ || new BlankRoot()
-  const _Blank   = BlankConstructorFor(_root)
-  const _factory = CreateFactory(_Blank)
-  const behavior = new DisguiseBehavior(this)
-  const disguise = new Proxy(_factory, behavior)
+  const _NewCore = BlankConstructorFor(_root)
+  const _factory = CreateFactory(_NewCore)
+  const permeability = new DisguisePermeability(this)
+  const disguise = new Proxy(_factory, permeability)
 
   _factory[Symbol.hasInstance] = (instance) => (instance.type === this)
   SetImmutable(_factory.prototype)
@@ -494,13 +555,13 @@ PutMethod(Type_root, function _init(spec, _root_, context__) {
 
   _root.type         = disguise.$
   _root[ROOT]        = _root
-  _root._newBlank    = () => (new _Blank()).$
-  _root[COPY]        = Create_COPY(_Blank)
+  _root._newBlank    = () => (new _NewCore()).$
+  _root[COPY]        = Create_COPY(_NewCore)
 
-  this.new           = _root.new = Create_new(_Blank)
+  this.new           = _root.new = Create_new(_NewCore)
 
   this._instanceRoot = _root
-  this._constructor  = _Blank
+  this._constructor  = _NewCore
   this._factory      = _factory
   this._disguise     = disguise
   this._nextIID      = 0

@@ -7,13 +7,13 @@ const Floor              = Math.floor
 const RandomUnitValue    = Math.random
 const DefineProperty     = Object.defineProperty
 const VisibleLocalNames  = Object.keys
-const AllLocalNames      = Object.getOwnPropertyNames
-const AllLocalSymbols    = Object.getOwnPropertySymbols
-const AllLocalSelectors  = Reflect.ownKeys
+const LocalNames         = Object.getOwnPropertyNames
+const LocalSymbols       = Object.getOwnPropertySymbols
+const LocalSelectors     = Reflect.ownKeys
 const SetImmutable       = Object.freeze
 const IsImmutable        = Object.isFrozen
 const Object_prototype   = Object.prototype
-const IsLocalSelector    = Object_prototype.hasOwnProperty
+const ContainsSelector   = Object_prototype.hasOwnProperty
 const PropertyDescriptor = Object.getOwnPropertyDescriptor
 const Apply              = Reflect.apply
 

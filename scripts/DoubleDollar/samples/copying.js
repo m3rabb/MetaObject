@@ -1,33 +1,3 @@
-
-function _setId(newId_) {
-  const newId = (arguments.length) ? newId_ : NewUniqueId(this.basicId() + "-")
-
-  const existingId = this[EXPLICIT_ID]
-
-  if (existingId !== undefined) {
-    let ids
-
-    if (newId === existingId) { return this }
-    if (!(ids = this[ALL_IDS])) {
-      this[ALL_IDS] = ids = SpawnFrom(null)
-      ids[existingId] = existingId
-    }
-    ids[newId] = newId
-  }
-  else { this[IS_FACT] = FACT }
-
-  this[EXPLICIT_ID] = newId
-  return this
-},
-
-EXPLICIT_ID = Symbol("EXPLICIT_ID")
-ALL_IDS     = Symbol("ALL_IDS")
-IS_FACT     = Symbol("IS_FACT")
-MUTABLE     = null
-FACT        = Symbol("FACT")
-IMMUTABLE   = Symbol("IMMUTABLE")
-
-
 AddGetter(Thing_root, function isFact() {
   return (this.id != null)
 })
@@ -75,74 +45,57 @@ AddGetter(Thing_root, function asImmutable() {
 })
 
 AddGetter(Thing_root, function beImmutable() {
-  return this.isImmutable ? this : this[COPY](true, undefined, this)
+  return this.isImmutable ? this : BecomeImmutable(this, true, false)
 })
 
 
 
 Thing.add("_initFrom_", _InitFrom_)
 
-function _InitFrom_(_source, visited, exceptSelector, asImmutable) {
+function _InitFrom_(sourceInner, visited, exceptSelector, asImmutable) {
   let props, next, prop, value, traversed, inner
 
-  if ((props = this[KNOWN_PROPERTIES])) {
-    next   = props.length
+  targetCore = this
+  targetInner = this[INNER]
+  selectors  = targetCore[KNOWN_SELECTORS] = sourceInner[KNOWN_SELECTORS]
+  next       = selectors.length
 
-    while (next--) {
-      prop  = props[next]
-      if (prop === exceptSelector) { continue }
-      value = _source[prop]
+  while (next--) {
+    selector = selectors[next]
+    if (selector === exceptSelector) { continue }
+    value = sourceInner[selector]
 
-      if (typeof value !== "object" || value === null || value.id != null) {}
-      else if ((traversed = visited.pair(value))) { value = traversed }
-      else if ((valueCore = InterMap.get(value))) {
-        value = valueCore[COPY](asImmutable, visited).$
-      }
-      else { value = CopyObject(value, asImmutable, visited) }
-
-      this[prop] = value
+    if (typeof value !== "object" || value === null || value.id != null) {}
+    else if ((traversed = visited.pair(value))) { value = traversed }
+    else if ((valueCore = InterMap.get(value))) {
+      value = valueCore[COPY](asImmutable, visited).$
     }
+    else { value = CopyObject(value, asImmutable, visited) }
+
+    targetCore[selector] = value
   }
-  else {
-    targetOuter = this[OUTER]
-    count = 1
-    propsKind = PROPS
 
-    do {
-      sourceProps = _source[propsKind]
-      targetProps = this[propsKind]
+  targetOuter = targetCore[OUTER]
+  selectors   = targetCore[PUBLIC_SELECTORS] = sourceInner[PUBLIC_SELECTORS]
+  next        = selectors.length
 
-      for (prop in sourceProps) {
-        if (prop !== exceptSelector) {
-          value = _source[prop]
-
-          if (typeof value !== "object" || value === null || value.id != null) {}
-          else if ((traversed = visited.pair(value))) { value = traversed }
-          else if ((valueCore = InterMap.get(value))) {
-            value = valueCore[COPY](asImmutable, visited).$
-          }
-          else { value = CopyObject(value, asImmutable, visited) }
-
-          targetProps[prop] = true
-          this[prop] = value
-          if (count) { targetOuter[prop] = value }
-        }
-      }
-      propsKind = _PROPS
-    } while (count--)
+  while (next--) {
+    selector = selectors[next]
+    if (selector !== exceptSelector) { targetOuter[selector] = value }
   }
 
   if (asImmutable) {
-    if (_source.id != null) {
-      if (_source !== this) { this._setId() }
+    if (sourceInner.id == null) {
+      DefineProperty(target, "id", EmptyIdConfiguration)
     }
-    else { DefineProperty(target, "id", EmptyIdConfiguration) } // NON_UNIQUE_IMMUTABLE
+    else if (sourceInner !== targetInner) { targetCore._setId() }
 
     DefineProperty(object, "isImmutable", IsImmutableConfiguration)
-    SetImmutable(this)
+    target[INNER] = (new ImmutableInnerPermeability(target)).inner
+    SetImmutable(targetOuter)
   }
 
-  return this
+  return targetInner
 }
 
 
@@ -153,7 +106,7 @@ function _GeneralPurposeObjectCopy(visited = CopyLog()) {
   if (this.id != null) { return this }
 
   target = SpawnFrom(RootOf(this))
-  props  = this[KNOWN_PROPERTIES] || VisibleLocalNames(this)
+  props  = this[KNOWN_SELECTORS] || VisibleLocalNames(this)
   next   = props.length
 
   visited.pairing(this, target) // Handles cyclic objects
@@ -178,7 +131,7 @@ function _GeneralPurposeObjectCopy(visited = CopyLog()) {
 
 
 // NOTE: The CopyObject is only called AFTER confirming that the source
-//       is NOT a fact!!!
+//       doesn't have an id and is therefore not a fact
 
 function CopyObject(source, asImmutable, visited = CopyLog()) {
   let target, next, value, traversed, inner, props, prop
@@ -194,13 +147,13 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
           visited.pairing(source, target) // ensure logging, just in case
         }
         returns (asImmutable && target !== source) ?
-          ThenBeImmutable(target) : target
+          BecomeImmutable(target, false, true) : target
       }
 
-      if (!(props = source[KNOWN_PROPERTIES]) && source.id === undefined) {
+      if (!(props = source[KNOWN_SELECTORS]) && source.id === undefined) {
         return source   // Never copy ordinary object without an
                         // expressed intention from their creators
-      }                 // e.g. setting copy|KNOWN_PROPERTIES|id = null
+      }                 // e.g. setting copy|KNOWN_SELECTORS|id = null
       // source.id === null
 
       target = SpawnFrom(RootOf(source))
@@ -248,8 +201,8 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
   }
 
   if (asImmutable) {
-    if (target.id == null) { // NON_UNIQUE_IMMUTABLE
-      DefineProperty(target, "id", EmptyIdConfiguration) // ""
+    if (target.id == null) {
+      DefineProperty(target, "id", EmptyIdConfiguration)
     }
     if (!target.isImmutable) { // Ensures we don't overwrite existing isImmutable
       DefineProperty(target, "isImmutable", IsImmutableConfiguration)
@@ -262,38 +215,15 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
 
 
 
-function ThenBeImmutable(target, visited = new Set()) {
+function BecomeImmutable(target, isCore, useExisting, visited = new Set()) {
   let next, value, inner, props, prop
 
   visited.add(target)
 
   switch (target.constructor) {
     default : // Custom Object
-      if ((props = target[KNOWN_PROPERTIES])) { }
-      else if (target[SECRET] === CORE) {
-        targetOuter = target[OUTER]
-        count = 1
-        propsKind = PROPS
-
-        do {
-          targetProps = target[propsKind]
-
-          for (prop in targetProps) {
-            value = _source[prop]
-
-            if (typeof value !== "object" || value === null) {}
-            else if (value.id != null || visited.has(value)) {}
-            else if ((valueCore = InterMap.get(value))) {
-              ThenBeImmutable(valueCore, visited)
-            }
-            else { ThenBeImmutable(value, visited }
-          }
-          propsKind = _PROPS
-        } while (count--)
-        break
-      } // LOOK: check this below!!!
-      else if (target.id === null || ("copy" in target)) { }
-      else { return target }
+      if (!(props = target[KNOWN_SELECTORS]) &&
+        (target.id === undefined) && !("copy" in target)) { return target }
 
     case Object :
       props = props || VisibleLocalNames(target)
@@ -301,14 +231,22 @@ function ThenBeImmutable(target, visited = new Set()) {
 
       while (next--) {
         prop  = props[next]
-        value = source[prop]
+        value = target[prop]
 
         if (typeof value !== "object" || value === null) {}
         else if (value.id != null || visited.has(value)) {}
         else if ((valueCore = InterMap.get(value))) {
-          ThenBeImmutable(valueCore, visited)
+          if (useExisting) {
+            BecomeImmutable(valueCore, true, useExisting, visited)
+          } else {
+            target[prop] = valueCore[COPY](true, visited).$
+          }
         }
-        else { ThenBeImmutable(value, visited }
+        else if (useExisting) {
+          BecomeImmutable(value, false, useExisting, visited)
+        } else {
+          target[prop] = CopyObject(value, true, visited).$
+        }
       }
       break
 
@@ -321,15 +259,27 @@ function ThenBeImmutable(target, visited = new Set()) {
         if (typeof value !== "object" || value === null) {}
         else if (value.id != null || visited.has(value)) {}
         else if ((valueCore = InterMap.get(value))) {
-          ThenBeImmutable(valueCore, visited)
+          if (useExisting) {
+            BecomeImmutable(valueCore, true, useExisting, visited)
+          } else {
+            target[prop] = valueCore[COPY](true, visited).$
+          }
         }
-        else { ThenBeImmutable(value, visited }
+        else if (useExisting) {
+          BecomeImmutable(value, false, useExisting, visited)
+        } else {
+          target[prop] = CopyObject(value, true, visited).$
+        }
       }
       break
   }
 
-  if (target.id == null) { // NON_UNIQUE_IMMUTABLE
-    DefineProperty(target, "id", EmptyIdConfiguration) // ""
+  if (isCore) {
+    DefineProperty(target, "isImmutable", IsImmutableConfiguration)
+    targetOuter = target[OUTER]
+    targetOuter.isImmutable = true
+    SetImmutable(targetOuter)
+    return (target[INNER] = (new ImmutableInnerPermeability(target)).inner)
   }
   if (!target.isImmutable) { // Ensures we don't overwrite existing isImmutable
     DefineProperty(target, "isImmutable", IsImmutableConfiguration)
@@ -484,12 +434,12 @@ PutMethod(Type_root, function addSMethod(method_func__name, func__, mode___) {
       break
 
     case GETTER :
-      _AddGetter(this._instanceRoot, selector, handler, true)
+      _AddGetter(this._instanceRoot, selector, true, handler)
       break
 
     case LAZY_INSTALLER :
-      _AddGetter(this._instanceRoot, selector, function _loader() {
-        DefineProperty(this, selector, InvisibleConfiguration)
+      _AddGetter(this._instanceRoot, selector, false, function _loader() {
+        DefineProperty(this, selector, VisibleConfiguration)
         return (this[selector] = handler.call(this))
       })
       break

@@ -2,7 +2,7 @@
    equality, etc.
 
 -- bias towards reading over writing
--- be lazy, dont store until you need to 
+-- be lazy, dont store until you need to
 --
 
 propsKind = (isPublic) ? (core[OUTER][selector] = value, PROPS) : _PROPS
@@ -27,3 +27,44 @@ delete core[selector]
 return true
 }
 }
+
+
+======
+Every time a new property is added/removed rebuild the cache
+
+set (core, selector, value, inner) {
+  const isPublic = (selector[0] !== "_")
+  const hasNewProperty = ((core[selector] === undefined) &&
+    !core[ROOT][KNOWN_PROPERTIES] && !core._has(selector))
+
+  switch (typeof value) {
+
+  }
+
+  if (isPublic) {
+    const outer = core[OUTER]
+    outer[selector] = value
+    if (hasNewProperty) {
+      outer[KNOWN_PROPERTIES] = VisibleLocalNames(outer)
+    }
+  }
+  else if (hasNewProperty) {
+    core[KNOWN_PROPERTIES] = VisibleLocalNames(core)
+  }
+
+  return true
+},
+
+
+===
+Better yet, only build the cache when it is needed to be read
+
+===
+
+Better yet load ref KNOWN_SELECTORS on init
+
+==
+
+or
+
+_KNOWN_SELECTORS & KNOWN_SELECTORS 

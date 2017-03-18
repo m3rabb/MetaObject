@@ -124,11 +124,13 @@ IsExactly        .add("compare"              , CompareEquality)
 IsExactly        .add("_compareObjects"      , CompareObjectsEquality)
 IsExactly        .add("_compareObjects_2nd"  , AreObjectsExactly_2nd)
 IsExactly        .add("_compareJSObjects"    , AreJSObjectsStrictlyEqual)
+IsIdentical      .addInstanceProperty("_equalitySelector", "isIdentical")
 
 IsInterchangeable.add("compare"              , CompareEquality)
 IsInterchangeable.add("_compareObjects"      , CompareObjectsEquality)
 IsInterchangeable.add("_compareObjects_2nd"  , AreObjectsInterchangeable_2nd)
 IsInterchangeable.add("_compareJSObjects"    , AreJSObjectsStrictlyEqual)
+IsIdentical      .addInstanceProperty("_equalitySelector", "isIdentical")
 
 IsEqual          .add("compare"              , CompareEquality)
 IsEqual          .add("_compareObjects"      , CompareObjectsEquality)
@@ -136,6 +138,7 @@ IsEqual          .add("_compareObjects_2nd"  , CompareObjectsEquality_2nd)
 IsEqual          .add("_compareObjects_nth"  , AreObjectsEqual_nth)
 IsEqual          .add("_compareJSObjects"    , AreJSObjectsEqual)
 IsEqual          .add("_compareJSObjects_nth", AreJSObjectsEqual)
+IsIdentical      .addInstanceProperty("_equalitySelector", "isIdentical")
 
 IsEquivalent     .add("compare"              , CompareEquivalence)
 IsEquivalent     .add("_compareObjects"      , CompareObjectsEquivalence)
@@ -143,6 +146,7 @@ IsEquivalent     .add("_compareObjects_2nd"  , CompareObjectsEquality_2nd)
 IsEquivalent     .add("_compareObjects_nth"  , AreObjectsEquivalent_nth)
 IsEquivalent     .add("_compareJSObjects"    , AreJSObjectsEquivalent)
 IsEquivalent     .add("_compareJSObjects_nth", AreJSObjectsEquivalent)
+IsIdentical      .addInstanceProperty("_equalitySelector", "isIdentical")
 
 IsEquivEqual     .add("compare"              , CompareEquivalence)
 IsEquivEqual     .add("_compareObjects"      , CompareObjectsEquivalence)
@@ -150,6 +154,7 @@ IsEquivEqual     .add("_compareObjects_2nd"  , CompareObjectsEquality_2nd)
 IsEquivEqual     .add("_compareObjects_nth"  , AreObjectsEqual_nth)
 IsEquivEqual     .add("_compareJSObjects"    , AreJSObjectsEquivalent)
 IsEquivEqual     .add("_compareJSObjects_nth", AreJSObjectsEqual)
+IsIdentical      .addInstanceProperty("_equalitySelector", "isIdentical")
 
 
 
