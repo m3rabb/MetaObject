@@ -82,34 +82,30 @@ const MutableInnerPermeability = {
         break
 
       case "function" : // LOOK: will catch Type things!!!
+        // NOTE: Checking for value.constructor is inadequate to prevent func spoofing
         core[selector] = InterMap.get(value) ? value : WrapFunc(value, OUTSIDE)
         break
 
       case "object" :
-             if (!isPublic)                  { core[selector] = value
-                                               return true            }
-             if (value === inner)            { core[selector] = value
-                                               value = core.$         }
-        else if (value === null)             { core[selector] = value }
-        else if (value === core[selector])   {   /* already set */    }
-        else if (value.id != null)           { core[selector] = value }
-        else switch (value.constructor) {
+             if (!isPublic)                      { core[selector] = value
+                                                   return true            }
+             if (value === inner)                { core[selector] = value
+                                                   value = core.$         }
+        else if (value === null)                 { core[selector] = value }
+        else if (value === core[selector])       {   /* already set */    }
+        else if (value.id != null)               { core[selector] = value }
+        else switch ((constructor = value.constructor)) {
+          case Array  :
           case Object :
-            if (value.isImmutable)           { core[selector] = value }
-            else { core[selector] = CopyObject(value, false, visited) }
-            break
-
-          case Array :
-            if (value.isImmutable)           { core[selector] = value }
-            else  { core[selector] = CopyArray(value, false, visited) }
+            if (value.isImmutable)               { core[selector] = value }
+            else { core[selector] = CopyObject(value, constructor, false) }
             break
 
           default :              // custom: fact by default || immutable
-            if (id === undefined)            { core[selector] = value }
+            if (id === undefined)                { core[selector] = value }
             else { // id === null  custom: marked nonfact || thing: default mutable nonfact
               core[selector] = ((valueCore = InterMap.get(value))) ?
-                valueCore[COPY](false, visited).$ :
-                CopyCustom(value, false, visited)
+                valueCore[COPY](false).$ : CopyObject(value, constructor, false)
             }
             break
         }
@@ -436,12 +432,26 @@ function Create_COPY(_NewCore) {
         if (selector === exceptSelector_) { continue }
         value = this[selector]
 
-        if (typeof value !== "object" || value === null || value.id != null) {}
-        else if ((traversed = visited.pair(value))) { value = traversed }
-        else if ((valueCore = InterMap.get(value))) {
-          value = valueCore[COPY](asImmutable, visited).$
+        if (typeof value !== "object" || value === null) {/* NOP */}
+        else if (id = value.id) != null) {/* NOP */}
+        else switch ((constructor = value.constructor)) {
+          case Array  :
+          case Object :
+            if (value.isImmutable) {/* NOP */} else {
+              value = (traversed = visited.pair(value)) ? traversed :
+                CopyObject(value, constructor, asImmutable, visited)
+            }
+            break
+
+          default :
+            if (id === undefined) {/* NOP */} // custom: fact by default || immutable
+            else { // id === null  custom: marked nonfact || thing: default mutable nonfact
+              value = (traversed = visited.pair(value)) ? traversed :
+                ((valueCore = InterMap.get(value))) ?
+                  valueCore[COPY](false, visited).$ :
+                  CopyObject(value, constructor, asImmutable, visited)
+            break
         }
-        else { value = CopyObject(value, asImmutable, visited) }
 
         target[selector] = value
         if (selector[0] !== "_") { targetOuter[selector] = value }

@@ -67,12 +67,26 @@ function _GeneralPurposeObjectCopy(visited = CopyLog()) {
     selector  = selectors[next]
     value = this[selector]
 
-    if (typeof value !== "object" || value === null || value.id != null) {}
-    else if ((traversed = visited.pair(value))) { value = traversed }
-    else if ((valueCore = InterMap.get(value))) {
-      value = valueCore[COPY](false, visited).$
+    if (typeof value !== "object" || value === null) {/* NOP */}
+    else if (id = value.id) != null) {/* NOP */}
+    else switch ((constructor = value.constructor)) {
+      case Array  :
+      case Object :
+        if (value.isImmutable) {/* NOP */} else {
+          value = (traversed = visited.pair(value)) ? traversed :
+            CopyObject(value, constructor, asImmutable, visited)
+        }
+        break
+
+      default :
+        if (id === undefined) {/* NOP */} // custom: fact by default || immutable
+        else { // id === null  custom: marked nonfact || thing: default mutable nonfact
+          value = (traversed = visited.pair(value)) ? traversed :
+            ((valueCore = InterMap.get(value))) ?
+              valueCore[COPY](false, visited).$ :
+              CopyObject(value, constructor, asImmutable, visited)
+        break
     }
-    else { value = CopyObject(value, false, visited) }
 
     target[selector] = value
   }
@@ -85,10 +99,10 @@ function _GeneralPurposeObjectCopy(visited = CopyLog()) {
 // NOTE: The CopyObject is only called AFTER confirming that the source
 //       doesn't have an id and is therefore not a fact
 
-function CopyObject(source, asImmutable, visited = CopyLog()) {
+function CopyObject(source, constructor, asImmutable, visited = CopyLog()) {
   let target, next, value, traversed, inner, selectors, selector
 
-  switch (source.constructor) {
+  switch (constructor) {
     default : // Custom Object
       if ((target = source.copy)) {
         if (target === _GeneralPurposeObjectCopy) {
@@ -121,7 +135,8 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
         selector  = selectors[next]
         value = source[selector]
 
-        if (typeof value !== "object" || value === null || value.id != null) {}
+        if (typeof value !== "object" || value === null) {/* NOP */}
+        else if (id = value.id) != null) {/* NOP */}
         else if ((traversed = visited.pair(value))) { value = traversed }
         else if ((valueCore = InterMap.get(value)) {
           value = valueCore[COPY](asImmutable, visited).$
