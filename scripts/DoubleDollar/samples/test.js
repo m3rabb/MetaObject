@@ -86,20 +86,37 @@ const MutableInnerPermeability = {
         break
 
       case "object" :
-             if (value === null)           { core[selector] = value }
-        else if (core[selector] === value) { core[selector] = value }
-        else if (value === inner)          { core[selector] = inner
-                                             value = core.$         }
-        else if (value.id != null)         { core[selector] = value }
-        else if (isPublic)                 { core[selector] = value =
-          (valueCore = InterMap.get(value)) ?
-            valueCore[COPY](true).$ : CopyObject(value, true)       }
-        else                               { core[selector] = value }
+             if (!isPublic)                  { core[selector] = value
+                                               return true            }
+             if (value === inner)            { core[selector] = value
+                                               value = core.$         }
+        else if (value === null)             { core[selector] = value }
+        else if (value === core[selector])   {   /* already set */    }
+        else if (value.id != null)           { core[selector] = value }
+        else switch (value.constructor) {
+          case Object :
+            if (value.isImmutable)           { core[selector] = value }
+            else { core[selector] = CopyObject(value, false, visited) }
+            break
+
+          case Array :
+            if (value.isImmutable)           { core[selector] = value }
+            else  { core[selector] = CopyArray(value, false, visited) }
+            break
+
+          default :              // custom: fact by default || immutable
+            if (id === undefined)            { core[selector] = value }
+            else { // id === null  custom: marked nonfact || thing: default mutable nonfact
+              core[selector] = ((valueCore = InterMap.get(value))) ?
+                valueCore[COPY](false, visited).$ :
+                CopyCustom(value, false, visited)
+            }
+            break
+        }
         break
     }
 
-    if (isPublic) { core[OUTER][selector] = value }
-
+    core[OUTER][selector] = value
     return true
   },
 
@@ -182,7 +199,7 @@ Thing.addSGetter(function _captureOverwrite() {
 })
 
 
-
+// LOOK: update this!!!
 function WrapFunc(OriginalFunc, funcType) {
   const $func = function (...args) {
     switch (funcType) {
