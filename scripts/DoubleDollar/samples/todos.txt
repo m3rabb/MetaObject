@@ -83,4 +83,10 @@ IsFactConfiguration = {
 }
 
 
-- change isImmutable to IS_IMMUTABLE 
+- consider switching to using explicit asMutable instead of immutability barrier in List
+- make copying use the same method object tricks as equality uses to avoid expensive bookkeeping actions until necessary
+
+- make global Copy and BeImmutable functions handle id
+
+- check List methods to see if only require getters to return facts, instead of all methods to return facts is the way to go
+- consider other copy methods for Lists 

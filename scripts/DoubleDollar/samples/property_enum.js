@@ -65,6 +65,6 @@ Better yet load ref KNOWN_SELECTORS on init
 
 ==
 
-or
+thought about going to two level -> _KNOWN_SELECTORS & KNOWN_SELECTORS
 
-_KNOWN_SELECTORS & KNOWN_SELECTORS 
+but better to go to current model, without lazyInstallers

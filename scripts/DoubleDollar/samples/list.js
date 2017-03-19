@@ -56,17 +56,15 @@ Krust.set((context) => {
       //   return this.within(span_ ? this._normalize(span_) : this.span)
       // },
 
-      function COPY(asImmutable, visited = CopyLog(), exceptSelector_) {
-        if (exceptSelector_ === "_elements") { return NewBlank()[INNER] }
-        sourceElements = this._elements
-        next = source.length
-        targetCore = new NewBlank() 
-        targetElements = targetCore._elements = []
+      function _initFrom_(_source, visited, exceptSelector, asImmutable) {
+        if (exceptSelector === "_elements") { return this }
 
-        visited.pairing(this.$, targetCore.$) // to manage cyclic objects
+        let targetElements = []
+        let sourceElements = _source._elements
+        let next = sourceElements.length
 
         while (next--) {
-          value = sourceElements[next]
+          let value = sourceElements[next]
 
           if (typeof value !== "object" || value === null || value.id != null) {}
           else if ((traversed = visited.pair(value))) { value = traversed }
@@ -78,28 +76,9 @@ Krust.set((context) => {
           targetElements[prop] = value
         }
 
-        if (asImmutable) {
-          DefineProperty(targetCore, "isImmutable", InvisibleTrue)
-          targetOuter = target[OUTER]
-          targetOuter.isImmutable = true
-          SetImmutable(targetOuter)
-          return (target[INNER] = (new ImmutableInnerPermeability(target)).inner)
-        }
-        if (!target.isImmutable) { // Ensures we don't overwrite existing isImmutable
-          DefineProperty(target, "isImmutable", IsImmutableConfiguration)
-        }
-        return SetImmutable(target)
-        if (asImmutable) {
-          listOuter = listCore[OUTER]
-          if (!copyToSelf) { listOuter.id = listCore.id = "" }
-          listOuter.isImmutable = listCore.isImmutable = true
-          listInner = (new ImmutableInnerPermeability(listCore)).inner
-          listCore[INNER] = listInner
-          SetImmutable(listOuter)
-          return listInner
-        }
-        return listCore[INNER]
-      }
+        this._elements = targetElements
+        return this
+      },
 
 
 

@@ -13,7 +13,7 @@ function VisibleProperties(target) {
 
   for (let name in target) {
     let value = target[name]
-    if (value !== Object_prototype[name] || IsLocalSelector.call(target,name)) {
+    if (value !== Object_prototype[name] || ContainsSelector.call(target,name)) {
       props[next++] = value
     }
   }
