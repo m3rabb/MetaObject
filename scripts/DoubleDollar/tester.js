@@ -28,7 +28,13 @@ var a = []
 
 for (n in d) { a.push(n) }
 
+function List(...args) {
+  this.elems = args
+}
 
+var count = 1000
+var nums = []
+while (count--) { nums[count] = count }
 // //=======================
 //
 // const InterMap = new WeakMap()

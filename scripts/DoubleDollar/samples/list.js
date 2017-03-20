@@ -66,14 +66,15 @@ Krust.set((context) => {
         while (next--) {
           let value = sourceElements[next]
 
-          if (typeof value !== "object" || value === null || value.id != null) {}
+          if (typeof value !== "object" || value === null)  {/* NOP */}
+          else if (value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
           else if ((traversed = visited.pair(value))) { value = traversed }
           else if ((valueCore = InterMap.get(value)) {
             value = valueCore[COPY](asImmutable, visited).$
           }
           else { value = CopyObject(value, asImmutable, visited) }
 
-          targetElements[prop] = value
+          targetElements[next] = value
         }
 
         this._elements = targetElements

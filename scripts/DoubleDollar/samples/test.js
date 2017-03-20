@@ -73,53 +73,46 @@ const MutableInnerPermeability = {
 
     if ((core[selector] === undefined) && !core._has(selector)) {
       delete core[KNOWN_SELECTORS]
-      delete core[PUBLIC_SELECTORS]
     }
 
     switch (typeof value) {
       default :
         core[selector] = value
-        break
+        return true
 
       case "function" : // LOOK: will catch Type things!!!
         // NOTE: Checking for value.constructor is inadequate to prevent func spoofing
         core[selector] = InterMap.get(value) ? value : WrapFunc(value, OUTSIDE)
-        break
+        return true
 
       case "object" :
-             if (!isPublic)                      { core[selector] = value
-                                                   return true            }
-             if (value === inner)                { core[selector] = value
-                                                   value = core.$         }
-        else if (value === null)                 { core[selector] = value }
-        else if (value === core[selector])       {   /* already set */    }
-        else if (value.id != null)               { core[selector] = value }
-        else switch ((constructor = value.constructor)) {
-          case Array  :
-          case Object :
-            if (value.isImmutable)               { core[selector] = value }
-            else { core[selector] = CopyObject(value, constructor, false) }
-            break
-
-          default :              // custom: fact by default || immutable
-            if (id === undefined)                { core[selector] = value }
-            else { // id === null  custom: marked nonfact || thing: default mutable nonfact
-              core[selector] = ((valueCore = InterMap.get(value))) ?
-                valueCore[COPY](false).$ : CopyObject(value, constructor, false)
-            }
-            break
+        if (!isPublic) {
+          core[selector] = value
         }
-        break
+        else if (value === inner) {
+          core[selector] = value
+          core[OUTER][selector] = core.$
+        }
+        else if (value === null || value[IS_IMMUTABLE] || value.id != null) {
+          core[OUTER][selector] = core[selector] = value
+        }
+        else if (value === core[selector]) {
+          core[OUTER][selector] = value
+        }
+        else if ((valueCore = InterMap.get(value))) {
+          core[OUTER][selector] = core[selector] =
+            valueCore[COPY](true, visited).$
+        }
+        else {
+          core[OUTER][selector] = core[selector] = CopyObject(value, true)
+        }
+        return true
     }
-
-    core[OUTER][selector] = value
-    return true
   },
 
   deleteProperty (core, selector, inner) {
     if ((core[selector] !== undefined) || core._has(selector)) {
       delete core[KNOWN_SELECTORS]
-      delete core[PUBLIC_SELECTORS]
       delete core[selector]
     }
 
@@ -154,7 +147,7 @@ class ImmutableInnerPermeability {
       case "_IMMUTABILITY" : this.target = core.asMutableCopy; break
       case "_ALL"          : this.target = core._newBlank()  ; break
       default :
-        if (!ContainsSelector.call(core, selector)) { return true }
+        if (!core._hasOwn(selector)) { return true }
         this.target = inner.mutableCopyExcept(selector)
         break
     }
@@ -211,7 +204,7 @@ function WrapFunc(OriginalFunc, funcType) {
 
           case "object" :
             if (this === null) { receiver = null }
-            else if (this.id != null) {
+            else if (value[IS_IMMUTABLE] || value.id != null) {
               receiver = (this[SECRET] === INNER) ? this.$ : this // or CORE???
             }
             else if (this[SECRET] === INNER) { // or CORE???
@@ -259,11 +252,12 @@ function WrapFunc(OriginalFunc, funcType) {
 
         case "object" :
           if (arg === null) { params[next] = null }
-          else if (arg.id != null) { params[next] = arg }
+          else if (arg[IS_IMMUTABLE] || arg.id != null) { params[next] = arg }
           else if ((argCore = InterMap.get(arg))) {
             params[next] = argCore[COPY](true).$
           }
           else { params[next] = CopyObject(arg, true) }
+          break
       }
     }
 
@@ -405,8 +399,8 @@ function Create_new(_NewCore) {
 
 function Create_COPY(_NewCore) {
   return function COPY(asImmutable, visited = CopyLog(), exceptSelector_) {
-    const
-    let
+    const target, targetInner, targetOuter, initializer
+    let   selectors, next, value, traversed, valueCore
 
     target      = new _NewCore()
     targetInner = target[INNER]
@@ -432,26 +426,13 @@ function Create_COPY(_NewCore) {
         if (selector === exceptSelector_) { continue }
         value = this[selector]
 
-        if (typeof value !== "object" || value === null) {/* NOP */}
-        else if (id = value.id) != null) {/* NOP */}
-        else switch ((constructor = value.constructor)) {
-          case Array  :
-          case Object :
-            if (value.isImmutable) {/* NOP */} else {
-              value = (traversed = visited.pair(value)) ? traversed :
-                CopyObject(value, constructor, asImmutable, visited)
-            }
-            break
-
-          default :
-            if (id === undefined) {/* NOP */} // custom: fact by default || immutable
-            else { // id === null  custom: marked nonfact || thing: default mutable nonfact
-              value = (traversed = visited.pair(value)) ? traversed :
-                ((valueCore = InterMap.get(value))) ?
-                  valueCore[COPY](false, visited).$ :
-                  CopyObject(value, constructor, asImmutable, visited)
-            break
+        if (typeof value !== "object" || value === null)  {/* NOP */}
+        else if (value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
+        else if ((traversed = visited.pair(value)) { traversed = value }
+        else if ((valueCore = InterMap.get(value))) {
+          value = valueCore[COPY](asImmutable, visited).$
         }
+        else { value = CopyObject(value, asImmutable, visited) }
 
         target[selector] = value
         if (selector[0] !== "_") { targetOuter[selector] = value }
@@ -459,12 +440,13 @@ function Create_COPY(_NewCore) {
     }
 
     if (asImmutable) {
-      if (this.id == null) {
-        DefineProperty(target, "id", VoidConfiguration)
-        targetOuter.id = NON_ID // VOID
+      if (this.id != null) {
+        if (target._setImmutableCopyId) { target._setImmutableCopyId() }
+        else {
+          delete target.id
+          delete targetOuter.id
+        }
       }
-      else { target._setImmutableCopyId() }
-
       target[IS_IMMUTABLE] = true
       SetImmutable(targetOuter)
       return (target[INNER] = (new ImmutableInnerPermeability(target)).inner)
