@@ -1,5 +1,5 @@
 AddGetter(Thing_root, function isFact() {
-  return (this.id != null)
+  return this[IS_IMMUTABLE] || (this.id != null)
 })
 
 AddGetter(Thing_root, function isImmutable() {
