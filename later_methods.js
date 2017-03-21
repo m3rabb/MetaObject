@@ -149,7 +149,7 @@ MagicKrust
 
 Skins
 Gourd
-Casaba melon 
+Casaba melon
 Cassava/Manniac
 Soursop/Guanabana/Graviola/
 pumkin
@@ -167,6 +167,8 @@ rind/skin/peel/pith
 flesh/pulp/seed
 
 purple carrot
+http://www.popsci.com/wtf-are-purple-carrots-and-where-did-they-come-from
+
 
 
 gourd
