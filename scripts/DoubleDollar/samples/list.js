@@ -49,6 +49,14 @@ Krust.set((context) => {
         elements_.length && this.addAll(elements_)
       },
 
+      function _new(values) {
+        const target = this.type.new()
+        const targetCore = InterMap.get(target)
+        targetCore._elements = values
+        return target
+      },
+
+
 
       // function copy(span_) {
       //   if (!span_ && this[IMMUTABLE]) { return this }
@@ -95,6 +103,14 @@ Krust.set((context) => {
         return `List(${this._elements})`
       },
 
+      function asArray() {
+        if (this[IS_IMMUTABLE]) {
+          DefineProperty(this, "asArray", VisibleConfiguration)
+          return (this.asArray = this._elements)
+        }
+        return CopyArray(this._elements)
+      },
+
 
 
       //// ACCESS METHODS ////
@@ -107,9 +123,10 @@ Krust.set((context) => {
           return this._elements.length
         },
 
-        function length() {  //
-          return this._elements.length
+        "ALIAS", {
+          length: "size"
         },
+
 
         function slots() {
           return this.map((value, index) =>
@@ -134,15 +151,27 @@ Krust.set((context) => {
 
 
         function span() {
-          return SpanBeFact([0, this._elements.length, FWD])
+          const span = [0, this._elements.length, FWD]
+
+          if (this[IS_IMMUTABLE]) {
+            DefineProperty(this, "span", VisibleConfiguration)
+            return (this.span = span)
+          }
+          return span
         },
 
         function inverseSpan() {
-          return SpanBeFact([0, this._elements.length, BWD])
+          const span = [0, this._elements.length, BWD]
+
+          if (this[IS_IMMUTABLE]) {
+            DefineProperty(this, "inverseSpan", VisibleConfiguration)
+            return (this.inverseSpan = span)
+          }
+          return span
         },
 
         function reversed() {
-          return this.type(...BeImmutable(ReversedCopy(this._elements)))
+          return this.type(...ReversedCopy(this._elements)))
         },
 
         function isEmpty() {
@@ -172,17 +201,7 @@ Krust.set((context) => {
         Each(indexes_spans, (index_span, next) => {
           values[next++] = this.at(index_span)
         })
-        return this.type(...BeImmutable(values))
-      },
-
-      function atEach(indexes_spans) {
-        let values = []
-        let next   = 0
-
-        Each(indexes_spans, (index_span, next) => {
-          values[next++] = this.at(index_span)
-        })
-        return this.type(...BeImmutable(values))
+        return this._new(values)
       },
 
       function reverse() {
@@ -200,7 +219,8 @@ Krust.set((context) => {
         const size      = elements.length
         const slotIndex = (index >= 0) ? index : size + index
         return (slotIndex >= 0 && slotIndex < size) ? target[slotIndex] :
-          (typeof absent_ !== "function") ? absent_ : absent_.call(this.$, index)
+          (typeof absent_ !== "function") ?
+            absent_ : absent_.call(this.$, index)
       },
 
       "GETTER", [
@@ -230,7 +250,7 @@ Krust.set((context) => {
           [span_start, ...end__direction__wrap]
         const readSpan = this._asNormalizedSpan(span)
 
-        if (this[AS_FACT] === IMMUTABLE) {
+        if (this[IS_IMMUTABLE]) {
           const [lo, hi, dir, wraps] = readSpan
 
           if (lo === 0 && hi === this.size && dir === FWD && !wrap) {
@@ -302,7 +322,7 @@ Krust.set((context) => {
             values[next++] = slot[Grip]  // element: value, key: index,
           }
         })
-        return this.type(...BeImmutable(values))
+        return this._new(values)
       },
 
 
@@ -423,7 +443,7 @@ Krust.set((context) => {
             values[next++]= (grip === SUB) ? sublist : span
           }
         })
-        return this.type(...BeImmutable(values))
+        return this._new(values)
       },
 
 
@@ -449,11 +469,17 @@ Krust.set((context) => {
       //// ACCESS : answering the Span of a Subsequence
 
       function spanOf(sub, directives_) {
-        const matchSub   = AsArray(sub)
-        const subSize    = matchSub.length
+        const matchSub = AsArray(sub)
+        const subSize  = matchSub.length
 
         return this._overDo(false, false, directives_, subSize, (sub, span) => {
-          if (EqualArrays(sub, matchSub)) { return BeImmutableSpan(span) }
+          if (EqualArrays(sub, matchSub)) {
+            if (this[IS_IMMUTABLE]) {
+              span[IS_IMMUTABLE] = true
+              return SetImmutable(span)
+            }
+            return span
+          }
         })
       },
 
@@ -482,10 +508,10 @@ Krust.set((context) => {
 
         this._overDo(distinct, false, directives_, subSize, (sub, span) => {
           if (EqualArrays(sub, matchSub)) {
-            spans[next++] = BeImmutableSpan(span)
+            spans[next++] = span
           }
         })
-        return this.type(...BeImmutable(spans))
+        return this._new(spans)
       },
 
 
@@ -554,7 +580,7 @@ Krust.set((context) => {
         this.withinDo(scanDirective, (value, index) => {
           values[index] = Action.call(this.$, value, index)
         })
-        return this.type(...BeImmutable(values))
+        return this._new(values)
       },
 
       function withinReduce(directive, Accumulator_, Reducer) {
@@ -670,9 +696,15 @@ Krust.set((context) => {
               sIndex += sInc
             }
 
-            let result = (asList) ?
-              action.call(this.$, BeImmutable(sub), BeImmutableSpan(span)) :
-              action.call(this.$, sub, span)
+            if (asList) {
+              sub = this._new(sub)
+              if (this[IS_IMMUTABLE]) {
+                span[IS_IMMUTABLE] = true
+                return SetImmutable(span)
+              }
+            }
+
+            let result = action.call(this.$, sub, span)
 
             if (result !== undefined) { return result }
 
@@ -696,7 +728,7 @@ Krust.set((context) => {
         this._overDo(distinct, true, directives, subSize, (sublist, span) => {
           values[next++] = Action.call(this.$, sublist, span)
         })
-        return this.type(...BeImmutable(values))
+        return this._new(values)
       },
 
 
@@ -969,7 +1001,7 @@ Krust.set((context) => {
         const fillerSize   = filler.length
         const fillDir      = directives.fill
 
-        if (matchSize === fillerSize && this[AS_FACT] !== IMMUTABLE) {
+        if (matchSize === fillerSize && this[IS_IMMUTABLE]) {
           this._overDo(true, false, directives, matchSize,
             (sub, [lo, hi, dir]) => {
               if (EqualArrays(sub, matchSub)) {
@@ -1034,12 +1066,24 @@ Krust.set((context) => {
 
       //// ADD : a Sequence at a Position
 
-      function addFirstAll(values, fillDirective_) {
-        return this.fanWithin(values, { scan: [0], fill: fillDirective_ })
+      function addAllFirst(values, fillDirective_) {
+        if (fillDirective_) {
+          return this.fanWithin(values, { scan: [0], fill: fillDirective_ })
+        }
+        const source = values.isList ? InterMap.get(values)._elements : values
+        const delta  = values.length
+        this.__subFromShiftTo(0, delta)
+        return this.__fillWithin(source, 0, delta, FWD)
       },
 
-      function addLastAll(values, fillDirective_) {
-        return this.fanWithin(values, { scan: [null], fill: fillDirective_ })
+      function addAllLast(values, fillDirective_) {
+        if (fillDirective_) {
+          return this.fanWithin(values, { scan: [null], fill: fillDirective_ })
+        }
+        const source = values.isList ? InterMap.get(values)._elements : values
+        const delta  = values.length
+        const size   = this._elements.length
+        return this.__fillWithin(source, size, size + delta, FWD)
       },
 
       function addAllBefore(values, sub, directives_) {
@@ -1127,7 +1171,7 @@ Krust.set((context) => {
       },
 
       function removeFinal(count = 1) {
-        return this._removeWithin([-count, null])
+        this._elements.length -= count
       },
 
 
@@ -1177,7 +1221,8 @@ Krust.set((context) => {
 
       function removeLast(value_) {
         return (arguments.length) ?
-          this.removeAtIndex(this.indexOfLast(value_)) : this.removeFinal()
+          this.removeAtIndex(this.indexOfLast(value_)) :
+          (this._elements.length -= 1, this)
       },
 
       function removeEvery(value) {

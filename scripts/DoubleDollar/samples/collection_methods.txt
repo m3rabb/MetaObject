@@ -199,8 +199,55 @@ Remove
     removeLast(value_)
     removeEvery(value)
 
-  By Span
+  By Sub
     removeOver(sub, directive_)            scan|sub
     removeOverFirst(sub, subDirection_)    scan|sub
     removeOverLast(sub, subDirection_)     scan|sub
     removeOverEvery(sub, directive_)       scan|sub
+
+
+
+CopyWith
+  Generic
+    copyWith    : "copyWithLast",
+    copyWithAll : "copyWithAllLast",                   fill
+
+  By Value
+    copyWithFirst(value)
+    copyWithLast(value)
+
+  By Sub
+    copyWithFirstAll(values, directive_)                fill
+    copyWithLastAll(values, directive_)                 fill
+
+CopyWithout
+  Generic
+    copyWithoutAt(index_span)
+    copyWithoutAtEach(indexers)
+    copyWithoutEach(values)
+
+  By Index
+    copyWithoutAtIndex(index)
+
+  By Span
+    copyWithoutWithin(lo, hi = lo)
+    copyWithoutBeyond(edge)
+    copyWithoutUntil(edge)
+    copyWithoutInitial(count = 1)
+    copyWithoutFinal(count = 1)
+
+  By Value
+    copyWithoutWhere(span_, condition)
+    copyWithoutEveryWhere(span_, conditional)
+    copyWithoutEveryWhereNot(span_, conditional)
+
+    copyWithout(value, scanDirective_)
+    copyWithoutFirst(value_)
+    copyWithoutLast(value_)
+    copyWithoutEvery(value)
+
+  By Sub
+    copyWithoutOver(sub, directive_)            scan|sub
+    copyWithoutOverFirst(sub, subDirection_)    scan|sub
+    copyWithoutOverLast(sub, subDirection_)     scan|sub
+    copyWithoutOverEvery(sub, directive_)       scan|sub

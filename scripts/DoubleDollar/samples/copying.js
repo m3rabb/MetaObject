@@ -46,7 +46,7 @@ AddGetter(Thing_root, function asImmutable() {
 })
 
 AddGetter(Thing_root, function beImmutable() {
-  return this[IS_IMMUTABLE] ? this : BecomeImmutable(this, false, true)
+  return (this[IS_IMMUTABLE]) ? this : this[BE_IMMUTABLE](false)
 })
 
 
@@ -69,7 +69,7 @@ function _GeneralPurposeObjectCopy(visited = CopyLog()) {
 
     if (typeof value !== "object" || value === null)  {/* NOP */}
     else if (value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
-    else if ((traversed = visited.pair(value)) { traversed = value }
+    else if ((traversed = visited.pair(value)) { value = traversed }
     else if ((valueCore = InterMap.get(value))) {
       value = valueCore[COPY](asImmutable, visited).$
     }
@@ -100,7 +100,7 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
           visited.pairing(source, target) // ensure logging, just in case
         }
         returns (asImmutable && target !== source) ? // Is this check necessary???
-          BecomeImmutable(target, true, false) : target
+          BeImmutableObject(target, true) : target
       }
 
       if (!(selectors = source[KNOWN_SELECTORS]) && source.id === undefined) {
@@ -113,7 +113,7 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
       // break omitted
 
     case Object :
-      selectors    = selectors || KnownNames(source)
+      selectors    = selectors || source[KNOWN_SELECTORS] || KnownNames(source)
       next         = selectors.length
       isFromObject = true
       // break omitted
@@ -124,11 +124,12 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
       visited.pairing(source, (target = [])) // Handles cyclic objects
 
       while (next--) {
-        value = fromObject ? source[selectors[next]] : source[next]
+        selector = isFromObject ? selectors[next] : next
+        value = source[selector]
 
         if (typeof value !== "object" || value === null)  {/* NOP */}
         else if (value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
-        else if ((traversed = visited.pair(value)) { traversed = value }
+        else if ((traversed = visited.pair(value)) { value = traversed }
         else if ((valueCore = InterMap.get(value))) {
           value = valueCore[COPY](asImmutable, visited).$
         }
@@ -144,6 +145,7 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
       if (target._setImmutableCopyId) { target._setImmutableCopyId() }
       else { delete target.id }
     }
+    target[KNOWN_SELECTORS] = selectors
     target[IS_IMMUTABLE] = true
     SetImmutable(this)
   }
@@ -153,68 +155,44 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
 
 
 
-function BecomeImmutable(target, modifySelfDeeply, isCore, visited = new Set()) {
+function BeImmutableObject(target, modifySelfDeeply, visited = new CopyLog()) {
   let next, value, inner, selectors, selector
 
   visited.add(target)
 
   switch (target.constructor) {
-    default : // Custom Object
-      selectors = target[KNOWN_SELECTORS]
-
-      if (!selectors && isCore) {
-        selectors = (target[KNOWN_SELECTORS] = KnownNames(target))
-      }
-      // break omitted
-
-    case Object :
-      selectors    = selectors || KnownNames(target)
+    default : // Object or Custom Object
+      selectors    = target[KNOWN_SELECTORS] ||
+        (target[KNOWN_SELECTORS] = KnownNames(target))
       next         = selectors.length
       isFromObject = true
-      // break omitted
+      break
 
     case Array :
-      next = isFromObject ? next : target.length
-
-      while (next--) {
-        value = fromObject ? target[selectors[next]] : target[next]
-
-        if (typeof value !== "object" || value === null)  {/* NOP */}
-        else if (value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
-        else if (visited.has(value))                      {/* NOP */}
-        else if ((valueCore = InterMap.get(value))) {
-          if (modifySelfDeeply) {
-            BecomeImmutable(valueCore, modifySelfDeeply, true, visited)
-          } else {
-            target[selector] = valueCore[COPY](true, visited).$
-          }
-        }
-        else if (modifySelfDeeply) {
-          BecomeImmutable(value, modifySelfDeeply, false, visited)
-        } else {
-          target[selector] = CopyObject(value, true, visited).$
-        }
-      }
+      next = target.length
       break
   }
 
+  while (next--) {
+    selector = isFromObject ? selectors[next] : next
+    value = target[selector]
+
+    if (typeof value !== "object" || value === null)  {/* NOP */}
+    else if (value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
+    else if (visited.pair(value))                     {/* NOP */}
+    else if ((valueCore = InterMap.get(value))) {
+      if (modifySelfDeeply) { valueCore[BE_IMMUTABLE](true, visited) }
+      else { target[selector] = valueCore[COPY](true, visited).$ }
+    }
+    else if (modifySelfDeeply) { BeImmutableObject(value, true, visited) }
+    else { target[selector] = CopyObject(value, true, visited) }
+  }
+
   target[IS_IMMUTABLE] = true
-  if (!isCore) { return SetImmutable(target) }
-
-  SetImmutable(target[OUTER])
-  return (target[INNER] = (new ImmutableInnerPermeability(target)).inner)
+  return SetImmutable(target)
 }
 
 
-
-
-
-
-
-function BeImmutableSpan(span) {
-  InterMap.set(span, ConfirmedFact)
-  return SetImmutable(span)
-}
 
 
 

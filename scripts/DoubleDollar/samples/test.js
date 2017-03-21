@@ -71,7 +71,7 @@ const MutableInnerPermeability = {
   set (core, selector, value, inner) {
     const isPublic = (selector[0] !== "_")
 
-    if ((core[selector] === undefined) && !core._has(selector)) {
+    if ((core[selector] === undefined) && !core._hasOwn(selector)) {
       delete core[KNOWN_SELECTORS]
     }
 
@@ -111,7 +111,7 @@ const MutableInnerPermeability = {
   },
 
   deleteProperty (core, selector, inner) {
-    if ((core[selector] !== undefined) || core._has(selector)) {
+    if ((core[selector] !== undefined) || core._hasOwn(selector)) {
       delete core[KNOWN_SELECTORS]
       delete core[selector]
     }
@@ -178,47 +178,37 @@ ImmutableInnerPermeability.prototype = SpawnFrom(null)
 
 Thing.addSGetter(function _captureChanges() {
   if (this[IS_IMMUTABLE]) { delete this._IMMUTABILITY }
-  return this
+  DefineProperty(this, "_captureChanges", InvisibleConfiguration)
+  return (this._captureChanges = this)
 }
 
 
 Thing.addSGetter(function _captureOverwrite() {
   if (this[IS_IMMUTABLE]) { delete this._ALL }
-  return this
+  DefineProperty(this. "_captureOverwrite", InvisibleConfiguration)
+  return (this._captureOverwrite = this)
 })
 
 
-// LOOK: update this!!!
-function WrapFunc(OriginalFunc, funcType) {
-  const $func = function (...args) {
-    switch (funcType) {
-      case OUTSIDE :
-        switch (typeof this) {
-          default :
-            receiver = this
-            break
+function WrapFunc(OriginalFunc) {
+  return $wrappedOutsideFunc(...args) {
+    const receiver = (this != null && this[SECRET] === INNER) ? this.$ : this
+    return OriginalFunc.apply(receiver, args)
+  }
+}
 
-          case "function" : // LOOK: will catch Type things!!!
-            receiver = (InterMap.get(this)) ? this : WrapFunc(this, OUTSIDE)
-            break
+// LOOK: consider making public methods on immutables always
+// answer immutables!!!
+function AsPublicMethod(originalFunc) {
+  const methodName = originalFunc.name
+  const funcBody   = `
+    return function (
+      InterMap, SetImmutable, ImmutableInnerPermeability,
+      INNER, IS_IMMUTABLE, INNER_PERMEABILITY
+    ) {
+      return function ${methodName}(OriginalMethod) {
+        let core, permeability, receiver, result
 
-          case "object" :
-            if (this === null) { receiver = null }
-            else if (value[IS_IMMUTABLE] || value.id != null) {
-              receiver = (this[SECRET] === INNER) ? this.$ : this // or CORE???
-            }
-            else if (this[SECRET] === INNER) { // or CORE???
-              receiver = this[COPY](true).$
-            }
-            else if ((argCore = InterMap.get(arg))) {
-              receiver = argCore[COPY](true).$
-            }
-            else { receiver = CopyObject(this, true) }
-            break
-        }
-        break
-
-      case KRUST :
         core = InterMap.get(this)
 
         if ((permeability = core[INNER_PERMEABILITY])) {
@@ -229,79 +219,39 @@ function WrapFunc(OriginalFunc, funcType) {
           receiver = permeability.target
         }
         else { receiver = core[INNER] }
-        break
 
-      case INNER :
-        receiver = this
-        break
-    }
+        result = OriginalFunc.apply(receiver, args)
 
-    next = args.length
-    params = []
-    while (next--) {
-      arg = args[next]
-
-      switch (typeof arg) {
-        default :
-          params[next] = arg
-          break
-
-        case "function" : // LOOK: will catch Type things!!!
-          params[next] = (InterMap.get(arg)) ? arg : WrapFunc(arg, OUTSIDE)
-          break
-
-        case "object" :
-          if (arg === null) { params[next] = null }
-          else if (arg[IS_IMMUTABLE] || arg.id != null) { params[next] = arg }
-          else if ((argCore = InterMap.get(arg))) {
-            params[next] = argCore[COPY](true).$
+        if (permeability) { // indicator that receiver isImmutable
+          if (result === receiver) {
+            result = permeability.target
+            if (result !== inner) {
+              permeability.target = permeability.inner  // reset permeability
+              result.beImmutable
+            }
+            permeability.inUse = false
+            return result.$
           }
-          else { params[next] = CopyObject(arg, true) }
-          break
-      }
-    }
-
-    result = OriginalFunc.apply(receiver, params)
-
-    switch (typeof result) {
-      default         : return result
-      case "object"   : break
-      case "function" : // LOOK: will catch Type things!!!
-        return InterMap.get(result) ? result : WrapFunc(result, OUTSIDE)
-    }
-    if (result === null) { return result }
-
-    if (result === receiver) {
-      if (funcType === KRUST) {
-        if (permeability) {
-          result = permeability.target
-          if (result !== inner) {
-            permeability.target = permeability.inner  // reset permeability
-            result.beImmutable
-          }
-          permeability.inUse = false
+          if (typeof value !== "object" || value === null) { return result }
+          if (value[IS_IMMUTABLE] || value.id != null)     { return result }
+          return ((valueCore = InterMap.get(value))) ?
+            valueCore[COPY](true).$ : CopyObject(value, true)
         }
-        return result.$
+
+        return (result === receiver) ? result.$ : result
       }
-      return result
     }
-
-    if (result.id != null) { return result }
-
-    if ((argCore = InterMap.get(result))) { return argCore[COPY](true).$ }
-
-    return CopyObject(result, true)
-  }
-
-  if (funcType !== OUTSIDE) {
-    DefineProperty($func, "name", VisibleConfiguration)
-    $func.name = OriginalFunc.name
-  }
-  DefineProperty($func, "id", VoidConfiguration)
-  // DefineProperty($func, "isImmutable", UnknownTrueConfiguration)
-  $func[IS_IMMUTABLE] = true
-  return SetImmutable($func)
+  `
+  const methodMaker  = Function(funcBody)
+  const publicMethod = methodMaker(
+    InterMap, SetImmutable, ImmutableInnerPermeability,
+    INNER, IS_IMMUTABLE, INNER_PERMEABILITY
+  )
+  publicMethod[IS_IMMUTABLE] = true
+  SetImmutable(publicMethod.prototype)
+  return SetImmutable(publicMethod)
 }
+
 
 
 function _setImmutableCopyId() {
@@ -362,8 +312,9 @@ function ConstructorForNamingInDebugger(typeName) {
     throw new Error("This constructor is only for use in debugging!")
   }`
   const constructor = Function(funcBody)()
-  delete constructor.prototype
-  constructor[IS_FACT] = IMMUTABLE
+
+  constructor[IS_IMMUTABLE] = true
+  SetImmutable(constructor.prototype)
   return SetImmutable(constructor)
 }
 
@@ -374,7 +325,7 @@ function CreateEmptyNamelessFunction() {
 function BlankConstructorFor(instanceRoot) {
   const constructor = CreateEmptyNamelessFunction()
   constructor.prototype = instanceRoot
-  constructor[IS_FACT] = IMMUTABLE
+  constructor[IS_IMMUTABLE] = true
   return SetImmutable(constructor)
 }
 
@@ -411,7 +362,7 @@ function Create_COPY(_NewCore) {
     if ((initializer = target._initFrom_)) {
       if (initializer.length < 4) {
         targetInner._initFrom_(this, visited, exceptSelector_)
-        return asImmutable ? BecomeImmutable(target, true, true) : targetInner
+        return asImmutable ? target[BE_IMMUTABLE](true) : targetInner
       }
 
       targetInner._initFrom_(this, visited, exceptSelector_, asImmutable)
@@ -428,7 +379,7 @@ function Create_COPY(_NewCore) {
 
         if (typeof value !== "object" || value === null)  {/* NOP */}
         else if (value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
-        else if ((traversed = visited.pair(value)) { traversed = value }
+        else if ((traversed = visited.pair(value)) { value = traversed }
         else if ((valueCore = InterMap.get(value))) {
           value = valueCore[COPY](asImmutable, visited).$
         }
@@ -469,6 +420,65 @@ function Create_COPY(_NewCore) {
 //     return target
 //   }
 // }
+
+
+function BE_IMMUTABLE(modifySelfDeeply, visited = new CopyLog()) {
+  let next, value, inner, selectors, selector
+
+  visited.add(target)
+
+  targetCore  = this
+  targetInner = this[INNER]
+  targetOuter = this[OUTER]
+
+  if (this._setPropertiesImmutable) {
+    targetInner._setPropertiesImmutable(modifySelfDeeply, visited)
+  }
+  else {
+    selectors = this[KNOWN_SELECTORS] ||
+      (this[KNOWN_SELECTORS] = KnownNames(this))
+    next = selectors.length
+
+    while (next--) {
+      selector = selectors[next]
+      value = target[selector]
+
+      if (typeof value !== "object" || value === null)  {/* NOP */}
+      else if (value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
+      else if (visited.has(value))                      {/* NOP */}
+      else if ((valueCore = InterMap.get(value))) {
+        if (modifySelfDeeply) { valueCore[BE_IMMUTABLE](true, visited) }
+        else {
+          value = valueCore[COPY](true, visited).$
+          targetCore[selector] = value
+          if (selector[0] !== "_") { targetOuter[selector] = value }
+        }
+      }
+      else if (modifySelfDeeply) { BeImmutableObject(value, true, visited) }
+      else {
+        value = CopyObject(value, true, visited)
+        targetCore[selector] = value
+        if (selector[0] !== "_") { targetOuter[selector] = value }
+      }
+    }
+  }
+
+  target[IS_IMMUTABLE] = true
+  delete target._captureChanges
+  delete target._captureOverwrite
+  SetImmutable(targetOuter)
+  return (target[INNER] = (new ImmutableInnerPermeability(target)).inner)
+}
+
+
+function BE_IMMUTABLE() {
+  target[IS_IMMUTABLE] = true
+  delete this._captureChanges
+  delete this._captureOverwrite
+  SetImmutable(target[OUTER])
+  return (target[INNER] = (new ImmutableInnerPermeability(target)).inner)
+}
+
 
 class DisguisePermeability {
   constructor (disguised) {

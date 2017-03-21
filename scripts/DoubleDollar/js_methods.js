@@ -13,7 +13,7 @@ const OwnSelectors       = Reflect.ownKeys
 const SetImmutable       = Object.freeze
 const IsImmutable        = Object.isFrozen
 const Object_prototype   = Object.prototype
-const ContainsSelector   = Object_prototype.hasOwnProperty
+const ContainsSelector   = Object_prototype.hasOwnProperty  // ._hasOwn
 const PropertyDescriptor = Object.getOwnPropertyDescriptor
 const Apply              = Reflect.apply
 

@@ -149,10 +149,28 @@ MagicKrust
 
 Skins
 Gourd
+Casaba melon 
 Cassava/Manniac
-Soursop/Guanabana/pumkin
+Soursop/Guanabana/Graviola/
+pumkin
 Abacaxi
 Swolt
+drupe
+CocoaButter
+HotSauce
+ChiliDog
+
+guarana
+Cherimoya
+
+rind/skin/peel/pith
+flesh/pulp/seed
+
+purple carrot
+
+
+gourd
+rind/pulp/seed/core
 
 rind,pulp,seed
 

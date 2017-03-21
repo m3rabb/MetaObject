@@ -6,7 +6,6 @@
 - _super
 
 - add permanent methods
-- make isImmutable lazy property
 
 - NOTE: make ALL functions to be considered unique facts EXCEPT ThingWrapped funcs
 -- We should make all Krust created func immutable
@@ -53,40 +52,26 @@ integument
 blubber/flubber
 
 
-- consider making things cache the selectors of all set properties.
++ consider making things cache the selectors of all set properties.
 - consider using rind,pulp,seed architecture instead of krust,outer,inner,core
 - reconcile _Blank and _NewCore
 
-- When a thing is immutable, the outer is immutable but the core is mutable to enable after the fact setting of the iid, and such.
++ When a thing is immutable, the outer is immutable but the core is mutable to enable after the fact setting of the iid, and such.
 
 - Streams
-- When making a copy of a id fact, don't copy the id!
++ When making a copy of a id fact, don't copy the id!
 
-- Consider including outsider immutability confimation recs within the InterMap
++ Consider including outsider immutability confimation recs within the InterMap
   After careful thought, I don't think we need to ensure the vality of immutables
   since an outside can simply set the id of an object to make it a fact which is
   effectively the same as setting it as immutable.
-
-InterMap
-key               value
-Krust             Core
-WrappedFunc       CONFIRMED_IMMUTABLE
-immutableObj      CONFIRMED_IMMUTABLE
-internalCopiedObj CONFIRMED_INTERNALLY_COPIED
-
-IsFactConfiguration = {
-  __proto__    : null,
-  enumerable   : false,
-  writable     : false,
-  configurable : false,
-  value        : true
-}
 
 
 - consider switching to using explicit asMutable instead of immutability barrier in List
 - make copying use the same method object tricks as equality uses to avoid expensive bookkeeping actions until necessary
 
 - make global Copy and BeImmutable functions handle id
+- consider other copy methods for Lists
+- figure a faster way than using AsArray. Add length to Lists
 
-- check List methods to see if only require getters to return facts, instead of all methods to return facts is the way to go
-- consider other copy methods for Lists 
+- make comparators consider id in their comparisons of objects.
