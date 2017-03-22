@@ -4,9 +4,9 @@
 const OuterBaseBehavior = {
   __proto__ : null,
 
-  get (base_root, selector, outer) {
-    return InterMap.get(outer[RIND])[INNER]._noSuchProperty(selector)
-  },
+  // get (base_root, selector, outer) {
+  //   return InterMap.get(outer[RIND])[INNER]._noSuchProperty(selector)
+  // },
 
   getPrototypeOf (base_root) { return base_root }
 }
@@ -243,38 +243,34 @@ const MutableInnerPorosity = {
 
 
 
-function CreateNamelessOuterConstructor() {
-  return function () {
-    this[RIND] = new Proxy(this, PrivacyPorosity)
-  }
+function CreateNamelessEmptyFunction() {
+  return function () {}
 }
 
 function OuterConstructorFor(outerRoot) {
-  const constructor = CreateNamelessOuterConstructor()
+  const constructor = CreateNamelessEmptyFunction()
   constructor.prototype = outerRoot
   return constructor
 }
 
-function CreateNamelessCoreConstructor(OuterConstructor) {
+function CreateNamelessCoreConstructor(CoreOuter) {
   return function () {
-    const outer = new OuterConstructor()
-    const rind  = outer[RIND]
+    let outer, rind
 
     this[INNER] = new Proxy(this, MutableInnerPorosity)
-    this[OUTER] = outer
-    this[RIND]  = rind
+    this[OUTER] = outer = new CoreOuter()
+    this[RIND]  = rind  = new Proxy(outer, PrivacyPorosity)
     InterMap.set(rind, this)
   }
 }
 
 function CoreConstructorFor(coreRoot) {
-  const outerRoot        = SpawnFrom(Outer_root)
-  const outerConstructor = OuterConstructorFor(outerRoot)
-  const coreConstructor  = CreateNamelessCoreConstructor(outerConstructor)
-  coreConstructor.prototype = coreRoot
-  return coreConstructor
+  const outerRoot = SpawnFrom(Outer_root)
+  const Outer     = OuterConstructorFor(outerRoot)
+  const Core      = CreateNamelessCoreConstructor(Outer)
+  Core.prototype  = coreRoot
+  return Core
 }
-
 
 
 const BlankThing  = CoreConstructorFor(Thing_core)
@@ -315,8 +311,8 @@ function DegenerateConstructorForNamingInDebugger(typeName, isInner) {
   const constructor = Function(funcBody)()
 
   constructor[IS_IMMUTABLE] = true
-  Freeze(constructor.prototype)
-  return Freeze(constructor)
+  Frost(constructor.prototype)
+  return Frost(constructor)
 }
 
 
@@ -326,7 +322,7 @@ function DegenerateConstructorForNamingInDebugger(typeName, isInner) {
 
 
 
-// Freeze(Base_root)
-// // Freeze(Stash_root)
-// Freeze(Implementation_root)
-// Freeze(Inner_root)
+// Frost(Base_root)
+// // Frost(Stash_root)
+// Frost(Implementation_root)
+// Frost(Inner_root)

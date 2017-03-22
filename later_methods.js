@@ -190,6 +190,9 @@ delicious_fruit
 
 navel/red_navel
 
+Hesperidium
+
+
 rind/fruit/navel/seed
 skin/rind/pulp/seed
 
@@ -204,6 +207,7 @@ black
 scarlet
 
 skin/flesh/pulp/seed
+
 
 TopDollar
 

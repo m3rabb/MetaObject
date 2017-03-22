@@ -128,31 +128,21 @@ describe("InPutMethod", function () {
   })
 })
 
-describe("CreateNamelessOuterConstructor", function () {
-  it("answers a nameless outer constructor", function () {
-    var func = CreateNamelessOuterConstructor()
+describe("CreateNamelessEmptyFunction", function () {
+  it("answers a nameless functionr", function () {
+    var func = CreateNamelessEmptyFunction()
     expect( func.name ).toBe( "" )
   })
 
   describe("When executed", function () {
     it("answers a function", function () {
-      var result = CreateNamelessOuterConstructor()
+      var result = CreateNamelessEmptyFunction()
       expect( typeof result ).toBe( "function" )
     })
 
-    it("which answers an outer object", function () {
-      var constructr = CreateNamelessOuterConstructor()
-      var outer = new constructr()
-      expect( typeof outer ).toBe( "object" )
-    })
-
-    it("with a rind", function () {
-      var constructr = CreateNamelessOuterConstructor()
-      var outer = new constructr()
-      var rind = outer[RIND]
-      rind.xyz = 123
-      expect( outer.xyz ).toBe( undefined )
-      expect( rind.xyz ).toBe( undefined )
+    it("which answers undefined", function () {
+      var func = CreateNamelessEmptyFunction()
+      expect( func() ).toBe( undefined )
     })
   })
 })
@@ -275,7 +265,7 @@ describe("DegenerateConstructorForNamingInDebugger", function () {
   })
 
   it("is frozen", function () {
-    expect( IsFrozen(this.func) ).toBe( true )
+    expect( IsFrosted(this.func) ).toBe( true )
   })
 
   it("its immutable", function () {
@@ -291,7 +281,7 @@ describe("DegenerateConstructorForNamingInDebugger", function () {
   })
 
   it("has its prototype set immutable", function () {
-    expect( IsFrozen(this.func.prototype) ).toBe( true )
+    expect( IsFrosted(this.func.prototype) ).toBe( true )
   })
 })
 
@@ -372,13 +362,13 @@ describe("CreateFactory", function () {
       const cat = this.factory("Nutmeg", 1)
       const catCore = InterMap.get(cat)
       expect( catCore[IS_IMMUTABLE] ).toBe( true )
-      expect( IsFrozen(cat) ).toBe( true )
+      expect( IsFrosted(cat) ).toBe( true )
     })
 
     it("but the inside of the new object is mmutable", function () {
       const cat = this.factory("Nutmeg", 1)
       const catCore = InterMap.get(cat)
-      expect( IsFrozen(catCore) ).toBe( false )
+      expect( IsFrosted(catCore) ).toBe( false )
     })
   })
 })
