@@ -1,0 +1,29 @@
+- using proxies for meta-programming. the challenges of using proxies for privacy and also enabling shared (inherited) properties.
+- challenges of enabling proxies for properties vs just methods.
+
+- how Chrome determines the class type of an obj, and how unfortunately it doesnt handle proxies :-(
+
+- testing (I hate tests, I love tests)
+- immutability
+
+frozen/fact/immutable/constant
+
+
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
+
+// To be a constant object, the entire reference graph
+// (direct and indirect references to other objects)
+// must reference only immutable frozen objects.
+// The object being frozen is said to be immutable because the
+// entire object state (values and references to other objects)
+// within the whole object is fixed.  Note that strings, numbers,
+// and booleans are always immutable and that Functions and Arrays
+// are objects.
+
+
+- to freeze or not
+https://news.ycombinator.com/item?id=4415981
+https://jsperf.com/freeze-vs-seal-vs-normal/3
+https://jsperf.com/object-freeze
+https://www.npmjs.com/package/icepick

@@ -29,6 +29,8 @@ AddGetter(Thing_root, function asCopy() {
   return this[IS_IMMUTABLE] ? this : this[COPY](false)
 }
 
+// Liberate the following two methods from the rule that all methods
+// must answer immutables (or facts) from immutable receivers
 AddGetter(Thing_root, function asMutableCopy() {
   return this[COPY](false)
 }
@@ -38,7 +40,7 @@ AddGetter(Thing_root, function asMutable() {
 }
 
 AddGetter(Thing_root, function asFact() {
-  return (this.id != null) ? this : this[COPY](true)
+  return this[IS_IMMUTABLE] || (this.id != null) ? this : this[COPY](true)
 }
 
 AddGetter(Thing_root, function asImmutable() {

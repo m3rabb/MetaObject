@@ -13,7 +13,7 @@ function VisibleProperties(target) {
 
   for (let name in target) {
     let value = target[name]
-    if (value !== Object_prototype[name] || ContainsSelector.call(target,name)) {
+    if (value !== Object_prototype[name] || InHasSelector.call(target,name)) {
       props[next++] = value
     }
   }
@@ -84,31 +84,31 @@ Thing.add(function isEquivalent(that, comparator_) {
 })
 
 
-Krust.add(function are(a, b) {
+PurpleCarrot.add(function are(a, b) {
   return a === b
 })
 
-Krust.add(function areIdentical(a, b) {
+PurpleCarrot.add(function areIdentical(a, b) {
   return IsIdentical().compare(a, b)
 })
 
-Krust.add(function areExactly(a, b) {
+PurpleCarrot.add(function areExactly(a, b) {
   return IsExactly().compare(a, b)
 })
 
-Krust.add(function areInterchangeable(a, b) {
+PurpleCarrot.add(function areInterchangeable(a, b) {
   return IsInterchangeable().compare(a, b)
 })
 
-Krust.add(function areEqual(a, b) {
+PurpleCarrot.add(function areEqual(a, b) {
   return IsEqual().compare(a, b)
 })
 
-Krust.add(function areEquivEqual(a, b) {
+PurpleCarrot.add(function areEquivEqual(a, b) {
   return IsEquivEqual().compare(a, b)
 })
 
-Krust.add(function areEquivalent(a, b) {
+PurpleCarrot.add(function areEquivalent(a, b) {
   return IsEquivalent().compare(a, b)
 })
 

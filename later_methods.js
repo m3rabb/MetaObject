@@ -167,9 +167,45 @@ rind/skin/peel/pith
 flesh/pulp/seed
 
 purple carrot
+http://www.carrotmuseum.co.uk/maroon.html
+http://www.carrotmuseum.co.uk/blackcarrot1.html
 http://www.popsci.com/wtf-are-purple-carrots-and-where-did-they-come-from
 
+black/ebony/sable/dusky/swarthy carrot
+purple/lavender/mauve/periwinkle/plum/violet/maroon
+https://www.aliexpress.com/popular/black-pomegranate.html
+https://ae01.alicdn.com/kf/HTB1YNcKOVXXXXbKXFXXq6xXFXXXV/20-Pcs-bag-font-b-Black-b-font-font-b-Pomegranate-b-font-Seeds-Home-Diy.jpg
 
+sable
+
+fragrant
+purple_guava
+black
+Scarlet_Guava
+purple_guava
+pugu
+pupo
+tahitian
+delicious_fruit
+
+navel/red_navel
+
+rind/fruit/navel/seed
+skin/rind/pulp/seed
+
+http://www.fruitmentor.com/californiapummelos
+
+
+black_pomo
+
+defying expectations
+Pomegranate/Guava/carrot
+black
+scarlet
+
+skin/flesh/pulp/seed
+
+TopDollar
 
 gourd
 rind/pulp/seed/core

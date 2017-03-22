@@ -1,30 +1,4 @@
-const ImplementationHandler = {
-  __proto__ : null,
-  get (_base_root, name, target) {
-    return target._noSuchProperty(name)
-  },
-  // set (_base_root, selector, value, inner) {
-  //   if (inner[_$isImmutable]) {
-  //     return inner._innerImmutableWrite(inner, selector, value) || false
-  //   }
-  //   inner[selector] = value
-  //   return true
-  // }
-}
 
-const Base_root             = SpawnFrom(null)
-const   Stash_root          = SpawnFrom(Base_root)
-
-const   Implementation_root = new Proxy(Base_root, ImplementationHandler)
-const     Inner_root        = SpawnFrom(Implementation_root)
-
-const       Nothing_root    = SpawnFrom(Inner_root)
-const       Top_root        = SpawnFrom(Inner_root)
-const         Thing_root    = SpawnFrom(Top_root)
-const         Type_root     = SpawnFrom(Top_root)
-const         Method_root   = SpawnFrom(Top_root)
-const         Context_root  = SpawnFrom(Top_root)
-const         Name_root     = SpawnFrom(Top_root)
 
 function ConstructorError(constructor) {
   SignalError(constructor.name,
@@ -45,7 +19,6 @@ SetImmutable(Implementation)
 SetImmutable(Inner)
 
 
-let HandleErrorsQuietly        = false
 let HandleInheritancePoisoning = true
 
 function _HandleErrorsQuietly(bool_) {
@@ -53,27 +26,6 @@ function _HandleErrorsQuietly(bool_) {
     (HandleErrorsQuietly = bool_) : HandleErrorsQuietly
 }
 
-function SignalError(target, message) {
-  if (HandleErrorsQuietly) {
-    console.warn(message)
-  } else {
-    console.error(message)
-    const error = new Error(message)
-    error.name = "TopError"
-    error.target = target
-    throw error
-  }
-  return null
-}
-
-
-function AtPutMethod(target, selector, func) {
-  target[selector] = func
-}
-
-function PutMethod(target, namedFunc) {
-  target[namedFunc.name] = namedFunc
-}
 
 
 // Change name into an instance of Kname!!!

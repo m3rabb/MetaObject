@@ -17,5 +17,6 @@ module.exports = {
         "no-unused-vars" : 0,
         "no-fallthrough" :
           ["error", { "commentPattern": "break[\\s\\w]*omitted" }],
+        "no-undef"       : "off",
     }
 };

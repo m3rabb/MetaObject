@@ -7,118 +7,9 @@ const FACT        = Symbol("FACT")
 const IMMUTABLE   = Symbol("IMMUTABLE")
 
 
-const InterMap = new WeakMap()
-
-const ALWAYS_FALSE = () => false
-const ALWAYS_NULL = () => null
-
-const PrivacyPermeability = {
-  __proto__ : null,
-
-  get (outer, selector, krust) {
-    let target, index
-
-    return (outer.atIndex && ((index = +selector) === index)) ?
-      outer.atIndex(index) : outer[selector]
-  },
-
-  // Setting on things in not allowed because the setting semantics are broken.
-  // For our model, the return value should always be the receiver, or a copy
-  // of the receiver, with the property changed.
-
-  // Further, note that the return value of a set always returns the value that
-  // was tried to be set to, regardless of whether it was successful or not.
-
-  set (outer, selector, value, barrier_) {
-    return outer._externalWrite(selector, value) || false
-  },
-
-  has (outer, selector) {
-    switch (selector[0]) {
-      case "_"       : return outer._externalPrivateRead(selector) || false
-      // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
-      case undefined : return false
-    }
-    return (selector in outer)
-  },
-
-  getOwnPropertyDescriptor (outer, selector) {
-    switch (selector[0]) {
-      case "_"       : return outer._externalPrivateRead(selector) || undefined
-      // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
-      case undefined : return undefined
-    }
-    return PropertyDescriptor(outer, selector)
-  },
-
-  ownKeys (outer) {
-    return AllLocalSelectors(outer)
-  },
-
-  getPrototypeOf : ALWAYS_NULL,
-  setPrototypeOf : ALWAYS_FALSE,
-  defineProperty : ALWAYS_FALSE,
-  deleteProperty : ALWAYS_FALSE,
-  isExtensible   : ALWAYS_FALSE,
-  // preventExtensions ???
-}
 
 
 
-const MutableInnerPermeability = {
-  __proto__ : null,
-
-  set (core, selector, value, inner) {
-    const isPublic = (selector[0] !== "_")
-
-    if ((core[selector] === undefined) && !core._hasOwn(selector)) {
-      delete core[KNOWN_SELECTORS]
-    }
-
-    switch (typeof value) {
-      default :
-        core[selector] = value
-        return true
-
-      case "function" : // LOOK: will catch Type things!!!
-        // NOTE: Checking for value.constructor is inadequate to prevent func spoofing
-        core[selector] = InterMap.get(value) ? value : WrapFunc(value, OUTSIDE)
-        return true
-
-      case "object" :
-        if (!isPublic) {
-          core[selector] = value
-        }
-        else if (value === inner) {
-          core[selector] = value
-          core[OUTER][selector] = core.$
-        }
-        else if (value === null || value[IS_IMMUTABLE] || value.id != null) {
-          core[OUTER][selector] = core[selector] = value
-        }
-        else if (value === core[selector]) {
-          core[OUTER][selector] = value
-        }
-        else if ((valueCore = InterMap.get(value))) {
-          core[OUTER][selector] = core[selector] =
-            valueCore[COPY](true, visited).$
-        }
-        else {
-          core[OUTER][selector] = core[selector] = CopyObject(value, true)
-        }
-        return true
-    }
-  },
-
-  deleteProperty (core, selector, inner) {
-    if ((core[selector] !== undefined) || core._hasOwn(selector)) {
-      delete core[KNOWN_SELECTORS]
-      delete core[selector]
-    }
-
-    return true
-  }
-}
 
 
 
@@ -261,13 +152,13 @@ function _setImmutableCopyId() {
 
 
 
-function EnkrustThing(thing) {
-  const krust = new Proxy(thing, PrivacyPermeability)
-  InterMap.set(krust, thing)
-  return (thing.$ = thing[OUTER] = krust)
+function WrapThing(thing) {
+  const skin = new Proxy(thing, PrivacyPermeability)
+  InterMap.set(skin, thing)
+  return (thing.$ = skin)
 }
 
-AddLazilyInstalledProperty(_Thing_root, "$", EnkrustThing)
+AddLazilyInstalledProperty(_Thing_root, "$", WrapThing)
 
 
 //
@@ -307,46 +198,10 @@ AddLazilyInstalledProperty(_Thing_root, "$", EnkrustThing)
 
 
 
-function ConstructorForNamingInDebugger(typeName) {
-  const funcBody = `return function ${typeName}() {
-    throw new Error("This constructor is only for use in debugging!")
-  }`
-  const constructor = Function(funcBody)()
 
-  constructor[IS_IMMUTABLE] = true
-  SetImmutable(constructor.prototype)
-  return SetImmutable(constructor)
-}
 
-function CreateEmptyNamelessFunction() {
-  return function () {}
-}
 
-function BlankConstructorFor(instanceRoot) {
-  const constructor = CreateEmptyNamelessFunction()
-  constructor.prototype = instanceRoot
-  constructor[IS_IMMUTABLE] = true
-  return SetImmutable(constructor)
-}
 
-function CreateFactory(_NewCore, isDisguised) {
-  return function (...args) {
-    const core = new _NewCore()
-    core[INNER]._init(...args)
-    if (args.length && core.id == null) { core.beImmutable } // LOOK!!!
-    return instance.$
-  }
-}
-
-function Create_new(_NewCore) {
-  const target = {}
-  target.new =function (...args) {
-    const instance = new _NewCore()
-    instance._init(...args)
-    return instance.$
-  }
-  return target.new
-}
 
 function Create_COPY(_NewCore) {
   return function COPY(asImmutable, visited = CopyLog(), exceptSelector_) {
