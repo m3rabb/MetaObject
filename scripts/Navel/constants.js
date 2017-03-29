@@ -28,6 +28,8 @@ const IS_IMMUTABLE       = Symbol("isImmutable")
 const IID                = Symbol("instance id")
 const KNOWN_SELECTORS    = Symbol("KNOWN_SELECTORS")
 const COPY               = Symbol("COPY")
+const INSTANCEOF         = Symbol.hasInstance
+const IS_TYPE_SELECTOR   = Symbol("is<type> selector")
 
 const ALWAYS_FALSE       = (() => false)
 const ALWAYS_NULL        = (() => null)

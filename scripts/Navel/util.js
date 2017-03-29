@@ -1,3 +1,18 @@
+function CreateNamelessEmptyFunction() {
+  return function () {}
+}
+
+
+
+function InAtPut(target, selector, func) {
+  target[selector] = func
+}
+
+function InPutMethod(target, namedFunc) {
+  target[namedFunc.name] = namedFunc
+}
+
+
 
 const VisibleConfiguration = {
   configurable: true,
@@ -28,6 +43,7 @@ function AddGetter(target, namedGetter_name, getter_) {
   return _AddGetter(target, name, true, getter)
 }
 
+// UNTESTED
 function AddInvisibleGetter(target, namedGetter_name, getter_) {
   const [name, getter] = (typeof namedGetter_name === "function") ?
       [namedGetter_name.name, namedGetter_name] :
@@ -42,7 +58,7 @@ function AddLazyProperty(target, namedInstaller_name, installer_) {
       [namedInstaller_name.name, namedInstaller_name] :
       [namedInstaller_name     , installer_         ]
 
-  _AddGetter(target, Name, false, function _loader() {
+  _AddGetter(target, Name, true, function $loader() {
     DefineProperty(this, Name, InvisibleConfiguration)
     return (this[Name] = Installer.call(this))
   })

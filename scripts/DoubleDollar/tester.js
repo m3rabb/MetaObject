@@ -1,40 +1,84 @@
-const DefineProperty     = Object.defineProperty
+class Person {
+  constructor(name, ssn) {
+    this.name = name
+    this._ssn = ssn
+    // In es6 it also works as in es5: remember es6 class is nothing more than a Function
+    // and `new` call the function defined by `constructor`;
+    // in es5 works because when you call a `new` on a function the value retuned is the
+    // value returned inside the function if it's an object otherwise returns `this`;
+    // in es6 remains the same for backward compatibility
+    return new Proxy(this, {
+      get (target, name, proxy) {
+        return (name[0] !== "_") ? target[name] : undefined
+      }
+    })
+  }
 
-const VisibleConfiguration = {
-  __proto__   : null,
-  writable    : true,
-  enumerable  : true,
-  configurable: true,
+  ssn() {
+    return this._ssn
+  }
+
+  _obscureSSN () {
+    return `OBSURED: ${this._ssn}`
+  }
+
+  obscure () {
+    return this._obscureSSN()
+  }
+
+  get obscured () {
+    return this._obscureSSN()
+  }
 }
 
-const InvisibleConfiguration = {
-  __proto__   : null,
-  writable    : true,
-  // enumerable  : true,
-  configurable: true,
+var target = function () {}
+var porosity = {
+  apply (target, receiver, args) {
+    const array = [target, receiver, args]
+    return array
+  }
 }
+var rind = new Proxy(target, porosity)
 
-function Dog(name) {
-  this.name = name
-}
+// =======================
 
-DefineProperty(Dog.prototype, "isImmutable", InvisibleConfiguration)
-var d = new Dog("bob")
-var KNOWNS = Symbol("KNOWNS")
-
-d[KNOWNS] = ["name", "id"]
-
-var a = []
-
-for (n in d) { a.push(n) }
-
-function List(...args) {
-  this.elems = args
-}
-
-var count = 1000
-var nums = []
-while (count--) { nums[count] = count }
+// const DefineProperty     = Object.defineProperty
+//
+// const VisibleConfiguration = {
+//   __proto__   : null,
+//   writable    : true,
+//   enumerable  : true,
+//   configurable: true,
+// }
+//
+// const InvisibleConfiguration = {
+//   __proto__   : null,
+//   writable    : true,
+//   // enumerable  : true,
+//   configurable: true,
+// }
+//
+// function Dog(name) {
+//   this.name = name
+// }
+//
+// DefineProperty(Dog.prototype, "isImmutable", InvisibleConfiguration)
+// var d = new Dog("bob")
+// var KNOWNS = Symbol("KNOWNS")
+//
+// d[KNOWNS] = ["name", "id"]
+//
+// var a = []
+//
+// for (n in d) { a.push(n) }
+//
+// function List(...args) {
+//   this.elems = args
+// }
+//
+// var count = 1000
+// var nums = []
+// while (count--) { nums[count] = count }
 // //=======================
 //
 // const InterMap = new WeakMap()

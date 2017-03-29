@@ -51,37 +51,7 @@ Core_root[INNER]  = Core_root
 Core_root[SECRET] = INNER
 
 
-const ErrorLog = []
 
-let HandleErrorsQuietly = true
-let LogErrors           = false
-
-// let HandleInheritancePoisoning = true
-
-
-function SignalError(target, message) {
-  if (LogErrors) { ErrorLog.push(`${target}: ${message}`) }
-
-  if (HandleErrorsQuietly) {
-    console.warn(message) // eslint-disable-line no-console
-  } else {
-    const error = new Error(message)
-    error.name = "Purple Carrot Error"
-    error.target = target
-    throw error
-  }
-  return null
-}
-
-
-
-function InAtPut(target, selector, func) {
-  target[selector] = func
-}
-
-function InPutMethod(target, namedFunc) {
-  target[namedFunc.name] = namedFunc
-}
 
 
 // NOTE: Delete these after bootstrap is fully complete
@@ -96,229 +66,52 @@ InAtPut(Core_root, "_hasOwn", InHasSelector)
 
 
 
-// UNTESTED
-function WrapFunc(OriginalFunc) {
-  return function $wrappedOutsideFunc(...args) {
-    const receiver =
-      (this != null && this[SECRET] === INNER) ? this[RIND] : this
-    return OriginalFunc.apply(receiver, args)
-  }
-}
 
-// UNTESTED
-function Wrap_initFrom_(OriginalFunc) {
-  if (OriginalFunc.length < 4) {
-    return function $_initFrom_3(_source, visited, exceptSelector_) {
-      const receiver =
-        (this != null && this[SECRET] === INNER) ? this[RIND] : this
-      const source = (_source != null && _source[SECRET] === INNER) ?
-        _source[RIND] : _source
-      return OriginalFunc.apply(receiver, source, visited, exceptSelector_)
-    }
-  }
-  return function $_initFrom_4(_source, visited, exceptSelector_, asImmutable) {
-    const receiver =
-      (this != null && this[SECRET] === INNER) ? this[RIND] : this
-    const source = (_source != null && _source[SECRET] === INNER) ?
-      _source[RIND] : _source
-    return OriginalFunc.apply(
-      receiver, source, visited, exceptSelector_, asImmutable)
-  }
-}
-
-
-// UNTESTED
-const PrivacyPorosity = {
-  __proto__ : null,
-
-  get (outer, selector, skin) {
-    let target, index
-
-    return (outer.atIndex && ((index = +selector) === index)) ?
-      outer.atIndex(index) : outer[selector]
-  },
-
-  // Setting on things in not allowed because the setting semantics are broken.
-  // For our model, the return value should always be the receiver, or a copy
-  // of the receiver, with the property changed.
-
-  // Further, note that the return value of a set always returns the value that
-  // was tried to be set to, regardless of whether it was successful or not.
-
-  set (outer, selector, value, skin) {
-    return false
-    // return InterMap.get(skin)._externalWrite(selector, value) || false
-  },
-
-  has (outer, selector) {
-    switch (selector[0]) {
-      case "_"       : return outer._externalPrivateRead(selector) || false
-      // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
-      case undefined : return false
-    }
-    return (selector in outer)
-  },
-
-  // getOwnPropertyDescriptor (outer, selector) {
-  //   switch (selector[0]) {
-  //     case "_"       : return outer._externalPrivateRead(selector) || undefined
-  //     // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
-  //     case undefined : return undefined
-  //   }
-  //   return PropertyDescriptor(outer, selector)
-  // },
-
-  // ownKeys (outer) { },
-
-  getPrototypeOf : ALWAYS_NULL,
-  setPrototypeOf : ALWAYS_FALSE,
-  defineProperty : ALWAYS_FALSE,
-  deleteProperty : ALWAYS_FALSE,
-  isExtensible   : ALWAYS_FALSE,
-  // preventExtensions ???
-}
-
-// UNTESTED
-const MutableInnerPorosity = {
-  __proto__ : null,
-
-  set (core, selector, value, inner) {
-    const isPublic = (selector[0] !== "_")
-
-    // if ((core[selector] === undefined) && !core._hasOwn(selector)) {
-    //   delete core[KNOWN_SELECTORS]
-    // }
-
-    switch (typeof value) {
-      case "object" :
-        if (!isPublic) { break }
-
-        if (value === inner) {
-          core[selector] = value
-          value = core[RIND]
-        }
-        else if (value === null || value[IS_IMMUTABLE] || value.id != null) {
-          core[selector] = value
-        }
-        else if (value === core[selector]) {/* NOP */}
-
-        else if ((valueCore = InterMap.get(value))) {
-          core[selector] = (value = valueCore[COPY](true, visited)[RIND])
-        }
-        else {
-          core[selector] = (value = CopyObject(value, true))
-        }
-        core[OUTER][selector] = value
-        return true
-
-      case "function" : // LOOK: will catch Type things!!!
-        // NOTE: Checking for value.constructor is inadequate to prevent func spoofing
-        if (selector === "_initFrom_") {
-          value = ((tag = InterMap.get(value)) && tag === "_initFrom_") ?
-            value : Wrap_initFrom_(value)
-        }
-        else {
-          value = (InterMap.get(value)) ? value : WrapFunc(value)
-        }
-        // break omitted
-
-      default :
-        if (isPublic) { core[OUTER][selector] = value }
-        break
-    }
-
-    core[selector] = value
-    return true
-  },
-
-  deleteProperty (core, selector, inner) {
-    if ((core[selector] !== undefined) || core._hasOwn(selector)) {
-      delete core[KNOWN_SELECTORS]
-      delete core[selector]
-    }
-
-    return true
-  }
-}
-
-
-
-function CreateNamelessEmptyFunction() {
-  return function () {}
-}
-
-function OuterConstructorFor(outerRoot) {
-  const constructor = CreateNamelessEmptyFunction()
-  constructor.prototype = outerRoot
-  return constructor
-}
-
-function CreateNamelessCoreConstructor(CoreOuter) {
-  return function () {
-    let outer, rind
-
-    this[INNER] = new Proxy(this, MutableInnerPorosity)
-    this[OUTER] = outer = new CoreOuter()
-    this[RIND]  = rind  = new Proxy(outer, PrivacyPorosity)
-    InterMap.set(rind, this)
-  }
-}
-
-function CoreConstructorFor(coreRoot) {
-  const outerRoot = SpawnFrom(Outer_root)
-  const Outer     = OuterConstructorFor(outerRoot)
-  const Core      = CreateNamelessCoreConstructor(Outer)
-  Core.prototype  = coreRoot
-  return Core
-}
-
-
+const BlankRoot   = CoreConstructorFor(Core_root)
 const BlankThing  = CoreConstructorFor(Thing_core)
-const BlankType   = CoreConstructorFor(Type_core)
 const BlankMethod = CoreConstructorFor(Method_core)
+const BlankType   = CoreConstructorFor(Type_root, true)
 
 
 
-function Create_new(BlankCore) {
-  const target = {
-    new : function (...args) {
-      const core = new BlankCore()
-      core[INNER]._init(...args)
-      return core[RIND]
-    }
-  }
-  return target.new
-}
+InPutMethod(Type_core, function _init(spec, _root_, context__) {
+  const isDisguised          = spec && spec.isDisguised
+  const _root                = _root_ || SpawnFrom(Core_root)
+  const BlankCoreConstructor = CoreConstructorFor(_root, isDisguised)
+  const $factory             = Create_$factory(BlankCoreConstructor)
+  const $type                = new BlankType($type)
 
-function CreateFactory(BlankCore) {
-  return function (...args) {
-    const core = new BlankCore()
-    core[INNER]._init(...args)
-    if (core.id == null) { core.beImmutable }
-    return core[RIND]
-  }
-}
+  _root.type         = disguise[RIND]
+  _root[ROOT]        = _root
+  _root._newBlank    = () => (new BlankCoreConstructor())[RIND]
+  _root[COPY]        = Create_COPY(_NewCore)
 
+  this.new           = _root.new = Create_new(_NewCore)
 
-function DegenerateConstructorForNamingInDebugger(typeName, isInner) {
-  const funcName = (isInner ? "_" : "") + typeName
-  const funcBody = `
-    return function ${funcName}() {
-      const message = "This constructor is only used for debugging!"
-      return SignalError(${funcName}, message)
-    }
-  `
-  const constructor = Function(funcBody)()
+  this._instanceRoot = _root
+  this._constructor  = _NewCore
+  this._factory      = _factory
+  this._disguise     = disguise
+  this._nextIID      = 0
+  this._subtypes     = SpawnFrom(null)
+  this._methods      = SpawnFrom(null)
 
-  constructor[IS_IMMUTABLE] = true
-  Frost(constructor.prototype)
-  return Frost(constructor)
-}
+  this._setId()
 
+  this.prototype     = _root[RIND]
+  this.context       = context__ ? context__[RIND] : null
 
+  const supertypes =
+    (spec && spec.supertypes || spec.supertype && [spec.supertype]) || [Thing]
+  this.setSupertypes(supertypes)
+  spec && this.setName(spec.name)
+  spec && this.addAll(spec.instanceMethods || [])
+
+  return disguised$type
+})
 
 
-
+Type.add(INSTANCEOF, (instance) => instance[IS_TYPE_SELECTOR])
 
 
 

@@ -1,48 +1,3 @@
-describe("Bootstrapping", function() {
-  it("sets up the InterMap", function () {
-    expect( InterMap.constructor ).toBe( WeakMap )
-  })
-
-  it("sets up the initial root hierarchy", function() {
-
-    expect( RootOf(Base_root)          ).toBe( null       )
-    expect( RootOf(  Outer_base)       ).toBe( Base_root  )
-    expect( RootOf(    Outer_root)     ).toBe( Outer_base )
-
-    expect( RootOf(  Core_base)        ).toBe( Base_root  )
-    expect( RootOf(    Core_root)      ).toBe( Core_base  )
-    expect( RootOf(      Thing_core)   ).toBe( Core_root  )
-    expect( RootOf(      Type_core)    ).toBe( Core_root  )
-    expect( RootOf(      Method_core)  ).toBe( Core_root  )
-  })
-
-  it("sets up the default INNER", function () {
-    expect( Core_root[INNER] ).toBe( Core_root )
-  })
-
-  it("sets up the default SECRET", function () {
-    expect( Core_root[SECRET] ).toBe( INNER )
-  })
-
-  describe("Make foundational core constructors", function() {
-    it("sets up the BlankThing", function () {
-      const blankInstance = new BlankThing()
-      expect( blankInstance[RIND] ).toBeDefined()
-    })
-
-    it("sets up the BlankType", function () {
-      const blankInstance = new BlankType()
-      expect( blankInstance[RIND] ).toBeDefined()
-    })
-
-    it("sets up the BlankMethod", function () {
-      const blankInstance = new BlankMethod()
-      expect( blankInstance[RIND] ).toBeDefined()
-    })
-  })
-
-})
-
 describe("SignalError", function () {
   beforeEach(function () {
     this.obj = {abc: 123}
@@ -107,42 +62,6 @@ describe("SignalError", function () {
       try { this.testRun() }
       catch (ex) { result = ex }
       expect(result.target).toBe(this.obj)
-    })
-  })
-})
-
-describe("InAtPut", function () {
-  it("assigns a property to a selector within a target object", function () {
-    var obj = {}
-    InAtPut(obj, "abc", 123)
-    expect( obj.abc ).toBe( 123 )
-  })
-})
-
-describe("InPutMethod", function () {
-  it("assigns a named function to selector within a target object", function () {
-    var obj = {}
-    var func = function abc() {}
-    InPutMethod(obj, func)
-    expect( obj.abc ).toBe( func )
-  })
-})
-
-describe("CreateNamelessEmptyFunction", function () {
-  it("answers a nameless functionr", function () {
-    var func = CreateNamelessEmptyFunction()
-    expect( func.name ).toBe( "" )
-  })
-
-  describe("When executed", function () {
-    it("answers a function", function () {
-      var result = CreateNamelessEmptyFunction()
-      expect( typeof result ).toBe( "function" )
-    })
-
-    it("which answers undefined", function () {
-      var func = CreateNamelessEmptyFunction()
-      expect( func() ).toBe( undefined )
     })
   })
 })
@@ -328,47 +247,58 @@ describe("CreateFactory", function () {
 
   function beImmutable() {
     this[IS_IMMUTABLE] = true
-    Freeze(this[OUTER])
+    Frost(this[OUTER])
   }
 
   beforeEach(function () {
+    // REVISIT once Types are fully formed
     this.Cat_root = SpawnFrom(Core_root)
     this.Cat_root._init = _init
     AddGetter(this.Cat_root, beImmutable)
     this.BlankCat = CoreConstructorFor(this.Cat_root)
-    this.factory  = CreateFactory(this.BlankCat)
+    this.Cat = CreateFactory(this.BlankCat)
   })
 
-  it("answers a new nameless function", function () {
-    expect( typeof this.factory ).toBe( "function" )
-    expect( this.factory.name ).toBe( "" )
+  it("answers a new constructor function named $type", function () {
+    expect( typeof this.Cat ).toBe( "function" )
+    expect( this.Cat.name ).toBe( "$type" )
+  })
+
+  it("the constructor has no prototype", function () {
+    expect( this.Cat.prototype ).toBe( undefined )
   })
 
   describe("When run", function () {
     it("answers the rind of a newly initialized object", function () {
-      const cat = new this.factory("Nutmeg", 1)
+      const cat = new this.Cat("Nutmeg", 1)
       cat.xyz = 123
       const catCore = InterMap.get(cat)
       expect( catCore[RIND] ).toBe( cat )
     })
 
     it("the new object is of the type of the Blank", function () {
-      const cat = this.factory("Nutmeg", 1)
+      const cat = this.Cat("Nutmeg", 1)
       const catCore = InterMap.get(cat)
       expect( RootOf(catCore) ).toBe( this.Cat_root )
     })
 
     it("the outside of the new object is immutable", function () {
-      const cat = this.factory("Nutmeg", 1)
+      const cat = this.Cat("Nutmeg", 1)
       const catCore = InterMap.get(cat)
       expect( catCore[IS_IMMUTABLE] ).toBe( true )
       expect( IsFrosted(cat) ).toBe( true )
     })
 
     it("but the inside of the new object is mmutable", function () {
-      const cat = this.factory("Nutmeg", 1)
+      const cat = this.Cat("Nutmeg", 1)
       const catCore = InterMap.get(cat)
       expect( IsFrosted(catCore) ).toBe( false )
+    })
+  })
+
+  xdescribe("When used with instanceof", function () {
+    it("answers true if the object is an instance of the type", function () {
+      const cat = this.Cat("Nutmeg", 1)
     })
   })
 })
