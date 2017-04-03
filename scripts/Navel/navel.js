@@ -1,121 +1,159 @@
 // "use strict"
 
+const InterMap = new WeakMap()
+
+
+
+
 // UNTESTED
-const OuterBaseBehavior = {
+const DefaultOuterBehavior = {
   __proto__ : null,
 
-  // get (base_root, selector, outer) {
-  //   return InterMap.get(outer[RIND])[INNER]._noSuchProperty(selector)
-  // },
+  get (base_root, selector, outer) {
+    return InterMap.get(outer[RIND])[INNER]._noSuchProperty(selector)
+  },
 
-  getPrototypeOf (base_root) { return base_root }
+  // getPrototypeOf (base_root) { return base_root }
 }
 
-// UNTESTED
-const CoreBaseBehavior = {
+const DefaultCoreBehavior = {
   __proto__ : null,
 
   get (base_root, selector, core) {
     return core[INNER]._noSuchProperty(selector)
   },
 
-  getPrototypeOf (base_root) { return base_root }
+  // getPrototypeOf (base_root) { return base_root }
 }
 
 
-const InterMap = new WeakMap()
+
+const Base$root                  = SpawnFrom(null)
+// const   Stash$root          = SpawnFrom(Base$root)
+
+const   Base$outer$root          = new Proxy(Base$root, DefaultOuterBehavior)
+// let     Nothing$outer$root
+let         Something$outer$root  // Inate Intrinsic
+
+const   Base$core$root           = new Proxy(Base$root, DefaultCoreBehavior)
+// let    Nothing$core$root
+let         Something$core$root
+
+// // Just in case sanity failsafe to prevent infinite recursion from CoreBaseBehavior
+// Nothing$core$root[INNER]  = Nothing$core$root
+//
 
 
-const Base_root                = SpawnFrom(null)
-// const   Stash_root          = SpawnFrom(Base_root)
+Something$outer$root = Base$outer$root
+Something$core$root  = Base$core$root
 
-const   Outer_base             = new Proxy(Base_root, OuterBaseBehavior)
-const     Outer_root           = SpawnFrom(Outer_base)
-
-const   Core_base              = new Proxy(Base_root, CoreBaseBehavior)
-const     Core_root            = SpawnFrom(Core_base)
-const       Thing_core         = SpawnFrom(Core_root)
-const       Type_core          = SpawnFrom(Core_root)
-const       Method_core        = SpawnFrom(Core_root)
-
-
-//const       Nothing_core_root    = SpawnFrom(Something_core_root)
-// const         Context_root  = SpawnFrom(Top_root)
-// const         Name_root     = SpawnFrom(Top_root)
-
-
-// Just in case sanity failsafe to prevent infinite recursion from CoreBaseBehavior
-Core_root[INNER]  = Core_root
+const BlankNothing   = NewBlankConstructor(CoreConstructorMaker)
 
 // This secret is only known by inner objects
-Core_root[SECRET] = INNER
+BlankNothing.prototype[SECRET] = INNER
 
+// #type #isNothing #is #_noSuchProperty
 
-
-
-
-// NOTE: Delete these after bootstrap is fully complete
-InPutMethod(Outer_root, function _noSuchProperty(selector) {
+InPutMethod(BlankNothing.prototype, function _noSuchProperty(selector) {
   return undefined
 })
 
-InPutMethod(Core_root, Outer_root._noSuchProperty)
+Something$outer$root = BlankNothing.outerRoot
+Something$core$root  = BlankNothing.prototype
 
-// _hasOwn
-InAtPut(Core_root, "_hasOwn", InHasSelector)
+const BlankSomething = NewBlankConstructor(CoreConstructorMaker)
 
+Something$outer$root = BlankSomething.outerRoot
+Something$core$root  = BlankSomething.prototype
 
-
-
-const BlankRoot   = CoreConstructorFor(Core_root)
-const BlankThing  = CoreConstructorFor(Thing_core)
-const BlankMethod = CoreConstructorFor(Method_core)
-const BlankType   = CoreConstructorFor(Type_root, true)
+const BlankType      = NewBlankConstructor(TypeCoreConstructorMaker)
+const Type$core$root = BlankType.prototype
 
 
+function Create_COPY() {}
 
-InPutMethod(Type_core, function _init(spec, _root_, context__) {
-  const isDisguised          = spec && spec.isDisguised
-  const _root                = _root_ || SpawnFrom(Core_root)
-  const BlankCoreConstructor = CoreConstructorFor(_root, isDisguised)
-  const $factory             = Create_$factory(BlankCoreConstructor)
-  const $type                = new BlankType($type)
+InPutMethod(Type$core$root, function setId() {
 
-  _root.type         = disguise[RIND]
-  _root[ROOT]        = _root
-  _root._newBlank    = () => (new BlankCoreConstructor())[RIND]
-  _root[COPY]        = Create_COPY(_NewCore)
+})
 
-  this.new           = _root.new = Create_new(_NewCore)
+InPutMethod(Type$core$root, function setSupertypes(types) {
+  this._supertypes = types
+})
 
-  this._instanceRoot = _root
-  this._constructor  = _NewCore
-  this._factory      = _factory
-  this._disguise     = disguise
-  this._nextIID      = 0
-  this._subtypes     = SpawnFrom(null)
-  this._methods      = SpawnFrom(null)
+InPutMethod(Type$core$root, function setName(name) {
+  this.name = name
+})
 
-  this._setId()
+InPutMethod(Type$core$root, function addProperty(selector, value) {
 
-  this.prototype     = _root[RIND]
-  this.context       = context__ ? context__[RIND] : null
+})
 
-  const supertypes =
+InPutMethod(Type$core$root, function add(method) {
+
+})
+
+InPutMethod(Type$core$root, function addAll(methods) {
+
+})
+
+InPutMethod(Type$core$root, function _init(spec, context_, Blank_) {
+  const name              = spec && spec.name
+  const supertypes        =
     (spec && spec.supertypes || spec.supertype && [spec.supertype]) || [Thing]
-  this.setSupertypes(supertypes)
-  spec && this.setName(spec.name)
-  spec && this.addAll(spec.instanceMethods || [])
+  const methods           = spec && spec.instanceMethods || []
+  const BlankConstructor  = Blank_ || NewBlankConstructor(CoreConstructorMaker)
+  const instanceCoreRoot  = BlankConstructor.prototype
 
-  return disguised$type
+  instanceCoreRoot[COPY]  = Create_COPY(BlankConstructor)
+
+  this._blankConstructor  = BlankConstructor
+  this._instanceOuterRoot = BlankConstructor.outerRoot
+  this._instanceCoreRoot  = instanceCoreRoot
+  this._nextIID           = 0
+  this._subtypes          = new Set()
+  this._methods           = SpawnFrom(null)
+  this.context            = context_ ? context_[RIND] : null
+
+  this.setId()
+  this.setName(name)
+  this.setSupertypes(supertypes)
+  this.addProperty("type", this[RIND])
+  this.add("_newBlank", () => new BlankConstructor()[RIND])
+  this.addAll(methods)
+  return this
 })
 
 
-Type.add(INSTANCEOF, (instance) => instance[IS_TYPE_SELECTOR])
 
 
+let Type      = (new BlankType())[INNER]._init(
+                     {name: "Type"     , supertypes: []}, null, BlankType)[RIND]
+// Fix Type's supertype later
+
+let Nothing   = Type({name: "Nothing"  , supertypes: []}, null, BlankNothing)
+let Something = Type({name: "Something", supertypes: []}, null, BlankSomething)
+let Thing     = Type({name: "Thing"    , supertypes: []})
+let Method    = Type({name: "Method"   , supertypes: [Thing]})
+
+// Thing.add(function _init(spec) {
+//   this.setName(spec && spec.name)
+// })
 
 // Frost(Base_root)
 // // Frost(Stash_root)
 // Frost(Implementation_root)
 // Frost(Inner_root)
+
+
+
+
+
+// _hasOwn
+InAtPut(Something$core$root, "_hasOwn", InHasSelector)
+
+
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/

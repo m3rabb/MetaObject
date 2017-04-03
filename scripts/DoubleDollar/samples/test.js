@@ -203,12 +203,12 @@ AddLazilyInstalledProperty(_Thing_root, "$", WrapThing)
 
 
 
-function Create_COPY(_NewCore) {
+function Create_COPY(BlankConstructor) {
   return function COPY(asImmutable, visited = CopyLog(), exceptSelector_) {
     const target, targetInner, targetOuter, initializer
     let   selectors, next, value, traversed, valueCore
 
-    target      = new _NewCore()
+    target      = new BlankConstructor()
     targetInner = target[INNER]
     targetOuter = target[OUTER]
 
@@ -448,7 +448,7 @@ PutMethod(Type_root, function _init(spec, _root_, context__) {
 }
 
 AddGetter(Thing_root, function id() {
-  return this[EXPICIT_ID]
+  return this[EXPLICIT_ID]
 })
 
 PutMethod(Type_root, function setSupertypes(supertypes) {

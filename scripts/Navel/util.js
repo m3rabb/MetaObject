@@ -1,4 +1,4 @@
-function CreateNamelessEmptyFunction() {
+function NewNamelessCoreConstructor() {
   return function () {}
 }
 
@@ -62,4 +62,10 @@ function AddLazyProperty(target, namedInstaller_name, installer_) {
     DefineProperty(this, Name, InvisibleConfiguration)
     return (this[Name] = Installer.call(this))
   })
+}
+
+
+function AsMethod(method_func__name, func__, mode___) {
+  return (method_func__name.isMethod) ?
+    method_func__name : Method(method_func__name, func__, mode___)
 }

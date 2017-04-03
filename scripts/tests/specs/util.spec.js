@@ -1,18 +1,18 @@
 describe("Util", function() {
-  describe("CreateNamelessEmptyFunction", function () {
+  describe("NewNamelessCoreConstructor", function () {
     it("answers a nameless functionr", function () {
-      var func = CreateNamelessEmptyFunction()
+      var func = NewNamelessCoreConstructor()
       expect( func.name ).toBe( "" )
     })
 
     describe("When executed", function () {
       it("answers a function", function () {
-        var result = CreateNamelessEmptyFunction()
+        var result = NewNamelessCoreConstructor()
         expect( typeof result ).toBe( "function" )
       })
 
       it("which answers undefined", function () {
-        var func = CreateNamelessEmptyFunction()
+        var func = NewNamelessCoreConstructor()
         expect( func() ).toBe( undefined )
       })
     })
@@ -62,6 +62,10 @@ describe("Util", function() {
     })
   })
 
+  describe("AddInvisibleGetter", function () {
+    xit("UNTESTED")
+  })
+
   describe("AddLazyProperty", function () {
     it("adds a getter loader property to an object", function () {
       const obj = {}
@@ -105,6 +109,14 @@ describe("Util", function() {
         const descriptor = PropertyDescriptor(obj, "xyz")
         expect( descriptor.get ).toBe( undefined )
       })
+    })
+  })
+
+  describe("AsMethod", function () {
+    xit("assigns a property to a selector within a target object", function () {
+      var obj = {}
+      InAtPut(obj, "abc", 123)
+      expect( obj.abc ).toBe( 123 )
     })
   })
 })

@@ -1,44 +1,60 @@
-class Person {
-  constructor(name, ssn) {
-    this.name = name
-    this._ssn = ssn
-    // In es6 it also works as in es5: remember es6 class is nothing more than a Function
-    // and `new` call the function defined by `constructor`;
-    // in es5 works because when you call a `new` on a function the value retuned is the
-    // value returned inside the function if it's an object otherwise returns `this`;
-    // in es6 remains the same for backward compatibility
-    return new Proxy(this, {
-      get (target, name, proxy) {
-        return (name[0] !== "_") ? target[name] : undefined
-      }
-    })
-  }
 
-  ssn() {
-    return this._ssn
+var upper = {abc:123}
+var lower = Object.create(upper)
+var rind  = new Proxy(lower, {
+  getPrototypeOf (target) {
+    var xyz = 44444
+    return null
   }
+})
 
-  _obscureSSN () {
-    return `OBSURED: ${this._ssn}`
-  }
+var arr = []
+for (var prop in rind) { arr.push(prop) }
 
-  obscure () {
-    return this._obscureSSN()
-  }
 
-  get obscured () {
-    return this._obscureSSN()
-  }
-}
+// =====================
+// class Person {
+//   constructor(name, ssn) {
+//     this.name = name
+//     this._ssn = ssn
+//     // In es6 it also works as in es5: remember es6 class is nothing more than a Function
+//     // and `new` call the function defined by `constructor`;
+//     // in es5 works because when you call a `new` on a function the value retuned is the
+//     // value returned inside the function if it's an object otherwise returns `this`;
+//     // in es6 remains the same for backward compatibility
+//     return new Proxy(this, {
+//       get (target, name, proxy) {
+//         return (name[0] !== "_") ? target[name] : undefined
+//       }
+//     })
+//   }
+//
+//   ssn() {
+//     return this._ssn
+//   }
+//
+//   _obscureSSN () {
+//     return `OBSURED: ${this._ssn}`
+//   }
+//
+//   obscure () {
+//     return this._obscureSSN()
+//   }
+//
+//   get obscured () {
+//     return this._obscureSSN()
+//   }
+// }
+//
+// var target = function () {}
+// var porosity = {
+//   apply (target, receiver, args) {
+//     const array = [target, receiver, args]
+//     return array
+//   }
+// }
+// var rind = new Proxy(target, porosity)
 
-var target = function () {}
-var porosity = {
-  apply (target, receiver, args) {
-    const array = [target, receiver, args]
-    return array
-  }
-}
-var rind = new Proxy(target, porosity)
 
 // =======================
 

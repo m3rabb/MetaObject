@@ -24,12 +24,19 @@ const SECRET             = Symbol("SECRET")
 const INNER              = Symbol("INNER")
 const OUTER              = Symbol("OUTER")
 const RIND               = Symbol("RIND")
-const IS_IMMUTABLE       = Symbol("isImmutable")
-const IID                = Symbol("instance id")
 const KNOWN_SELECTORS    = Symbol("KNOWN_SELECTORS")
 const COPY               = Symbol("COPY")
-const INSTANCEOF         = Symbol.hasInstance
+
+const BLANK_CONSTRUCTOR  = Symbol("blankConstructor")
+const ROOT               = Symbol("$root")
+const FACTORY            = Symbol("$factory")
+const IS_IMMUTABLE       = Symbol("isImmutable")
+const IID                = Symbol("instance id")
 const IS_TYPE_SELECTOR   = Symbol("is<type> selector")
+
+const INSTANCEOF         = Symbol.hasInstance
 
 const ALWAYS_FALSE       = (() => false)
 const ALWAYS_NULL        = (() => null)
+
+const SAFE_FUNCTION      = {[IS_IMMUTABLE] : true}

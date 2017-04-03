@@ -49,10 +49,10 @@ Krust.set((context) => {
         elements_.length && this.addAll(elements_)
       },
 
-      function _new(values) {
+      function _newFromArray(array) {
         const target = this.type.new()
         const targetCore = InterMap.get(target)
-        targetCore._elements = values
+        targetCore._elements = array
         return target
       },
 
@@ -201,7 +201,7 @@ Krust.set((context) => {
         Each(indexes_spans, (index_span, next) => {
           values[next++] = this.at(index_span)
         })
-        return this._new(values)
+        return this._newFromArray(values)
       },
 
       function reverse() {
@@ -322,7 +322,7 @@ Krust.set((context) => {
             values[next++] = slot[Grip]  // element: value, key: index,
           }
         })
-        return this._new(values)
+        return this._newFromArray(values)
       },
 
 
@@ -443,7 +443,7 @@ Krust.set((context) => {
             values[next++]= (grip === SUB) ? sublist : span
           }
         })
-        return this._new(values)
+        return this._newFromArray(values)
       },
 
 
@@ -511,7 +511,7 @@ Krust.set((context) => {
             spans[next++] = span
           }
         })
-        return this._new(spans)
+        return this._newFromArray(spans)
       },
 
 
@@ -580,7 +580,7 @@ Krust.set((context) => {
         this.withinDo(scanDirective, (value, index) => {
           values[index] = Action.call(this.$, value, index)
         })
-        return this._new(values)
+        return this._newFromArray(values)
       },
 
       function withinReduce(directive, Accumulator_, Reducer) {
@@ -697,7 +697,7 @@ Krust.set((context) => {
             }
 
             if (asList) {
-              sub = this._new(sub)
+              sub = this._newFromArray(sub)
               if (this[IS_IMMUTABLE]) {
                 span[IS_IMMUTABLE] = true
                 return SetImmutable(span)
@@ -728,7 +728,7 @@ Krust.set((context) => {
         this._overDo(distinct, true, directives, subSize, (sublist, span) => {
           values[next++] = Action.call(this.$, sublist, span)
         })
-        return this._new(values)
+        return this._newFromArray(values)
       },
 
 
