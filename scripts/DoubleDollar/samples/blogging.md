@@ -124,3 +124,6 @@ UNKNOWNS_SELECTORS
 OWN
 
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Enumerability_and_ownership_of_properties
+
+
+addMethod|addOwnMethod

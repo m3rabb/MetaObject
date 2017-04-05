@@ -113,13 +113,11 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
 
       target = SpawnFrom(RootOf(source))
       // break omitted
-
     case Object :
       selectors    = selectors || source[KNOWN_SELECTORS] || KnownNames(source)
       next         = selectors.length
       isFromObject = true
       // break omitted
-
     case Array :
       next = isFromObject ? next : source.length
 

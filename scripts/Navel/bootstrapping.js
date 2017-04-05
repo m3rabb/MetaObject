@@ -28,173 +28,176 @@ const DefaultCoreBehavior = {
 
 
 
-const Base$root                  = SpawnFrom(null)
-// const   Stash$root          = SpawnFrom(Base$root)
+const Base$root         = SpawnFrom(null)
+// const   Stash$root      = SpawnFrom(Base$root)
+const   Base$root$outer = new Proxy(Base$root, DefaultOuterBehavior)
+const   Base$root$core  = new Proxy(Base$root, DefaultCoreBehavior)
 
-const   Base$root$outer          = new Proxy(Base$root, DefaultOuterBehavior)
-// let     Nothing$root$outer
-let         Something$root$outer  // Inate Intrinsic
-
-const   Base$root$core           = new Proxy(Base$root, DefaultCoreBehavior)
-// let    Nothing$root$core
-let         Something$root$core
 
 // // Just in case sanity failsafe to prevent infinite recursion from CoreBaseBehavior
 // Nothing$root$core[INNER]  = Nothing$root$core
 //
 
 
-Something$root$outer = Base$root$outer
-Something$root$core  = Base$root$core
+const _BaseBlanker = {$root$outer: Base$root$outer, $root$core: Base$root$core}
+const  NothingBlanker  = NewBlankerFrom(_BaseBlanker  , CoreBlankerMaker)
+const   $InateBlanker  = NewBlankerFrom(NothingBlanker, CoreBlankerMaker)
+const    MethodBlanker = NewBlankerFrom($InateBlanker , CoreBlankerMaker)
+const    TypeBlanker   = NewBlankerFrom($InateBlanker , TypeCoreBlankerMaker)
 
-const BlankNothing   = NewBlankConstructor(CoreConstructorMaker)
 
 // This secret is only known by inner objects
-BlankNothing.prototype[SECRET] = INNER
+NothingBlanker.$root$core[SECRET] = INNER
 
 // #type #isNothing #is #_noSuchProperty
 
-InPutMethod(BlankNothing.prototype, function _noSuchProperty(selector) {
+InPutMethod(NothingBlanker.$root$core, function _noSuchProperty(selector) {
   return undefined
 })
 
-
-Something$root$outer = BlankNothing.$root$outer
-Something$root$core  = BlankNothing.prototype
-
-const BlankSomething = NewBlankConstructor(CoreConstructorMaker)
-
-// _hasOwn
-InAtPut(BlankSomething.prototype, "_hasOwn", InHasSelector)
+InAtPut($InateBlanker.$root$core, "_hasOwn", InHasSelector)
 
 
-Something$root$outer = BlankSomething.$root$outer
-Something$root$core  = BlankSomething.prototype
+InPutMethod(MethodBlanker.$root$core, function _init(func_name, func_, mode__) {
+  const [selector, handler, mode] = (typeof func_name === "function") ?
+    [func_name.name, func_name, func_] : [func_name, func_, mode__]
 
-const BlankType      = NewBlankConstructor(TypeCoreConstructorMaker)
-const Type$root$core = BlankType.prototype
-
-const BlankMethod    = NewBlankConstructor(CoreConstructorMaker)
-const Method$root$core = BlankMethod.prototype
-
-
-
-function Create_COPY() {}
-
-
-
-
-InPutMethod(Method$root$core, function _init(namedFunc_name, func_, mode__) {
-  const [name, handler, mode] = (typeof namedFunc_name === "function") ?
-    [namedFunc_name.name, namedFunc_name, func_] :
-    [namedFunc_name, func_, mode__]
-
-  this.selector = name
+  this.selector = selector
   this.handler  = handler
   this.mode     = mode || STANDARD
+  this.isPublic = (selector[0] !== "_")
 })
 
 
-InPutMethod(Type$root$core, function addProperty(selector, value) {
-  this._blankConstructor.$root$inner[selector] = value
+InAtPut(TypeBlanker.$root$core, _init, function BOOTSTRAP_INIT(name, blanker) {
+  this.name = name
+  this._instanceBlanker = blanker
+  this._subtypes = new Set()
+  this._methods = SpawnFrom(null)
   return this
 })
 
-// InPutMethod(Type$root$core, function addInstanceMethod(method) {
-//   this._blankConstructor.$root$core[selector] = value
-//   return this
-// })
 
-InPutMethod(Type$root$core, function add(method_func__name, func__, mode___) {
-  // const method   = AsMethod(method_func__name, func__, mode___)
-  // const selector = method.selector
-  // const handler  = method.handler
-  //
-  // switch (method.mode) {
-  //   case STANDARD :
-  //     this._instanceRoot[selector] = handler
-  //     break
-  //
-  //   case GETTER :
-  //     _AddGetter(this._instanceRoot, selector, true, handler)
-  //     break
-  //
-  //   case LAZY_INSTALLER :
-  //     _AddGetter(this._instanceRoot, selector, false, function _loader() {
-  //       DefineProperty(this, selector, VisibleConfiguration)
-  //       return (this[selector] = handler.call(this))
-  //     })
-  //     break
-  // }
-  //
-  // this._methods[selector] = method
-  // ReseedSubtypesMethodHandler(this, method)
-  // return this
-})
 
-InPutMethod(Type$root$core, function setId() {
+const Nothing$core = (new TypeBlanker())._init("NOTHING", NothingBlanker)
+const $Inate$core  = (new TypeBlanker())._init("$INATE" , $InateBlanker )
+const Method$core  = (new TypeBlanker())._init("METHOD" , MethodBlanker )
+const Type$core    = (new TypeBlanker())._init("TYPE"   , TypeBlanker   )
 
-})
-
-InPutMethod(Type$root$core, function setSupertypes(types) {
-  this._supertypes = types
-})
-
-InPutMethod(Type$root$core, function setName(name) {
-  this.name = name
-})
+const Nothing = Nothing$core[RIND]
+const $Inate  = $Inate$core [RIND]
+const Method  = Method$core [RIND]
+const Type    = Type$core   [RIND]
 
 
 
-InPutMethod(Type$root$core, function add(method) {
+function addMethod(method_func__name, func__, mode___) {
+  const method        = AsMethod(method_func__name, func__, mode___)
+  const mode          = method.mode
+  const selector      = method.selector
+  const handler       = method.handler
+  const isPublic      = method.isPublic
+  const blanker       = this._instanceBlanker
+  const $root$outer   = blanker.$root$outer
+  const $root$core    = blanker.$root$core
 
-})
+  if (mode === STANDARD) {
+    if (isPublic) { $root$outer[selector] = PublicHandlerFor(selector) }
+    $root$outer[$root$core] = handler
+  }
+  else {
+    const getHandler = (mode === GETTER) ? handler : LazyLoaderMaker(handler)
+    if (isPublic) {
+      _AddGetter($root$outer, selector, true, PublicHandlerFor(selector, true))
+    }
+    _AddGetter($root$core, selector, true, getHandler)
+  }
 
-InPutMethod(Type$root$core, function addAll(methods) {
+  this._methods[selector] = method
+  ReseedSubtypesMethodHandler(this, method)
+  return this
+}
 
-})
 
-InPutMethod(Type$root$core, function _init(spec, context_, Blank_) {
-  const name              = spec && spec.name
-  const supertypes        =
+addMethod.call(Type$core, addMethod)
+
+
+Type$core.addMethod(function _init(spec, context_) {
+  const name            = spec && spec.name
+  const supertypes      =
     spec && (spec.supertypes || spec.supertype && [spec.supertype]) || [Thing]
-  const methods           = spec && spec.instanceMethods || []
-  const BlankConstructor  = Blank_ || NewBlankConstructor(CoreConstructorMaker)
-  const instanceCoreRoot  = BlankConstructor.prototype
+  const methods         = spec && spec.instanceMethods || []
+  const blanker         = this._instanceBlanker
 
-  instanceCoreRoot[COPY]  = Create_COPY(BlankConstructor)
+  this._nextIID         = 0
+  this._subtypes        = new Set()
+  this._properties      = SpawnFrom(null)
+  this._methods         = SpawnFrom(null)
+  this.context          = context_ ? context_[RIND] : null
 
-  this._blankConstructor  = BlankConstructor
-  // this._instanceOuterRoot = BlankConstructor.root$outer
-  // this._instanceCoreRoot  = instanceCoreRoot
-  this._nextIID           = 0
-  this._subtypes          = new Set()
-  this._methods           = SpawnFrom(null)
-  this.context            = context_ ? context_[RIND] : null
-
+  this.addMethod("_newBlank", () => new blanker()[RIND])
+  this._create$copy(blanker)
   this.setId()
   this.setName(name)
   this.setSupertypes(supertypes)
   this.addProperty("type", this[RIND])
-  this.add("_newBlank", () => new BlankConstructor()[RIND])
-  this.addAll(methods)
+  this.addAllMethods(methods)
+  return this
+})
+
+Type$core.addMethod(function _create$copy(blanker) {
+
+})
+
+Type$core.addMethod(function setId() {
+
+})
+
+Type$core.addMethod(function setName(name) {
+  this.name = name
+})
+
+Type$core.addMethod(function setSupertypes(types) {
+  this._supertypes = types
+})
+
+Type$core.addMethod(function addProperty(selector, value) {
+  this._instanceBlanker.$root$inner[selector] = value
+  this._properties[selector] = PROPERTY
+  return this
+})
+
+Type$core.addMethod(function addAllMethods(methods) {
+  let next = methods.length
+  while (next--) { this.addMethod(methods[next]) }
   return this
 })
 
 
 
-let Type      = (new BlankType())[INNER]._init(
-                     {name: "Type"     , supertypes: []}, null, BlankType)[RIND]
-let Nothing   = Type({name: "Nothing"  , supertypes: []}, null, BlankNothing)
-let Something = Type({name: "Something", supertypes: []}, null, BlankSomething)
-let Thing     = Type({name: "Thing"    , supertypes: []})
-let Method    = Type({name: "Method"   , supertypes: [Thing]}, null, BlankMethod)
+const Thing = Type({name: "Thing", supertypes: []})
 
-// Type.setSupertypes([Thing])
+Nothing$core[INNER]._init({name: "Nothing", supertypes: []})
+$Inate$core [INNER]._init({name: "$Inate" , supertypes: []})
+Method$core [INNER]._init({name: "Method" })
+Type$core   [INNER]._init({name: "Type"   })
 
-// Thing.add(function _init(spec) {
-//   this.setName(spec && spec.name)
-// })
+
+Nothing$core.addMethod(Nothing$core._noSuchProperty)
+$Inate$core .addMethod($Inate$core._hasOwn)
+Method$core .addMethod(Method$core._init)
+Type$core   .addMethod(Type$core._init)
+Type$core   .addMethod(Type$core.addMethod)
+Type$core   .addMethod(Type$core._create$copy)
+Type$core   .addMethod(Type$core.setId)
+Type$core   .addMethod(Type$core.setName)
+Type$core   .addMethod(Type$core.setSupertypes)
+Type$core   .addMethod(Type$core.addProperty)
+Type$core   .addMethod(Type$core.addAllMethods)
+
+
+
+
 
 // Frost(Base_root)
 // // Frost(Stash_root)

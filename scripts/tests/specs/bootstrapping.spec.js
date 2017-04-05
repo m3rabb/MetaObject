@@ -185,17 +185,17 @@ describe("Bootstrapping", function() {
   })
 
   it("sets up the basis types", function () {
-    expect( Type.name )     .toBe( "Type" )
-    expect( Nothing.name )  .toBe( "Nothing" )
+    expect( Type.name      ).toBe( "Type"      )
+    expect( Nothing.name   ).toBe( "Nothing"   )
     expect( Something.name ).toBe( "Something" )
-    expect( Thing.name )    .toBe( "Thing" )
-    expect( Method.name )   .toBe( "Method" )
+    expect( Thing.name     ).toBe( "Thing"     )
+    expect( Method.name    ).toBe( "Method"    )
 
-    expect( Nothing.type )  .toBe( Type )
+    expect( Nothing.type   ).toBe( Type )
     expect( Something.type ).toBe( Type )
-    expect( Thing.type )    .toBe( Type )
-    expect( Method.type )   .toBe( Type )
-    expect( Type.type )     .toBe( Type )
+    expect( Thing.type     ).toBe( Type )
+    expect( Method.type    ).toBe( Type )
+    expect( Type.type      ).toBe( Type )
   })
 })
 

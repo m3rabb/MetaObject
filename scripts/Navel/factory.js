@@ -30,7 +30,7 @@
 // rind --> core
 
 
-function CoreConstructorMaker(PairedOuter) {
+function CoreBlankerMaker(PairedOuter) {
   return function $core() {
     const outer = new PairedOuter()
     const rind  = new Proxy(outer, PrivacyPorosity)
@@ -43,45 +43,48 @@ function CoreConstructorMaker(PairedOuter) {
   }
 }
 
-function TypeCoreConstructorMaker(TypeOuter) {
-  return function $Type() {  // NewBlankTypeConstructor
-    const $factory = (...args) => {
-      const core = new this._blankConstructor()
-      core[INNER]._init(...args)
+
+function TypeCoreBlankerMaker(TypeOuter) {
+  return function $Type() {  // NewTypeBlanker
+    const $blanker = (/* arguments */) => {
+      const core = new this._instanceBlanker()
+      core[INNER]._init(arguments)
       if (core.id == null) { core.beImmutable }
       return core[RIND]
     }
-    InterMap.set($factory, SAFE_FUNCTION)
+    InterMap.set($blanker, SAFE_FUNCTION)
 
     const mutablePorosity = new DisguisedMutablePorosity(this)
     const outer           = new TypeOuter()
     const privacyPorosity = new TypePrivacyPorosity(outer)
-    const rind            = new Proxy($factory, privacyPorosity)
+    const rind            = new Proxy($blanker, privacyPorosity)
 
-    this[FACTORY] = $factory
-    this[INNER]   = new Proxy($factory, mutablePorosity)
+    this[BLANKER] = $blanker
+    this[INNER]   = new Proxy($blanker, mutablePorosity)
     this[OUTER]   = outer
     this[RIND]    = rind
     outer[RIND]   = rind
     InterMap.set(rind, this)
+
+    this._instanceBlanker = NewBlankerFrom($InateBlanker, CoreBlankerMaker)
   }
 }
 
-function NewBlankConstructor(coreConstructorMaker) {
-  const $root$core           = SpawnFrom(Something$root$core)
-  const $root$outer          = SpawnFrom(Something$root$outer)
-  const PairedOuter          = function $outer() {}
-  const BlankConstructor     = coreConstructorMaker(PairedOuter)
+function NewBlankerFrom(superBlanker, coreBlankerMaker) {
+  const $root$core  = SpawnFrom(superBlanker.$root$core)
+  const $root$outer = SpawnFrom(superBlanker.$root$outer)
+  const PairedOuter = function $outer() {}
+  const Blanker     = coreBlankerMaker(PairedOuter)
 
-  $root$core[OUTER]            = $root$outer
-  BlankConstructor.prototype   = $root$core
-  BlankConstructor.$root$inner = new Proxy($root$core, MutablePorosity)
-  BlankConstructor.$root$outer = $root$outer
-  PairedOuter.prototype        = $root$outer
-  InterMap.set(BlankConstructor, SAFE_FUNCTION)
-  return BlankConstructor
+  $root$core[OUTER]     = $root$outer
+  PairedOuter.prototype = $root$outer
+  Blanker.prototype     = $root$core
+  Blanker.$root$core    = $root$core
+  Blanker.$root$inner   = new Proxy($root$core, MutablePorosity)
+  Blanker.$root$outer   = $root$outer
+  InterMap.set(Blanker, SAFE_FUNCTION)
+  return Blanker
 }
-
 
 
 

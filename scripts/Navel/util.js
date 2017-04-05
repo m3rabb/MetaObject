@@ -69,3 +69,17 @@ function AsMethod(method_func__name, func__, mode___) {
   return (method_func__name.isMethod) ?
     method_func__name : Method(method_func__name, func__, mode___)
 }
+
+// function AsMethod(method_func__name, func__, mode___) {
+//   if (method_func__name.isMethod) { return method_func__name }
+//   const method$core = new MethodBlanker()
+//   method$core[INNER]._init(method_func__name, func__, mode___)
+//   return method$core[RIND]
+// }
+
+function LazyLoaderMaker(Handler) {
+  return function $loader() {
+    DefineProperty(this, selector, VisibleConfiguration)
+    return (this[selector] = handler.call(this))
+  }
+}

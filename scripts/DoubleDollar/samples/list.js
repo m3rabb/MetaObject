@@ -1372,12 +1372,12 @@ Krust.set((context) => {
       },
 
       function __subFromShiftTo(sourceEdge, targetEdge) {
+        if (targetEdge === sourceEdge) { return }
+
         const target  = this._captureChanges._elements
         const endEdge = elements.length
         const size    = endEdge - sourceEdge
         let   tIndex, sIndex
-
-        if (targetEdge === sourceEdge) { return }
 
         if (targetEdge < sourceEdge) {
           sIndex = sourceEdge

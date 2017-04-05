@@ -89,20 +89,20 @@ describe("TypeCoreConstructorMaker", function () {
         this.inner = this.core[INNER]
         this.outer = this.core[OUTER]
         this.rind = this.core[RIND]
-        this.factory = this.core[FACTORY]
+        this.blanker = this.core[BLANKER]
       })
 
-      it("has a factory constructor function", function () {
-        expect( typeof this.factory ).toBe( "function" )
+      it("has a blank constructor function", function () {
+        expect( typeof this.blanker ).toBe( "function" )
       })
 
-      describe("Where the factory", function () {
-        it("is named '$factory'", function () {
-          expect( this.factory.name ).toBe( "$factory" )
+      describe("Where the blanker", function () {
+        it("is named '$blanker'", function () {
+          expect( this.blanker.name ).toBe( "$blanker" )
         })
 
         it("has a confirmed 'safe' function", function () {
-          expect( InterMap.get(this.factory) ).toBe( SAFE_FUNCTION )
+          expect( InterMap.get(this.blanker) ).toBe( SAFE_FUNCTION )
         })
 
         describe("When executed", function () {
@@ -148,7 +148,7 @@ describe("TypeCoreConstructorMaker", function () {
       })
 
       describe("Where the inner proxy", function () {
-        it("disguises the core as the factory func", function () {
+        it("disguises the core as the blanker func", function () {
           expect( typeof this.inner ).toBe( "function" )
         })
 
@@ -157,9 +157,9 @@ describe("TypeCoreConstructorMaker", function () {
           expect( this.core.xyz ).toBe( 123 )
         })
 
-        it("not the disguising factory func", function () {
+        it("not the disguising blanker func", function () {
           this.inner.xyz = 123
-          expect( this.factory.xyz ).toBe( undefined )
+          expect( this.blanker.xyz ).toBe( undefined )
         })
       })
 
@@ -175,7 +175,7 @@ describe("TypeCoreConstructorMaker", function () {
       })
 
       describe("Where the rind proxy", function () {
-        it("disguises the outer as the factory func", function () {
+        it("disguises the outer as the blanker func", function () {
           expect( typeof this.rind ).toBe( "function" )
         })
 
@@ -184,12 +184,12 @@ describe("TypeCoreConstructorMaker", function () {
           expect( this.rind.xyz ).toBe( 123 )
         })
 
-        it("not the disguising factory func", function () {
-          this.factory.xyz = 123
+        it("not the disguising blanker func", function () {
+          this.blanker.xyz = 123
           expect( this.rind.xyz ).toBe( undefined )
         })
 
-        it("making the factory's prototype inaccessible", function () {
+        it("making the blanker's prototype inaccessible", function () {
           expect( this.rind.prototype ).toBe( undefined )
         })
       })
