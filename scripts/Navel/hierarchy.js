@@ -53,6 +53,32 @@ function MakeAncestors(supertypes$cores) {
 
 
 
+// function Make$lookup(type$inner) {
+//   const type$core = InterMap.get(type$inner[RIND])
+//
+//   function $lookup(selector) {
+//     const ancestors = type$core._ancestors
+//     let  next = ancestors.length
+//
+//     while (next--) {
+//       ancestor$core = ancestors[next]
+//       properties = ancestor$core._properties
+//       value = properties[selector]
+//       if (value !== undefined || (selector in properties)) {
+//         if (value === PROPERTY) {
+//           return (type$core._blanker.$root$inner[selector] = value)
+//         }
+//         type$core.addMethod(value, null, DONT_RECORD) // value isMethod
+//         return this[INNER][selector]
+//       }
+//     }
+//     if (this._noSuchProperty) { return this[INNER]._noSuchProperty(selector) }
+//     return (type$core._blanker.$root$inner[selector] = undefined)
+//   }
+//   return AsSafeFunction($lookup)
+// }
+
+
 
 // SUPER
 

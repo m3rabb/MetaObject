@@ -3,20 +3,20 @@
 const InterMap = new WeakMap()
 
 
-const Outer$lookup = PublicHandlerFor($LOOKUP)
 
 // UNTESTED
 const DefaultOuterBehavior = {
   __proto__ : null,
 
   get (base$root, selector, $outer) {
+    const $core = InterMap.get($outer[RIND])
     if (selector[0] === "_") {
-      const $core = InterMap.get($outer[RIND])
-      return ($core._outerPrivateAccess) ?
-        $core[INNER]._outerPrivateAccess(selector) : undefined
+      if ($core._externalPrivateAccess) {
+        return $core[INNER]._externalPrivateAccess(selector)
+      }
     }
-    return Outer$lookup.call($outer[RIND], selector)
-    // return InterMap.get(outer[RIND])[INNER]._noSuchProperty(selector)
+    return $core._noSuchProperty ?
+      $core[INNER]._noSuchProperty(selector) : undefined
   },
   // getPrototypeOf (base$root) { return base$root }
 }
@@ -25,37 +25,13 @@ const DefaultCoreBehavior = {
   __proto__ : null,
 
   get (base$root, selector, $core) {
-    return $core[$LOOKUP](selector)
-    // return core[INNER]._noSuchProperty(selector)
+    return $core._noSuchProperty ?
+      $core[INNER]._noSuchProperty(selector) : undefined
   },
 
   // getPrototypeOf (base$root) { return base$root }
 }
 
-function Make$lookup(type$inner) {
-  const type$core = InterMap.get(type$inner[RIND])
-
-  function $lookup(selector) {
-    const ancestors = type$core._ancestors
-    let  next = ancestors.length
-
-    while (next--) {
-      ancestor$core = ancestors[next]
-      properties = ancestor$core._properties
-      value = properties[selector]
-      if (value !== undefined || (selector in properties)) {
-        if (value === PROPERTY) {
-          return (type$core._blanker.$root$inner[selector] = value)
-        }
-        type$core.addMethod(value, null, DONT_RECORD) // value isMethod
-        return this[INNER][selector]
-      }
-    }
-    if (this._noSuchProperty) { return this[INNER]._noSuchProperty(selector) }
-    return (type$core._blanker.$root$inner[selector] = undefined)
-  }
-  return AsSafeFunction($lookup)
-}
 
 function Make$copy() {}
 
@@ -67,9 +43,9 @@ const   Base$root$core  = new Proxy(Base$root, DefaultCoreBehavior)
 
 
 const $BaseBlanker = {$root$outer: Base$root$outer, $root$core: Base$root$core}
-const   $InateBlanker   = NewBlankerFrom($BaseBlanker  , MakeCoreBlanker)
-const     MethodBlanker = NewBlankerFrom($InateBlanker , MakeCoreBlanker)
-const     TypeBlanker   = NewBlankerFrom($InateBlanker , MakeTypeCoreBlanker)
+const   $InateBlanker   = NewBlankerFrom($BaseBlanker , MakeCoreBlanker)
+const     MethodBlanker = NewBlankerFrom($InateBlanker, MakeCoreBlanker)
+const     TypeBlanker   = NewBlankerFrom($InateBlanker, MakeTypeCoreBlanker)
 
 const $Inate$root$core = $InateBlanker.$root$core
 const Method$root$core = MethodBlanker.$root$core
@@ -87,10 +63,6 @@ $InateBlanker.$root$inner.id       = undefined
 $InateBlanker.$root$inner.atIndex  = undefined
 $InateBlanker.$root$inner.splice   = undefined // Weird ref by debugger
 
-
-// InAtPut($Inate$root$core, "_hasOwn", InHasSelector)
-
-// InAtPut($Inate$root$core, LOOKUP, ALWAYS_UNDEFINED)
 
 
 InPutMethod(Method$root$core, function _init(func_name, func_, mode__) {
@@ -127,13 +99,7 @@ const Type    = Type$core  [RIND]
 SetDisplayNames($InateBlanker, "$Outer", "$Inner")
 
 
-
-Method$root$core[$LOOKUP]              = Make$lookup(Method$core)
-Type$root$core[$LOOKUP]                = Make$lookup(Type$core)
 Type$root$core._updateMethodInSubtypes = ALWAYS_NULL
-
-
-
 
 
 function addMethod(method_func__name, func__, mode___) {
@@ -182,21 +148,23 @@ Type$core.addMethod(function _init(spec, context_) {
   // blanker.$root$inner[KIND] = name
   SetDisplayNames(blanker, name)
 
-  blanker.$root$core[$LOOKUP] = Make$lookup(this)
-  blanker.$root$core[$COPY] =   Make$copy(blanker)
-
   this._nextIID         = 0
   this._subtypes        = new Set()
   this._properties      = SpawnFrom(null)
   this.context          = context_ ? context_[RIND] : null
 
   this.addMethod("_newBlank", () => new blanker()[RIND])
+  this._make$copy(blanker)
   this.setId()
   this.setName(name)
   this.setSupertypes(supertypes)
   this.addProperty("type", this[RIND])
   this.addAllMethods(methods)
   return this
+})
+
+Type$core.addMethod(function _make$copy(blanker) {
+  // blanker.$root$core[$COPY] =   Make$copy(blanker)
 })
 
 Type$core.addMethod(function setId() {
@@ -249,8 +217,9 @@ SetDisplayNames($InateBlanker, "$Outer", "$Inner")
 
 Method$core .addMethod(Method$root$core._init)
 Type$core   .addMethod(Type$root$core._init)
-Type$core   .addMethod(Type$root$core.addMethod)
 Type$core   .addMethod(Type$root$core._updatePropertyInSubtypes)
+Type$core   .addMethod(Type$root$core._make$copy)
+Type$core   .addMethod(Type$root$core.addMethod)
 Type$core   .addMethod(Type$root$core.setId)
 Type$core   .addMethod(Type$root$core.setName)
 Type$core   .addMethod(Type$root$core.setSupertypes)
