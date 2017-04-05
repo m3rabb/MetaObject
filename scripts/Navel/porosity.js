@@ -22,6 +22,8 @@ const PrivacyPorosity = {
   },
 
   has ($outer, selector) {
+    // const firstChar = (typeof selector === "symbol") ?
+    //   selector.toString()[7] : selector[0]
     switch (selector[0]) {
       case "_"       : return $outer._externalPrivateRead(selector) || false
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
@@ -65,6 +67,8 @@ class TypePrivacyPorosity {
 
   has (disguisedFunc, selector) {
     const $outer = this.$outer
+    // const firstChar = (typeof selector === "symbol") ?
+    //   selector.toString()[7] : selector[0]
     switch (selector[0]) {
       case "_"       : return $outer._externalPrivateRead(selector) || false
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
@@ -87,8 +91,8 @@ const MutablePorosity = {
   set ($core, selector, value, $inner) {
     const isPublic = (selector[0] !== "_")
 
-    if (($core[selector] === undefined) && !$core._hasOwn(selector)) {
-      delete $core[KNOWN_SELECTORS]
+    if (!(selector in $core)) {
+      delete $core[$KNOWN_SELECTORS]
     }
 
     switch (typeof value) {
@@ -139,8 +143,8 @@ const MutablePorosity = {
   },
 
   deleteProperty ($core, selector, $inner) {
-    if (($core[selector] !== undefined) || $core._hasOwn(selector)) {
-      delete $core[KNOWN_SELECTORS]
+    if (selector in $core) {
+      delete $core[$KNOWN_SELECTORS]
       delete $core[selector]
     }
 

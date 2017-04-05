@@ -1,4 +1,4 @@
-function NewNamelessCoreConstructor() {
+function MakeNamelessVacuousFunction() {
   return function () {}
 }
 
@@ -77,9 +77,16 @@ function AsMethod(method_func__name, func__, mode___) {
 //   return method$core[RIND]
 // }
 
-function LazyLoaderMaker(Handler) {
+function MakeLazyLoader(Handler) {
   return function $loader() {
     DefineProperty(this, selector, VisibleConfiguration)
     return (this[selector] = handler.call(this))
   }
+}
+
+function AsSafeFunction(func, ignorePrototype_) {
+  func[IS_IMMUTABLE] = true
+  InterMap.set(func, SAFE_FUNCTION)
+  if (!ignorePrototype_) { Frost(func.prototype) }
+  return Frost(func)
 }

@@ -19,27 +19,37 @@ const Apply              = Reflect.apply
 
 // Reflect.ownKeys === Object.getOwnPropertyNames(target).concat(Object.getOwnPropertySymbols(target)
 
+// Protected Implementation properties (so no namespace clashing)
+// private
+const INNER              = Symbol("$inner")
+const OUTER              = Symbol("$outer")
+const RIND               = Symbol("$rind")
 
-const SECRET             = Symbol("SECRET")
-const INNER              = Symbol("INNER")
-const OUTER              = Symbol("OUTER")
-const RIND               = Symbol("RIND")
-const INNER_POROSITY     = Symbol("INNER_POROSITY")
-const KNOWN_SELECTORS    = Symbol("KNOWN_SELECTORS")
-const COPY               = Symbol("COPY")
+const $INNER_POROSITY    = Symbol("$innerPorosity")
+const $KNOWN_SELECTORS   = Symbol("$knownSelectors")
+const $COPY              = Symbol("$copy")
+const $LOOKUP            = Symbol("$lookup")
+const $IID               = Symbol("$instanceId")
+const $SECRET            = Symbol("$secret")
+
+// public
+const IS_IMMUTABLE       = Symbol("isImmutable")
+const IS_TYPE_SELECTOR   = Symbol("is<type> selector")
+const INSTANCEOF         = Symbol.hasInstance
+
+
+// Sentinels
 const PROPERTY           = Symbol("PROPERTY")
 const METHOD             = Symbol("METHOD")
 
-const BLANK_CONSTRUCTOR  = Symbol("blankConstructor")
-const ROOT               = Symbol("$root")
-const BLANKER            = Symbol("$blanker")
-const IS_IMMUTABLE       = Symbol("isImmutable")
-const IID                = Symbol("instance id")
-const IS_TYPE_SELECTOR   = Symbol("is<type> selector")
+const DONT_RECORD        = Symbol("DONT_RECORD")
+const STANDARD           = Symbol("STANDARD")
+const GETTER             = Symbol("GETTER")
+const LAZY_INSTALLER     = Symbol("LAZY_INSTALLER")
 
-const INSTANCEOF         = Symbol.hasInstance
 
 const ALWAYS_FALSE       = (() => false)
 const ALWAYS_NULL        = (() => null)
+const ALWAYS_UNDEFINED   = (() => undefined)
 
 const SAFE_FUNCTION      = {[IS_IMMUTABLE] : true}

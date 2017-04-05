@@ -30,8 +30,8 @@
 // rind --> core
 
 
-function CoreBlankerMaker(PairedOuter) {
-  return function $core() {
+function MakeCoreBlanker(PairedOuter) {
+  return function () {
     const outer = new PairedOuter()
     const rind  = new Proxy(outer, PrivacyPorosity)
 
@@ -44,36 +44,37 @@ function CoreBlankerMaker(PairedOuter) {
 }
 
 
-function TypeCoreBlankerMaker(TypeOuter) {
-  return function $Type() {  // NewTypeBlanker
-    const $blanker = (/* arguments */) => {
-      const core = new this._instanceBlanker()
-      core[INNER]._init(arguments)
+function MakeTypeCoreBlanker(TypeOuter) {
+  return function () {  // $Type // NewTypeBlanker
+    const type = this
+    function $new(...args) {
+      const core = new type._blanker()
+      core[INNER]._init(...args)
       if (core.id == null) { core.beImmutable }
       return core[RIND]
     }
-    InterMap.set($blanker, SAFE_FUNCTION)
+    InterMap.set($new, SAFE_FUNCTION)
 
     const mutablePorosity = new DisguisedMutablePorosity(this)
     const outer           = new TypeOuter()
     const privacyPorosity = new TypePrivacyPorosity(outer)
-    const rind            = new Proxy($blanker, privacyPorosity)
+    const rind            = new Proxy($new, privacyPorosity)
 
-    this[BLANKER] = $blanker
-    this[INNER]   = new Proxy($blanker, mutablePorosity)
+    this.newFact  = $new
+    this[INNER]   = new Proxy($new, mutablePorosity)
     this[OUTER]   = outer
     this[RIND]    = rind
     outer[RIND]   = rind
     InterMap.set(rind, this)
 
-    this._instanceBlanker = NewBlankerFrom($InateBlanker, CoreBlankerMaker)
+    this._blanker = NewBlankerFrom($InateBlanker, MakeCoreBlanker)
   }
 }
 
 function NewBlankerFrom(superBlanker, coreBlankerMaker) {
   const $root$core  = SpawnFrom(superBlanker.$root$core)
   const $root$outer = SpawnFrom(superBlanker.$root$outer)
-  const PairedOuter = function $outer() {}
+  const PairedOuter = MakeNamelessVacuousFunction()
   const Blanker     = coreBlankerMaker(PairedOuter)
 
   $root$core[OUTER]     = $root$outer
@@ -82,23 +83,24 @@ function NewBlankerFrom(superBlanker, coreBlankerMaker) {
   Blanker.$root$core    = $root$core
   Blanker.$root$inner   = new Proxy($root$core, MutablePorosity)
   Blanker.$root$outer   = $root$outer
-  InterMap.set(Blanker, SAFE_FUNCTION)
-  return Blanker
+
+  return AsSafeFunction(Blanker, true)
 }
 
 
-
-function DegenerateConstructorForNamingInDebugger(typeName, isInner) {
-  const funcName = (isInner ? "_" : "") + typeName
+function VacuousConstructor(name) {
   const funcBody = `
-    return function ${funcName}() {
+    return function ${name}() {
       const message = "This constructor is only used for debugging!"
-      return SignalError(${funcName}, message)
+      return SignalError(${name}, message)
     }
   `
   const constructor = Function(funcBody)()
+  return AsSafeFunction(constructor)
+}
 
-  constructor[IS_IMMUTABLE] = true
-  Frost(constructor.prototype)
-  return Frost(constructor)
+function SetDisplayNames(blanker, outerName, coreName = ("_" + outerName)) {
+  blanker.$root$outer.constructor = VacuousConstructor(outerName)
+  blanker.$root$core.constructor  = VacuousConstructor(coreName)
+  return blanker
 }

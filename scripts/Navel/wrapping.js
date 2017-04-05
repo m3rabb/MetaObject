@@ -25,33 +25,36 @@
 
 // UNTESTED
 function WrapFunc(OriginalFunc) {
-  return function $wrappedOutsideFunc(/* arguments */) {
+  return function $wrappedOutsideFunc(...args) {
     const receiver =
-      (this != null && this[SECRET] === INNER) ? this[RIND] : this
-    return OriginalFunc.apply(receiver, arguments)
+      (this != null && this[_SECRET] === INNER) ? this[RIND] : this
+    return OriginalFunc.apply(receiver, ...args)
   }
 }
 
+const PublicHandlers = SpawnFrom(null)
+const PublicGetters  = SpawnFrom(null)
+
 
 function PublicHandlerFor(selector, IsGetter) {
-  let publicHandler = IsGetter ?
-    PublicGetters.get(selector) : PublicHandlers.get(selector)
+  const publicHandlers = IsGetter ? PublicGetters : PublicHandlers
+  let publicHandler    = publicHandlers[selector]
 
   if (publicHandler) { return publicHandler }
 
-  publicHandler = function (/* arguments */) {
-    let $core, porosity, $inner, result
+  publicHandler = function (...args) {
+    let $core, porosity, $inner, result, result$core
 
     $core = InterMap.get(this)
 
-    if ((porosity = $core[INNER_POROSITY])) {
+    if ((porosity = $core[_INNER_POROSITY])) {
       if (porosity.inUse) { porosity = new ImmutableInnerPorosity($core) }
       porosity.inUse = true
       $inner = porosity.target
     }
     else { $inner = $core[INNER] }
 
-    result = IsGetter ? $inner[selector] : $inner[selector](arguments)
+    result = IsGetter ? $inner[selector] : $inner[selector](...args)
 
     if (porosity) { // indicator that $inner isImmutable
       if (result === $inner) {
@@ -63,21 +66,17 @@ function PublicHandlerFor(selector, IsGetter) {
         porosity.inUse = false
         return result.$
       }
-      if (typeof value !== "object" || value === null) { return result }
-      if (value[IS_IMMUTABLE] || value.id != null)     { return result }
-      return ((valueCore = InterMap.get(value))) ?
-        valueCore[COPY](true).$ : CopyObject(value, true)
+      if (typeof result !== "object" || result === null) { return result }
+      if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+      return ((result$core = InterMap.get(result))) ?
+        result$core[COPY](true).$ : CopyObject(result, true)
     }
 
-    return (result === $inner) ? result.$ : result
+    return (result === $inner) ? result[RIND] : result
   }
 
-  IsGetter ?
-    PublicGetters.set(selector, publicHandler) :
-    PublicHandlers.set(selector, publicHandler)
-  InterMap.set(publicHandler, SAFE_FUNCTION)
-  (publicHandler.prototype)
-  return Frost(publicHandler)
+  publicHandlers[selector] = publicHandler
+  return AsSafeFunction(publicHandler)
 }
 
 
@@ -86,7 +85,7 @@ function PublicHandlerFor(selector, IsGetter) {
 //   const funcBody = `
 //     return function (
 //       InterMap, Frost, ImmutableInnerPorosity,
-//       INNER, IS_IMMUTABLE, INNER_POROSITY
+//       INNER, IS_IMMUTABLE, _INNER_POROSITY
 //     ) {
 //       return function ${name}(OriginalMethod) {
 //         let core, porosity, receiver, result
@@ -98,7 +97,7 @@ function PublicHandlerFor(selector, IsGetter) {
 //   const maker = Function(funcBody)
 //   const publicHandler = maker(
 //     InterMap, Frost, ImmutableInnerPorosity,
-//     INNER, IS_IMMUTABLE, INNER_POROSITY
+//     INNER, IS_IMMUTABLE, _INNER_POROSITY
 //   )
 //   publicHandler[IS_IMMUTABLE] = true
 //   Frost(publicMethod.prototype)
