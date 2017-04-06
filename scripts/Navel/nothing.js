@@ -1,4 +1,4 @@
-NothingBlanker.$root$core[SECRET] = INNER
+NothingBlanker.$root$core[$SECRET] = $INNER
 
 // #type #isNothing #is #_noSuchProperty
 

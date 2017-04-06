@@ -8,15 +8,15 @@ const InterMap = new WeakMap()
 const DefaultOuterBehavior = {
   __proto__ : null,
 
-  get (base$root, selector, $outer) {
-    const $core = InterMap.get($outer[RIND])
+  get (base$root, selector, $plup) {
+    const $core = InterMap.get($plup[RIND])
     if (selector[0] === "_") {
       if ($core._externalPrivateAccess) {
-        return $core[INNER]._externalPrivateAccess(selector)
+        return $core[$TWIN]._externalPrivateAccess(selector)
       }
     }
     return $core._noSuchProperty ?
-      $core[INNER]._noSuchProperty(selector) : undefined
+      $core[$TWIN]._noSuchProperty(selector) : undefined
   },
   // getPrototypeOf (base$root) { return base$root }
 }
@@ -26,7 +26,7 @@ const DefaultCoreBehavior = {
 
   get (base$root, selector, $core) {
     return $core._noSuchProperty ?
-      $core[INNER]._noSuchProperty(selector) : undefined
+      $core[$TWIN]._noSuchProperty(selector) : undefined
   },
 
   // getPrototypeOf (base$root) { return base$root }
@@ -38,11 +38,11 @@ function Make$copy() {}
 
 const Base$root         = SpawnFrom(null)
 // const   Stash$root      = SpawnFrom(Base$root)
-const   Base$root$outer = new Proxy(Base$root, DefaultOuterBehavior)
+const   Base$root$plup = new Proxy(Base$root, DefaultOuterBehavior)
 const   Base$root$core  = new Proxy(Base$root, DefaultCoreBehavior)
 
 
-const $BaseBlanker = {$root$outer: Base$root$outer, $root$core: Base$root$core}
+const $BaseBlanker = {$root$plup: Base$root$plup, $root$core: Base$root$core}
 const   $InateBlanker   = NewBlankerFrom($BaseBlanker , MakeCoreBlanker)
 const     MethodBlanker = NewBlankerFrom($InateBlanker, MakeCoreBlanker)
 const     TypeBlanker   = NewBlankerFrom($InateBlanker, MakeTypeCoreBlanker)
@@ -51,17 +51,17 @@ const $Inate$root$core = $InateBlanker.$root$core
 const Method$root$core = MethodBlanker.$root$core
 const Type$root$core   = TypeBlanker.$root$core
 // // Just in case sanity failsafe to prevent infinite recursion from CoreBaseBehavior
-// $InateBlanker.$root$core[INNER]  = $InateBlanker.$root$core
+// $InateBlanker.$root$core[$TWIN]  = $InateBlanker.$root$core
 //
 
 // This secret is only known by inner objects
-$Inate$root$core[$SECRET]          = INNER
+$Inate$root$core[$SECRET]          = $TWIN
 $Inate$root$core[$INNER_POROSITY]  = undefined
 $Inate$root$core[$KNOWN_SELECTORS] = undefined
 $Inate$root$core._noSuchProperty   = undefined
-$InateBlanker.$root$inner.id       = undefined
-$InateBlanker.$root$inner.atIndex  = undefined
-$InateBlanker.$root$inner.splice   = undefined // Weird ref by debugger
+$InateBlanker.$root$twin.id       = undefined
+$InateBlanker.$root$twin.atIndex  = undefined
+$InateBlanker.$root$twin.splice   = undefined // Weird ref by debugger
 
 
 
@@ -82,7 +82,7 @@ InPutMethod(Type$root$core, function _init(name, blanker) {
   this._ancestors = []
   // this._subtypes = new Set()
   this._properties = SpawnFrom(null)
-  // blanker.$root$inner[KIND] = name
+  // blanker.$root$twin[KIND] = name
   SetDisplayNames(blanker, name)
   return this
 })
@@ -109,20 +109,20 @@ function addMethod(method_func__name, func__, mode___) {
   const handler       = method.handler
   const isPublic      = method.isPublic
   const blanker       = this._blanker
-  const $root$outer   = blanker.$root$outer
+  const $root$plup   = blanker.$root$plup
   const $root$core    = blanker.$root$core
   const doRecord      = (mode___ !== DONT_RECORD)
 
   if (mode === STANDARD) {
     if (isPublic) {
-      $root$outer[selector] = PublicHandlerFor(selector)
+      $root$plup[selector] = PublicHandlerFor(selector)
     }
     $root$core[selector] = handler
   }
   else {
     const getHandler = (mode === GETTER) ? handler : MakeLazyLoader(handler)
     if (isPublic) {
-      _AddGetter($root$outer, selector, true, PublicHandlerFor(selector, true))
+      _AddGetter($root$plup, selector, true, PublicHandlerFor(selector, true))
     }
     _AddGetter($root$core, selector, true, getHandler)
   }
@@ -145,7 +145,7 @@ Type$core.addMethod(function _init(spec, context_) {
   const methods         = spec && spec.instanceMethods || []
   const blanker         = this._blanker
 
-  // blanker.$root$inner[KIND] = name
+  // blanker.$root$twin[KIND] = name
   SetDisplayNames(blanker, name)
 
   this._nextIID         = 0
@@ -194,7 +194,7 @@ Type$core.addMethod(function _updatePropertyInSubtypes(selector, value) {
 })
 
 Type$core.addMethod(function addProperty(selector, value) {
-  this._blanker.$root$inner[selector] = value
+  this._blanker.$root$twin[selector] = value
   this._properties[selector] = PROPERTY
   return this._updatePropertyInSubtypes(selector, value)
 })
@@ -209,9 +209,9 @@ Type$core.addMethod(function addAllMethods(methods) {
 
 const Thing = Type({name: "Thing", supertypes: []})
 
-$Inate$core [INNER]._init({name: "$Inate" , supertypes: []})
-Method$core [INNER]._init({name: "Method" })
-Type$core   [INNER]._init({name: "Type"   })
+$Inate$core [$TWIN]._init({name: "$Inate" , supertypes: []})
+Method$core [$TWIN]._init({name: "Method" })
+Type$core   [$TWIN]._init({name: "Type"   })
 
 SetDisplayNames($InateBlanker, "$Outer", "$Inner")
 

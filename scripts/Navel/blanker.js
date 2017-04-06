@@ -32,13 +32,13 @@
 
 function MakeCoreBlanker(PairedOuter) {
   return function () {
-    const outer = new PairedOuter()
-    const rind  = new Proxy(outer, PrivacyPorosity)
+    const $pulp = new PairedOuter()
+    const rind  = new Proxy($pulp, PrivacyPorosity)
 
-    this[INNER] = new Proxy(this, MutablePorosity)
-    this[OUTER] = outer
+    this[$TWIN] = new Proxy(this, MutablePorosity)
+    this[$PULP] = $pulp
     this[RIND]  = rind
-    outer[RIND] = rind
+    $pulp[RIND] = rind
     InterMap.set(rind, this)
   }
 }
@@ -49,22 +49,22 @@ function MakeTypeCoreBlanker(TypeOuter) {
     const type = this
     function $new(...args) {
       const core = new type._blanker()
-      core[INNER]._init(...args)
+      core[$TWIN]._init(...args)
       if (core.id == null) { core.beImmutable }
       return core[RIND]
     }
     InterMap.set($new, SAFE_FUNCTION)
 
     const mutablePorosity = new DisguisedMutablePorosity(this)
-    const outer           = new TypeOuter()
-    const privacyPorosity = new TypePrivacyPorosity(outer)
+    const $pulp           = new TypeOuter()
+    const privacyPorosity = new TypePrivacyPorosity($pulp)
     const rind            = new Proxy($new, privacyPorosity)
 
     this.newFact  = $new
-    this[INNER]   = new Proxy($new, mutablePorosity)
-    this[OUTER]   = outer
+    this[$TWIN]   = new Proxy($new, mutablePorosity)
+    this[$PULP]   = $pulp
     this[RIND]    = rind
-    outer[RIND]   = rind
+    $pulp[RIND]   = rind
     InterMap.set(rind, this)
 
     this._blanker = NewBlankerFrom($InateBlanker, MakeCoreBlanker)
@@ -73,16 +73,16 @@ function MakeTypeCoreBlanker(TypeOuter) {
 
 function NewBlankerFrom(superBlanker, coreBlankerMaker) {
   const $root$core  = SpawnFrom(superBlanker.$root$core)
-  const $root$outer = SpawnFrom(superBlanker.$root$outer)
+  const $root$plup = SpawnFrom(superBlanker.$root$plup)
   const PairedOuter = MakeNamelessVacuousFunction()
   const Blanker     = coreBlankerMaker(PairedOuter)
 
-  $root$core[OUTER]     = $root$outer
-  PairedOuter.prototype = $root$outer
+  $root$core[$PULP]     = $root$plup
+  PairedOuter.prototype = $root$plup
   Blanker.prototype     = $root$core
   Blanker.$root$core    = $root$core
-  Blanker.$root$inner   = new Proxy($root$core, MutablePorosity)
-  Blanker.$root$outer   = $root$outer
+  Blanker.$root$twin   = new Proxy($root$core, MutablePorosity)
+  Blanker.$root$plup   = $root$plup
 
   return AsSafeFunction(Blanker, true)
 }
@@ -99,8 +99,8 @@ function VacuousConstructor(name) {
   return AsSafeFunction(constructor)
 }
 
-function SetDisplayNames(blanker, outerName, coreName = ("_" + outerName)) {
-  blanker.$root$outer.constructor = VacuousConstructor(outerName)
-  blanker.$root$core.constructor  = VacuousConstructor(coreName)
+function SetDisplayNames(blanker, outerName, innerName = ("_" + outerName)) {
+  blanker.$root$plup.constructor = VacuousConstructor(outerName)
+  blanker.$root$core.constructor  = VacuousConstructor(innerName)
   return blanker
 }

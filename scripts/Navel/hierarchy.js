@@ -53,8 +53,8 @@ function MakeAncestors(supertypes$cores) {
 
 
 
-// function Make$lookup(type$inner) {
-//   const type$core = InterMap.get(type$inner[RIND])
+// function Make$lookup(type$twin) {
+//   const type$core = InterMap.get(type$twin[RIND])
 //
 //   function $lookup(selector) {
 //     const ancestors = type$core._ancestors
@@ -66,14 +66,14 @@ function MakeAncestors(supertypes$cores) {
 //       value = properties[selector]
 //       if (value !== undefined || (selector in properties)) {
 //         if (value === PROPERTY) {
-//           return (type$core._blanker.$root$inner[selector] = value)
+//           return (type$core._blanker.$root$twin[selector] = value)
 //         }
 //         type$core.addMethod(value, null, DONT_RECORD) // value isMethod
-//         return this[INNER][selector]
+//         return this[$TWIN][selector]
 //       }
 //     }
-//     if (this._noSuchProperty) { return this[INNER]._noSuchProperty(selector) }
-//     return (type$core._blanker.$root$inner[selector] = undefined)
+//     if (this._noSuchProperty) { return this[$TWIN]._noSuchProperty(selector) }
+//     return (type$core._blanker.$root$twin[selector] = undefined)
 //   }
 //   return AsSafeFunction($lookup)
 // }

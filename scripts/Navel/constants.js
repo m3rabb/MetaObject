@@ -21,21 +21,21 @@ const Apply              = Reflect.apply
 
 // Protected Implementation properties (so no namespace clashing)
 // private
-const INNER              = Symbol("$inner")
-const OUTER              = Symbol("$outer")
-const RIND               = Symbol("$rind")
+const $TWIN              = Symbol("$twin")
+const $PULP              = Symbol("$pulp")
+const RIND               = Symbol("rind")
 
+// publicly accessible
+const IS_IMMUTABLE      = Symbol("isImmutable")
+const IS_TYPE_SELECTOR   = Symbol("is<type> selector")
+const INSTANCEOF         = Symbol.hasInstance
+
+// private, not accessible
 const $INNER_POROSITY    = Symbol("$innerPorosity")
 const $KNOWN_SELECTORS   = Symbol("$knownSelectors")
 const $COPY              = Symbol("$copy")
-const $LOOKUP            = Symbol("$lookup")
 const $IID               = Symbol("$instanceId")
 const $SECRET            = Symbol("$secret")
-
-// public
-const IS_IMMUTABLE       = Symbol("isImmutable")
-const IS_TYPE_SELECTOR   = Symbol("is<type> selector")
-const INSTANCEOF         = Symbol.hasInstance
 
 
 // Sentinels
@@ -46,7 +46,6 @@ const DONT_RECORD        = Symbol("DONT_RECORD")
 const STANDARD           = Symbol("STANDARD")
 const GETTER             = Symbol("GETTER")
 const LAZY_INSTALLER     = Symbol("LAZY_INSTALLER")
-
 
 const ALWAYS_FALSE       = (() => false)
 const ALWAYS_NULL        = (() => null)

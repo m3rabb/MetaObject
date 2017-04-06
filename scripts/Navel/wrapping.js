@@ -6,16 +6,16 @@
 //   if (OriginalFunc.length < 4) {
 //     return function $_initFrom_3(_source, visited, exceptSelector_) {
 //       const receiver =
-//         (this != null && this[SECRET] === INNER) ? this[RIND] : this
-//       const source = (_source != null && _source[SECRET] === INNER) ?
+//         (this != null && this[SECRET] === $TWIN) ? this[RIND] : this
+//       const source = (_source != null && _source[SECRET] === $TWIN) ?
 //         _source[RIND] : _source
 //       return OriginalFunc.apply(receiver, source, visited, exceptSelector_)
 //     }
 //   }
 //   return function $_initFrom_4(_source, visited, exceptSelector_, asImmutable) {
 //     const receiver =
-//       (this != null && this[SECRET] === INNER) ? this[RIND] : this
-//     const source = (_source != null && _source[SECRET] === INNER) ?
+//       (this != null && this[SECRET] === $TWIN) ? this[RIND] : this
+//     const source = (_source != null && _source[SECRET] === $TWIN) ?
 //       _source[RIND] : _source
 //     return OriginalFunc.apply(
 //       receiver, source, visited, exceptSelector_, asImmutable)
@@ -27,7 +27,7 @@
 function WrapFunc(OriginalFunc) {
   return function $wrappedOutsideFunc(...args) {
     const receiver =
-      (this != null && this[_SECRET] === INNER) ? this[RIND] : this
+      (this != null && this[_SECRET] === $TWIN) ? this[RIND] : this
     return OriginalFunc.apply(receiver, ...args)
   }
 }
@@ -43,24 +43,24 @@ function PublicHandlerFor(selector, IsGetter) {
   if (publicHandler) { return publicHandler }
 
   publicHandler = function (...args) {
-    let $core, porosity, $inner, result, result$core
+    let $core, porosity, $twin, result, result$core
 
     $core = InterMap.get(this)
 
     if ((porosity = $core[_INNER_POROSITY])) {
       if (porosity.inUse) { porosity = new ImmutableInnerPorosity($core) }
       porosity.inUse = true
-      $inner = porosity.target
+      $twin = porosity.target
     }
-    else { $inner = $core[INNER] }
+    else { $twin = $core[$TWIN] }
 
-    result = IsGetter ? $inner[selector] : $inner[selector](...args)
+    result = IsGetter ? $twin[selector] : $twin[selector](...args)
 
-    if (porosity) { // indicator that $inner isImmutable
-      if (result === $inner) {
+    if (porosity) { // indicator that $twin isImmutable
+      if (result === $twin) {
         result = porosity.target
-        if (result !== inner) {
-          porosity.target = porosity.$inner  // reset porosity
+        if (result !== $twin) {
+          porosity.target = porosity.$twin  // reset porosity
           result.beImmutable
         }
         porosity.inUse = false
@@ -72,7 +72,7 @@ function PublicHandlerFor(selector, IsGetter) {
         result$core[COPY](true).$ : CopyObject(result, true)
     }
 
-    return (result === $inner) ? result[RIND] : result
+    return (result === $twin) ? result[RIND] : result
   }
 
   publicHandlers[selector] = publicHandler
@@ -85,7 +85,7 @@ function PublicHandlerFor(selector, IsGetter) {
 //   const funcBody = `
 //     return function (
 //       InterMap, Frost, ImmutableInnerPorosity,
-//       INNER, IS_IMMUTABLE, _INNER_POROSITY
+//       $TWIN, IS_IMMUTABLE, _INNER_POROSITY
 //     ) {
 //       return function ${name}(OriginalMethod) {
 //         let core, porosity, receiver, result
@@ -97,7 +97,7 @@ function PublicHandlerFor(selector, IsGetter) {
 //   const maker = Function(funcBody)
 //   const publicHandler = maker(
 //     InterMap, Frost, ImmutableInnerPorosity,
-//     INNER, IS_IMMUTABLE, _INNER_POROSITY
+//     $TWIN, IS_IMMUTABLE, _INNER_POROSITY
 //   )
 //   publicHandler[IS_IMMUTABLE] = true
 //   Frost(publicMethod.prototype)
