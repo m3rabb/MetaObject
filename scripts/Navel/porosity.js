@@ -2,10 +2,10 @@
 const PrivacyPorosity = {
   __proto__ : null,
 
-  get ($plup, selector, target) {
+  get ($outer, selector, target) {
     let index
-    return ($plup.atIndex && ((index = +selector) === index)) ?
-      $plup.atIndex(index) : $plup[selector]
+    return ($outer.atIndex && ((index = +selector) === index)) ?
+      $outer.atIndex(index) : $outer[selector]
   },
 
   // Setting on things in not allowed because the setting semantics are broken.
@@ -15,32 +15,32 @@ const PrivacyPorosity = {
   // Further, note that the return value of a set always returns the value that
   // was tried to be set to, regardless of whether it was successful or not.
 
-  set ($plup, selector, value, target) {
+  set ($outer, selector, value, target) {
     return false
     // return InterMap.get(target)._externalWrite(selector, value) || false
   },
 
-  has ($plup, selector) {
+  has ($outer, selector) {
     // const firstChar = (typeof selector === "symbol") ?
     //   selector.toString()[7] : selector[0]
     switch (selector[0]) {
-      case "_"       : return $plup._externalPrivateRead(selector) || false
+      case "_"       : return $outer._externalPrivateRead(selector) || false
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       case undefined : return false
     }
-    return (selector in $plup)
+    return (selector in $outer)
   },
 
-  // getOwnPropertyDescriptor ($plup, selector) {
+  // getOwnPropertyDescriptor ($outer, selector) {
   //   switch (selector[0]) {
-  //     case "_"       : return $plup._externalPrivateRead(selector) || undefined
+  //     case "_"       : return $outer._externalPrivateRead(selector) || undefined
   //     // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
   //     case undefined : return undefined
   //   }
-  //   return PropertyDescriptor($plup, selector)
+  //   return PropertyDescriptor($outer, selector)
   // },
 
-  // ownKeys ($plup) { },
+  // ownKeys ($outer) { },
 
   getPrototypeOf : ALWAYS_NULL ,
   setPrototypeOf : ALWAYS_FALSE,
@@ -52,28 +52,28 @@ const PrivacyPorosity = {
 
 
 class TypePrivacyPorosity {
-  constructor ($plup) {
-    this.$plup = $plup
+  constructor ($outer) {
+    this.$outer = $outer
   }
 
   get (disguisedFunc, selector, target) {
     let   index
-    const $plup = this.$plup
+    const $outer = this.$outer
 
-    return ($plup.atIndex && ((index = +selector) === index)) ?
-      $plup.atIndex(index) : $plup[selector]
+    return ($outer.atIndex && ((index = +selector) === index)) ?
+      $outer.atIndex(index) : $outer[selector]
   }
 
   has (disguisedFunc, selector) {
-    const $plup = this.$plup
+    const $outer = this.$outer
     // const firstChar = (typeof selector === "symbol") ?
     //   selector.toString()[7] : selector[0]
     switch (selector[0]) {
-      case "_"       : return $plup._externalPrivateRead(selector) || false
+      case "_"       : return $outer._externalPrivateRead(selector) || false
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       case undefined : return false
     }
-    return (selector in $plup)
+    return (selector in $outer)
   }
 }
 
@@ -87,36 +87,36 @@ TypePrivacyPorosity.prototype = SpawnFrom(PrivacyPorosity)
 const MutablePorosity = {
   __proto__ : null,
 
-  set ($core, selector, value, $twin) {
+  set ($inner, selector, value, $flesh) {
     const isPublic = (selector[0] !== "_")
 
-    if (!(selector in $core)) {
-      delete $core[$KNOWN_SELECTORS]
+    if (!(selector in $inner)) {
+      delete $inner[$KNOWN_SELECTORS]
     }
 
     switch (typeof value) {
       case "object" :
         if (!isPublic) { break }
 
-        if (value === $twin) {  // Perhaps will force assignments to always be target!!!
-          $core[selector] = $twin
-          value = $core[RIND]
+        if (value === $flesh) {  // Perhaps will force assignments to always be target!!!
+          $inner[selector] = $flesh
+          value = $inner[RIND]
         }
-        else if (value === $core[RIND]) {
-          $core[selector] = $twin
+        else if (value === $inner[RIND]) {
+          $inner[selector] = $flesh
         }
         else if (value === null || value[IS_IMMUTABLE] || value.id != null) {
-          $core[selector] = value
+          $inner[selector] = value
         }
-        else if (value === $core[selector]) {/* NOP */}
+        else if (value === $inner[selector]) {/* NOP */}
 
         else if ((valueCore = InterMap.get(value))) {
-          $core[selector] = (value = valueCore[COPY](true, visited)[RIND])
+          $inner[selector] = (value = valueCore[COPY](true, visited)[RIND])
         }
         else {
-          $core[selector] = (value = CopyObject(value, true))
+          $inner[selector] = (value = CopyObject(value, true))
         }
-        $core[$PULP][selector] = value
+        $inner[$OUTER][selector] = value
         return true
 
       case "function" : // LOOK: will catch Type things!!!
@@ -133,18 +133,18 @@ const MutablePorosity = {
 
         // break omitted
       default :
-        if (isPublic) { $core[$PULP][selector] = value }
+        if (isPublic) { $inner[$OUTER][selector] = value }
         break
     }
 
-    $core[selector] = value
+    $inner[selector] = value
     return true
   },
 
-  deleteProperty ($core, selector, $twin) {
-    if (selector in $core) {
-      delete $core[$KNOWN_SELECTORS]
-      delete $core[selector]
+  deleteProperty ($inner, selector, $flesh) {
+    if (selector in $inner) {
+      delete $inner[$KNOWN_SELECTORS]
+      delete $inner[selector]
     }
 
     return true
@@ -155,38 +155,38 @@ const MutablePorosity_set    = MutablePorosity.set
 const MutablePorosity_delete = MutablePorosity.deleteProperty
 
 class DisguisedMutablePorosity {
-  constructor ($core) {
-    this.$core = $core
+  constructor ($inner) {
+    this.$inner = $inner
   }
 
-  get (disguisedFunc, selector, $twin) {
-    return this.$core[selector]
+  get (disguisedFunc, selector, $flesh) {
+    return this.$inner[selector]
   }
 
-  set (disguisedFunc, selector, value, $twin) {
-    return MutablePorosity_set(this.$core, selector, value, $twin)
+  set (disguisedFunc, selector, value, $flesh) {
+    return MutablePorosity_set(this.$inner, selector, value, $flesh)
   }
 
-  has (disguisedFunc, selector, $twin) {
-    return (selector in this.$core)
+  has (disguisedFunc, selector, $flesh) {
+    return (selector in this.$inner)
   }
 
-  deleteProperty (disguisedFunc, selector, $twin) {
-    return MutablePorosity_delete(this.$core, selector, $twin)
+  deleteProperty (disguisedFunc, selector, $flesh) {
+    return MutablePorosity_delete(this.$inner, selector, $flesh)
   }
 }
 
 
 
 class ImmutableInnerPorosity {
-  constructor ($core) {
+  constructor ($inner) {
     this.inUse = false
-    this.target = this.$twin = new Proxy($core, this)
+    this.target = this.$flesh = new Proxy($inner, this)
   }
 
-  set ($core, selector, value, $twin) {
-    if ($core[selector] !== value) {
-      const copy = $twin.mutableCopyExcept(selector)
+  set ($inner, selector, value, $flesh) {
+    if ($inner[selector] !== value) {
+      const copy = $flesh.mutableCopyExcept(selector)
       copy[selector] = value
       this.target = copy
 
@@ -197,13 +197,13 @@ class ImmutableInnerPorosity {
     return true
   }
 
-  deleteProperty ($core, selector, $twin) {
+  deleteProperty ($inner, selector, $flesh) {
     switch (selector) {
-      case "_IMMUTABILITY" : this.target = $core.asMutableCopy; break
-      case "_ALL"          : this.target = $core._newBlank()  ; break
+      case "_IMMUTABILITY" : this.target = $inner.asMutableCopy; break
+      case "_ALL"          : this.target = $inner._newBlank()  ; break
       default :
-        if (!$core._hasOwn(selector)) { return true }
-        this.target = $twin.mutableCopyExcept(selector)
+        if (!$inner._hasOwn(selector)) { return true }
+        this.target = $flesh.mutableCopyExcept(selector)
         break
     }
 
@@ -213,16 +213,16 @@ class ImmutableInnerPorosity {
     return true
   }
 
-  detourSet ($core, selector, value, $twin) {
+  detourSet ($inner, selector, value, $flesh) {
     this.target[selector] = value
     return true
   }
 
-  detourGet ($core, selector, $twin) {
+  detourGet ($inner, selector, $flesh) {
     return this.target[selector]
   }
 
-  detourDelete ($core, selector, $twin) {
+  detourDelete ($inner, selector, $flesh) {
     delete this.target[selector]
     return true
   }

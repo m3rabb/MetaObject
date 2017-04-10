@@ -83,10 +83,3 @@ function MakeLazyLoader(Handler) {
     return (this[selector] = handler.call(this))
   }
 }
-
-function AsSafeFunction(func, ignorePrototype_) {
-  func[IS_IMMUTABLE] = true
-  InterMap.set(func, SAFE_FUNCTION)
-  if (!ignorePrototype_) { Frost(func.prototype) }
-  return Frost(func)
-}

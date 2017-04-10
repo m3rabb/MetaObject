@@ -21,9 +21,10 @@ const Apply              = Reflect.apply
 
 // Protected Implementation properties (so no namespace clashing)
 // private
-const $TWIN              = Symbol("$twin")
-const $PULP              = Symbol("$pulp")
-const RIND               = Symbol("rind")
+const $INNER             = Symbol("$inner")
+const $FLESH             = Symbol("$flesh")
+const $OUTER             = Symbol("$outer")
+const  RIND              = Symbol("rind")
 
 // publicly accessible
 const IS_IMMUTABLE      = Symbol("isImmutable")
@@ -50,5 +51,6 @@ const LAZY_INSTALLER     = Symbol("LAZY_INSTALLER")
 const ALWAYS_FALSE       = (() => false)
 const ALWAYS_NULL        = (() => null)
 const ALWAYS_UNDEFINED   = (() => undefined)
+const ALWAYS_SELF        = function () { return this }
 
 const SAFE_FUNCTION      = {[IS_IMMUTABLE] : true}

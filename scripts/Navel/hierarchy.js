@@ -1,29 +1,21 @@
 
 
-function MakeAncestors(supertypes$cores) {
-  let next, supertypes$core, ancestors, visited
 
-  next = supertypes$cores.length
-  if (next === 0) { return [] }
 
-  supertype$core = supertypes$cores[--next]
-  ancestors      = supertype$core._ancestors.slice()
-  if (next === 0) {
-    ancestors.push(supertype$core)
-    return ancestors
-  }
 
-  visited = new Set(ancestors)
-  do {
-    supertype$core = supertypes$cores[--next]
-    if (!visited.has(supertype$core)) {
-      supertype$core._ancestors.forEach(type$core => {
-        if (!visited.has(type$core)) { ancestors.push(type$core) }
-      })
-    }
-  } while (next)
-  return ancestors
-}
+
+
+
+
+
+
+// const existingTypeProperties = Type$inner._properties
+//
+// for (let sel in Type$properties) {
+//   let prop = existingTypeProperties[sel]
+//   if (prop === PROPERTY) { Type$inner.addProperty(sel, Type$inner[sel]) }
+//   else { Type$inner.addMethod(prop, null, DONT_RECORD) }
+// }
 
 
 // function SeedInstanceRootMethodHandlers(_root, _ancestors) {
@@ -53,27 +45,27 @@ function MakeAncestors(supertypes$cores) {
 
 
 
-// function Make$lookup(type$twin) {
-//   const type$core = InterMap.get(type$twin[RIND])
+// function Make$lookup(type$flesh) {
+//   const type$inner = InterMap.get(type$flesh[RIND])
 //
 //   function $lookup(selector) {
-//     const ancestors = type$core._ancestors
+//     const ancestors = type$inner._ancestors
 //     let  next = ancestors.length
 //
 //     while (next--) {
-//       ancestor$core = ancestors[next]
-//       properties = ancestor$core._properties
+//       ancestor$inner = ancestors[next]
+//       properties = ancestor$inner._properties
 //       value = properties[selector]
 //       if (value !== undefined || (selector in properties)) {
 //         if (value === PROPERTY) {
-//           return (type$core._blanker.$root$twin[selector] = value)
+//           return (type$inner._blanker.$root$flesh[selector] = value)
 //         }
-//         type$core.addMethod(value, null, DONT_RECORD) // value isMethod
-//         return this[$TWIN][selector]
+//         type$inner.addMethod(value, null, DONT_RECORD) // value isMethod
+//         return this[$FLESH][selector]
 //       }
 //     }
-//     if (this._noSuchProperty) { return this[$TWIN]._noSuchProperty(selector) }
-//     return (type$core._blanker.$root$twin[selector] = undefined)
+//     if (this._noSuchProperty) { return this[$FLESH]._noSuchProperty(selector) }
+//     return (type$inner._blanker.$root$flesh[selector] = undefined)
 //   }
 //   return AsSafeFunction($lookup)
 // }

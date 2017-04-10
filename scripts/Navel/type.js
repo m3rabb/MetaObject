@@ -1,8 +1,8 @@
 
 Type.addMethod("new", function (/* arguments */) {
-  const $core = new this._blankConstructor()
-  $core[$TWIN]._init(arguments)
-  return $core[RIND]
+  const $inner = new this._blankConstructor()
+  $inner[$FLESH]._init(arguments)
+  return $inner[RIND]
 })
 
 Type.addMethod(INSTANCEOF, (instance) => instance[IS_TYPE_SELECTOR])
