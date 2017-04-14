@@ -29,6 +29,13 @@
 //
 // rind --> core
 
+function AsSafeFunction(func, ignorePrototype_) {
+  func[IS_IMMUTABLE] = true
+  InterMap.set(func, SAFE_FUNCTION)
+  if (!ignorePrototype_) { Frost(func.prototype) }
+  return Frost(func)
+}
+
 
 function NewBlankerFrom(superBlanker, innerBlankerMaker) {
   const $root$inner = SpawnFrom(superBlanker.$root$inner)
@@ -59,26 +66,26 @@ function MakeCoreBlanker(PairedOuter) {
   }
 }
 
+
+const NewAsFact = function newAsFact(...args) {
+  const $inner = new this._blanker()
+  $inner[$FLESH]._init(...args)
+  if ($inner.id == null) { $inner.beImmutable }
+  return $inner[RIND]
+}
+
 function MakeTypeCoreBlanker(TypeOuter) {
   return function () {  // $Type // NewTypeBlanker
-    const type = this
-    function newAsFact(...args) {
-      const $inner = new type._blanker()
-      $inner[$FLESH]._init(...args)
-      if ($inner.id == null) { $inner.beImmutable }
-      return $inner[RIND]
-    }
-    InterMap.set(newAsFact, SAFE_FUNCTION)
-
     const mutablePorosity = new DisguisedMutablePorosity(this)
     const $outer          = new TypeOuter()
-    const privacyPorosity = new TypePrivacyPorosity($outer)
-    const rind            = new Proxy(newAsFact, privacyPorosity)
+    const privacyPorosity = new TypePrivacyPorosity(this, $outer)
+    const rind            = new Proxy(NewAsFact, privacyPorosity)
     const blanker         = NewBlankerFrom($InateBlanker, MakeCoreBlanker)
 
-    blanker.$root$flesh.newAsFact = newAsFact // <<==
-    this._blanker = blanker
-    this[$FLESH]  = new Proxy(newAsFact, mutablePorosity)
+    this._blanker    = blanker
+    this._properties = SpawnFrom(null)
+
+    this[$FLESH]  = new Proxy(NewAsFact, mutablePorosity)
     this[$OUTER]  = $outer
     this[RIND]    = rind
     $outer[RIND]  = rind
@@ -88,23 +95,18 @@ function MakeTypeCoreBlanker(TypeOuter) {
 
 function InSetAsSpecialMethod(_type, selector, handler) {
   const method        = Method(name, func)
-  const isPublic      = method.isPublic
   const blanker       = _type._blanker
 
-  if (isPublic) { blanker.$root$outer[selector] = PublicHandlerFor(selector) }
+  if (method.isPublic) { blanker.$root$outer[selector] = handler }
   blanker.$root$inner[selector] = handler
 }
 
-function InSetAsSpecialMethod(_type, selector, handler) {
-  const method        = Method(name, func)
-  const isPublic      = method.isPublic
-  const blanker       = _type._blanker
+// function InSetAsSpecialMethod(_type, selector, handler) {
+//   _type.blanker.$root$inner[selector] = handler
+//   _type._properties[selector] = Method(name, func)
+// }
 
-  if (isPublic) { blanker.$root$outer[selector] = PublicHandlerFor(selector) }
-  blanker.$root$inner[selector] = handler
-}
-
-function InSetMethod(_type, method) {
+function InPutMethod(_type, method) {
   const mode          = method.mode
   const selector      = method.selector
   const handler       = method.handler
@@ -147,13 +149,6 @@ function SetDisplayNames(blanker, outerName, innerName = ("_" + outerName)) {
   blanker.$root$outer.constructor = VacuousConstructor(outerName)
   blanker.$root$inner.constructor  = VacuousConstructor(innerName)
   return blanker
-}
-
-function AsSafeFunction(func, ignorePrototype_) {
-  func[IS_IMMUTABLE] = true
-  InterMap.set(func, SAFE_FUNCTION)
-  if (!ignorePrototype_) { Frost(func.prototype) }
-  return Frost(func)
 }
 
 

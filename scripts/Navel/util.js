@@ -4,13 +4,13 @@ function MakeNamelessVacuousFunction() {
 
 
 
-function InAtPut(target, selector, func) {
-  target[selector] = func
-}
+// function InAtPut(target, selector, func) {
+//   target[selector] = func
+// }
 
-function InPutMethod(target, namedFunc) {
-  target[namedFunc.name] = namedFunc
-}
+// function InPutNamedFunc(target, namedFunc) {
+//   target[namedFunc.name] = namedFunc
+// }
 
 
 

@@ -52,7 +52,8 @@ const PrivacyPorosity = {
 
 
 class TypePrivacyPorosity {
-  constructor ($outer) {
+  constructor ($inner, $outer) {
+    this.$inner = $inner
     this.$outer = $outer
   }
 
@@ -74,6 +75,10 @@ class TypePrivacyPorosity {
       case undefined : return false
     }
     return (selector in $outer)
+  }
+
+  apply (func, receiver, args) {
+    return func.apply(this.$inner, args)
   }
 }
 

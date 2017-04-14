@@ -2,7 +2,7 @@
 
 const InterMap = new WeakMap()
 
-
+AsSafeFunction(NewAsFact)
 
 // UNTESTED
 const DefaultOuterBehavior = {
@@ -63,14 +63,14 @@ $InateBlanker.$root$flesh.splice   = undefined // Weird ref by debugger
 
 
 // Bootstrap #_init
-InPutMethod(Type$root$inner, function _init(name, blanker) {
+Type$root$inner._init = function _init(name, blanker) {
+  SetDisplayNames(blanker, name) // Not necessary but helpful for debugging
   this.name = name
   this._blanker = blanker
   this._subtypes = new Set()
   this._properties = SpawnFrom(null)
-  SetDisplayNames(blanker, name) // Not necessary but helpful for debugging
   return this
-})
+}
 
 
 const $Inate$inner  = (new TypeBlanker())._init("$Inate" , $InateBlanker )
@@ -81,10 +81,8 @@ const $Inate  = $Inate$inner[RIND]
 const Method  = Method$inner[RIND]
 const Type    = Type$inner  [RIND]
 
-Type$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
-
-InPutMethod(Method$root$inner, function _init(func_name, func_, mode__) {
+Method$root$inner._init = function _init(func_name, func_, mode__) {
   const [selector, handler, mode] = (typeof func_name === "function") ?
     [func_name.name, func_name, func_] : [func_name, func_, mode__]
 
@@ -92,10 +90,24 @@ InPutMethod(Method$root$inner, function _init(func_name, func_, mode__) {
   this.handler  = AsSafeFunction(handler)
   this.mode     = mode || STANDARD
   this.isPublic = (selector[0] !== "_")
-})
+}
 
 
-InPutMethod(Type$root$inner, function _propagateIntoSubtypes(value, selector_) {
+Type$root$inner._propagateIntoSubtypes = ALWAYS_SELF
+
+function addMethod(method_func__name, func__, mode___) {
+  const method = AsMethod(method_func__name, func__, mode___)
+  InPutMethod(this, method)
+  this._properties[method.selector] = method
+  return this._propagateIntoSubtypes(method)
+}
+
+addMethod.call(Type$inner, addMethod)
+
+Method$inner.addMethod(Method$root$inner._init)
+
+
+Type$inner.addMethod(function _propagateIntoSubtypes(value, selector_) {
   let [selector, isMethod] = selector_ ?
     [selector_, false] : [value.selector, true]
   let subtypes =
@@ -105,23 +117,12 @@ InPutMethod(Type$root$inner, function _propagateIntoSubtypes(value, selector_) {
     let properties = _subtype._properties
 
     if (!properties[selector]) {
-      if (isMethod) { InSetMethod(this, value) }
+      if (isMethod) { InPutMethod(this, value) }
       else { InSetProperty(this, selector, value) }
       _subtype._propagateIntoSubtypes(value, selector_)
     }
   })
 })
-
-function addMethod(method_func__name, func__, mode___) {
-  const method = AsMethod(method_func__name, func__, mode___)
-  InSetMethod(this, method)
-  this._properties[method.selector] = method
-  return this._propagateIntoSubtypes(method)
-}
-
-
-addMethod.call(Type$inner, addMethod)
-
 
 
 Type$inner.addMethod(function _inheritPropertiesFrom(_supertypes) {
@@ -135,7 +136,7 @@ Type$inner.addMethod(function _inheritPropertiesFrom(_supertypes) {
       if (!existing[selector]) {
         let value = properties[selector]
 
-        if (value !== PROPERTY) { InSetMethod(this, value) }
+        if (value !== PROPERTY) { InPutMethod(this, value) }
         else { InSetProperty(this, selector, _supertype[selector]) }
       }
     }
@@ -169,6 +170,7 @@ Type$inner.addMethod(function setId() {
 
 Type$inner.addMethod(function setName(name) {
   this.name = name
+  SetDisplayNames(this._blanker, name)
   return this
 })
 
@@ -190,37 +192,30 @@ Type$inner.addMethod(function _init(spec, context_) {
   const supertypes      =
     spec && (spec.supertypes || spec.supertype && [spec.supertype]) || [Thing]
   const methods         = spec && spec.instanceMethods || []
-  const blanker         = this._blanker
+  const Blanker         = this._blanker
 
-  // blanker.$root$flesh[KIND] = name
-  SetDisplayNames(blanker, name)
+  blanker.$root$inner[COPY] = Make$copy(Blanker)
 
   this._nextIID         = 0
   this._subtypes        = new Set()
-  this._properties      = SpawnFrom(null)
   this.context          = context_ ? context_[RIND] : null
 
-  this.addMethod("_newBlank", () => new blanker()[RIND]) //
-  this._make$copy(blanker) //
   this.setId()
   this.setName(name)
   this.setSupertypes(supertypes)
   this.addProperty("type", this[RIND])
+  this.addMethod(_newBlank, () => new Blanker()[RIND])
   this.addAllMethods(methods)
   return this
 })
 
-const typeProperties = Type$inner._properties
-
-$Inate$inner [$FLESH]._init({name: "$Inate" , supertypes: []})
-const Thing =          Type({name: "Thing"  , supertypes: []})
-Method$inner [$FLESH]._init({name: "Method" , supertypes: [Thing]})
-Type$inner   [$FLESH]._init({name: "Type"   , supertypes: [Thing]})
+$Inate$inner[$FLESH]._init({name: "$Inate" , supertypes: []})
+const Thing =         Type({name: "Thing"  , supertypes: []})
+Method$inner[$FLESH]._init({name: "Method" , supertypes: [Thing]})
+Type$inner  [$FLESH]._init({name: "Type"   , supertypes: [Thing]})
 
 SetDisplayNames($InateBlanker, "$Outer", "$Inner")
 
-Method$inner.addMethod(Method$root$inner._init)
-Type$inner._inheritPropertiesFrom([{_properties : typeProperties}])
 
 
 
