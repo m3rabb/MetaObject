@@ -2,7 +2,7 @@
 const PrivacyPorosity = {
   __proto__ : null,
 
-  get ($outer, selector, target) {
+  get ($outer, selector, $rind) {
     let index
     return ($outer.atIndex && ((index = +selector) === index)) ?
       $outer.atIndex(index) : $outer[selector]
@@ -15,9 +15,9 @@ const PrivacyPorosity = {
   // Further, note that the return value of a set always returns the value that
   // was tried to be set to, regardless of whether it was successful or not.
 
-  set ($outer, selector, value, target) {
+  set ($outer, selector, value, $rind) {
     return false
-    // return InterMap.get(target)._externalWrite(selector, value) || false
+    // return InterMap.get($rind)._externalWrite(selector, value) || false
   },
 
   has ($outer, selector) {
@@ -51,13 +51,13 @@ const PrivacyPorosity = {
 }
 
 
-class TypePrivacyPorosity {
+class DisguisedPrivacyPorosity {
   constructor ($inner, $outer) {
     this.$inner = $inner
     this.$outer = $outer
   }
 
-  get (disguisedFunc, selector, target) {
+  get (disguisedFunc, selector, $rind) {
     let   index
     const $outer = this.$outer
 
@@ -82,7 +82,7 @@ class TypePrivacyPorosity {
   }
 }
 
-TypePrivacyPorosity.prototype = SpawnFrom(PrivacyPorosity)
+DisguisedPrivacyPorosity.prototype = SpawnFrom(PrivacyPorosity)
 
 
 
@@ -92,7 +92,7 @@ TypePrivacyPorosity.prototype = SpawnFrom(PrivacyPorosity)
 const MutablePorosity = {
   __proto__ : null,
 
-  set ($inner, selector, value, $flesh) {
+  set ($inner, selector, value, $pulp) {
     const isPublic = (selector[0] !== "_")
 
     if (!(selector in $inner)) {
@@ -103,20 +103,20 @@ const MutablePorosity = {
       case "object" :
         if (!isPublic) { break }
 
-        if (value === $flesh) {  // Perhaps will force assignments to always be target!!!
-          $inner[selector] = $flesh
+        if (value === $pulp) {  // Perhaps will force assignments to always be target!!!
+          $inner[selector] = $pulp
           value = $inner[RIND]
         }
         else if (value === $inner[RIND]) {
-          $inner[selector] = $flesh
+          $inner[selector] = $pulp
         }
         else if (value === null || value[IS_IMMUTABLE] || value.id != null) {
           $inner[selector] = value
         }
         else if (value === $inner[selector]) {/* NOP */}
 
-        else if ((valueCore = InterMap.get(value))) {
-          $inner[selector] = (value = valueCore[COPY](true, visited)[RIND])
+        else if ((value$inner = InterMap.get(value))) {
+          $inner[selector] = (value = value$inner[COPY](true)[RIND])
         }
         else {
           $inner[selector] = (value = CopyObject(value, true))
@@ -146,7 +146,7 @@ const MutablePorosity = {
     return true
   },
 
-  deleteProperty ($inner, selector, $flesh) {
+  deleteProperty ($inner, selector, $pulp) {
     if (selector in $inner) {
       delete $inner[$KNOWN_SELECTORS]
       delete $inner[selector]
@@ -156,81 +156,172 @@ const MutablePorosity = {
   }
 }
 
-const MutablePorosity_set    = MutablePorosity.set
-const MutablePorosity_delete = MutablePorosity.deleteProperty
-
 class DisguisedMutablePorosity {
   constructor ($inner) {
     this.$inner = $inner
   }
 
-  get (disguisedFunc, selector, $flesh) {
+  get (disguisedFunc, selector, $pulp) {
     return this.$inner[selector]
   }
 
-  set (disguisedFunc, selector, value, $flesh) {
-    return MutablePorosity_set(this.$inner, selector, value, $flesh)
+  set (disguisedFunc, selector, value, $pulp) {
+    // return super.set(this.$inner, selector, value, $pulp)
+    return MutablePorosity.set(this.$inner, selector, value, $pulp)
   }
 
-  has (disguisedFunc, selector, $flesh) {
+  has (disguisedFunc, selector, $pulp) {
     return (selector in this.$inner)
   }
 
-  deleteProperty (disguisedFunc, selector, $flesh) {
-    return MutablePorosity_delete(this.$inner, selector, $flesh)
+  deleteProperty (disguisedFunc, selector, $pulp) {
+    // return super.deleteProperty(this.$inner, selector, $pulp)
+    return MutablePorosity.deleteProperty(this.$inner, selector, $pulp)
   }
 }
+
+// DisguisedMutablePorosity.prototype = SpawnFrom(MutablePorosity)
 
 
 
 class ImmutableInnerPorosity {
   constructor ($inner) {
     this.inUse = false
-    this.target = this.$flesh = new Proxy($inner, this)
+    this.target = this.$pulp = new Proxy($inner, this)
   }
 
-  set ($inner, selector, value, $flesh) {
+  set ($inner, selector, value, $pulp) {
     if ($inner[selector] !== value) {
-      const copy = $flesh.mutableCopyExcept(selector)
+      const copy = $pulp.mutableCopyExcept(selector) // Check returns rind|pulp
       copy[selector] = value
-      this.target = copy
+      this.target = copy // Must be $pulp!!!
 
-      this.set = this.detourSet
-      this.get = this.detourGet
-      this.deleteProperty = this.detourDelete
+      this.set = this.retargetedSet
+      this.get = this.retargetedGet
+      this.deleteProperty = this.retargetedDelete
     }
     return true
   }
 
-  deleteProperty ($inner, selector, $flesh) {
+  deleteProperty ($inner, selector, $pulp) {
     switch (selector) {
       case "_IMMUTABILITY" : this.target = $inner.asMutableCopy; break
       case "_ALL"          : this.target = $inner._newBlank()  ; break
       default :
         if (!$inner._hasOwn(selector)) { return true }
-        this.target = $flesh.mutableCopyExcept(selector)
+        this.target = $pulp.mutableCopyExcept(selector)
         break
     }
 
-    this.set = this.detourSet
-    this.get = this.detourGet
-    this.deleteProperty = this.detourDelete
+    this.set = this.retargetedSet
+    this.get = this.retargetedGet
+    this.deleteProperty = this.retargetedDelete
     return true
   }
 
-  detourSet ($inner, selector, value, $flesh) {
+  retargetedSet ($inner, selector, value, $pulp) {
     this.target[selector] = value
     return true
   }
 
-  detourGet ($inner, selector, $flesh) {
+  retargetedGet ($inner, selector, $pulp) {
     return this.target[selector]
   }
 
-  detourDelete ($inner, selector, $flesh) {
+  retargetedDelete ($inner, selector, $pulp) {
     delete this.target[selector]
     return true
   }
 }
 
 ImmutableInnerPorosity.prototype = SpawnFrom(null)
+
+
+const SuperMethodPorosity = {
+  __proto__ : null,
+
+  apply (func, receiver, args) {
+    return func.apply(receiver[$PULP], args)
+  }
+}
+
+
+function SetSuperPropertyFor($inner, selector) {
+  let ancestors = $inner.type.ancestry
+  let next      = ancestors.length
+
+  if ($inner._hasOwn(selector)) { next++ }
+
+  while (--next) {
+    let type$inner = InterMap.get(ancestors[next])
+    let nextPropertiess = type$inner._properties
+
+    if (selector in nextProperties) {
+      let value = nextProperties[selector]
+      if (value && value)
+      if (value != null) { return value }
+      switch (value.mode) {
+        case STANDARD :
+          return ($inner[$SUPERS][selector] = value[$SUPER])
+        case GETTER :
+        case LAZY_INSTALLER :
+          return ($inner[$SUPERS][selector] = InterMap.get(value))
+        default :
+          return ($inner[$SUPERS][selector] = value)
+      }
+    }
+  }
+  return NO_SUPER
+}
+
+
+const SuperPorosity = {
+  __proto__ : null,
+
+  get ($inner, selector, target) {
+    const supers = $inner[$SUPERS]
+    const value = (selector in supers) ?
+      supers[selector] : SetSuperPropertyFor($inner, selector)
+    return (value === NO_SUPER) ?
+      ($inner._noSuchProperty ?
+        $inner[$PULP]._noSuchProperty(selector) : undefined) :
+      (value && value[$SECRET] === $INNER ?
+        value.handler.call($inner[$PULP]) : value)
+  },
+
+  set            : ALWAYS_FALSE,
+  getPrototypeOf : ALWAYS_NULL ,
+  setPrototypeOf : ALWAYS_FALSE,
+  defineProperty : ALWAYS_FALSE,
+  deleteProperty : ALWAYS_FALSE,
+  isExtensible   : ALWAYS_FALSE,
+}
+
+
+const OwnSuperPorosity = {
+  __proto__ : SuperPorosity,
+
+  get ($inner, selector, target) {
+    // const supers = $inner[SUPERS]
+    // const value =
+    //
+    // if (selector in supers) {
+    //   let sharedSupers = supers[SUPERS]
+    //   if (sharedSupers !== supers) { // instance has its own SUPERS
+    //     if (!(selector in sharedSupers)) {
+    //
+    //     }
+    //
+    //   }
+    //   value = supers[selector]
+    // }
+    // else {
+    //   value = SetSuperPropertyFor($inner, selector)
+    // }
+    // return (value === NO_SUPER) ?
+    //   ($inner._noSuchProperty ?
+    //     $inner[$PULP]._noSuchProperty(selector) : undefined) :
+    //   (value && value[$SECRET] === $INNER ?
+    //     value.handler.call($inner[$PULP]) : value)
+  }
+}

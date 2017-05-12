@@ -85,3 +85,18 @@ The challenge with JS immutability is that it forces all properties to be visibl
 3) split the baby, and when mutable, have the outer have a ref to INNER, but when made immutable remove the INNER ref, and only use a $ ref within the outer.  The Base$outer$root would hold a default INNER ref set to null to prevent error in the BaseBehavior and help distinguish the immutable from mutable.
 4) never have an INNER ref within the outer, and only use the slower InterMap tunnel to access INNER.
 XX) I must use #4 because using INNER is a security risk, if a proxied villain hijacks one of the methods and calls it on itself and discovers the INNER selector, and then reuses it on a valid thing to steal its secrets.
+
+
+==
+keep track of "volatiles", getter properties that should be copied as getters,
+as opposed to as values. keep track of lazy values, that should be copied at all
+
+==
+only copyable properties should be visible
+
+==
+Add object level properties and methods
+
+
+==
+Customize publicHandler for asMutable to ensure a immutable receive can be returned as mutable

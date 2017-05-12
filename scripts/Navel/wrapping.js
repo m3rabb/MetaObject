@@ -27,57 +27,78 @@
 function WrapFunc(OriginalFunc) {
   return function $wrappedOutsideFunc(...args) {
     const receiver =
-      (this != null && this[_SECRET] === $FLESH) ? this[RIND] : this
+      (this != null && this[$SECRET] === $INNER) ? this[RIND] : this
     return OriginalFunc.apply(receiver, ...args)
   }
 }
 
-const PublicHandlers = SpawnFrom(null)
+const PublicHandlers = SpawnFrom(null)  // Should these be WeakSets instead???
 const PublicGetters  = SpawnFrom(null)
 
 
-function PublicHandlerFor(selector, IsGetter) {
-  const publicHandlers = IsGetter ? PublicGetters : PublicHandlers
-  let publicHandler    = publicHandlers[selector]
+function PublicHandlerFor(selector, mode) {
+  let IsGetter       = (mode === GETTER)
+  let publicHandlers = IsGetter ? PublicGetters : PublicHandlers
+  let publicHandler  = publicHandlers[selector]
 
   if (publicHandler) { return publicHandler }
 
   publicHandler = function (...args) {
-    let $inner, porosity, $flesh, result, result$inner
+    let $inner, porosity, $pulp, result, result$inner
 
-    $inner = InterMap.get(this)
+    $inner = InterMap.get(this[RIND])
 
-    if ((porosity = $inner[_INNER_POROSITY])) {
+    if ((porosity = $inner[$INNER_POROSITY])) { // indicator that $pulp isImmutable
       if (porosity.inUse) { porosity = new ImmutableInnerPorosity($inner) }
       porosity.inUse = true
-      $flesh = porosity.target
-    }
-    else { $flesh = $inner[$FLESH] }
+      $pulp = porosity.target
 
-    result = IsGetter ? $flesh[selector] : $flesh[selector](...args)
+      result = IsGetter ? $pulp[selector] : $pulp[selector](...args)
 
-    if (porosity) { // indicator that $flesh isImmutable
-      if (result === $flesh) {
+      if (result === $pulp) {
         result = porosity.target
-        if (result !== $flesh) {
-          porosity.target = porosity.$flesh  // reset porosity
+        if (result !== $pulp) {
+          porosity.target = porosity.$pulp  // reset porosity
           result.beImmutable
         }
         porosity.inUse = false
-        return result.$
+        return result[RIND]
       }
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
       return ((result$inner = InterMap.get(result))) ?
-        result$inner[COPY](true).$ : CopyObject(result, true)
+        result$inner[COPY](true)[RIND] : CopyObject(result, true)
     }
 
-    return (result === $flesh) ? result[RIND] : result
+    $pulp = $inner[$PULP]
+    result = IsGetter ? $pulp[selector] : $pulp[selector](...args)
+    return (result === $pulp) ? result[RIND] : result
   }
 
   publicHandlers[selector] = publicHandler
   return AsSafeFunction(publicHandler)
 }
+
+
+function EnsureMutablePublicHandlerFor(selector, mode) {
+  let IsGetter       = (mode === GETTER)
+  let publicHandlers = IsGetter ? PublicGetters : PublicHandlers
+  let publicHandler  = function (...args) {
+    let $pulp = InterMap.get(this[RIND])[$PULP]
+    let result = IsGetter ? $pulp[selector] : $pulp[selector](...args)
+    return (result === $pulp) ? result[RIND] : result
+  }
+  publicHandlers[selector] = publicHandler
+  AsSafeFunction(publicHandler)
+}
+
+
+EnsureMutablePublicHandlerFor("mutableCopy"      , STANDARD)
+EnsureMutablePublicHandlerFor("mutableCopyExcept", STANDARD)
+EnsureMutablePublicHandlerFor("asMutableCopy"    , GETTER  )
+EnsureMutablePublicHandlerFor("asMutable"        , GETTER  )
+
+
 
 
 // function AsPublic(originalFunc) {

@@ -2,7 +2,7 @@ Thing.addMethod(function _init(spec) {
   this.setName(spec && spec.name)
 })
 
-Thing.addMethod("_hasOwn", InHasSelector)
+Thing.addMethod("_hasOwn", HasOwnProperty)
 
 
 

@@ -59,8 +59,8 @@ function _GeneralPurposeObjectCopy(visited = CopyLog()) {
   if (this.id != null) { return this }
 
   target = SpawnFrom(RootOf(this))
-  selectors = this[KNOWN_SELECTORS] ||
-    (this[KNOWN_SELECTORS] = KnownNames(this))
+  selectors = this[KNOWN_PROPERTIES] ||
+    (this[KNOWN_PROPERTIES] = VisibleProperties(this))
   next   = selectors.length
 
   visited.pairing(this, target) // Handles cyclic objects
@@ -105,16 +105,17 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
           BeImmutableObject(target, true) : target
       }
 
-      if (!(selectors = source[KNOWN_SELECTORS]) && source.id === undefined) {
+      if (!(selectors = source[KNOWN_PROPERTIES]) && source.id === undefined) {
         return source   // Never copy ordinary custom objects without an
                         // expressed intention from their creators
-      }                 // e.g. setting copy|KNOWN_SELECTORS|id = null
+      }                 // e.g. setting copy|KNOWN_PROPERTIES|id = null
       // source.id === null
 
       target = SpawnFrom(RootOf(source))
       // break omitted
     case Object :
-      selectors    = selectors || source[KNOWN_SELECTORS] || KnownNames(source)
+      selectors    = selectors ||
+        source[KNOWN_PROPERTIES] || VisibleProperties(source)
       next         = selectors.length
       isFromObject = true
       // break omitted
@@ -145,7 +146,7 @@ function CopyObject(source, asImmutable, visited = CopyLog()) {
       if (target._setImmutableCopyId) { target._setImmutableCopyId() }
       else { delete target.id }
     }
-    target[KNOWN_SELECTORS] = selectors
+    target[KNOWN_PROPERTIES] = selectors
     target[IS_IMMUTABLE] = true
     SetImmutable(this)
   }
@@ -162,8 +163,8 @@ function BeImmutableObject(target, modifySelfDeeply, visited = new CopyLog()) {
 
   switch (target.constructor) {
     default : // Object or Custom Object
-      selectors    = target[KNOWN_SELECTORS] ||
-        (target[KNOWN_SELECTORS] = KnownNames(target))
+      selectors    = target[KNOWN_PROPERTIES] ||
+        (target[KNOWN_PROPERTIES] = VisibleProperties(target))
       next         = selectors.length
       isFromObject = true
       break
@@ -413,7 +414,7 @@ class MethodLoader {
   }
 
   addAliases (aliases) {
-    const aliasNames = KnownNames(aliases)
+    const aliasNames = VisibleProperties(aliases)
     const next       = aliasNames.length
     const saved      = this.aliases
 

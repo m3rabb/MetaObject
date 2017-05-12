@@ -1,47 +1,18 @@
+// base
+// inate
+// type
+// instance
 
 
 
 
 
 
+// remember when executing _setSharedProperty to invalidate super !!!
 
 
 
 
-
-// const existingTypeProperties = Type$inner._properties
-//
-// for (let sel in Type$properties) {
-//   let prop = existingTypeProperties[sel]
-//   if (prop === PROPERTY) { Type$inner.addProperty(sel, Type$inner[sel]) }
-//   else { Type$inner.addMethod(prop, null, DONT_RECORD) }
-// }
-
-
-// function SeedInstanceRootMethodHandlers(_root, _ancestors) {
-//   const count = _ancestors.length
-//   let next = 0
-//   while (next < count) {
-//     const methods = _ancestors[next++].methods
-//     for (const selector in methods) {
-//       _root[selector] = methods[selector].handler
-//     }
-//   }
-// }
-//
-// function ReseedSubtypesMethodHandler(type, selector, handler) {
-//   const subtypes = type.subtypes
-//   for (const oid in subtypes) {
-//     ReseedTypeMethodHandler(subtypes[oid], selector, handler)
-//   }
-// }
-//
-// function ReseedTypeMethodHandler(type, selector, handler) {
-//   if (type.methods[selector] == undefined) {
-//     type._instanceRoot[selector] = handler
-//     ReseedSubtypesMethodHandler(type, selector, handler)
-//   }
-// }
 
 
 
@@ -72,6 +43,9 @@
 
 
 
+
+
+
 // SUPER
 
 //
@@ -84,4 +58,24 @@
 //     const superHandler = _target[SUPERS][Selector]
 //     return superHandler.apply(_target, ...args)
 //   }
+// }
+
+
+// ownProperties = this[KNOWN_PROPERTIES] ||
+//   (this[KNOWN_PROPERTIES] = VisibleProperties(this))
+//
+// if (ownProperties[selector]) {
+//   _type = InterMap.get(this.type)[$PULP]
+//   const $root$inner = _type._blanker.$root$inner
+//   const descriptor = PropertyDescriptor($root$inner, selector)
+//
+//   if (descriptor) {
+//     const getter = descriptor.get
+//     if (getter) {
+//       return getter.call($inner[$PULP])
+//     }
+//   }
+//   properties = _type._properties
+//   supers = supers || (this[SUPERS] = SpawnFrom(null))
+//   return (super[selector] =
 // }

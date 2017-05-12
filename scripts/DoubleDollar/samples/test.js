@@ -202,7 +202,7 @@ AddLazilyInstalledProperty(_Thing_root, "$", WrapThing)
 
 
 
-
+// Add logic to handle getters and lazys correctly
 function Create_COPY(BlankConstructor) {
   return function COPY(asImmutable, visited = CopyLog(), exceptSelector_) {
     const target, targetInner, targetOuter, initializer

@@ -10,7 +10,7 @@ const DefaultOuterBehavior = {
   __proto__ : null,
 
   get (base_root, selector, outer) {
-    return InterMap.get(outer[RIND])[INNER]._noSuchProperty(selector)
+    return InterMap.get(outer[$RIND])[INNER]._noSuchProperty(selector)
   },
 
   // getPrototypeOf (base_root) { return base_root }
@@ -112,13 +112,13 @@ InPutMethod(Type$core$root, function _init(spec, context_, Blank_) {
   this._nextIID           = 0
   this._subtypes          = new Set()
   this._methods           = SpawnFrom(null)
-  this.context            = context_ ? context_[RIND] : null
+  this.context            = context_ ? context_[$RIND] : null
 
   this.setId()
   this.setName(name)
   this.setSupertypes(supertypes)
-  this.addProperty("type", this[RIND])
-  this.add("_newBlank", () => new BlankConstructor()[RIND])
+  this.addProperty("type", this[$RIND])
+  this.add("_newBlank", () => new BlankConstructor()[$RIND])
   this.addAll(methods)
   return this
 })
@@ -127,7 +127,7 @@ InPutMethod(Type$core$root, function _init(spec, context_, Blank_) {
 
 
 let Type      = (new BlankType())[INNER]._init(
-                     {name: "Type"     , supertypes: []}, null, BlankType)[RIND]
+                     {name: "Type"     , supertypes: []}, null, BlankType)[$RIND]
 // Fix Type's supertype later
 
 let Nothing   = Type({name: "Nothing"  , supertypes: []}, null, BlankNothing)

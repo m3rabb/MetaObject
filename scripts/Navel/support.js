@@ -29,112 +29,59 @@
 //
 // rind --> core
 
-function AsSafeFunction(func, ignorePrototype_) {
-  func[IS_IMMUTABLE] = true
+
+const InterMap = new WeakMap()
+
+
+const VisibleConfiguration = {
+  configurable: true,
+  writable    : true,
+  enumerable  : true,
+}
+
+const InvisibleConfiguration = {
+  configurable: true,
+  writable    : true,
+  enumerable  : false,
+}
+
+function AddGetter(target, name, isVisible, getter) {
+  const configuration = {
+    configurable: true,
+    enumerable  : isVisible,
+    get         : getter
+  }
+  return DefineProperty(target, name, configuration)
+}
+
+
+function AsMethod(method_func__name, func__, mode___) {
+  return (method_func__name.isMethod) ?
+    method_func__name : Method(method_func__name, func__, mode___)
+}
+
+function MakeLazyLoader(Selector, Handler) {
+  const $loader = function () {
+    DefineProperty(this, Selector, InvisibleConfiguration)
+    return (this[Selector] = Handler.call(this))
+  }
+  $loader[$SECRET] = LOADER
+  return $loader
+}
+
+
+function AsSafeFunction(func, mode) {
   InterMap.set(func, SAFE_FUNCTION)
-  if (!ignorePrototype_) { Frost(func.prototype) }
+  if (mode !== BLANKER) { Frost(func.prototype) }
   return Frost(func)
 }
 
 
-function NewBlankerFrom(superBlanker, innerBlankerMaker) {
-  const $root$inner = SpawnFrom(superBlanker.$root$inner)
-  const $root$outer = SpawnFrom(superBlanker.$root$outer)
-  const PairedOuter = MakeNamelessVacuousFunction()
-  const Blanker     = innerBlankerMaker(PairedOuter)
-
-  $root$inner[$OUTER]     = $root$outer
-  PairedOuter.prototype = $root$outer
-  Blanker.prototype     = $root$inner
-  Blanker.$root$inner    = $root$inner
-  Blanker.$root$flesh   = new Proxy($root$inner, MutablePorosity)
-  Blanker.$root$outer   = $root$outer
-
-  return AsSafeFunction(Blanker, true)
+function MakeNamelessVacuousFunction() {
+  return function () {}
 }
 
-function MakeCoreBlanker(PairedOuter) {
-  return function () {
-    const $outer = new PairedOuter()
-    const rind  = new Proxy($outer, PrivacyPorosity)
-
-    this[$FLESH] = new Proxy(this, MutablePorosity)
-    this[$OUTER] = $outer
-    this[RIND]   = rind
-    $outer[RIND] = rind
-    InterMap.set(rind, this)
-  }
-}
-
-
-const NewAsFact = function newAsFact(...args) {
-  const $inner = new this._blanker()
-  $inner[$FLESH]._init(...args)
-  if ($inner.id == null) { $inner.beImmutable }
-  return $inner[RIND]
-}
-
-function MakeTypeCoreBlanker(TypeOuter) {
-  return function () {  // $Type // NewTypeBlanker
-    const mutablePorosity = new DisguisedMutablePorosity(this)
-    const $outer          = new TypeOuter()
-    const privacyPorosity = new TypePrivacyPorosity(this, $outer)
-    const rind            = new Proxy(NewAsFact, privacyPorosity)
-    const blanker         = NewBlankerFrom($InateBlanker, MakeCoreBlanker)
-
-    this._blanker    = blanker
-    this._properties = SpawnFrom(null)
-
-    this[$FLESH]  = new Proxy(NewAsFact, mutablePorosity)
-    this[$OUTER]  = $outer
-    this[RIND]    = rind
-    $outer[RIND]  = rind
-    InterMap.set(rind, this)
-  }
-}
-
-function InSetAsSpecialMethod(_type, selector, handler) {
-  const method        = Method(name, func)
-  const blanker       = _type._blanker
-
-  if (method.isPublic) { blanker.$root$outer[selector] = handler }
-  blanker.$root$inner[selector] = handler
-}
-
-// function InSetAsSpecialMethod(_type, selector, handler) {
-//   _type.blanker.$root$inner[selector] = handler
-//   _type._properties[selector] = Method(name, func)
-// }
-
-function InPutMethod(_type, method) {
-  const mode          = method.mode
-  const selector      = method.selector
-  const handler       = method.handler
-  const isPublic      = method.isPublic
-
-  const blanker       = _type._blanker
-  const $root$outer   = blanker.$root$outer
-  const $root$inner   = blanker.$root$inner
-
-  if (mode === STANDARD) {
-    if (isPublic) { $root$outer[selector] = PublicHandlerFor(selector) }
-    $root$inner[selector] = handler
-  }
-  else {
-    const getHandler = (mode === GETTER) ? handler : MakeLazyLoader(handler)
-    if (!isPublic) {
-      _AddGetter($root$outer, selector, true, PublicHandlerFor(selector, true))
-    }
-    _AddGetter($root$inner, selector, true, getHandler)
-  }
-}
-
-function InSetProperty(_type, selector, value) {
-  _type._blanker.$root$flesh[selector] = value
-}
-
-
-function VacuousConstructor(name) {
+function MakeVacuousConstructor(name) {
   const funcBody = `
     return function ${name}() {
       const message = "This constructor is only used for debugging!"
@@ -146,33 +93,101 @@ function VacuousConstructor(name) {
 }
 
 function SetDisplayNames(blanker, outerName, innerName = ("_" + outerName)) {
-  blanker.$root$outer.constructor = VacuousConstructor(outerName)
-  blanker.$root$inner.constructor  = VacuousConstructor(innerName)
+  blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
+  blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
   return blanker
 }
 
 
-function MakeAncestors(_supertypes) {
-  let next, _supertype, _ancestors, visited
+function NewBlankerFrom(superBlanker, blankerMaker) {
+  const $root$inner = SpawnFrom(superBlanker.$root$inner)
+  const $root$outer = SpawnFrom(superBlanker.$root$outer)
+  const PairedOuter = MakeNamelessVacuousFunction()
+  const Blanker     = blankerMaker(PairedOuter)
 
-  next = _supertypes.length
-  if (next === 0) { return [] }
+  $root$inner[$OUTER]   = $root$outer
+  PairedOuter.prototype = $root$outer
+  Blanker.prototype     = $root$inner
+  Blanker.$root$inner   = $root$inner
+  Blanker.$root$pulp    = new Proxy($root$inner, MutablePorosity)
+  Blanker.$root$outer   = $root$outer
 
-  _supertype = _supertypes[--next]
-  _ancestors = _supertype._ancestors.slice()
-  if (next === 0) {
-    _ancestors.push(_supertype)
-    return _ancestors
-  }
-
-  visited = new Set(_ancestors)
-  do {
-    _supertype = _supertypes[--next]
-    if (!visited.has(_supertype)) {
-      _supertype._ancestors.forEach(_type => {
-        if (!visited.has(_type)) { _ancestors.push(_type) }
-      })
-    }
-  } while (next)
-  return _ancestors
+  return AsSafeFunction(Blanker, BLANKER)
 }
+
+function MakeInnerBlanker(PairedOuter) {
+  return function () {
+    const $outer = new PairedOuter()
+    const $rind  = new Proxy($outer, PrivacyPorosity)
+
+    this[$PULP]   = new Proxy(this, MutablePorosity)
+    this[$OUTER]  = $outer
+    this[RIND]    = $rind
+    $outer[RIND]  = $rind
+    InterMap.set($rind, this)
+  }
+}
+
+function MakeTypeInnerBlanker(TypeOuter) {
+  return function () {  // $Type // NewTypeBlanker
+    const mutablePorosity = new DisguisedMutablePorosity(this)
+    const $outer          = new TypeOuter()
+    const privacyPorosity = new DisguisedPrivacyPorosity(this, $outer)
+    const $rind           = new Proxy(NewAsFact, privacyPorosity)
+    const blanker         = NewBlankerFrom($InateBlanker, MakeInnerBlanker)
+
+    this._blanker    = blanker
+    this._properties = SpawnFrom(null)
+
+    this[$PULP]   = new Proxy(NewAsFact, mutablePorosity)
+    this[$OUTER]  = $outer
+    this[RIND]    = $rind
+    $outer[RIND]  = $rind
+    InterMap.set($rind, this)
+  }
+}
+
+// To ease debugging, consider dynamic naming new${TypeName}AsFact !!!
+const NewAsFact = function newAsFact(...args) {
+  const $inner = new this._blanker()
+  $inner[$PULP]._init(...args)
+  if ($inner.id == null) { $inner.beImmutable }
+  return $inner[RIND]
+}
+
+// AsSafeFunction(NewAsFact) // Causes proxy error on read of name!!!
+
+
+
+function SetMethod($inner, $outer, method) {
+  const mode     = method.mode
+  const selector = method.selector
+  const handler  = method.handler
+  const isPublic = method.isPublic
+
+  if (mode === STANDARD) {
+    if (isPublic) { $outer[selector] = PublicHandlerFor(selector, STANDARD) }
+    $inner[selector] = handler
+  }
+  else {
+    const getHandler =
+      (mode === LAZY_INSTALLER) ? MakeLazyLoader(selector, handler) : handler
+    const getters = $inner[GETTERS] || ($inner[GETTERS] = SpawnFrom(null))
+    getters[selector] = getHandler // necessary???
+    AddGetter($inner, selector, true, getHandler)
+    if (isPublic) {
+      const publicGetHandler = PublicHandlerFor(selector, GETTER)
+      AddGetter($outer, selector, true, publicGetHandler)
+    }
+  }
+}
+
+
+
+
+
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/
