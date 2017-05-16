@@ -1,70 +1,8 @@
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
-const ALL_IDS     = Symbol("ALL_IDS")
-const MUTABLE     = null
-const FACT        = Symbol("FACT")
-const IMMUTABLE   = Symbol("IMMUTABLE")
 
 
-
-
-
-
-
-
-class ImmutableInnerPermeability {
-  constructor (core) {
-    this.inUse = false
-    // this.target = new Proxy(core, this)
-    this.target = this.inner = new Proxy(core, this)
-  }
-
-  set (core, selector, value, inner) {
-    if (core[selector] !== value) {
-      const copy = inner.mutableCopyExcept(selector)
-      copy[selector] = value
-      this.target = copy
-
-      this.set = this.detourSet
-      this.get = this.detourGet
-      this.deleteProperty = this.detourDelete
-    }
-    return true
-  }
-
-  deleteProperty (core, selector, inner) {
-    switch (selector) {
-      case "_IMMUTABILITY" : this.target = core.asMutableCopy; break
-      case "_ALL"          : this.target = core._newBlank()  ; break
-      default :
-        if (!core._hasOwn(selector)) { return true }
-        this.target = inner.mutableCopyExcept(selector)
-        break
-    }
-
-    this.set = this.detourSet
-    this.get = this.detourGet
-    this.deleteProperty = this.detourDelete
-    return true
-  }
-
-  detourSet (core, selector, value, inner) {
-    this.target[selector] = value
-    return true
-  }
-
-  detourGet (core, selector, inner) {
-    return this.target[selector]
-  }
-
-  detourDelete (core, selector, inner) {
-    delete this.target[selector]
-    return true
-  }
-}
-
-ImmutableInnerPermeability.prototype = SpawnFrom(null)
 
 
 Thing.addSGetter(function _captureChanges() {
@@ -244,6 +182,12 @@ function Create_COPY(BlankConstructor) {
         if (selector[0] !== "_") { targetOuter[selector] = value }
       }
     }
+
+    if ($inner._certified) {
+      const $pulp = $pulp._certified()
+      if ($pulp[IS_IMMUTABLE]) { return $pulp[$RIND] }
+    }
+  
 
     if (asImmutable) {
       if (this.id != null) {

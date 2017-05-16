@@ -98,5 +98,16 @@ only copyable properties should be visible
 Add object level properties and methods
 
 
+
 ==
-Customize publicHandler for asMutable to ensure a immutable receive can be returned as mutable
+Make immutable copy on demand work from calls to this as well!!!
+==
+Consider making all public methods answer facts
+
+==
+Consider not allowing anything to be set to undefined as an implementation sentinel
+
+==
+ensure symbols arent "has-able" thru proxies
+
+change _subtypes and _supertypes to be subtypes and supertypes after implementing CopyObject

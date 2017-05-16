@@ -86,8 +86,6 @@ DisguisedPrivacyPorosity.prototype = SpawnFrom(PrivacyPorosity)
 
 
 
-
-
 // UNTESTED
 const MutablePorosity = {
   __proto__ : null,
@@ -96,7 +94,7 @@ const MutablePorosity = {
     const isPublic = (selector[0] !== "_")
 
     if (!(selector in $inner)) {
-      delete $inner[$KNOWN_SELECTORS]
+      delete $inner[KNOWN_PROPERTIES]
     }
 
     switch (typeof value) {
@@ -105,9 +103,9 @@ const MutablePorosity = {
 
         if (value === $pulp) {  // Perhaps will force assignments to always be target!!!
           $inner[selector] = $pulp
-          value = $inner[RIND]
+          value = $inner[$RIND]
         }
-        else if (value === $inner[RIND]) {
+        else if (value === $inner[$RIND]) {
           $inner[selector] = $pulp
         }
         else if (value === null || value[IS_IMMUTABLE] || value.id != null) {
@@ -116,10 +114,10 @@ const MutablePorosity = {
         else if (value === $inner[selector]) {/* NOP */}
 
         else if ((value$inner = InterMap.get(value))) {
-          $inner[selector] = (value = value$inner[COPY](true)[RIND])
+          $inner[selector] = (value = value$inner[COPY](true)[$RIND])
         }
         else {
-          $inner[selector] = (value = CopyObject(value, true))
+          $inner[selector] = value // (value = CopyObject(value, true))
         }
         $inner[$OUTER][selector] = value
         return true
@@ -148,21 +146,29 @@ const MutablePorosity = {
 
   deleteProperty ($inner, selector, $pulp) {
     if (selector in $inner) {
-      delete $inner[$KNOWN_SELECTORS]
+      delete $inner[KNOWN_PROPERTIES]
       delete $inner[selector]
+      delete $inner[$OUTER][selector]
     }
 
     return true
-  }
+  },
+
+  // has () {
+  //   // hide symbols from view
+  // }
 }
 
 class DisguisedMutablePorosity {
-  constructor ($inner) {
+  constructor ($inner, $pulp) {
     this.$inner = $inner
   }
 
   get (disguisedFunc, selector, $pulp) {
-    return this.$inner[selector]
+    const $inner  = this.$inner
+    const getters = $inner[$GETTERS]
+    const handler = getters[selector]
+    return (handler) ? handler.call($pulp) : $inner[selector]
   }
 
   set (disguisedFunc, selector, value, $pulp) {
@@ -187,7 +193,7 @@ class DisguisedMutablePorosity {
 class ImmutableInnerPorosity {
   constructor ($inner) {
     this.inUse = false
-    this.target = this.$pulp = new Proxy($inner, this)
+    this.target = this.originalTarget = new Proxy($inner, this)
   }
 
   set ($inner, selector, value, $pulp) {

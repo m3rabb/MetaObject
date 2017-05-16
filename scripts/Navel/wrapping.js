@@ -46,7 +46,7 @@ function PublicHandlerFor(selector, mode) {
   publicHandler = function (...args) {
     let $inner, porosity, $pulp, result, result$inner
 
-    $inner = InterMap.get(this[RIND])
+    $inner = InterMap.get(this)
 
     if ((porosity = $inner[$INNER_POROSITY])) { // indicator that $pulp isImmutable
       if (porosity.inUse) { porosity = new ImmutableInnerPorosity($inner) }
@@ -58,21 +58,23 @@ function PublicHandlerFor(selector, mode) {
       if (result === $pulp) {
         result = porosity.target
         if (result !== $pulp) {
-          porosity.target = porosity.$pulp  // reset porosity
+          porosity.target = porosity.originalTarget  // reset porosity
           result.beImmutable
         }
         porosity.inUse = false
-        return result[RIND]
+        return result[$RIND]
       }
-      if (typeof result !== "object" || result === null) { return result }
-      if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-      return ((result$inner = InterMap.get(result))) ?
-        result$inner[COPY](true)[RIND] : CopyObject(result, true)
+    }
+    else {
+      $pulp = $inner[$PULP]
+      result = IsGetter ? $pulp[selector] : $pulp[selector](...args)
+      if (result === $pulp) { return result[$RIND] }
     }
 
-    $pulp = $inner[$PULP]
-    result = IsGetter ? $pulp[selector] : $pulp[selector](...args)
-    return (result === $pulp) ? result[RIND] : result
+    if (typeof result !== "object" || result === null) { return result }
+    if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+    return ((result$inner = InterMap.get(result))) ?
+      result$inner[$COPY](true)[$RIND] : CopyObject(result, true)
   }
 
   publicHandlers[selector] = publicHandler
@@ -80,13 +82,38 @@ function PublicHandlerFor(selector, mode) {
 }
 
 
+function InnerPublicHandlerFor(selector, mode) {
+  let IsGetter       = (mode === GETTER)
+  let innerHandlers = IsGetter ? InnerGetters : InnerHandlers
+  let innerHandler  = innerHandlers[selector]
+
+  if (innerHandler) { return innerHandler }
+
+  innerHandler = new Proxy(originalFunc, {
+    apply (func, receiver, args) {
+      let result, result$inner
+
+      result = originalFunc.apply(receiver, args)
+      if (result === receiver) { return result }
+      if (typeof result !== "object" || result === null) { return result }
+      if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+      return ((result$inner = InterMap.get(result))) ?
+        result$inner[$COPY](true)[$RIND] : CopyObject(result, true)
+    }
+  })
+
+  return (innerHandlers[selector] = innerHandler)
+}
+
+
+
 function EnsureMutablePublicHandlerFor(selector, mode) {
   let IsGetter       = (mode === GETTER)
   let publicHandlers = IsGetter ? PublicGetters : PublicHandlers
   let publicHandler  = function (...args) {
-    let $pulp = InterMap.get(this[RIND])[$PULP]
+    let $pulp = InterMap.get(this)[$PULP]
     let result = IsGetter ? $pulp[selector] : $pulp[selector](...args)
-    return (result === $pulp) ? result[RIND] : result
+    return (result === $pulp) ? result[$RIND] : result
   }
   publicHandlers[selector] = publicHandler
   AsSafeFunction(publicHandler)

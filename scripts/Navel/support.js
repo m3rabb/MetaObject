@@ -55,6 +55,32 @@ function AddGetter(target, name, isVisible, getter) {
 }
 
 
+function SetMethod($inner, method) {
+  const $outer   = $inner[$OUTER]
+  const mode     = method.mode
+  const selector = method.selector
+  const handler  = method.handler
+  const isPublic = method.isPublic
+
+  if (mode === STANDARD) {
+    if (isPublic) { $outer[selector] = PublicHandlerFor(selector, STANDARD) }
+    $inner[selector] = handler
+  }
+  else {
+    const getHandler =
+      (mode === LAZY_INSTALLER) ? MakeLazyLoader(selector, handler) : handler
+    // const getters = $inner[GETTERS] || ($inner[GETTERS] = SpawnFrom(null))
+    $inner[$GETTERS][selector] = getHandler // necessary???
+    AddGetter($inner, selector, true, getHandler)
+    if (isPublic) {
+      const publicGetHandler = PublicHandlerFor(selector, GETTER)
+      AddGetter($outer, selector, true, publicGetHandler)
+    }
+  }
+}
+
+
+
 function AsMethod(method_func__name, func__, mode___) {
   return (method_func__name.isMethod) ?
     method_func__name : Method(method_func__name, func__, mode___)
@@ -104,6 +130,7 @@ function NewBlankerFrom(superBlanker, blankerMaker) {
   const $root$outer = SpawnFrom(superBlanker.$root$outer)
   const PairedOuter = MakeNamelessVacuousFunction()
   const Blanker     = blankerMaker(PairedOuter)
+  const supers       = SpawnFrom(null)
 
   $root$inner[$OUTER]   = $root$outer
   PairedOuter.prototype = $root$outer
@@ -111,6 +138,11 @@ function NewBlankerFrom(superBlanker, blankerMaker) {
   Blanker.$root$inner   = $root$inner
   Blanker.$root$pulp    = new Proxy($root$inner, MutablePorosity)
   Blanker.$root$outer   = $root$outer
+
+  supers[$GETTERS]      = SpawnFrom(null)
+  supers[$SUPERS]       = supers
+  $root$inner[$SUPERS]  = supers
+  $root$inner[$GETTERS] = SpawnFrom(null)
 
   return AsSafeFunction(Blanker, BLANKER)
 }
@@ -122,8 +154,8 @@ function MakeInnerBlanker(PairedOuter) {
 
     this[$PULP]   = new Proxy(this, MutablePorosity)
     this[$OUTER]  = $outer
-    this[RIND]    = $rind
-    $outer[RIND]  = $rind
+    this[$RIND]   = $rind
+    $outer[$RIND] = $rind
     InterMap.set($rind, this)
   }
 }
@@ -141,46 +173,29 @@ function MakeTypeInnerBlanker(TypeOuter) {
 
     this[$PULP]   = new Proxy(NewAsFact, mutablePorosity)
     this[$OUTER]  = $outer
-    this[RIND]    = $rind
-    $outer[RIND]  = $rind
+    this[$RIND]   = $rind
+    $outer[$RIND] = $rind
     InterMap.set($rind, this)
   }
 }
 
 // To ease debugging, consider dynamic naming new${TypeName}AsFact !!!
 const NewAsFact = function newAsFact(...args) {
-  const $inner = new this._blanker()
-  $inner[$PULP]._init(...args)
-  if ($inner.id == null) { $inner.beImmutable }
-  return $inner[RIND]
+  let $inner = new this._blanker()
+  let $pulp  = $inner[$PULP]
+  $pulp._init(...args)
+  if ($inner._certified) {
+    const $pulp = $pulp._certified()
+    if ($pulp[IS_IMMUTABLE]) { return $pulp[$RIND] }
+  }
+  if ($pulp.id == null) { $pulp.beImmutable }
+  return $pulp[$RIND]
 }
 
 // AsSafeFunction(NewAsFact) // Causes proxy error on read of name!!!
 
 
 
-function SetMethod($inner, $outer, method) {
-  const mode     = method.mode
-  const selector = method.selector
-  const handler  = method.handler
-  const isPublic = method.isPublic
-
-  if (mode === STANDARD) {
-    if (isPublic) { $outer[selector] = PublicHandlerFor(selector, STANDARD) }
-    $inner[selector] = handler
-  }
-  else {
-    const getHandler =
-      (mode === LAZY_INSTALLER) ? MakeLazyLoader(selector, handler) : handler
-    const getters = $inner[GETTERS] || ($inner[GETTERS] = SpawnFrom(null))
-    getters[selector] = getHandler // necessary???
-    AddGetter($inner, selector, true, getHandler)
-    if (isPublic) {
-      const publicGetHandler = PublicHandlerFor(selector, GETTER)
-      AddGetter($outer, selector, true, publicGetHandler)
-    }
-  }
-}
 
 
 

@@ -30,3 +30,35 @@ https://www.npmjs.com/package/icepick
 
 
 - When to use symbols vs private properties
+
+
+===
+
+
+PrivateChars = SpawnFrom(null)
+
+PrivateChars = {
+  __proto__ : null,
+  "_" : true,
+  undefined : true
+}
+
+vs
+
+const firstChar = selector[0]
+const isPublic  = (firstChar !== "_" && firstChar !== undefined)
+
+vs
+
+switch
+
+
+==
+
+_ratify
+_approve
+_certify
+_confirm
+_validate
+_finalNew
+_confirmed

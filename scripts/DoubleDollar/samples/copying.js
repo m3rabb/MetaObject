@@ -52,6 +52,8 @@ AddGetter(Thing_root, function beImmutable() {
 })
 
 
+// make KNOWN_PROPERTIES a stash instead to differentiate between
+// regular properties and getters
 
 function _GeneralPurposeObjectCopy(visited = CopyLog()) {
   let target, selectors, selector, next, value, traversed, inner,
@@ -73,9 +75,9 @@ function _GeneralPurposeObjectCopy(visited = CopyLog()) {
     else if (value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
     else if ((traversed = visited.pair(value)) { value = traversed }
     else if ((valueCore = InterMap.get(value))) {
-      value = valueCore[COPY](asImmutable, visited).$
+      value = valueCore[COPY](false, visited).$
     }
-    else { value = CopyObject(value, asImmutable, visited) }
+    else { value = CopyObject(value, false, visited) }
 
     target[selector] = value
   }
