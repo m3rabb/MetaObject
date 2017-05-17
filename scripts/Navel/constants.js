@@ -45,6 +45,7 @@ const $SUPER             = Symbol("$super")
 
 
 // Sentinels
+const CONSTRUCTOR        = Symbol("CONSTRUCTOR")
 const PROPERTY           = Symbol("PROPERTY")
 const METHOD             = Symbol("METHOD")
 const LOADER             = Symbol("LOADER")

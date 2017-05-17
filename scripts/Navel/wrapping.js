@@ -46,7 +46,7 @@ function PublicHandlerFor(selector, mode) {
   publicHandler = function (...args) {
     let $inner, porosity, $pulp, result, result$inner
 
-    $inner = InterMap.get(this)
+    $inner = InterMap.get(this[$RIND])
 
     if ((porosity = $inner[$INNER_POROSITY])) { // indicator that $pulp isImmutable
       if (porosity.inUse) { porosity = new ImmutableInnerPorosity($inner) }
@@ -67,7 +67,8 @@ function PublicHandlerFor(selector, mode) {
     }
     else {
       $pulp = $inner[$PULP]
-      result = IsGetter ? $pulp[selector] : $pulp[selector](...args)
+      result = IsGetter ?
+        $pulp[selector] : Apply($inner[selector], $pulp, args)
       if (result === $pulp) { return result[$RIND] }
     }
 

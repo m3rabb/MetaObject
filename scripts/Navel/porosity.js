@@ -1,12 +1,20 @@
 // UNTESTED
-const PrivacyPorosity = {
-  __proto__ : null,
 
+const BasePorosity = {
+  getPrototypeOf : ALWAYS_NULL ,
+  setPrototypeOf : ALWAYS_FALSE,
+  defineProperty : ALWAYS_FALSE,
+  deleteProperty : ALWAYS_FALSE,
+  isExtensible   : ALWAYS_FALSE,
+  // preventExtensions ???
+}
+
+class _PrivacyPorosity {
   get ($outer, selector, $rind) {
     let index
     return ($outer.atIndex && ((index = +selector) === index)) ?
       $outer.atIndex(index) : $outer[selector]
-  },
+  }
 
   // Setting on things in not allowed because the setting semantics are broken.
   // For our model, the return value should always be the receiver, or a copy
@@ -18,7 +26,7 @@ const PrivacyPorosity = {
   set ($outer, selector, value, $rind) {
     return false
     // return InterMap.get($rind)._externalWrite(selector, value) || false
-  },
+  }
 
   has ($outer, selector) {
     // const firstChar = (typeof selector === "symbol") ?
@@ -29,7 +37,7 @@ const PrivacyPorosity = {
       case undefined : return false
     }
     return (selector in $outer)
-  },
+  }
 
   // getOwnPropertyDescriptor ($outer, selector) {
   //   switch (selector[0]) {
@@ -41,14 +49,11 @@ const PrivacyPorosity = {
   // },
 
   // ownKeys ($outer) { },
-
-  getPrototypeOf : ALWAYS_NULL ,
-  setPrototypeOf : ALWAYS_FALSE,
-  defineProperty : ALWAYS_FALSE,
-  deleteProperty : ALWAYS_FALSE,
-  isExtensible   : ALWAYS_FALSE,
-  // preventExtensions ???
 }
+
+_PrivacyPorosity.prototype = SpawnFrom(BasePorosity)
+
+const PrivacyPorosity = new _PrivacyPorosity()
 
 
 class DisguisedPrivacyPorosity {
@@ -94,6 +99,7 @@ const MutablePorosity = {
     const isPublic = (selector[0] !== "_")
 
     if (!(selector in $inner)) {
+      // Consider making id invisible, and ensuring that id is only set thru a special method here!!!
       delete $inner[KNOWN_PROPERTIES]
     }
 

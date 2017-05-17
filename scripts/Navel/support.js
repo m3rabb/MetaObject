@@ -118,11 +118,11 @@ function MakeVacuousConstructor(name) {
   return AsSafeFunction(constructor)
 }
 
-function SetDisplayNames(blanker, outerName, innerName = ("_" + outerName)) {
-  blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
-  blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
-  return blanker
-}
+// function SetDisplayNames(blanker, outerName, innerName = ("_" + outerName)) {
+//   blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
+//   blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
+//   return blanker
+// }
 
 
 function NewBlankerFrom(superBlanker, blankerMaker) {
@@ -179,20 +179,30 @@ function MakeTypeInnerBlanker(TypeOuter) {
   }
 }
 
+// const NewAsFact = function newAsFact(...args) {
+//   let $inner = new this._blanker()
+//   let $pulp  = $inner[$PULP]
+//   $pulp._init(...args)
+//   if ($inner._postCreation) {
+//     const $pulp = $pulp._postCreation()
+//     if ($pulp[IS_IMMUTABLE]) { return $pulp[$RIND] }
+//   }
+//   if ($pulp.id == null) { $pulp.beImmutable }
+//   return $pulp[$RIND]
+// }
+
+
 // To ease debugging, consider dynamic naming new${TypeName}AsFact !!!
 const NewAsFact = function newAsFact(...args) {
-  let $inner = new this._blanker()
-  let $pulp  = $inner[$PULP]
-  $pulp._init(...args)
-  if ($inner._certified) {
-    const $pulp = $pulp._certified()
-    if ($pulp[IS_IMMUTABLE]) { return $pulp[$RIND] }
-  }
-  if ($pulp.id == null) { $pulp.beImmutable }
-  return $pulp[$RIND]
+  let instance = this.new(...args)
+  if (instance.id == null) { instance.beImmutable }
+  return instance
 }
-
 // AsSafeFunction(NewAsFact) // Causes proxy error on read of name!!!
+
+
+
+
 
 
 

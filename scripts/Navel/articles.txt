@@ -62,3 +62,36 @@ _confirm
 _validate
 _finalNew
 _confirmed
+_certified
+_postInit
+_postCreation
+
+==
+function _set(prop, value)
+
+to enable quick reading of properties but controlled setting
+addSetter($IID, function id(newId) {
+  return newId
+}) {
+  this._.id
+}
+
+Type.addSetter(function id(newId) {
+  const existingId = this.id
+
+  return value
+})
+
+==
+
+$pulp[selector](...args)
+vs
+$inner[selector].apply($pulp, args)
+vs
+Apply($inner[selector], $pulp, args)
+
+wrapper func vs proxy apply
+
+==
+Talk about big leap away from using an internal (mutable) proxy and using
+property setter methods instead 

@@ -20,3 +20,5 @@ Type.addMethod(function addAlias(aliasName, name_method) {
 })
 
 Type.addAlias("removeMethod", "removeProperty")
+
+Type.addAlias("basicNew", "new")

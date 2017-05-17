@@ -65,7 +65,7 @@ const Type$root$inner   = TypeBlanker.$root$inner
 Type$root$inner._bootstrap = function (name, blanker) {
   this._blanker = blanker
   this.subtypes = new Set()
-  SetDisplayNames(blanker, name) // The following is not necessary but helpful for implementation debugging!!!
+  // SetDisplayNames(blanker, name) // The following is not necessary but helpful for implementation debugging!!!
   return this
 }
 
@@ -73,6 +73,8 @@ Type$root$inner._bootstrap = function (name, blanker) {
 const $Inate$inner  = new TypeBlanker()
 const Method$inner  = new TypeBlanker()
 const Type$inner    = new TypeBlanker()
+
+const $Inate$pulp   = $Inate$inner[$PULP]
 
 const $Inate  = $Inate$inner._bootstrap("$Inate", $InateBlanker )[$RIND]
 const Method  = Method$inner._bootstrap("Method", MethodBlanker )[$RIND]
@@ -87,7 +89,7 @@ $Inate$root$inner[$IID]             = undefined
 
 $Inate$root$inner.beImmutable       = undefined
 $Inate$root$inner._noSuchProperty   = undefined
-$Inate$root$inner._certified        = undefined
+$Inate$root$inner._postCreation     = undefined
 
 // This secret is only known by inner objects
 $Inate$root$inner[$SECRET]          = $INNER
@@ -99,7 +101,7 @@ $Inate$root$pulp.splice             = undefined // Weird ref by debugger
 
 $Inate_properties.beImmutable       = undefined
 $Inate_properties._noSuchProperty   = undefined
-$Inate_properties._certified        = undefined
+$Inate_properties._postCreation     = undefined
 $Inate_properties.id                = undefined
 $Inate_properties.atIndex           = undefined
 $Inate_properties.splice            = undefined // Weird ref by debugger
@@ -144,6 +146,15 @@ Type$root$inner._setSharedProperty = function _setSharedProperty(selector, value
   return this._propagateIntoSubtypes(selector)
 }
 
+Type$root$inner.new = function basicNew(...args) {
+  let $inner = new this._blanker()
+  let _instance  = $inner[$PULP]
+  _instance._init(...args)
+  if (_instance._postCreation) {
+    _instance = _instance._postCreation()
+  }
+  return _instance[$RIND]
+}
 
 const AddMethod = function addMethod(method_namedFunc__name, func__, mode___) {
   const method = AsMethod(method_namedFunc__name, func__, mode___)
@@ -156,6 +167,7 @@ AddMethod.call(Type$inner, AddMethod)
 
 Method.addMethod(Method$root$inner._init)
 Type.addMethod(Type$root$inner._setSharedProperty)
+Type.addMethod("new", Type$root$inner.new)
 
 
 Type.addMethod(function addGetter(...namedFunc_name__handler) {
@@ -166,12 +178,13 @@ Type.addMethod(function addLazyProperty(...namedFunc_name__handler) {
   return this.addMethod(...namedFunc_name__handler, LAZY_INSTALLER)
 })
 
-Type.addMethod(function addProperty(selector, value) {
+Type.addMethod(function addSharedProperty(selector, value) {
   return this._setSharedProperty(selector, value, true)
 })
 
-Type.addMethod(function removeProperty(selector) {
-  return this._deleteSharedProperty(selector)
+Type.addMethod(function removeSharedProperty(selector) {
+  return (selector in this._properties) ?
+    this._deleteSharedProperty(selector) : this
 })
 
 Type.addMethod(function addAllMethods(methods) {
@@ -190,7 +203,7 @@ Type.addMethod(function _deleteSharedProperty(selector) {
   delete $root$inner[$GETTERS][selector]
   delete supers[selector]
   delete supers[$GETTERS][selector]
-  return this._propagateIntoSubtypes(selector)
+  return this._inheritProperty(selector)
 })
 
 Type.addMethod(function _propagateIntoSubtypes(selector) {
@@ -206,9 +219,9 @@ Type.addMethod(function _inheritProperty(selector) {
   if (selector in properties) { return this }
 
   let ancestry = this.ancestry
-  let next = ancestry.length
+  let next = ancestry.length - 1
 
-  while (--next) {
+  while (next--) {
     let type$inner = InterMap.get(ancestry[next])
     let nextProperties = type$inner._properties
 
@@ -217,7 +230,7 @@ Type.addMethod(function _inheritProperty(selector) {
       return this._setSharedProperty(selector, value, false)
     }
   }
-  return this._deleteSharedProperty(selector)
+  return this
 })
 
 
@@ -229,11 +242,11 @@ Type.addMethod(function _reinheritProperties() {
   let validProperties = SpawnFrom(null)
   let ancestry = this.ancestry
   let nextProperties = this._properties
-  let next = ancestry.length
+  let next = ancestry.length - 1
 
   for (let selector in nextProperties) { validProperties[selector] = true }
 
-  while (--next) {
+  while (next--) {
     let nextType$inner = InterMap.get(ancestry[next])
     nextProperties = nextType$inner._properties
 
@@ -326,16 +339,25 @@ Type.addMethod(function setName(newName) {
   if (newName !== priorName) {
     if (priorName != null) {
       const priorMembershipSelector = AsMembershipSelector(priorName)
-      this.removeProperty(priorMembershipSelector)
+      this.removeSharedProperty(priorMembershipSelector)
     }
     const newMembershipSelector = AsMembershipSelector(newName)
-    this.addProperty(newMembershipSelector, true)
-    $Inate.addProperty(newMembershipSelector, false)
+    this.addSharedProperty(newMembershipSelector, true)
+    $Inate.addSharedProperty(newMembershipSelector, false)
     this.membershipSelector = newMembershipSelector
     this.name = newName
-    SetDisplayNames(this._blanker, newName)
+    this._setDisplayNames(newName)
   }
   return this
+})
+
+Type.addMethod(function _setDisplayNames(outerName, innerName_) {
+  const innerName = innerName_ || ("_" + outerName)
+  const blanker   = this._blanker
+  this._properties.constructor    = CONSTRUCTOR
+  blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
+  blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
+  return blanker
 })
 
 
@@ -345,35 +367,40 @@ function Make_newBlank(Blanker) {
 }
 
 
-Type.addGetter(function basicId() {
+Type.addGetter(function instanceId() {
+  return this[$IID] || (this[$IID] = ++InterMap.get(this.type)._iidCount)
+})
+
+Type.addGetter(function simpleId() {
   const type = this.type
   const context = type.context
   const prefix = context ? context.id + "@" : ""
-  let iid = this[$IID] ||
-    (this[$IID] = ++InterMap.get(this.type)._iidCount)
-  return `${prefix}${type.name}#${iid}`
+  return `${prefix}${type.name}#${this.instanceId}`
   // `${type.name}<${NewUniqueId()}>`
 })
 
-Type.addMethod(function setId(newId_) {
+
+Type.addMethod(function _setId(newId_) {
   const existingId = this.id
 
   if (newId_ === undefined) {
     if (existingId !== undefined) { return this }
-    this.id = this.basicId
+    this.id = this.simpleId
   }
   else if (newId_ === existingId) { return this }
   else { this.id = newId_ }
 
-  if (existingId !== undefined) {
-    let priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
-    priorIds[priorIds.length] = existingId
-  }
+  // if (existingId !== undefined) {
+  //   let priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
+  //   priorIds[priorIds.length] = existingId
+  // }
   return this
 })
 
-Type.addMethod(function resetId(newId_) {
-  this.id = (newId_ !== undefined) ? newId : this.basicId
+
+Type.addMethod(function _resetId(newId_) {
+  // delete this[$PRIOR_IDS]
+  this.id = (newId_ !== undefined) ? newId : this.simpleId
 })
 
 
@@ -389,34 +416,40 @@ Type.addMethod(function _init(spec, context_) {
   this.subtypes = new Set()
   this.context  = context_ ? context_[$RIND] : null
 
-  this.addProperty("type", this[$RIND])
+  this.addSharedProperty("type", this[$RIND])
   this.setName(name)
-  this.setId()
   this.setSupertypes(supertypes)
   this.addMethod(newBlanker)
   this.addAllMethods(methods)
   return this
 })
 
-// Type.addMethod(function _certified(beImmutable_) {
-//   return this.setId(this.basicId, true)
+Type.addMethod(function _setCopyId() {
+  this.id = this.simpleId
+  return this
+})
+
+
+// Type.addMethod(function _postCreation(beImmutable_) {
+//   this.id = this.simpleId
+//   return this
 // })
 
 
 
 
-Type$inner  [$PULP]._init({name: "Type", supertypes: []})
 
-$Inate$inner[$PULP][$IID] = "0"
+Type$inner[$PULP]._init({name: "Type", supertypes: []})
 
-$Inate$inner[$PULP]._init({name: "$Inate", supertypes: []})
+$Inate$pulp[$IID] = "0"
+$Inate$pulp._init({name: "$Inate", supertypes: []})
+$Inate$pulp._setDisplayNames("$Outer", "$Inner") // Helps with debugging!!!
 
-const Thing        = Type({name: "Thing" , supertypes: []})
+const Thing = Type({name: "Thing" , supertypes: []})
 
 Method$inner[$PULP]._init({name: "Method"})
 Type.setSupertypes([Thing])
 
-SetDisplayNames($InateBlanker, "$Outer", "$Inner") // Helps with debugging!!!
 
 
 
@@ -427,10 +460,16 @@ SetDisplayNames($InateBlanker, "$Outer", "$Inner") // Helps with debugging!!!
 
 // methodAt
 
-Thing.addMethod(Type$inner._properties.setId)
-Thing.addMethod(Type$inner._properties.basicId)
-Type.removeProperty("setId")
-Type.removeProperty("basicId")
+// Type.moveMethodTo("", target)
+
+Thing.addMethod(Type$inner._properties._setId)
+Thing.addMethod(Type$inner._properties.simpleId)
+Thing.addMethod(Type$inner._properties.instanceId)
+Type.removeSharedProperty("_setId")
+Type.removeSharedProperty("simpleId")
+Type.removeSharedProperty("instanceId")
+
+// _setCopyId()
 
 
 $Inate.addLazyProperty(function $() {
@@ -457,12 +496,39 @@ Method.addLazyProperty(function isStandard() {
   return (this.mode === STANDARD)
 })
 
-Method.addProperty("STANDARD"      , STANDARD      )
-Method.addProperty("GETTER"        , GETTER        )
-Method.addProperty("LAZY"          , LAZY_INSTALLER)
-Method.addProperty("LAZY_INSTALLER", LAZY_INSTALLER)
+Method.addSharedProperty("STANDARD"      , STANDARD      )
+Method.addSharedProperty("GETTER"        , GETTER        )
+Method.addSharedProperty("LAZY"          , LAZY_INSTALLER)
+Method.addSharedProperty("LAZY_INSTALLER", LAZY_INSTALLER)
 
 
+Thing.addMethod(function _setName(name) {
+  this.name = name
+})
+
+Thing.addMethod("_hasOwn", HasOwnProperty) // remove this???
+
+
+// set(setSupertypes)
+//
+// on
+//
+// onSet("name", function (newName)) {
+//
+//   return newName
+// })
+//
+// addSetter()
+
+Thing.addMethod(function _init(spec_) {
+  if (spec_) {
+    var id   = spec_.id
+    var name = spec_.name
+  }
+  name && (this.name = name)
+  id   && (this.id   = id)
+  return this
+})
 
 Thing.addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
   const $inner   = InterMap.get(this[$RIND])
@@ -489,12 +555,6 @@ Thing.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
 // Thing.addMethod(function _quietGet(selector) {
 //   const descriptor = PropertyDescriptor(this, selector)
 //   return descriptor.value
-// })
-
-
-// Thing.addMethod(function _resetId() {
-//   this.id = this.basicId
-//   return this
 // })
 
 
