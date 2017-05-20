@@ -111,3 +111,8 @@ Consider not allowing anything to be set to undefined as an implementation senti
 ensure symbols arent "has-able" thru proxies
 
 change _subtypes and _supertypes to be subtypes and supertypes after implementing CopyObject
+
+==
+Change disguised func to be named vacuous func !!!
+==
+Check that getters called on $pulp actual have the $pulp as the receiver
