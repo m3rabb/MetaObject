@@ -94,4 +94,9 @@ wrapper func vs proxy apply
 
 ==
 Talk about big leap away from using an internal (mutable) proxy and using
-property setter methods instead 
+property setter methods instead
+
+
+==
+class doesn't protect again skylight. Gotta do it the old fashion way
+// Protect from prototype chain hacking!!! aka skylighting

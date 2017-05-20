@@ -18,5 +18,6 @@ module.exports = {
         "no-fallthrough" :
           ["error", { "commentPattern": "break[\\s\\w]*omitted" }],
         "no-undef"       : "off",
+        "no-empty"       : "off",
     }
 };
