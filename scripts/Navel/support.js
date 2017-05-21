@@ -101,13 +101,13 @@ function MakeLazyLoader(Selector, Handler) {
   }
   $loader.isLoader = true // is necessary???
   // $loader[$SECRET] = LOADER
-  return BeSafeFunction($loader) // $loader
+  return BeFrozenFunc($loader) // $loader
 }
 
 
-function BeSafeFunction(func, ignorePrototype) {
+function BeFrozenFunc(func, ignorePrototype) {
   InterMap.set(func, SAFE_FUNCTION)
-  if (ignorePrototype !== IGNORE) { Frost(func.prototype) }
+  if (ignorePrototype !== IGNORE_PROTOTYPE) { Frost(func.prototype) }
   return Frost(func)
 }
 
@@ -124,7 +124,7 @@ function MakeVacuousConstructor(name) {
     }
   `
   const constructor = Function(funcBody)()
-  return BeSafeFunction(constructor)
+  return BeFrozenFunc(constructor)
 }
 
 // function SetDisplayNames(blanker, outerName, innerName = ("_" + outerName)) {
@@ -153,7 +153,7 @@ function NewBlankerFrom(superBlanker, blankerMaker) {
   $root$inner[$SUPERS]     = supers
   $root$inner[$IMMEDIATES] = SpawnFrom(null)
 
-  return BeSafeFunction(Blanker, IGNORE)
+  return BeFrozenFunc(Blanker, IGNORE_PROTOTYPE)
 }
 
 function MakeInnerBlanker(PairedOuter) {
@@ -215,7 +215,7 @@ const NewAsFact = function newAsFact(...args) {
   if (instance.id == null) { instance.beImmutable }
   return instance
 }
-// BeSafeFunction(NewAsFact) // Causes proxy error on read of name!!!
+// BeFrozenFunc(NewAsFact) // Causes proxy error on read of name!!!
 
 
 

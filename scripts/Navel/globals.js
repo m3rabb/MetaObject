@@ -51,7 +51,7 @@ const CONSTRUCTOR        = Symbol("CONSTRUCTOR")
 const PROPERTY           = Symbol("PROPERTY")
 const METHOD             = Symbol("METHOD")
 const NO_SUPER           = Symbol("NO_SUPER")
-const IGNORE             = Symbol("IGNORE")
+const IGNORE_PROTOTYPE   = Symbol("IGNORE_PROTOTYPE")
 
 
 const ALWAYS_FALSE       = (() => false)
@@ -63,47 +63,6 @@ const SAFE_FUNCTION      = {[IS_IMMUTABLE] : true}
 // const KNOWN_GETTER       = {[IS_IMMUTABLE] : true, [GETTER] : true}
 
 
-
-const STANDARD = {
-  id          : "STANDARD",
-  isRelaxed   : false,
-  isImmediate : false,
-  isLazy      : false,
-}
-
-const GETTER = {
-  id          : "GETTER",
-  isRelaxed   : false,
-  isImmediate : true ,
-  isLazy      : false,
-}
-
-const LAZY_INSTALLER = {
-  id          : "LAZY_INSTALLER",
-  isRelaxed   : false,
-  isImmediate : true ,
-  isLazy      : true ,
-}
-
-const RELAXED_STANDARD = {
-  id          : "RELAXED_STANDARD",
-  isRelaxed   : true ,
-  isImmediate : false,
-  isLazy      : false,
-}
-
-const RELAXED_GETTER = {
-  id          : "RELAXED_GETTER",
-  isRelaxed   : true ,
-  isImmediate : true ,
-  isLazy      : false,
-}
-
-isRelaxed ?
-  (mode.isImmediate ? RelaxedGetterPorosity : RelaxedMethodPorosity) :
-  (mode.isImmediate ? FactGetterPorosity    : FactMethodPorosity)
-
-  
 
 const VisibleConfiguration = {
   configurable : true,
@@ -120,3 +79,16 @@ const InvisibleConfiguration = {
 
 const SymbolPropertyMap  = SpawnFrom(null)
 const InterMap           = new WeakMap()
+
+const FuncGlobals = {
+  InterMap   : InterMap,
+  $BARRIER   : $BARRIER,
+  $RIND      : $RIND,
+  $PULP      : $PULP,
+  $INNER     : $INNER,
+  $SECRET    : $SECRET,
+  $COPY      : $COPY,
+  // CopyObject : CopyObject
+}
+
+const FunctionNamer = NamedFunctionMaker(FuncGlobals)

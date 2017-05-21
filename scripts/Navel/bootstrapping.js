@@ -117,7 +117,7 @@ Method$root$inner._init = function _init(func_name, func_, mode__) {
   this.isPublic      = isPublic
   this.selector      = selector
   this.mode          = mode || STANDARD
-  this._handler      = BeSafeFunction(handler)
+  this._handler      = BeFrozenFunc(handler)
   if (mode.isLazy)   { handler = MakeLazyLoader(selector, handler) }
   this.handler       = handler
 
@@ -330,6 +330,10 @@ Type.addMethod(function _buildAncestry() {
 })
 
 
+addSetLoader
+_basicSet(selector, value)
+
+
 Type.addMethod(function setSupertypes(supertypes) {
   this.supertypes = supertypes
   this._setAsSubtypeFor(supertypes)
@@ -494,6 +498,7 @@ Thing.addMethod(function _setId(newId_) {
 // mutableCopy
 // asMutable
 // asMutableCopy
+
 
 
 

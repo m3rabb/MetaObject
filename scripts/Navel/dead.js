@@ -92,6 +92,31 @@ Type$inner.addMethod(function _inheritPropertiesFrom(_supertypes) {
 })
 
 
+
+// Unnecessary because a private property such as _initFrom_ cannot be set
+// from the outside!!!
+//
+// function Wrap_initFrom_(OriginalFunc) {
+//   if (OriginalFunc.length < 4) {
+//     return function $_initFrom_3(_source, visited, exceptSelector_) {
+//       const receiver =
+//         (this != null && this[SECRET] === $FLESH) ? this[RIND] : this
+//       const source = (_source != null && _source[SECRET] === $FLESH) ?
+//         _source[RIND] : _source
+//       return OriginalFunc.apply(receiver, source, visited, exceptSelector_)
+//     }
+//   }
+//   return function $_initFrom_4(_source, visited, exceptSelector_, asImmutable) {
+//     const receiver =
+//       (this != null && this[SECRET] === $FLESH) ? this[RIND] : this
+//     const source = (_source != null && _source[SECRET] === $FLESH) ?
+//       _source[RIND] : _source
+//     return OriginalFunc.apply(
+//       receiver, source, visited, exceptSelector_, asImmutable)
+//   }
+// }
+
+
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */

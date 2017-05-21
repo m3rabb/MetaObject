@@ -142,14 +142,14 @@ MutablePorosity.set = function set($inner, selector, value, $pulp) {
 
     case "function" : // LOOK: will catch Type things!!!
       // NOTE: Checking for value.constructor is inadequate to prevent func spoofing
-      value = (InterMap.get(value)) ? value : SafeFunc(value)
+      value = (InterMap.get(value)) ? value : WrapFunc(value)
 
       // if (selector === "_initFrom_") {
       //   value = ((tag = InterMap.get(value)) && tag === "_initFrom_") ?
       //     value : Wrap_initFrom_(value)
       // }
       // else {
-      //   value = (InterMap.get(value)) ? value : SafeFunc(value)
+      //   value = (InterMap.get(value)) ? value : WrapFunc(value)
       // }
 
       // break omitted
@@ -286,143 +286,143 @@ ImmutableInner_prototype.retargetedDelete = function retargetedDelete($inner, se
 
 
 
-//
-// function FactMethod () {}
-//
-// FactMethod.prototype = SpawnFrom(null)
-// const FactMethodPorosity = new FactMethod()
-//
-// MethodPorosity.apply = function apply(handler, receiver, args) {
-//   if (receiver[$SECRET] === $INNER) {
-//     $pulp = receiver
-//     result = handler.apply($pulp, args)
-//     // CHECK how this wprks with SUPER!!!
-//   }
-//   else {
-//     $inner = InterMap.get(receiver)
-//
-//     if ((barrier = $inner[$BARRIER])) { // indicates isImmutable
-//       if (barrier.inUse) { barrier = new ImmutableInner($inner) }
-//       barrier.inUse = true
-//       $pulp = barrier.target
-//       result = handler.apply($pulp, args)
-//
-//       if (result === $pulp) {
-//         result = porosity.target
-//         if (result !== $pulp) {
-//           barrier.target = barrier.originalTarget  // reset porosity
-//           result.beImmutable
-//         }
-//         barrier.inUse = false
-//         return result[$RIND]
-//       }
-//     }
-//     else {
-//       $pulp  = $inner[$PULP]
-//       result = handler.apply($pulp, args)
-//       if (result === $pulp) { return $inner[$RIND] }
-//     }
-//   }
-//
-//   if (typeof result !== "object" || result === null) { return result }
-//   if (result === receiver)                           { return result }
-//   if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-//   return ((result$inner = InterMap.get(result))) ?
-//     result$inner[$COPY](true).$ : CopyObject(result, true)
-// }
-//
-//
-// function FactGetter () {}
-//
-// FactGetter.prototype = SpawnFrom(null)
-// const FactGetterPorosity = new FactGetter()
-//
-// FactGetterPorosity.apply = function apply(handler, receiver, args_) {
-//   if (receiver[$SECRET] === $INNER) {
-//     $pulp = receiver
-//     result = handler.call($pulp)
-//     // CHECK how this wprks with SUPER!!!
-//   }
-//   else {
-//     $inner = InterMap.get(receiver) || InterMap.get(receiver[$RIND])
-//     // Second term handles receiver being $outer from get in TypeOuter
-//     // Getters on type aren't common so this is simpler than using the more
-//     // elaborate steps that are required in get in TypeInner
-//
-//     if ((barrier = $inner[$BARRIER])) { // indicates isImmutable
-//       if (barrier.inUse) { barrier = new ImmutableInner($inner) }
-//       barrier.inUse = true
-//       $pulp = barrier.target
-//       result = handler.call($pulp)
-//
-//       if (result === $pulp) {
-//         result = porosity.target
-//         if (result !== $pulp) {
-//           barrier.target = barrier.originalTarget  // reset porosity
-//           result.beImmutable
-//         }
-//         barrier.inUse = false
-//         return result[$RIND]
-//       }
-//     }
-//     else {
-//       $pulp  = $inner[$PULP]
-//       result = handler.apply($pulp, args)
-//       if (result === $pulp) { return $inner[$RIND] }
-//     }
-//   }
-//
-//   if (typeof result !== "object" || result === null) { return result }
-//   if (result === receiver)                           { return result }
-//   if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-//   return ((result$inner = InterMap.get(result))) ?
-//     result$inner[$COPY](true).$ : CopyObject(result, true)
-// }
-//
-//
-// // CHECK CODE BELOW!!!
-//
-//
-//
-// function RelaxedMethod () {}
-//
-// RelaxedMethod.prototype = SpawnFrom(null)
-// const RelaxedMethodPorosity = new RelaxedMethod()
-//
-// RelaxedMethodPorosity.apply = function apply(handler, receiver, args) {
-//   if (receiver[$SECRET] === $INNER) {
-//     $pulp = receiver
-//     return handler.apply($pulp, args)
-//     // CHECK how this works with SUPER!!!
-//   }
-//   else {
-//     $inner = InterMap.get(receiver)
-//     $pulp  = $inner[$PULP]
-//     result = handler.apply($pulp, args)
-//     if (result === $pulp) { return $inner[$RIND] }
-//   }
-// }
-//
-//
-// class MutableOuterGetter {
-//   apply (handler, receiver, args_) {
-//     // load getters raw (like private methods) into $root$inner!!!
-//     // if (receiver[$SECRET] === $INNER) {
-//     //   $pulp = receiver
-//     //   return handler.call($pulp)
-//     // }
-//
-//     $inner = InterMap.get(receiver) || InterMap.get(receiver[$RIND])
-//       // Second term handles receiver being $outer from get in TypeOuter
-//       // Getters on type aren't common so this is simpler than using the more
-//       // elaborate steps that are required in get in TypeInner
-//
-//     $pulp  = $inner[$PULP]
-//     result = handler.call($pulp)
-//     return (result === $pulp) ? $inner[$RIND] : result
-//     // CHECK how this wprks with SUPER!!!
-//   }
-// }
+
+function FactMethod () {}
+
+FactMethod.prototype = SpawnFrom(null)
+const FactMethodPorosity = new FactMethod()
+
+MethodPorosity.apply = function apply(handler, receiver, args) {
+  if (receiver[$SECRET] === $INNER) {
+    $pulp = receiver
+    result = handler.apply($pulp, args)
+    // CHECK how this wprks with SUPER!!!
+  }
+  else {
+    $inner = InterMap.get(receiver)
+
+    if ((barrier = $inner[$BARRIER])) { // indicates isImmutable
+      if (barrier.inUse) { barrier = new ImmutableInner($inner) }
+      barrier.inUse = true
+      $pulp = barrier.target
+      result = handler.apply($pulp, args)
+
+      if (result === $pulp) {
+        result = porosity.target
+        if (result !== $pulp) {
+          barrier.target = barrier.originalTarget  // reset porosity
+          result.beImmutable
+        }
+        barrier.inUse = false
+        return result[$RIND]
+      }
+    }
+    else {
+      $pulp  = $inner[$PULP]
+      result = handler.apply($pulp, args)
+      if (result === $pulp) { return $inner[$RIND] }
+    }
+  }
+
+  if (typeof result !== "object" || result === null) { return result }
+  if (result === receiver)                           { return result }
+  if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+  return ((result$inner = InterMap.get(result))) ?
+    result$inner[$COPY](true).$ : CopyObject(result, true)
+}
+
+
+function FactGetter () {}
+
+FactGetter.prototype = SpawnFrom(null)
+const FactGetterPorosity = new FactGetter()
+
+FactGetterPorosity.apply = function apply(handler, receiver, args_) {
+  if (receiver[$SECRET] === $INNER) {
+    $pulp = receiver
+    result = handler.call($pulp)
+    // CHECK how this wprks with SUPER!!!
+  }
+  else {
+    $inner = InterMap.get(receiver) || InterMap.get(receiver[$RIND])
+    // Second term handles receiver being $outer from get in TypeOuter
+    // Getters on type aren't common so this is simpler than using the more
+    // elaborate steps that are required in get in TypeInner
+
+    if ((barrier = $inner[$BARRIER])) { // indicates isImmutable
+      if (barrier.inUse) { barrier = new ImmutableInner($inner) }
+      barrier.inUse = true
+      $pulp = barrier.target
+      result = handler.call($pulp)
+
+      if (result === $pulp) {
+        result = porosity.target
+        if (result !== $pulp) {
+          barrier.target = barrier.originalTarget  // reset porosity
+          result.beImmutable
+        }
+        barrier.inUse = false
+        return result[$RIND]
+      }
+    }
+    else {
+      $pulp  = $inner[$PULP]
+      result = handler.apply($pulp, args)
+      if (result === $pulp) { return $inner[$RIND] }
+    }
+  }
+
+  if (typeof result !== "object" || result === null) { return result }
+  if (result === receiver)                           { return result }
+  if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+  return ((result$inner = InterMap.get(result))) ?
+    result$inner[$COPY](true).$ : CopyObject(result, true)
+}
+
+
+// CHECK CODE BELOW!!!
+
+
+
+function RelaxedMethod () {}
+
+RelaxedMethod.prototype = SpawnFrom(null)
+const RelaxedMethodPorosity = new RelaxedMethod()
+
+RelaxedMethodPorosity.apply = function apply(handler, receiver, args) {
+  if (receiver[$SECRET] === $INNER) {
+    $pulp = receiver
+    return handler.apply($pulp, args)
+    // CHECK how this works with SUPER!!!
+  }
+  else {
+    $inner = InterMap.get(receiver)
+    $pulp  = $inner[$PULP]
+    result = handler.apply($pulp, args)
+    if (result === $pulp) { return $inner[$RIND] }
+  }
+}
+
+
+class MutableOuterGetter {
+  apply (handler, receiver, args_) {
+    // load getters raw (like private methods) into $root$inner!!!
+    // if (receiver[$SECRET] === $INNER) {
+    //   $pulp = receiver
+    //   return handler.call($pulp)
+    // }
+
+    $inner = InterMap.get(receiver) || InterMap.get(receiver[$RIND])
+      // Second term handles receiver being $outer from get in TypeOuter
+      // Getters on type aren't common so this is simpler than using the more
+      // elaborate steps that are required in get in TypeInner
+
+    $pulp  = $inner[$PULP]
+    result = handler.call($pulp)
+    return (result === $pulp) ? $inner[$RIND] : result
+    // CHECK how this wprks with SUPER!!!
+  }
+}
 
 
 class SuperInnerMethod {
