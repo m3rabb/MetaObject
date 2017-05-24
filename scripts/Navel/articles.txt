@@ -100,3 +100,60 @@ property setter methods instead
 ==
 class doesn't protect again skylight. Gotta do it the old fashion way
 // Protect from prototype chain hacking!!! aka skylighting
+
+
+
+
+===
+
+Naming functions to work in debugger
+
+
+
+function MakeVacuousConstructor(name, freeze_) {
+  const funcBody = `
+    return function ${name}() {
+      const message = "This constructor is only used for debugging!"
+      return SignalError(${name}, message)
+    }
+  `
+  const func = Function(funcBody)()
+  return (freeze_ !== DONT_FREEZE) ?
+    BeFrozenFunc(func) :
+    DefineProperty(func, "name", InvisibleConfiguration)
+}
+
+function AsInnerFact(selector, Handler) {
+  const func = function $$$$$_$innerFact(...args) {
+    // this is $pulp
+    const result = Handler.apply(this, args) // <<----------
+
+    if (result === this)                               { return result }
+    if (typeof result !== "object" || result === null) { return result }
+    if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+    return ((result$inner = InterMap.get(result))) ?
+      result$inner[$COPY](true).$ : CopyObject(result, true)
+  }
+
+  const named = FunctionNamer.make({$$$$$: selector, Handler: Handler}, func)
+  return BeFrozenFunc(named)
+}
+
+function AsInnerFact(selector, Handler) {
+  const name = `${selector}_$innerXYZFact`
+  const func = {
+    [name] : function XYZYX(...args) {
+      // this is $pulp
+      const result = Handler.apply(this, args) // <<----------
+
+      if (result === this)                               { return result }
+      if (typeof result !== "object" || result === null) { return result }
+      if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+      return ((result$inner = InterMap.get(result))) ?
+        result$inner[$COPY](true).$ : CopyObject(result, true)
+    }
+  }[name]
+
+  // const named = FunctionNamer.make({$$$$$: selector, Handler: Handler}, func)
+  return BeFrozenFunc(func)
+}

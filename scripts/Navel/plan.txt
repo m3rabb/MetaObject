@@ -1,0 +1,17 @@
+Methods under test
+
+Wrapping        16  --
+Support         8
+testbase        7
+copying         23
+porosity        28
+bootstrapping   43  --
+TOTAL          125
+
+
+
+
+brain function (COPY) SafeFunc (func) Op= APPLESEED addPropertyLoader
+JavaScript function const functionName: function(arguments) {
+  // body...Xd    InterMap Intermission
+} (// IDEA: ) Open function script IDEA SafeFunc

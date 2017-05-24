@@ -44,6 +44,7 @@ const $SECRET            = Symbol("$secret")
 const $IMMEDIATES        = Symbol("$immediates")
 const $SUPERS            = Symbol("$supers")
 const $SUPER             = Symbol("$super")
+const $SET_LOADERS       = Symbol("set-loaders")
 
 
 // Sentinels
@@ -51,7 +52,8 @@ const CONSTRUCTOR        = Symbol("CONSTRUCTOR")
 const PROPERTY           = Symbol("PROPERTY")
 const METHOD             = Symbol("METHOD")
 const NO_SUPER           = Symbol("NO_SUPER")
-const IGNORE_PROTOTYPE   = Symbol("IGNORE_PROTOTYPE")
+const IMMEDIATE          = Symbol("IMMEDIATE")
+// const DONT_FREEZE        = Symbol("DONT_FREEZE")
 
 
 const ALWAYS_FALSE       = (() => false)
@@ -59,7 +61,6 @@ const ALWAYS_NULL        = (() => null)
 const ALWAYS_UNDEFINED   = (() => undefined)
 const ALWAYS_SELF        = function () { return this }
 
-const SAFE_FUNCTION      = {[IS_IMMUTABLE] : true}
 // const KNOWN_GETTER       = {[IS_IMMUTABLE] : true, [GETTER] : true}
 
 
@@ -77,18 +78,8 @@ const InvisibleConfiguration = {
 }
 
 
-const SymbolPropertyMap  = SpawnFrom(null)
-const InterMap           = new WeakMap()
-
-const FuncGlobals = {
-  InterMap   : InterMap,
-  $BARRIER   : $BARRIER,
-  $RIND      : $RIND,
-  $PULP      : $PULP,
-  $INNER     : $INNER,
-  $SECRET    : $SECRET,
-  $COPY      : $COPY,
-  // CopyObject : CopyObject
-}
-
-const FunctionNamer = NamedFunctionMaker(FuncGlobals)
+// const SymbolPropertyMap  = SpawnFrom(null)
+const SAFE_FUNCTION = {[IS_IMMUTABLE] : true}
+const InterMap      = new WeakMap()
+// Safe functions are stored in here so that the diguised Types function are
+// automatically recognized as safe functions too

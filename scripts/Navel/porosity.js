@@ -15,11 +15,18 @@ function Outer() {}
 const Outer_prototype = Outer.prototype = SpawnFrom(BasePorosity)
 const PrivacyPorosity = new Outer()
 
+PrivacyPorosity.get = function get($outer, selector, $rind) {
+  const value = $outer[selector]
+  return (value !== IMMEDIATE) ? value :
+    $outer[$IMMEDIATES][selector].outer.call(InterMap.get($rind)[$PULP])
+}
+
   // get ($outer, selector, $rind) {
   //   let index
   //   return ($outer.atIndex && ((index = +selector) === index)) ?
   //     $outer.atIndex(index) : $outer[selector]
   // }
+
 
   // Setting on things in not allowed because the setting semantics are broken.
   // For our model, the return value should always be the receiver, or a copy
@@ -67,7 +74,10 @@ function TypeOuter($pulp, $outer) {
 const TypeOuter_prototype = TypeOuter.prototype = SpawnFrom(Outer_prototype)
 
 TypeOuter_prototype.get = function get(disguisedFunc, selector, $rind) {
-  return this.$outer[selector]
+  const $outer = this.$outer
+  const value  = $outer[selector]
+  return (value !== IMMEDIATE) ? value :
+    $outer[$IMMEDIATES][selector].outer.call(this.$pulp)
 }
 
 TypeOuter_prototype.set = function set(disguisedFunc, selector, value, $rind) {
@@ -106,8 +116,20 @@ function MutableInner() {}
 const MutableInner_prototype = MutableInner.prototype = SpawnFrom(null)
 const MutablePorosity = new MutableInner()
 
+MutablePorosity.get = function get($inner, selector, $pulp) {
+  const value = $inner[selector]
+  return (value !== IMMEDIATE) ? value :
+    $inner[$IMMEDIATES][selector].inner.call($pulp)
+}
+
 
 MutablePorosity.set = function set($inner, selector, value, $pulp) {
+  const loader   = $inner[$SET_LOADERS][selector]
+  const newValue = (loader) ? loader.call($pulp, value) : value
+  return InSetProperty($inner, selector, newValue, $pulp)
+}
+
+function InSetProperty($inner, selector, value, $pulp) {
   const isPublic = (selector[0] !== "_")
 
   if (!(selector in $inner)) {
@@ -126,7 +148,7 @@ MutablePorosity.set = function set($inner, selector, value, $pulp) {
       else if (value === null || value[IS_IMMUTABLE] || value.id != null) {
         $inner[selector] = value
       }
-      else if (value === $inner[selector]) {/* NOP */}
+      else if (value === $inner[selector]) { return true }
 
       else if (value === $inner[$RIND]) {
         $inner[selector] = $pulp
@@ -195,10 +217,10 @@ const TypeInner_prototype = TypeInner.prototype = SpawnFrom(MutableInner_prototy
 
 TypeInner_prototype.get = function get(disguisedFunc, selector, $pulp) {
   // Double check this!!!
-  const $inner     = this.$inner
-  const immediates = $inner[$IMMEDIATES]
-  const handler    = immediates[selector]
-  return (handler) ? handler.call($pulp) : $inner[selector]
+  const $inner = this.$inner
+  const value  = $inner[selector]
+  return (value !== IMMEDIATE) ? value :
+    $inner[$IMMEDIATES][selector].inner.call($pulp)
 }
 
 TypeInner_prototype.set = function set(disguisedFunc, selector, value, $pulp) {
@@ -220,7 +242,7 @@ TypeInner_prototype.apply = function apply(func, receiver, args) {
   // return this.$pulp.newAsFact(...args)
 
   // This is the same code as in newAsFact(...args)
-  let instance = this.$inner[$PULP].new(...args)
+  let instance = this.$pulp.new(...args)
   if (instance.id == null) { instance.beImmutable }
   return instance
 }
@@ -232,197 +254,70 @@ TypeInner_prototype.apply = function apply(func, receiver, args) {
 
 
 function ImmutableInner($inner) {
-  this.inUse = false
-  this.target = this.originalTarget = new Proxy($inner, this)
+  $inner[$PULP] = new Proxy($inner, this)
+  this.inUse    = false
+  this.target   = $inner
 }
 
 const ImmutableInner_prototype = ImmutableInner.prototype = SpawnFrom(null)
 
+ImmutableInner_prototype.get = function get($inner, selector, $pulp) {
+  const value = $inner[selector]
+  return (value !== IMMEDIATE) ? value :
+    $inner[$IMMEDIATES][selector].inner.call($pulp)
+}
 
 ImmutableInner_prototype.set = function set($inner, selector, value, $pulp) {
   if ($inner[selector] !== value) {
     const copy = $pulp.mutableCopyExcept(selector) // Check returns rind|pulp
-    copy[selector] = value
-    this.target = copy // Must be $pulp!!!
 
-    this.set = this.retargetedSet
-    this.get = this.retargetedGet
+    copy[selector]      = value
+    this.target         = InterMap.get(copy)
+    this.set            = this.retargetedSet
+    this.get            = this.retargetedGet
     this.deleteProperty = this.retargetedDelete
   }
   return true
 }
 
 ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, selector, $pulp) {
+  let copy
   switch (selector) {
-    case "_IMMUTABILITY" : this.target = $inner.asMutableCopy; break
-    case "_ALL"          : this.target = $inner._newBlank()  ; break
+    case "_IMMUTABILITY" : copy = $inner.asMutableCopy; break
+    case "_ALL"          : copy = $inner._newBlank()  ; break
     default :
       if (!$inner._hasOwn(selector)) { return true }
-      this.target = $pulp.mutableCopyExcept(selector)
+      copy = $pulp.mutableCopyExcept(selector)
       break
   }
 
-  this.set = this.retargetedSet
-  this.get = this.retargetedGet
+  this.target         = InterMap.get(copy)
+  this.set            = this.retargetedSet
+  this.get            = this.retargetedGet
   this.deleteProperty = this.retargetedDelete
   return true
 }
 
-ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, selector, value, $pulp) {
-  this.target[selector] = value
-  return true
-}
-
 ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, selector, $pulp) {
+  const target$inner = this.target
+  const value        = target$inner[selector]
+  return (value !== IMMEDIATE) ? value :
+    target$inner[$IMMEDIATES][selector].inner.call(target$inner[$PULP])
+
   return this.target[selector]
 }
 
+ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, selector, value, $pulp) {
+  this.target[$PULP][selector] = value
+  return true
+}
+
 ImmutableInner_prototype.retargetedDelete = function retargetedDelete($inner, selector, $pulp) {
-  delete this.target[selector]
+  delete this.target[$PULP][selector]
   return true
 }
 
 
-
-
-
-//
-// function FactMethod () {}
-//
-// FactMethod.prototype = SpawnFrom(null)
-// const FactMethodPorosity = new FactMethod()
-//
-// MethodPorosity.apply = function apply(handler, receiver, args) {
-//   if (receiver[$SECRET] === $INNER) {
-//     $pulp = receiver
-//     result = handler.apply($pulp, args)
-//     // CHECK how this wprks with SUPER!!!
-//   }
-//   else {
-//     $inner = InterMap.get(receiver)
-//
-//     if ((barrier = $inner[$BARRIER])) { // indicates isImmutable
-//       if (barrier.inUse) { barrier = new ImmutableInner($inner) }
-//       barrier.inUse = true
-//       $pulp = barrier.target
-//       result = handler.apply($pulp, args)
-//
-//       if (result === $pulp) {
-//         result = porosity.target
-//         if (result !== $pulp) {
-//           barrier.target = barrier.originalTarget  // reset porosity
-//           result.beImmutable
-//         }
-//         barrier.inUse = false
-//         return result[$RIND]
-//       }
-//     }
-//     else {
-//       $pulp  = $inner[$PULP]
-//       result = handler.apply($pulp, args)
-//       if (result === $pulp) { return $inner[$RIND] }
-//     }
-//   }
-//
-//   if (typeof result !== "object" || result === null) { return result }
-//   if (result === receiver)                           { return result }
-//   if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-//   return ((result$inner = InterMap.get(result))) ?
-//     result$inner[$COPY](true).$ : CopyObject(result, true)
-// }
-//
-//
-// function FactGetter () {}
-//
-// FactGetter.prototype = SpawnFrom(null)
-// const FactGetterPorosity = new FactGetter()
-//
-// FactGetterPorosity.apply = function apply(handler, receiver, args_) {
-//   if (receiver[$SECRET] === $INNER) {
-//     $pulp = receiver
-//     result = handler.call($pulp)
-//     // CHECK how this wprks with SUPER!!!
-//   }
-//   else {
-//     $inner = InterMap.get(receiver) || InterMap.get(receiver[$RIND])
-//     // Second term handles receiver being $outer from get in TypeOuter
-//     // Getters on type aren't common so this is simpler than using the more
-//     // elaborate steps that are required in get in TypeInner
-//
-//     if ((barrier = $inner[$BARRIER])) { // indicates isImmutable
-//       if (barrier.inUse) { barrier = new ImmutableInner($inner) }
-//       barrier.inUse = true
-//       $pulp = barrier.target
-//       result = handler.call($pulp)
-//
-//       if (result === $pulp) {
-//         result = porosity.target
-//         if (result !== $pulp) {
-//           barrier.target = barrier.originalTarget  // reset porosity
-//           result.beImmutable
-//         }
-//         barrier.inUse = false
-//         return result[$RIND]
-//       }
-//     }
-//     else {
-//       $pulp  = $inner[$PULP]
-//       result = handler.apply($pulp, args)
-//       if (result === $pulp) { return $inner[$RIND] }
-//     }
-//   }
-//
-//   if (typeof result !== "object" || result === null) { return result }
-//   if (result === receiver)                           { return result }
-//   if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-//   return ((result$inner = InterMap.get(result))) ?
-//     result$inner[$COPY](true).$ : CopyObject(result, true)
-// }
-//
-//
-// // CHECK CODE BELOW!!!
-//
-//
-//
-// function RelaxedMethod () {}
-//
-// RelaxedMethod.prototype = SpawnFrom(null)
-// const RelaxedMethodPorosity = new RelaxedMethod()
-//
-// RelaxedMethodPorosity.apply = function apply(handler, receiver, args) {
-//   if (receiver[$SECRET] === $INNER) {
-//     $pulp = receiver
-//     return handler.apply($pulp, args)
-//     // CHECK how this works with SUPER!!!
-//   }
-//   else {
-//     $inner = InterMap.get(receiver)
-//     $pulp  = $inner[$PULP]
-//     result = handler.apply($pulp, args)
-//     if (result === $pulp) { return $inner[$RIND] }
-//   }
-// }
-//
-//
-// class MutableOuterGetter {
-//   apply (handler, receiver, args_) {
-//     // load getters raw (like private methods) into $root$inner!!!
-//     // if (receiver[$SECRET] === $INNER) {
-//     //   $pulp = receiver
-//     //   return handler.call($pulp)
-//     // }
-//
-//     $inner = InterMap.get(receiver) || InterMap.get(receiver[$RIND])
-//       // Second term handles receiver being $outer from get in TypeOuter
-//       // Getters on type aren't common so this is simpler than using the more
-//       // elaborate steps that are required in get in TypeInner
-//
-//     $pulp  = $inner[$PULP]
-//     result = handler.call($pulp)
-//     return (result === $pulp) ? $inner[$RIND] : result
-//     // CHECK how this wprks with SUPER!!!
-//   }
-// }
 
 
 class SuperInnerMethod {
@@ -437,29 +332,29 @@ const SuperMethodPorosity = new SuperInnerMethod()
 function SetSuperPropertyFor($inner, selector) {
   let ancestors = $inner.type.ancestry
   let next      = ancestors.length
+  let supers    = $inner[$SUPERS]
 
   if ($inner._hasOwn(selector)) { next++ }
 
-  while (--next) {
+  while (next--) {
     let type$inner = InterMap.get(ancestors[next])
-    let nextPropertiess = type$inner._properties
+    let nextProperties = type$inner._properties
 
     if (selector in nextProperties) {
-      let value = nextProperties[selector]
-      if (value && value)
-      if (value != null) { return value }
-      switch (value.mode) {
-        case STANDARD :
-          return ($inner[$SUPERS][selector] = value[$SUPER])
-        case GETTER :
-        case LAZY_INSTALLER :
-          return ($inner[$SUPERS][selector] = InterMap.get(value))
-        default :
-          return ($inner[$SUPERS][selector] = value)
+      const value = nextProperties[selector]
+
+      if (value && value.isMethod) {
+        if (value.mode.isImmediate) {
+          supers[$IMMEDIATES][selector] = value.super
+          return (supers[selector] = IMMEDIATE)
+        }
+        return (supers[selector] = value.super)
       }
+      return (supers[selector] = value)
     }
   }
-  return NO_SUPER
+
+  return (supers[selector] = NO_SUPER)
 }
 
 
@@ -470,11 +365,19 @@ const SuperPorosity = {
     const supers = $inner[$SUPERS]
     const value = (selector in supers) ?
       supers[selector] : SetSuperPropertyFor($inner, selector)
-    return (value === NO_SUPER) ?
-      ($inner._noSuchProperty ?
-        $inner[$PULP]._noSuchProperty(selector) : undefined) :
-      (value && value[$SECRET] === $INNER ?
-        value.handler.call($inner[$PULP]) : value)
+
+    switch (value) {
+      case NO_SUPER  :
+        return $inner._noSuchProperty ?
+          $inner[$PULP]._noSuchProperty(selector) : undefined
+      case IMMEDIATE :
+        return supers[$IMMEDIATES][selector].call($inner[$PULP])
+      default :
+        return value // if method, answer sf|sx|sl wrapper handler
+    }
+      //
+      // (value && value[$SECRET] === $INNER ?
+      //   value.handler.call($inner[$PULP]) : value)
   },
 
   set            : ALWAYS_FALSE,

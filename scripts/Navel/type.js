@@ -1,24 +1,27 @@
-
-Type.addMethod("new", function (/* arguments */) {
-  const $inner = new this._blankConstructor()
-  $inner[$FLESH]._init(arguments)
-  return $inner[$RIND]
+_Type.addGetter(function _nextIID() {
+  return ++this._iidCount
 })
 
-Type.addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])
-
-
-Type.addMethod(function methodAt(selector) {
-  // FINISH THIS
+_Type.addLazyProperty(function id() {
+  return this.oid
 })
 
 
-Type.addMethod(function addAlias(aliasName, name_method) {
-  const sourceMethod = name_method.isMethod ?
-    name_method : this.methodAt(name_method)
-  return this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
-})
+// _Type.addMethod(function methodAt(selector) {
+//   // FINISH THIS
+// })
+//
+// _Type.addMethod(function addAlias(aliasName, name_method) {
+//   const sourceMethod = name_method.isMethod ?
+//     name_method : this.methodAt(name_method)
+//   return this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
+// })
+//
+// _Type.addAlias("basicNew", "new")
+// _Type.addAlias("removeMethod", "removeProperty")
+//
 
-Type.addAlias("removeMethod", "removeProperty")
 
-Type.addAlias("basicNew", "new")
+// Type.addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])
+
+// Type.moveMethodTo("", target)
