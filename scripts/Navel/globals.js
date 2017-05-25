@@ -44,7 +44,7 @@ const $SECRET            = Symbol("$secret")
 const $IMMEDIATES        = Symbol("$immediates")
 const $SUPERS            = Symbol("$supers")
 const $SUPER             = Symbol("$super")
-const $SET_LOADERS       = Symbol("set-loaders")
+const $SET_LOADERS       = Symbol("$set_loaders")
 
 
 // Sentinels

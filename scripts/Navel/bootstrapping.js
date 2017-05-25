@@ -47,76 +47,11 @@ const   Base$root$inner = new Proxy(Base$root, DefaultInnerBehavior)
 
 
 const $BaseBlanker = {$root$outer: Base$root$outer, $root$inner: Base$root$inner}
-const   $InateBlanker   = NewBlankerFrom($BaseBlanker , MakeInnerBlanker)
-const     ThingBlanker  = NewBlankerFrom($InateBlanker, MakeInnerBlanker)
-const     MethodBlanker = NewBlankerFrom($InateBlanker, MakeInnerBlanker)
-const     TypeBlanker   = NewBlankerFrom($InateBlanker, MakeTypeInnerBlanker)
-
-const $Inate$root$inner = $InateBlanker.$root$inner
-const $Inate$root$pulp  = $InateBlanker.$root$pulp
-const Method$root$inner = MethodBlanker.$root$inner
-const Method$root$pulp  = MethodBlanker.$root$pulp
-const Type$root$inner   = TypeBlanker.$root$inner
-// // Just in case sanity failsafe to prevent infinite recursion from DefaultInnerBehavior
-// $InateBlanker.$root$inner[$PULP]  = $InateBlanker.$root$inner
-//
-
-const _$Inate  = new TypeBlanker(["$Inate"])[$PULP]
-const _Thing   = new TypeBlanker(["Thing"]) [$PULP]
-const _Method  = new TypeBlanker(["Method"])[$PULP]
-const _Type    = new TypeBlanker(["Type"])  [$PULP]
-
-const $Inate  = _$Inate[$RIND]
-const Thing   = _Thing [$RIND]
-const Method  = _Method[$RIND]
-const Type    = _Type  [$RIND]
+const   $InateBlanker = NewBlankerFrom($BaseBlanker , MakeInnerBlanker)
+const     TypeBlanker = NewBlankerFrom($InateBlanker, MakeTypeInnerBlanker)
 
 
-// Stubs for default properties
-$Inate$root$inner[$BARRIER]         = undefined
-$Inate$root$inner[$IID]             = undefined
-
-$Inate$root$inner._noSuchProperty   = undefined
-
-// This secret is only known by inner objects
-$Inate$root$inner[$SECRET]          = $INNER
-
-$Inate$root$pulp.id                 = undefined
-$Inate$root$pulp.splice             = undefined // Weird ref by debugger
-// Perhaps remove these later
-$Inate$root$pulp.beImmutable        = undefined
-$Inate$root$inner._postCreation     = undefined
-
-
-const $Inate_properties = _$Inate._properties
-
-$Inate_properties._noSuchProperty   = undefined
-$Inate_properties.id                = undefined
-$Inate_properties.splice            = undefined // Weird ref by debugger
-// Perhaps remove these later
-$Inate_properties.beImmutable       = undefined
-$Inate_properties._postCreation     = undefined
-
-
-Method$root$pulp.isMethod           = "333"
-
-Method$root$inner._init = function _init(func_name, func_, mode__) {
-  let [selector, handler, mode = STANDARD_METHOD] =
-    (typeof func_name === "function") ?
-      [func_name.name, func_name, func_] : [func_name, func_, mode__]
-  let isPublic = (selector[0] !== "_")
-
-  this.isPublic = isPublic
-  this.selector = selector
-  this.mode     = mode
-  this.handler  = BeFrozenFunc(handler)
-  // this.super --> is a lazy property
-  this.inner = mode.inner[isPublic](selector, handler)
-  if (isPublic) { this.outer = mode.outer(selector, handler) }
-  return this
-}
-
-
+const Type$root$inner = TypeBlanker.$root$inner
 
 Type$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
@@ -168,21 +103,85 @@ const _basicSet = function _basicSet(propertyName, value) {
 
 Type$root$inner._basicSet = _basicSet
 
-
 // Temporary bootstrapping #_init
-Type$root$inner._init = function _bootstrap(name, iid, blanker) {
-  this[$IID]    = iid
-  this._blanker = blanker
+Type$root$inner._init = function _bootstrap(iid, blanker_) {
   this.subtypes = new Set()
+  this[$IID]    = iid
+  if (blanker_) { this._blanker = blanker_ }
   // SetDisplayNames(blanker, name) // The following is not necessary but helpful for implementation debugging!!!
-  return this
+  return this[$PULP]
 }
 
 
-_$Inate._init("$Inate", 0, $InateBlanker)
-_Thing ._init("Thing" , 1, ThingBlanker )
-_Type  ._init("Type"  , 2, TypeBlanker  )
-_Method._init("Method", 3, MethodBlanker)
+const _$Inate  = new TypeBlanker(["$Inate"])._init(0, $InateBlanker)
+const _Thing   = new TypeBlanker(["Thing"] )._init(1)
+const _Type    = new TypeBlanker(["Type"]  )._init(2, TypeBlanker)
+const _Method  = new TypeBlanker(["Method"])._init(3)
+
+const $Inate  = _$Inate[$RIND]
+const Thing   = _Thing [$RIND]
+const Method  = _Method[$RIND]
+const Type    = _Type  [$RIND]
+
+
+// // Just in case sanity failsafe to prevent infinite recursion from DefaultInnerBehavior
+// $InateBlanker.$root$inner[$PULP]  = $InateBlanker.$root$inner
+//
+
+
+const $Inate$root$inner = $InateBlanker.$root$inner
+const $Inate$root$pulp  = $InateBlanker.$root$pulp
+
+
+// Stubs for default properties
+$Inate$root$inner[$BARRIER]         = undefined
+$Inate$root$inner[$IID]             = undefined
+
+$Inate$root$inner._noSuchProperty   = undefined
+
+// This secret is only known by inner objects
+$Inate$root$inner[$SECRET]          = $INNER
+
+$Inate$root$pulp.id                 = undefined
+$Inate$root$pulp.splice             = undefined // Weird ref by debugger
+// Perhaps remove these later
+$Inate$root$pulp.beImmutable        = undefined
+$Inate$root$inner._postCreation     = undefined
+
+
+const $Inate_properties = _$Inate._properties
+
+$Inate_properties._noSuchProperty   = undefined
+$Inate_properties.id                = undefined
+$Inate_properties.splice            = undefined // Weird ref by debugger
+// Perhaps remove these later
+$Inate_properties.beImmutable       = undefined
+$Inate_properties._postCreation     = undefined
+
+
+
+const MethodBlanker     = _Method._blanker
+const Method$root$inner = MethodBlanker.$root$inner
+const Method$root$pulp  = MethodBlanker.$root$pulp
+
+Method$root$pulp.isMethod           = true
+
+Method$root$inner._init = function _init(func_name, func_, mode__) {
+  let [selector, handler, mode = STANDARD_METHOD] =
+    (typeof func_name === "function") ?
+      [func_name.name, func_name, func_] : [func_name, func_, mode__]
+  let isPublic = (selector[0] !== "_")
+
+  this.isPublic = isPublic
+  this.selector = selector
+  this.mode     = mode
+  this.handler  = BeFrozenFunc(handler)
+  // this.super --> is a lazy property
+  this.inner = mode.inner[isPublic](selector, handler)
+  if (isPublic) { this.outer = mode.outer(selector, handler) }
+  return this
+}
+
 
 
 const AddMethod = function addMethod(method_namedFunc__name, func__, mode___) {
@@ -422,17 +421,14 @@ _Type.addMethod(function _init(spec, context_) {
   this._iidCount  = 0
   this.subtypes   = new Set()
   this.context    = context_ ? context_[$RIND] : null
-
-  this.addSharedProperty("type", this[$RIND])
-
   this.name       = name
   this.supertypes = supertypes
 
+  this.addSharedProperty("type", this[$RIND])
   this.addMethod(newBlanker)
   this.addAllMethods(methods)
   return this
 })
-
 
 
 
@@ -452,19 +448,10 @@ _$Inate.addLazyProperty(function _super() {
 })
 
 _Thing._init({name: "Thing" , supertypes: []})
-
 _Method._init({name: "Method"})
 
-Thing.addMethod(_basicSet)
-
+_Thing.addMethod(_basicSet)
 _Type.setSupertypes([Thing])
-
-
-
-
-
-
-
 
 
 

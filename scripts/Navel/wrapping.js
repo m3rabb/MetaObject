@@ -230,6 +230,7 @@ function AsOuterSpecial(selector, Handler) {
 }
 
 function AsOuterLazyLoader(selector, Handler) {
+  // FIGURE A WAY TO MAKE THIS WORK WITH selector as a Symbol AS WELL!!!
   const func = function $$$$$_$outerLazy() {
     let result, result$inner, $pulp
     let $inner = InterMap.get(this)
@@ -259,9 +260,9 @@ function AsOuterLazyLoader(selector, Handler) {
     }
 
     $pulp = $inner[$PULP]
-    DefineProperty(this, $$$$$, InvisibleConfiguration)
-    $pulp[$$$$$] = Handler.call($pulp) // <<----------
-    return $inner[$$$$$]
+    DefineProperty($inner, "$$$$$", InvisibleConfiguration)
+    $pulp.$$$$$ = Handler.call($pulp) // <<----------
+    return $inner.$$$$$
   }
 
   const named = FunctionNamer.make({$$$$$: selector, Handler: Handler}, func)
