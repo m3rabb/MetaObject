@@ -18,7 +18,7 @@ const PrivacyPorosity = new Outer()
 PrivacyPorosity.get = function get($outer, selector, $rind) {
   const value = $outer[selector]
   return (value !== IMMEDIATE) ? value :
-    $outer[$IMMEDIATES][selector].outer.call(InterMap.get($rind)[$PULP])
+    $outer[$IMMEDIATES][selector].inner.call(InterMap.get($rind)[$PULP])
 }
 
   // get ($outer, selector, $rind) {
@@ -77,7 +77,7 @@ TypeOuter_prototype.get = function get(disguisedFunc, selector, $rind) {
   const $outer = this.$outer
   const value  = $outer[selector]
   return (value !== IMMEDIATE) ? value :
-    $outer[$IMMEDIATES][selector].outer.call(this.$pulp)
+    $outer[$IMMEDIATES][selector].inner.call(this.$pulp)
 }
 
 TypeOuter_prototype.set = function set(disguisedFunc, selector, value, $rind) {

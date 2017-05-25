@@ -157,3 +157,32 @@ function AsInnerFact(selector, Handler) {
   // const named = FunctionNamer.make({$$$$$: selector, Handler: Handler}, func)
   return BeFrozenFunc(func)
 }
+
+
+
+
+
+// function MakeVacuousConstructor(name) {
+//   const funcBody = `
+//     return function ${name}() {
+//       const message = "This constructor is only used for naming!"
+//       return SignalError(${name}, message)
+//     }
+//   `
+//   const func = Function(funcBody)()
+//   Frost(func.prototype)
+//   return DefineProperty(func, "name", InvisibleConfiguration)
+// }
+
+
+function MakeVacuousConstructor(name) {
+  const func = {
+    [name] : function () {
+      const message = "This constructor is only used for naming!"
+      return SignalError(name, message)
+    }
+  }[name]
+
+  Frost(func.prototype)
+  return DefineProperty(func, "name", InvisibleConfiguration)
+}

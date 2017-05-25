@@ -116,13 +116,19 @@ function MakeNamelessVacuousFunction() {
   return function () {}
 }
 
-function MakeVacuousConstructor(Name, freeze_) {
-  return {
-    [Name] : function () {
-      return SignalError(Name, "This constructor is only used for naming!")
+
+function MakeVacuousConstructor(name) {
+  const funcBody = `
+    return function ${name}() {
+      const message = "This constructor is only used for naming!"
+      return SignalError(${name}, message)
     }
-  }[Name]
+  `
+  const func = Function(funcBody)()
+  Frost(func.prototype)
+  return DefineProperty(func, "name", InvisibleConfiguration)
 }
+
 
 
 // function SetDisplayNames(blanker, outerName, innerName = ("_" + outerName)) {
@@ -137,7 +143,8 @@ function NewBlankerFrom(superBlanker, blankerMaker) {
   const $root$outer = SpawnFrom(superBlanker.$root$outer)
   const PairedOuter = MakeNamelessVacuousFunction()
   const Blanker     = blankerMaker(PairedOuter)
-  const supers       = SpawnFrom(null)
+  const supers      = SpawnFrom(null)
+  const immediates  = SpawnFrom(null)
 
   $root$inner[$OUTER]   = $root$outer
   PairedOuter.prototype = $root$outer
@@ -149,8 +156,9 @@ function NewBlankerFrom(superBlanker, blankerMaker) {
   supers[$IMMEDIATES]       = SpawnFrom(null)
   supers[$SUPERS]           = supers
   $root$inner[$SUPERS]      = supers
-  $root$inner[$IMMEDIATES]  = SpawnFrom(null)
   $root$inner[$SET_LOADERS] = SpawnFrom(null)
+  $root$inner[$IMMEDIATES]  = immediates
+  $root$outer[$IMMEDIATES]  = immediates
 
   InterMap.set(Blanker, SAFE_FUNCTION)
   return Frost(Blanker)
@@ -162,8 +170,6 @@ function MakeTypeInnerBlanker(PairedOuter) {
     const typeName = (typeof name_spec === "object") ?
       name_spec.name : name_spec
     const func = MakeVacuousConstructor(typeName)
-    Frost(func.prototype)
-    DefineProperty(func, "name", InvisibleConfiguration)
 
     const mutablePorosity = new TypeInner(this)
     const $pulp           = new Proxy(func, mutablePorosity)

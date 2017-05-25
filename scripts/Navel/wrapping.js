@@ -270,7 +270,7 @@ function AsOuterLazyLoader(selector, Handler) {
 
 
 function AsInnerFact(selector, Handler) {
-  const name = `${selector}_$innerXYZFact`
+  const name = `${selector}_$innerFact`
   const func = {
     [name] : function (...args) {
       // this is $pulp
@@ -300,13 +300,14 @@ function AsInnerState(selector, Handler) {
 }
 
 function AsInnerLazyLoader(selector, Handler) {
+  // FIGURE A WAY TO MAKE THIS WORK WITH selector as a Symbol AS WELL!!!
   const func = function $$$$$_$innerLazy() {
     // this is $pulp
     const $inner = this[$INNER]
 
-    DefineProperty($inner, $$$$$, InvisibleConfiguration)
-    this[$$$$$] = Handler.call(this) // <<----------
-    return $inner[$$$$$]
+    DefineProperty($inner, "$$$$$", InvisibleConfiguration)
+    this.$$$$$ = Handler.call(this) // <<----------
+    return $inner.$$$$$
   }
 
   const named = FunctionNamer.make({$$$$$: selector, Handler: Handler}, func)

@@ -12,19 +12,19 @@
 // asMutable
 // asMutableCopy
 
-_Thing.addMethod(_basicSet)
+// Thing.addMethod(_basicSet)
 
 Thing.addMethod("_hasOwn", HasOwnProperty)
 
 
-_Thing.addGetter(function iid() {
+Thing.addGetter(function iid() {
   let iid = this[$IID]
   if (iid !== undefined) { return iid }
   // This will set the $iid, even of an immutable thing
-  return (this[$INNER][$IID] = InterMap.get(this.type)._nextIID)
+  return (this[$INNER][$IID] = InterMap.get(this.type)[$PULP]._nextIID)
 })
 
-_Thing.addGetter(function oid() {
+Thing.addGetter(function oid() {
   const type = this.type
   const context = type.context
   const prefix = context ? context.id + "@" : ""
@@ -33,12 +33,12 @@ _Thing.addGetter(function oid() {
 })
 
 
-_Thing.addSetLoader("id", function _setId(newId_) {
+Thing.addSetLoader("id", function _setId(newId_) {
   const existingId = this.id
   let   newId
 
   if (newId_ === undefined) {
-    if (existingId !== undefined) ? { return existingId }
+    if (existingId !== undefined) { return existingId }
     newId = this.oid
   }
   else { newId = newId_ }
@@ -50,9 +50,9 @@ _Thing.addSetLoader("id", function _setId(newId_) {
   return newId
 })
 
-_Thing.addSetLoader("name", "_setName")
+Thing.addSetLoader("name", "_setName")
 
-_Thing.addMethod(function _init(spec_) {
+Thing.addMethod(function _init(spec_) {
   if (spec_) {
     var id   = spec_.id
     var name = spec_.name
@@ -63,26 +63,26 @@ _Thing.addMethod(function _init(spec_) {
 })
 
 
-_Thing.addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
-  const $inner   = this[$INNER]
-  const method   = AsMethod(method_namedFunc__name, func__, mode___)
-  const selector = method.selector
-  const methods  = $inner[OWN_METHODS]|| ($inner[OWN_METHODS] = SpawnFrom(null))
-  const supers   = $inner[$SUPERS]    || ($inner[$SUPERS]     = SpawnFrom(null))
-  SetMethod($inner, method)
-  methods[selector] = method
-  delete supers[selector]
-  // delete getters
-  return this
-})
-
-_Thing.addMethod(function addOwnGetter(...namedFunc_name__handler) {
-  return this.addOwnMethod(...namedFunc_name__handler, GETTER)
-})
-
-_Thing.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
-  return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
-})
+// _Thing.addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
+//   const $inner   = this[$INNER]
+//   const method   = AsMethod(method_namedFunc__name, func__, mode___)
+//   const selector = method.selector
+//   const methods  = $inner[OWN_METHODS]|| ($inner[OWN_METHODS] = SpawnFrom(null))
+//   const supers   = $inner[$SUPERS]    || ($inner[$SUPERS]     = SpawnFrom(null))
+//   SetMethod($inner, method)
+//   methods[selector] = method
+//   delete supers[selector]
+//   // delete getters
+//   return this
+// })
+//
+// _Thing.addMethod(function addOwnGetter(...namedFunc_name__handler) {
+//   return this.addOwnMethod(...namedFunc_name__handler, GETTER)
+// })
+//
+// _Thing.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
+//   return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
+// })
 
 // _Thing.addSMethod(function addOMethod(method_func__name, func_) {
 //   const type = method_func__name.type

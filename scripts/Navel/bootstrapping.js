@@ -48,6 +48,7 @@ const   Base$root$inner = new Proxy(Base$root, DefaultInnerBehavior)
 
 const $BaseBlanker = {$root$outer: Base$root$outer, $root$inner: Base$root$inner}
 const   $InateBlanker   = NewBlankerFrom($BaseBlanker , MakeInnerBlanker)
+const     ThingBlanker  = NewBlankerFrom($InateBlanker, MakeInnerBlanker)
 const     MethodBlanker = NewBlankerFrom($InateBlanker, MakeInnerBlanker)
 const     TypeBlanker   = NewBlankerFrom($InateBlanker, MakeTypeInnerBlanker)
 
@@ -61,12 +62,12 @@ const Type$root$inner   = TypeBlanker.$root$inner
 //
 
 const _$Inate  = new TypeBlanker(["$Inate"])[$PULP]
-// const _Thing   = new TypeBlanker(["Thing"]) [$PULP]
+const _Thing   = new TypeBlanker(["Thing"]) [$PULP]
 const _Method  = new TypeBlanker(["Method"])[$PULP]
 const _Type    = new TypeBlanker(["Type"])  [$PULP]
 
 const $Inate  = _$Inate[$RIND]
-// const Thing   = _Thing [$RIND]
+const Thing   = _Thing [$RIND]
 const Method  = _Method[$RIND]
 const Type    = _Type  [$RIND]
 
@@ -169,7 +170,8 @@ Type$root$inner._basicSet = _basicSet
 
 
 // Temporary bootstrapping #_init
-Type$root$inner._init = function _bootstrap(name, blanker) {
+Type$root$inner._init = function _bootstrap(name, iid, blanker) {
+  this[$IID]    = iid
   this._blanker = blanker
   this.subtypes = new Set()
   // SetDisplayNames(blanker, name) // The following is not necessary but helpful for implementation debugging!!!
@@ -177,9 +179,10 @@ Type$root$inner._init = function _bootstrap(name, blanker) {
 }
 
 
-_$Inate._init("$Inate", $InateBlanker)[$RIND]
-_Method._init("Method", MethodBlanker)[$RIND]
-_Type  ._init("Type"  , TypeBlanker  )[$RIND]
+_$Inate._init("$Inate", 0, $InateBlanker)
+_Thing ._init("Thing" , 1, ThingBlanker )
+_Type  ._init("Type"  , 2, TypeBlanker  )
+_Method._init("Method", 3, MethodBlanker)
 
 
 const AddMethod = function addMethod(method_namedFunc__name, func__, mode___) {
@@ -234,11 +237,9 @@ _Type.addMethod(function _deleteSharedProperty(selector) {
 })
 
 _Type.addMethod(function _propagateIntoSubtypes(selector) {
-  let subtypes = this.subtypes
-  for (let index = 0, count = subtypes.length; index < count; index++) {
-    InterMap.get(subtypes[index])[$PULP]._inheritProperty(selector)
-  }
-  return this
+  this.subtypes.forEach(subtype => {
+    InterMap.get(subtype)[$PULP]._inheritProperty(selector)
+  })
 })
 
 _Type.addMethod(function _inheritProperty(selector) {
@@ -372,8 +373,9 @@ _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
   const innerName = innerName_ || ("_" + outerName)
   const blanker   = this._blanker
 
-  blanker.$root$outer.constructor.name = outerName
-  blanker.$root$inner.constructor.name = innerName
+  blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
+  blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
+  this._properties.constructor    = CONSTRUCTOR
   return this
 })
 
@@ -390,6 +392,7 @@ _Type.addSetLoader("name", function setName(newName) {
     this.addSharedProperty(newMembershipSelector, true)
     this.membershipSelector = newMembershipSelector
     this._setDisplayNames(newName)
+    this._disguisedFunc.name = newName
   }
   return newName
 })
@@ -411,10 +414,10 @@ _Type.addMethod(function _init(spec, context_) {
   const blanker    = this._blanker
   const newBlanker = Make__newBlank(blanker)
   // $root$inner[$COPY]    = Make_$copy(Blanker)
-
-  blanker.$root$outer.constructor = this._disguisedFunc
-  blanker.$root$inner.constructor = MakeVacuousConstructor()
-  this._properties.constructor    = CONSTRUCTOR
+  //
+  // blanker.$root$outer.constructor = this._disguisedFunc
+  // blanker.$root$inner.constructor = MakeVacuousConstructor()
+  // this._properties.constructor    = CONSTRUCTOR
 
   this._iidCount  = 0
   this.subtypes   = new Set()
@@ -437,7 +440,6 @@ _Type._init({name: "Type", supertypes: []})
 
 Type$root$inner._basicSet = _basicSet
 
-_$Inate[$IID] = "0"
 _$Inate._init({name: "$Inate", supertypes: []})
 _$Inate._setDisplayNames("$Outer", "$Inner") // Helps with debugging!!!
 
@@ -449,7 +451,7 @@ _$Inate.addLazyProperty(function _super() {
   return new Proxy(this[$INNER], SuperPorosity)
 })
 
-const Thing = Type({name: "Thing" , supertypes: []})
+_Thing._init({name: "Thing" , supertypes: []})
 
 _Method._init({name: "Method"})
 
