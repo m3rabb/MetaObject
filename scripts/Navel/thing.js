@@ -14,26 +14,54 @@
 
 // Thing.addMethod(_basicSet)
 
-Thing.addMethod("_hasOwn", HasOwnProperty)
+// Thing.addMethod("_hasOwn", HasOwnProperty)
 
 
-Thing.addGetter(function iid() {
-  let iid = this[$IID]
-  if (iid !== undefined) { return iid }
-  // This will set the $iid, even of an immutable thing
-  return (this[$INNER][$IID] = InterMap.get(this.type)[$PULP]._nextIID)
-})
 
-Thing.addGetter(function oid() {
+_Thing.addMethod(function has(propertyName) {
+  return (propertyName in this[$OUTER])
+}, BASIC_METHOD)
+
+_Thing.addMethod(function _has(propertyName) {
+  return (propertyName in this[$INNER])
+}, BASIC_METHOD)
+
+_Thing.addMethod(function hasOwn(propertyName) {
+  if (propertyName[0] === "_") { return undefined }
+  const names = this[KNOWN_PROPERTIES] || ResetKnownProperties(this)
+  return (names[propertyName] !== undefined)
+}, BASIC_METHOD)
+
+_Thing.addMethod(function _hasOwn(propertyName) {
+  const names = this[KNOWN_PROPERTIES] || ResetKnownProperties(this)
+  return (names[propertyName] !== undefined)
+}, BASIC_METHOD)
+
+
+
+
+
+_Thing.addMethod(function iid() {
+  DefineProperty(this[$INNER], "iid", InvisibleConfiguration)
+  return (this.iid = InterMap.get(this.type)[$PULP]._nextIID)
+}, BASIC_IMMEDIATE)
+
+_Thing.addImmediate(function oid() {
   const type = this.type
   const context = type.context
   const prefix = context ? context.id + "@" : ""
-  return `${prefix}${type.name}#${this.iid}`
+  return `${this.iid}.${prefix}${type.name}`
   // `${type.name}<${NewUniqueId()}>`
 })
 
+_Thing.addLazyProperty(function uid() {
+  return this._hasOwn("guid") ? this.guid : `<${NewUniqueId()}>`
+})
 
-Thing.addSetLoader("id", function _setId(newId_) {
+
+
+
+_Thing.addSetLoader("id", function _setId(newId_) {
   const existingId = this.id
   let   newId
 
@@ -50,9 +78,22 @@ Thing.addSetLoader("id", function _setId(newId_) {
   return newId
 })
 
-Thing.addSetLoader("name", "_setName")
 
-Thing.addMethod(function _init(spec_) {
+
+_Thing.addMethod(function isPermeable() {
+  return (this[$RIND][$SECRET] === $INNER)
+}, BASIC_IMMEDIATE)
+
+const isPermeable_method = InterMap.get(_Thing._properties.isPermeable)
+
+isPermeable_method.outer = BeFrozenFunc(function isPermeable_$outerCustom() {
+  return (this[$SECRET] === $INNER)
+}, isPermeable_method)
+
+
+_Thing.addSetter("name", "_setName")
+
+_Thing.addMethod(function _init(spec_) {
   if (spec_) {
     var id   = spec_.id
     var name = spec_.name
@@ -61,6 +102,8 @@ Thing.addMethod(function _init(spec_) {
   name && (this.name = name)
   return this
 })
+
+
 
 
 // _Thing.addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
@@ -76,8 +119,8 @@ Thing.addMethod(function _init(spec_) {
 //   return this
 // })
 //
-// _Thing.addMethod(function addOwnGetter(...namedFunc_name__handler) {
-//   return this.addOwnMethod(...namedFunc_name__handler, GETTER)
+// _Thing.addMethod(function addOwnImmediate(...namedFunc_name__handler) {
+//   return this.addOwnMethod(...namedFunc_name__handler, IMMEDIATE)
 // })
 //
 // _Thing.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {

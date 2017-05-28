@@ -30,41 +30,12 @@
 // rind --> core
 
 
+function AsMethod(method_func__name, func__, mode___) {
+  return (method_func__name.isMethod) ?
+    method_func__name : Method(method_func__name, func__, mode___)
+}
 
 
-// function AddGetter(target, name, isVisible, getter) {
-//   const configuration = {
-//     configurable: true,
-//     enumerable  : isVisible,
-//     get         : getter
-//   }
-//   return DefineProperty(target, name, configuration)
-// }
-
-
-// function SetMethod($inner, method) {
-//   const $outer   = $inner[$OUTER]
-//   const mode     = method.mode
-//   const selector = method.selector
-//   const handler  = method.handler
-//   const isPublic = method.isPublic
-//
-//   if (mode === STANDARD) {
-//     if (isPublic) { $outer[selector] = method }
-//     $inner[selector] = handler
-//   }
-//   else {
-//     const getHandler =
-//       (mode === LAZY_INSTALLER) ? MakeLazyLoader(selector, handler) : handler
-//     // const getters = $inner[GETTERS] || ($inner[GETTERS] = SpawnFrom(null))
-//     $inner[$GETTERS][selector] = handler // necessary???
-//     AddGetter($inner, selector, true, getHandler)
-//     if (isPublic) {
-//       const publicGetHandler = PublicHandlerFor(selector, GETTER)
-//       AddGetter($outer, selector, true, publicGetHandler)
-//     }
-//   }
-// }
 
 function SetMethod($inner, method) {
   const $outer       = $inner[$OUTER]
@@ -87,29 +58,15 @@ function SetMethod($inner, method) {
 }
 
 
-
-function AsMethod(method_func__name, func__, mode___) {
-  return (method_func__name.isMethod) ?
-    method_func__name : Method(method_func__name, func__, mode___)
+// Consider caching these!!!
+function MakeAssignmentError(Property, Setter) {
+  var $assignmentError = function () {
+    SignalError(this[$RIND], `Assignment to ${Property} is not allowed, use ${Setter} instead!`)
+  }
+  return
 }
 
-// function MakeLazyLoader(Selector, Handler) {
-//   const $loader = function () {
-//     if (this[IS_IMMUTABLE]) { return Handler.call(this) }
-//     DefineProperty(this, Selector, InvisibleConfiguration)
-//     return (this[Selector] = Handler.call(this))
-//   }
-//   $loader.isLoader = true // is necessary???
-//   // $loader[$SECRET] = LOADER
-//   return BeFrozenFunc($loader) // $loader
-// }
 
-
-function BeFrozenFunc(func) {
-  InterMap.set(func, SAFE_FUNCTION)
-  Frost(func.prototype)
-  return Frost(func)
-}
 
 
 function MakeNamelessVacuousFunction() {
@@ -131,13 +88,6 @@ function MakeVacuousConstructor(name) {
 
 
 
-// function SetDisplayNames(blanker, outerName, innerName = ("_" + outerName)) {
-//   blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
-//   blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
-//   return blanker
-// }
-
-
 function NewBlankerFrom(superBlanker, blankerMaker) {
   const $root$inner = SpawnFrom(superBlanker.$root$inner)
   const $root$outer = SpawnFrom(superBlanker.$root$outer)
@@ -150,7 +100,7 @@ function NewBlankerFrom(superBlanker, blankerMaker) {
   PairedOuter.prototype = $root$outer
   Blanker.prototype     = $root$inner
   Blanker.$root$inner   = $root$inner
-  Blanker.$root$pulp    = new Proxy($root$inner, MutablePorosity)
+  Blanker.$root$pulp    = new Proxy($root$inner, Mutability)
   Blanker.$root$outer   = $root$outer
 
   supers[$IMMEDIATES]       = SpawnFrom(null)
@@ -160,52 +110,51 @@ function NewBlankerFrom(superBlanker, blankerMaker) {
   $root$inner[$IMMEDIATES]  = immediates
   $root$outer[$IMMEDIATES]  = immediates
 
-  InterMap.set(Blanker, SAFE_FUNCTION)
+  InterMap.set(Blanker, BLANKER_FUNC)
   return Frost(Blanker)
 }
 
 // NOT TESTED
+function PreInitType(func, $inner, $outer, permeability) {
+  const mutability = new TypeInner($inner)
+  const $pulp      = new Proxy(func, mutability)
+  mutability.$pulp = $pulp
+  const porosity   = new TypeOuter($pulp, $outer, permeability)
+  const $rind      = new Proxy(func, porosity)
+  // const $rind           = new Proxy(NewAsFact, privacyPorosity)
+
+  $inner[$INNER] = $inner
+  $inner[$PULP]  = $pulp
+  // this[$PULP]  = new Proxy(NewAsFact, mutability)
+  $inner[$OUTER] = $outer
+  $inner[$RIND]  = $rind
+  $outer[$RIND]  = $rind
+  InterMap.set($rind, $inner)
+}
+
+
 function MakeTypeInnerBlanker(PairedOuter) {
-  return function ([name_spec]) {  // $Type // NewTypeBlanker
+  return function (permeability, [name_spec]) {  // $Type // NewTypeBlanker
     const typeName = (typeof name_spec === "object") ?
       name_spec.name : name_spec
-    const func = MakeVacuousConstructor(typeName)
+    const func = MakeVacuousConstructor(typeName || "UNNAMED")
 
-    const mutablePorosity = new TypeInner(this)
-    const $pulp           = new Proxy(func, mutablePorosity)
-    mutablePorosity.$pulp = $pulp
-    const $outer          = new PairedOuter()
-    const privacyPorosity = new TypeOuter($pulp, $outer)
-    const $rind           = new Proxy(func, privacyPorosity)
-    // const $rind           = new Proxy(NewAsFact, privacyPorosity)
-    const blanker         = NewBlankerFrom($InateBlanker, MakeInnerBlanker)
-    const properties      = SpawnFrom(null)
-
+    PreInitType(func, this, new PairedOuter(), permeability)
     this._disguisedFunc = func
-    this._blanker       = blanker
-    this._properties    = properties
-
-    this[$INNER]  = this
-    this[$PULP]   = $pulp
-    // this[$PULP]   = new Proxy(NewAsFact, mutablePorosity)
-    this[$OUTER]  = $outer
-    this[$RIND]   = $rind
-    $outer[$RIND] = $rind
-    InterMap.set($rind, this)
-
-    // $pulp.name = typeName   // Unnecessary here but helps with implementation debugging!!!
-
+    this._blanker       = NewBlankerFrom($InateBlanker, MakeInnerBlanker)
+    this._properties    = SpawnFrom(null)
   }
 }
 
 
+
 function MakeInnerBlanker(PairedOuter) {
-  return function () {
+  return function (permeability) {
     const $outer = new PairedOuter()
-    const $rind  = new Proxy($outer, PrivacyPorosity)
+    const $rind  = new Proxy($outer, permeability)
 
     this[$INNER]  = this
-    this[$PULP]   = new Proxy(this, MutablePorosity)
+    this[$PULP]   = new Proxy(this, Mutability)
     this[$OUTER]  = $outer
     this[$RIND]   = $rind
     $outer[$RIND] = $rind
@@ -223,6 +172,26 @@ function AsMembershipSelector(name) {
   return `is${name[0].toUpperCase()}${name.slice(1)}`
 }
 
+
+function AsFunctionName(selector) {
+  if (typeof selector !== "symbol") { return selector }
+  let name = selector.toString()
+  return name.slice(7, name.length - 1)
+}
+
+
+function ResetKnownProperties($pulp) {
+  let properties = SpawnFrom(null)
+  let selectors  = VisibleProperties($pulp[$INNER])
+  let next       = selectors.length
+
+  while (next--) {
+    selector             = selectors[next]
+    properties[selector] = selector
+  }
+  return ($pulp[KNOWN_PROPERTIES] = properties)
+}
+
 // const NewAsFact = function newAsFact(...args) {
 //   let $inner = new this._blanker()
 //   let $pulp  = $inner[$PULP]
@@ -236,24 +205,21 @@ function AsMembershipSelector(name) {
 // }
 
 
-// // To ease debugging, consider dynamic naming new${TypeName}AsFact !!!
-// const NewAsFact = function newAsFact(...args) {
-//   let instance = this.new(...args)
-//   if (instance.id == null) { instance.beImmutable }
-//   return instance
-// }
-// // BeFrozenFunc(NewAsFact) // Causes proxy error on read of name!!!
+function BeFrozenFunc(func, marker) {
+  if (InterMap.get(func)) { return func }
+
+  func[IS_IMMUTABLE] = true
+  InterMap.set(func, marker)
+  Frost(func.prototype)
+  return Frost(func)
+}
 
 
-
-
-
-
-
-
-
-
-
+// Simpleton function
+const ALWAYS_FALSE     = BeFrozenFunc(() => false                , SAFE_FUNC)
+const ALWAYS_NULL      = BeFrozenFunc(() => null                 , SAFE_FUNC)
+const ALWAYS_UNDEFINED = BeFrozenFunc(() => undefined            , SAFE_FUNC)
+const ALWAYS_SELF      = BeFrozenFunc(function () { return this }, SAFE_FUNC)
 
 
 

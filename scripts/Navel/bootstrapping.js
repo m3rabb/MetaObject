@@ -9,41 +9,11 @@
 
 
 
-// UNTESTED
-const DefaultOuterBehavior = {
-  __proto__ : null,
-
-  get (base$root, selector, $outer) {
-    const $inner = InterMap.get($outer[$RIND])
-    if (selector[0] === "_") {
-      if ($inner._externalPrivateAccess) {
-        return $inner[$PULP]._externalPrivateAccess(selector)
-      }
-    }
-    return $inner._noSuchProperty ?
-      $inner[$PULP]._noSuchProperty(selector) : undefined
-  },
-  // getPrototypeOf (base$root) { return base$root }
-}
-
-const DefaultInnerBehavior = {
-  __proto__ : null,
-
-  get (base$root, selector, $inner) {
-    return $inner._noSuchProperty ?
-      $inner[$PULP]._noSuchProperty(selector) : undefined
-  },
-
-  // getPrototypeOf (base$root) { return base$root }
-}
-
-
-
 
 const Base$root         = SpawnFrom(null)
 // const   Stash$root      = SpawnFrom(Base$root)
-const   Base$root$outer = new Proxy(Base$root, DefaultOuterBehavior)
-const   Base$root$inner = new Proxy(Base$root, DefaultInnerBehavior)
+const   Base$root$outer = new Proxy(Base$root, BaseOuterBehavior)
+const   Base$root$inner = new Proxy(Base$root, BaseInnerBehavior)
 
 
 const $BaseBlanker = {$root$outer: Base$root$outer, $root$inner: Base$root$inner}
@@ -51,7 +21,121 @@ const   $InateBlanker = NewBlankerFrom($BaseBlanker , MakeInnerBlanker)
 const     TypeBlanker = NewBlankerFrom($InateBlanker, MakeTypeInnerBlanker)
 
 
+
 const Type$root$inner = TypeBlanker.$root$inner
+
+// Temporary bootstrapping #_init
+Type$root$inner._init = function _bootstrap(iid, blanker_) {
+  DefineProperty(this, "iid", InvisibleConfiguration)
+  this._permeability = Impermeable
+  this.iid           = iid
+  this.subtypes      = new Set()
+  if (blanker_) { this._blanker = blanker_ }
+  // SetDisplayNames(blanker, name) // The following is not necessary but helpful for implementation debugging!!!
+  return this[$PULP]
+}
+
+
+
+const _$Inate = new TypeBlanker(Impermeable, ["$Inate"])._init(0, $InateBlanker)
+const _Thing  = new TypeBlanker(Impermeable, ["Thing"] )._init(1)
+const _Type   = new TypeBlanker(Impermeable, ["Type"]  )._init(2, TypeBlanker)
+const _Method = new TypeBlanker(Impermeable, ["Method"])._init(3)
+
+const $Inate = _$Inate[$RIND]
+const Thing  = _Thing [$RIND]
+const Method = _Method[$RIND]
+const Type   = _Type  [$RIND]
+
+
+
+const $Inate$root$inner = $InateBlanker.$root$inner
+const $Inate$root$pulp  = $InateBlanker.$root$pulp
+
+
+// Stubs for default properties
+$Inate$root$inner[$BARRIER]       = undefined
+$Inate$root$inner._noSuchProperty = undefined
+
+// This secret is only known by inner objects
+$Inate$root$inner[$SECRET]        = $INNER
+
+$Inate$root$pulp.id               = undefined
+// $Inate$root$pulp.splice             = undefined // Weird ref by debugger
+// Perhaps remove these later
+$Inate$root$pulp.beImmutable      = undefined
+$Inate$root$inner._postCreation   = undefined
+
+
+const $Inate_properties = _$Inate._properties
+
+$Inate_properties[$BARRIER]       = PROPERTY
+$Inate_properties._noSuchProperty = PROPERTY
+$Inate_properties.id              = PROPERTY
+// $Inate_properties.splice            = PROPERTY // Weird ref by debugger
+// Perhaps remove these later
+$Inate_properties.beImmutable     = PROPERTY
+$Inate_properties._postCreation   = PROPERTY
+
+
+
+
+const MethodBlanker     = _Method._blanker
+const Method$root$inner = MethodBlanker.$root$inner
+const Method$root$pulp  = MethodBlanker.$root$pulp
+
+Method$root$pulp.isMethod = true
+
+Method$root$inner._init = function _init(func_name, func_, mode__) {
+  let [selector, handler, mode = STANDARD_METHOD] =
+    (typeof func_name === "function") ?
+      [func_name.name, func_name, func_] : [func_name, func_, mode__]
+  let isPublic = (selector[0] !== "_")
+  let $inner   = this[$INNER]
+
+  this.isPublic = isPublic
+  this.selector = selector
+  this.mode     = mode
+  // this.super --> is a lazy property
+
+  let existing = InterMap.get(handler)
+  if (existing && existing.mode !== mode) {
+    SignalError(this[$rind], "Can't reuse same handler function for different types of methods!")
+  }
+
+  if (mode === SET_LOADER) {
+    this.handler = BeFrozenFunc(handler, SET_LOADER_FUNC)
+  }
+  else {
+    this.outer   = BeFrozenFunc(mode.outer(selector, handler, isPublic), $inner)
+    this.inner   = BeFrozenFunc(mode.inner(selector, handler, isPublic), $inner)
+    this.handler = BeFrozenFunc(handler, $inner)
+  }
+
+  return this
+}
+
+
+
+Type$root$inner.new = {
+  new : function (...args) {
+    let instance$inner = new this._blanker(this._permeability, args)
+    let instance$pulp  = instance$inner[$PULP]
+    instance$pulp._init(...args)
+    if (instance$inner._postCreation) {
+      const result = instance$pulp._postCreation()[$RIND]
+      if (result !== undefined && result !== instance$pulp) { return result }
+    }
+    return instance$inner[$RIND]
+  }
+}.new
+
+Type$root$inner.newAsFact = function newAsFact(...args) {
+  // Note: same as implementation in TypeOuter and TypeInner
+  let instance = this.new(...args)
+  if (instance.id == null) { instance.beImmutable }
+  return instance
+}
 
 Type$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
@@ -75,113 +159,6 @@ Type$root$inner._setSharedProperty = function _setSharedProperty(selector, value
   return this._propagateIntoSubtypes(selector)
 }
 
-Type$root$inner.new = {
-  new : function (...args) {
-    let instance$inner = new this._blanker(args)
-    let instance$pulp  = instance$inner[$PULP]
-    instance$pulp._init(...args)
-    if (instance$inner._postCreation) {
-      const result = instance$pulp._postCreation()[$RIND]
-      if (result !== undefined && result !== instance$pulp) { return result }
-    }
-    return instance$inner[$RIND]
-  }
-}.new
-
-Type$root$inner.newAsFact = function newAsFact(...args) {
-  // Note: same as implementation in TypeOuter and TypeInner
-  let instance = this.new(...args)
-  if (instance.id == null) { instance.beImmutable }
-  return instance
-}
-
-
-const _basicSet = function _basicSet(propertyName, value) {
-  InSetProperty(this[$INNER], propertyName, value, this)
-  return this
-}
-
-Type$root$inner._basicSet = _basicSet
-
-// Temporary bootstrapping #_init
-Type$root$inner._init = function _bootstrap(iid, blanker_) {
-  this.subtypes = new Set()
-  this[$IID]    = iid
-  if (blanker_) { this._blanker = blanker_ }
-  // SetDisplayNames(blanker, name) // The following is not necessary but helpful for implementation debugging!!!
-  return this[$PULP]
-}
-
-
-const _$Inate  = new TypeBlanker(["$Inate"])._init(0, $InateBlanker)
-const _Thing   = new TypeBlanker(["Thing"] )._init(1)
-const _Type    = new TypeBlanker(["Type"]  )._init(2, TypeBlanker)
-const _Method  = new TypeBlanker(["Method"])._init(3)
-
-const $Inate  = _$Inate[$RIND]
-const Thing   = _Thing [$RIND]
-const Method  = _Method[$RIND]
-const Type    = _Type  [$RIND]
-
-
-// // Just in case sanity failsafe to prevent infinite recursion from DefaultInnerBehavior
-// $InateBlanker.$root$inner[$PULP]  = $InateBlanker.$root$inner
-//
-
-
-const $Inate$root$inner = $InateBlanker.$root$inner
-const $Inate$root$pulp  = $InateBlanker.$root$pulp
-
-
-// Stubs for default properties
-$Inate$root$inner[$BARRIER]         = undefined
-$Inate$root$inner[$IID]             = undefined
-
-$Inate$root$inner._noSuchProperty   = undefined
-
-// This secret is only known by inner objects
-$Inate$root$inner[$SECRET]          = $INNER
-
-$Inate$root$pulp.id                 = undefined
-$Inate$root$pulp.splice             = undefined // Weird ref by debugger
-// Perhaps remove these later
-$Inate$root$pulp.beImmutable        = undefined
-$Inate$root$inner._postCreation     = undefined
-
-
-const $Inate_properties = _$Inate._properties
-
-$Inate_properties._noSuchProperty   = undefined
-$Inate_properties.id                = undefined
-$Inate_properties.splice            = undefined // Weird ref by debugger
-// Perhaps remove these later
-$Inate_properties.beImmutable       = undefined
-$Inate_properties._postCreation     = undefined
-
-
-
-const MethodBlanker     = _Method._blanker
-const Method$root$inner = MethodBlanker.$root$inner
-const Method$root$pulp  = MethodBlanker.$root$pulp
-
-Method$root$pulp.isMethod           = true
-
-Method$root$inner._init = function _init(func_name, func_, mode__) {
-  let [selector, handler, mode = STANDARD_METHOD] =
-    (typeof func_name === "function") ?
-      [func_name.name, func_name, func_] : [func_name, func_, mode__]
-  let isPublic = (selector[0] !== "_")
-
-  this.isPublic = isPublic
-  this.selector = selector
-  this.mode     = mode
-  this.handler  = BeFrozenFunc(handler)
-  // this.super --> is a lazy property
-  this.inner = mode.inner[isPublic](selector, handler)
-  if (isPublic) { this.outer = mode.outer(selector, handler) }
-  return this
-}
-
 
 
 const AddMethod = function addMethod(method_namedFunc__name, func__, mode___) {
@@ -195,12 +172,12 @@ AddMethod.call(_Type, AddMethod)
 
 _Method.addMethod(Method$root$inner._init)
 _Type.addMethod(Type$root$inner._setSharedProperty)
-_Type.addMethod("new", Type$root$inner.new, SPECIAL_METHOD)
-_Type.addMethod(Type$root$inner.newAsFact, SPECIAL_METHOD)
+_Type.addMethod("new", Type$root$inner.new, BASIC_METHOD)
+_Type.addMethod(Type$root$inner.newAsFact, BASIC_METHOD)
 
 
-_Type.addMethod(function addGetter(...namedFunc_name__handler) {
-  return this.addMethod(...namedFunc_name__handler, STANDARD_GETTER)
+_Type.addMethod(function addImmediate(...namedFunc_name__handler) {
+  return this.addMethod(...namedFunc_name__handler, STANDARD_IMMEDIATE)
 })
 
 _Type.addMethod(function addLazyProperty(...namedFunc_name__handler) {
@@ -239,6 +216,7 @@ _Type.addMethod(function _propagateIntoSubtypes(selector) {
   this.subtypes.forEach(subtype => {
     InterMap.get(subtype)[$PULP]._inheritProperty(selector)
   })
+  return this
 })
 
 _Type.addMethod(function _inheritProperty(selector) {
@@ -342,20 +320,57 @@ _Type.addMethod(function _buildAncestry() {
 })
 
 
+// addSetter("name", "setName")
+// addSetter("name", function setName() {})
 
+_Type.addMethod(function addSetter(propertyName, setter) {
+  if (typeof setter === "string") {
+    return this.addMethod(setter, AsBasicSetter(propertyName, setter))
+  }
+  let setterName = setter.name
+  if (!setterName) {
+    SignalError(this[$RIND], "Setter function must be named!")
+  }
+  return this.addMethod(setterName, AsLoaderSetter(propertyName, setter))
+})
+
+
+// addSetLoader("name", function () {})
+// addSetLoader("name", function setName() {})
 
 _Type.addMethod(function addSetLoader(propertyName, loader) {
-  if (typeof loader === "string") {
-    let setterName = loader
-    return this.addMethod(setterName, AsBasicSetter(propertyName, setterName))
-  }
-
-  let setterName = loader.name
-  if (setterName) {
-    this.addMethod(setterName, AsLoaderSetter(propertyName, setterName, loader))
+  if (loader.name) {
+    this.addMethod(loader.name, AsLoaderSetter(propertyName, loader))
   }
   return this.addMethod(propertyName, loader, SET_LOADER)
 })
+
+
+// addRequiredSetter("name", "setName")
+// addRequiredSetter("name", function setName() {})
+
+_Type.addMethod(function addRequiredSetter(propertyName, setter) {
+  if (typeof setter === "string") {
+    var setterName = name
+    this.addMethod(setter, AsBasicSetter(propertyName, setter))
+  }
+  else {
+    setterName = setter.name
+    if (!setterName) {
+      SignalError(this[$RIND], "Setter function must be named!")
+    }
+    this.addMethod(setterName, AsLoaderSetter(propertyName, setter))
+  }
+  var handler = MakeAssignmentError(propertyName, setterName)
+  return this.addMethod(propertyName, handler, SET_LOADER)
+})
+
+
+const _basicSet = function _basicSet(propertyName, value) {
+  return InSetProperty(this[$INNER], propertyName, value, this)
+}
+
+Type$root$inner._basicSet = _basicSet
 
 
 
@@ -374,7 +389,7 @@ _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
 
   blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
   blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
-  this._properties.constructor    = CONSTRUCTOR
+  this._properties.constructor    = PROPERTY
   return this
 })
 
@@ -404,6 +419,7 @@ _Type.addMethod(function _make$copy(blanker) {
   // blanker.$root$inner[$COPY] =   Make$copy(blanker)
 })
 
+_Type.addSharedProperty("_permeability", Impermeable)
 
 _Type.addMethod(function _init(spec, context_) {
   const name       = spec && spec.name
@@ -418,18 +434,17 @@ _Type.addMethod(function _init(spec, context_) {
   // blanker.$root$inner.constructor = MakeVacuousConstructor()
   // this._properties.constructor    = CONSTRUCTOR
 
-  this._iidCount  = 0
-  this.subtypes   = new Set()
-  this.context    = context_ ? context_[$RIND] : null
-  this.name       = name
-  this.supertypes = supertypes
+  this._iidCount     = 0
+  this.subtypes      = new Set()
+  this.context       = context_ ? context_[$RIND] : null
+  this.name          = name
+  this.supertypes    = supertypes
 
   this.addSharedProperty("type", this[$RIND])
   this.addMethod(newBlanker)
   this.addAllMethods(methods)
   return this
 })
-
 
 
 _Type._init({name: "Type", supertypes: []})
@@ -439,13 +454,23 @@ Type$root$inner._basicSet = _basicSet
 _$Inate._init({name: "$Inate", supertypes: []})
 _$Inate._setDisplayNames("$Outer", "$Inner") // Helps with debugging!!!
 
-_$Inate.addLazyProperty(function $() {
-  return this[$RIND]
-})
 
-_$Inate.addLazyProperty(function _super() {
-  return new Proxy(this[$INNER], SuperPorosity)
-})
+_$Inate.addMethod(function $() {
+  const $inner = this[$INNER]
+
+  DefineProperty($inner, "$", InvisibleConfiguration)
+  return ($inner[$OUTER].$ = $inner.$ = $inner[$RIND])
+}, BASIC_IMMEDIATE)
+
+
+_$Inate.addMethod(function _super() {
+  const $inner = this[$INNER]
+  const $super = new Proxy($inner, SuperPorosity)
+
+  DefineProperty($inner, "_super", InvisibleConfiguration)
+  return ($inner._super = $super)
+}, BASIC_IMMEDIATE)
+
 
 _Thing._init({name: "Thing" , supertypes: []})
 _Method._init({name: "Method"})

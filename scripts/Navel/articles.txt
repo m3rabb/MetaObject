@@ -186,3 +186,22 @@ function MakeVacuousConstructor(name) {
   Frost(func.prototype)
   return DefineProperty(func, "name", InvisibleConfiguration)
 }
+
+==
+This one doesn't work as expected
+
+function AsInnerFact(selector, Handler) {
+  const name = `${AsFunctionName(selector)}_$innerFact`
+  const $innerFact = {}
+  $innerFact[selector] = function (...args) {
+    // this is $pulp
+    const result = Handler.apply(this, args) // <<----------
+
+    if (result === this)                               { return result }
+    if (typeof result !== "object" || result === null) { return result }
+    if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+    return ((result$inner = InterMap.get(result))) ?
+      result$inner[$COPY](true).$ : CopyObject(result, true)
+  }
+  return BeFrozenFunc($innerFact[selector])
+}

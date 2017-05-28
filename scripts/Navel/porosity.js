@@ -1,6 +1,38 @@
-// UNTESTED
 
-const BasePorosity = {
+
+
+// UNTESTED
+const BaseOuterBehavior = {
+  __proto__ : null,
+
+  get (base$root, selector, $outer) {
+    const $inner = InterMap.get($outer[$RIND])
+    if (selector[0] === "_") {
+      if ($inner._externalPrivateAccess) {
+        return $inner[$PULP]._externalPrivateAccess(selector)
+      }
+    }
+    return $inner._noSuchProperty ?
+      $inner[$PULP]._noSuchProperty(selector) : undefined
+  },
+  // getPrototypeOf (base$root) { return base$root }
+}
+
+const BaseInnerBehavior = {
+  __proto__ : null,
+
+  get (base$root, selector, $inner) {
+    return $inner._noSuchProperty ?
+      $inner[$PULP]._noSuchProperty(selector) : undefined
+  },
+
+  // getPrototypeOf (base$root) { return base$root }
+}
+
+
+
+// UNTESTED
+const DefaultPermeability = {
   __proto__      : null        ,
   getPrototypeOf : ALWAYS_NULL ,
   setPrototypeOf : ALWAYS_FALSE,
@@ -10,36 +42,52 @@ const BasePorosity = {
   // preventExtensions ???
 }
 
-function Outer() {}
 
-const Outer_prototype = Outer.prototype = SpawnFrom(BasePorosity)
-const PrivacyPorosity = new Outer()
 
-PrivacyPorosity.get = function get($outer, selector, $rind) {
+
+function Outer(id) {
+  this.id = id
+}
+
+const Outer_prototype = Outer.prototype = SpawnFrom(DefaultPermeability)
+
+
+// Setting on things in not allowed because the setting semantics are broken.
+// For our model, the return value should always be the receiver, or a copy
+// of the receiver, with the property changed.
+
+// Further, note that the return value of a set always returns the value that
+// was tried to be set to, regardless of whether it was successful or not.
+
+Outer_prototype.set = function set($outer, selector, value, $rind) {
+  SignalError($rind, "Assignment is not allowed to the outside of an object, use a setter instead!")
+  return false
+  // return InterMap.get($rind)._externalWrite(selector, value) || false
+}
+
+
+// getOwnPropertyDescriptor ($outer, selector) {
+//   switch (selector[0]) {
+//     case "_"       : return $outer._externalPrivateRead(selector) || undefined
+//     // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
+//     case undefined : return undefined
+//   }
+//   return PropertyDescriptor($outer, selector)
+// },
+
+// ownKeys ($outer) { },
+
+
+
+const Impermeable = new Outer("Impermeable")
+
+Impermeable.get = function get($outer, selector, $rind) {
   const value = $outer[selector]
   return (value !== IMMEDIATE) ? value :
     $outer[$IMMEDIATES][selector].outer.call($rind)
 }
 
-  // get ($outer, selector, $rind) {
-  //   let index
-  //   return ($outer.atIndex && ((index = +selector) === index)) ?
-  //     $outer.atIndex(index) : $outer[selector]
-  // }
-
-
-  // Setting on things in not allowed because the setting semantics are broken.
-  // For our model, the return value should always be the receiver, or a copy
-  // of the receiver, with the property changed.
-
-  // Further, note that the return value of a set always returns the value that
-  // was tried to be set to, regardless of whether it was successful or not.
-PrivacyPorosity.set = function set($outer, selector, value, $rind) {
-  return false
-  // return InterMap.get($rind)._externalWrite(selector, value) || false
-}
-
-PrivacyPorosity.has = function has($outer, selector) {
+Impermeable.has = function has($outer, selector) {
   // const firstChar = (typeof selector === "symbol") ?
   //   selector.toString()[7] : selector[0]
   switch (selector[0]) {
@@ -50,52 +98,51 @@ PrivacyPorosity.has = function has($outer, selector) {
   return (selector in $outer)
 }
 
-  // getOwnPropertyDescriptor ($outer, selector) {
-  //   switch (selector[0]) {
-  //     case "_"       : return $outer._externalPrivateRead(selector) || undefined
-  //     // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
-  //     case undefined : return undefined
-  //   }
-  //   return PropertyDescriptor($outer, selector)
-  // },
 
-  // ownKeys ($outer) { },
+const Permeable = new Outer("Permeable")
 
+Permeable.get = function get($outer, selector, $rind) {
+  const method = $outer[$IMMEDIATES][selector]
+  if (method) { return method.outer.call($rind) }
 
+  if (selector in $outer) { return $outer[selector] }
 
+  const $inner = InterMap.get($rind)
 
+  if (selector in $inner) {
+    const value = $inner[selector]
+    if (typeof value !== "function") {
+      return (value === $inner[$PULP]) ? $rind : value
+    }
 
+    const marker = InterMap.get(value)
+    return marker.isMethod ? marker.outer : value
+  }
 
-function TypeOuter($pulp, $outer) {
-  this.$pulp  = $pulp
-  this.$outer = $outer
+  return $outer[selector]
 }
 
-const TypeOuter_prototype = TypeOuter.prototype = SpawnFrom(Outer_prototype)
+Permeable.has = function has($outer, selector) {
+  return (selector in $inner)
+}
+
+
+
+function TypeOuter($pulp, $outer, permeability) {
+  this.$pulp        = $pulp
+  this.$outer       = $outer
+  this.permeability = permeability
+}
+
+const TypeOuter_prototype = SpawnFrom(Outer_prototype)
+TypeOuter.prototype = TypeOuter_prototype
 
 TypeOuter_prototype.get = function get(disguisedFunc, selector, $rind) {
-  const $outer = this.$outer
-  const value  = $outer[selector]
-  return (value !== IMMEDIATE) ? value :
-    $outer[$IMMEDIATES][selector].outer.call($rind)
-}
-
-TypeOuter_prototype.set = function set(disguisedFunc, selector, value, $rind) {
-  return false
-  // return InterMap.get($rind)._externalWrite(selector, value) || false
+  return this.permeability.get(this.$outer, selector, $rind)
 }
 
 TypeOuter_prototype.has = function has(disguisedFunc, selector) {
-  const $outer = this.$outer
-  // const firstChar = (typeof selector === "symbol") ?
-  //   selector.toString()[7] : selector[0]
-  switch (selector[0]) {
-    case "_"       : return $outer._externalPrivateRead ?
-      $outer._externalPrivateRead(selector) : false
-    // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
-    case undefined : return false
-  }
-  return (selector in $outer)
+  return this.permeability.has(this.$outer, selector)
 }
 
 TypeOuter_prototype.apply = function apply(func, receiver, args) {
@@ -110,23 +157,26 @@ TypeOuter_prototype.apply = function apply(func, receiver, args) {
 
 
 
+
+
 // UNTESTED
 function MutableInner() {}
 
 const MutableInner_prototype = MutableInner.prototype = SpawnFrom(null)
-const MutablePorosity = new MutableInner()
+const Mutability = new MutableInner()
 
-MutablePorosity.get = function get($inner, selector, $pulp) {
+Mutability.get = function get($inner, selector, $pulp) {
   const value = $inner[selector]
   return (value !== IMMEDIATE) ? value :
     $inner[$IMMEDIATES][selector].inner.call($pulp)
 }
 
 
-MutablePorosity.set = function set($inner, selector, value, $pulp) {
+Mutability.set = function set($inner, selector, value, $pulp) {
   const loader   = $inner[$SET_LOADERS][selector]
   const newValue = (loader) ? loader.call($pulp, value) : value
-  return InSetProperty($inner, selector, newValue, $pulp)
+  InSetProperty($inner, selector, newValue, $pulp)
+  return true
 }
 
 function InSetProperty($inner, selector, value, $pulp) {
@@ -148,7 +198,7 @@ function InSetProperty($inner, selector, value, $pulp) {
       else if (value === null || value[IS_IMMUTABLE] || value.id != null) {
         $inner[selector] = value
       }
-      else if (value === $inner[selector]) { return true }
+      else if (value === $inner[selector]) { return $pulp }
 
       else if (value === $inner[$RIND]) {
         $inner[selector] = $pulp
@@ -160,18 +210,18 @@ function InSetProperty($inner, selector, value, $pulp) {
         $inner[selector] = value // (value = CopyObject(value, true))
       }
       $inner[$OUTER][selector] = value
-      return true
+      return $pulp
 
     case "function" : // LOOK: will catch Type things!!!
       // NOTE: Checking for value.constructor is inadequate to prevent func spoofing
-      value = (InterMap.get(value)) ? value : SafeFunc(value)
+      value = (InterMap.get(value)) ? value : AsTameFunc(value)
 
       // if (selector === "_initFrom_") {
       //   value = ((tag = InterMap.get(value)) && tag === "_initFrom_") ?
       //     value : Wrap_initFrom_(value)
       // }
       // else {
-      //   value = (InterMap.get(value)) ? value : SafeFunc(value)
+      //   value = (InterMap.get(value)) ? value : TameFunc(value)
       // }
 
       // break omitted
@@ -181,10 +231,10 @@ function InSetProperty($inner, selector, value, $pulp) {
   }
 
   $inner[selector] = value
-  return true
+  return $pulp
 }
 
-MutablePorosity.deleteProperty = function deleteProperty($inner, selector, $pulp) {
+Mutability.deleteProperty = function deleteProperty($inner, selector, $pulp) {
   // const selector = SymbolPropertyMap[symbol]
   //
   // if (selector === undefined) {
@@ -224,8 +274,8 @@ TypeInner_prototype.get = function get(disguisedFunc, selector, $pulp) {
 }
 
 TypeInner_prototype.set = function set(disguisedFunc, selector, value, $pulp) {
-  return MutablePorosity.set(this.$inner, selector, value, $pulp)
-  // return MutablePorosity.set(this.$inner, selector, value, $pulp)
+  return Mutability.set(this.$inner, selector, value, $pulp)
+  // return Mutability.set(this.$inner, selector, value, $pulp)
 }
 
 TypeInner_prototype.has = function has(disguisedFunc, selector, $pulp) {
@@ -233,8 +283,8 @@ TypeInner_prototype.has = function has(disguisedFunc, selector, $pulp) {
 }
 
 TypeInner_prototype.deleteProperty = function deleteProperty(disguisedFunc, selector, $pulp) {
-  return MutablePorosity.deleteProperty(this.$inner, selector, $pulp)
-  // return MutablePorosity.deleteProperty(this.$inner, selector, $pulp)
+  return Mutability.deleteProperty(this.$inner, selector, $pulp)
+  // return Mutability.deleteProperty(this.$inner, selector, $pulp)
 }
 
 TypeInner_prototype.apply = function apply(func, receiver, args) {
@@ -248,7 +298,7 @@ TypeInner_prototype.apply = function apply(func, receiver, args) {
 }
 
 
-// TypeInner.prototype = SpawnFrom(BasePorosity)
+// TypeInner.prototype = SpawnFrom(DefaultPermeability)
 
 
 
