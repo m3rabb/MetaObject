@@ -49,7 +49,7 @@ const $SET_LOADERS       = Symbol("$set_loaders")
 
 
 // Sentinels
-const PROPERTY           = Symbol("PROPERTY")
+const CONSTRUCTOR        = Symbol("CONSTRUCTOR")
 const NO_SUPER           = Symbol("NO_SUPER")
 const IMMEDIATE          = Symbol("IMMEDIATE")
 
@@ -79,6 +79,7 @@ const BLANKER_FUNC    = Frost({id: "BLANKER_FUNC"   , [IS_IMMUTABLE] : true})
 const TAMED_FUNC      = Frost({id: "TAMED_FUNC"     , [IS_IMMUTABLE] : true})
 const SET_LOADER_FUNC = Frost({id: "SET_LOADER_FUNC", [IS_IMMUTABLE] : true})
 
+const EMPTY_OBJECT    = Frost(SpawnFrom(null))
 
 const InterMap      = new WeakMap()
 // Safe functions are stored in here so that the diguised Types function are

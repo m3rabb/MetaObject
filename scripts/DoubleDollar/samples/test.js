@@ -19,118 +19,7 @@ Thing.addSGetter(function _captureOverwrite() {
 })
 
 
-function WrapFunc(OriginalFunc) {
-  return $wrappedOutsideFunc(...args) {
-    const receiver = (this != null && this[SECRET] === INNER) ? this.$ : this
-    return OriginalFunc.apply(receiver, args)
-  }
-}
 
-// LOOK: consider making public methods on immutables always
-// answer immutables!!!
-function AsPublicMethod(originalFunc) {
-  const methodName = originalFunc.name
-  const funcBody   = `
-    return function (
-      InterMap, SetImmutable, ImmutableInnerPermeability,
-      INNER, IS_IMMUTABLE, INNER_PERMEABILITY
-    ) {
-      return function ${methodName}(OriginalMethod) {
-        let core, permeability, receiver, result
-
-        core = InterMap.get(this)
-
-        if ((permeability = core[INNER_PERMEABILITY])) {
-          if (permeability.inUse) {
-            permeability = new ImmutableInnerPermeability(core)
-          }
-          permeability.inUse = true
-          receiver = permeability.target
-        }
-        else { receiver = core[INNER] }
-
-        result = OriginalFunc.apply(receiver, args)
-
-        if (permeability) { // indicator that receiver isImmutable
-          if (result === receiver) {
-            result = permeability.target
-            if (result !== inner) {
-              permeability.target = permeability.inner  // reset permeability
-              result.beImmutable
-            }
-            permeability.inUse = false
-            return result.$
-          }
-          if (typeof value !== "object" || value === null) { return result }
-          if (value[IS_IMMUTABLE] || value.id != null)     { return result }
-          return ((valueCore = InterMap.get(value))) ?
-            valueCore[COPY](true).$ : CopyObject(value, true)
-        }
-
-        return (result === receiver) ? result.$ : result
-      }
-    }
-  `
-  const methodMaker  = Function(funcBody)
-  const publicMethod = methodMaker(
-    InterMap, SetImmutable, ImmutableInnerPermeability,
-    INNER, IS_IMMUTABLE, INNER_PERMEABILITY
-  )
-  publicMethod[IS_IMMUTABLE] = true
-  SetImmutable(publicMethod.prototype)
-  return SetImmutable(publicMethod)
-}
-
-
-
-function _setImmutableCopyId() {
-  // if it has a way to make a new id then set it,
-  // otherwise if mutable, no id, and if immutable set id to ""
-}
-
-
-
-function WrapThing(thing) {
-  const skin = new Proxy(thing, PrivacyPermeability)
-  InterMap.set(skin, thing)
-  return (thing.$ = skin)
-}
-
-AddLazilyInstalledProperty(_Thing_root, "$", WrapThing)
-
-
-//
-// function CreateInnerPublicMethod(methodName) {
-//   const funcBody = `return function (globals) {
-//     const
-//       InterMap = globals.InterMap,
-//       IMMUTABLE_WRITE_PERMEABILITY = globals.IMMUTABLE_WRITE_PERMEABILITY,
-//       ImmutableWritePermeability   = globals.ImmutableWritePermeability,
-//       AsOutsideFunc                = globals.AsOutsideFunc,
-//       SECRET                       = globals.SECRET,
-//       PARAM                        = globals.PARAM,
-//       PARAM_TYPE                   = globals.PARAM_TYPE,
-//       OBJECT                       = globals.OBJECT,
-//       FACT                         = globals.FACT,
-//       OUTSIDER                     = globals.OUTSIDER,
-//       INNER                        = globals.INNER,
-//       COPY                         = globals.COPY,
-//       OUTER_BARRIER                = globals.OUTER_BARRIER,
-//       InnerParamBarrier            = globals.InnerParamBarrier,
-//       OuterParamBarrier            = globals.OuterParamBarrier,
-//       ObjectParamBarrier           = globals.ObjectParamBarrier,
-//       CopyObject                   = globals.CopyObject
-//   ) {
-//     return function ${methodName}(OriginalMethod) {
-//
-//     }
-//   }`
-//
-//   const method = Function(funcBody)()
-//   delete method.prototype
-//   method.isFact = method.isImmutable = true
-//   return SetImmutable(method)
-// }
 
 
 
@@ -187,7 +76,7 @@ function Create_COPY(BlankConstructor) {
       const $pulp = $pulp._certified()
       if ($pulp[IS_IMMUTABLE]) { return $pulp[$RIND] }
     }
-  
+
 
     if (asImmutable) {
       if (this.id != null) {
@@ -279,64 +168,10 @@ function BE_IMMUTABLE() {
 }
 
 
-class DisguisePermeability {
-  constructor (disguised) {
-    this.disguised = disguised
-  }
-
-  get (func, selector, disguise) {
-    return this.disguised[selector]
-  }
-
-  set (func, selector, value, disguise) {
-    this.disguised[selector] = value
-    return false
-  }
-
-  has (func, selector, disguise) {
-    return (selector in this.disguised)
-  }
-}
-
-const BlankRoot   = BlankConstructorFor(Inner_root)
-const BlankType   = BlankConstructorFor(Type_root)
-const BlankMethod = BlankConstructorFor(Method_root)
 
 
 
-// This is the factory for Type
-function Type(spec_typeName, supertypes_) {
-  const newType = new BlankType()
-  const spec    = (spec_typeName !== "string") ? spec_typeName :
-                    {name : spec_typeName, supertypes : supertypes_}
-  return newType._init(spec)
-}
 
-
-
-function _setId(newId_) {
-  const newId = (arguments.length) ? newId_ : NewUniqueId(this.basicId() + "-")
-
-  const id = this.id
-
-  if (id !== undefined) {
-    let ids
-
-    if (newId === existingId) { return this }
-    if (!(ids = this[ALL_IDS])) {
-      this[ALL_IDS] = ids = SpawnFrom(null)
-      ids[existingId] = existingId
-    }
-    ids[newId] = newId
-  }
-
-  this.id = newId
-  return this
-},
-
-Thing.addSLazyProperty(IID, function() {
-  return InterMap.get(this.type)._nextIID++
-})
 
 This.addSGetter(function basicId() {
   const prefix = this.context ? this.context.id + "@" : ""

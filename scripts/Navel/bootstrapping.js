@@ -10,15 +10,21 @@
 
 
 
-const Base$root         = SpawnFrom(null)
+const Base$root         = EMPTY_OBJECT
 // const   Stash$root      = SpawnFrom(Base$root)
 const   Base$root$outer = new Proxy(Base$root, BaseOuterBehavior)
 const   Base$root$inner = new Proxy(Base$root, BaseInnerBehavior)
 
 
-const $BaseBlanker = {$root$outer: Base$root$outer, $root$inner: Base$root$inner}
-const   $InateBlanker = NewBlankerFrom($BaseBlanker , MakeInnerBlanker)
-const     TypeBlanker = NewBlankerFrom($InateBlanker, MakeTypeInnerBlanker)
+const $BaseBlanker = {
+  $root$outer : Base$root$outer,
+  $root$inner : Base$root$inner,
+  maker       : MakeInnerBlanker,
+}
+
+//const NothingBlanker
+const     $InateBlanker = NewBlanker({ super : $BaseBlanker         })
+const       TypeBlanker = NewBlanker({ maker : MakeTypeInnerBlanker })
 
 
 
@@ -27,20 +33,18 @@ const Type$root$inner = TypeBlanker.$root$inner
 // Temporary bootstrapping #_init
 Type$root$inner._init = function _bootstrap(iid, blanker_) {
   DefineProperty(this, "iid", InvisibleConfiguration)
-  this._permeability = Impermeable
   this.iid           = iid
   this.subtypes      = new Set()
   if (blanker_) { this._blanker = blanker_ }
-  // SetDisplayNames(blanker, name) // The following is not necessary but helpful for implementation debugging!!!
   return this[$PULP]
 }
 
 
 
-const _$Inate = new TypeBlanker(Impermeable, ["$Inate"])._init(0, $InateBlanker)
-const _Thing  = new TypeBlanker(Impermeable, ["Thing"] )._init(1)
-const _Type   = new TypeBlanker(Impermeable, ["Type"]  )._init(2, TypeBlanker)
-const _Method = new TypeBlanker(Impermeable, ["Method"])._init(3)
+const _$Inate = new TypeBlanker(["$Inate"])._init(0, $InateBlanker)
+const _Thing  = new TypeBlanker(["Thing"] )._init(1)
+const _Type   = new TypeBlanker(["Type"]  )._init(2, TypeBlanker)
+const _Method = new TypeBlanker(["Method"])._init(3)
 
 const $Inate = _$Inate[$RIND]
 const Thing  = _Thing [$RIND]
@@ -67,16 +71,16 @@ $Inate$root$pulp.beImmutable      = undefined
 $Inate$root$inner._postCreation   = undefined
 
 
+
 const $Inate_properties = _$Inate._properties
 
-$Inate_properties[$BARRIER]       = PROPERTY
-$Inate_properties._noSuchProperty = PROPERTY
-$Inate_properties.id              = PROPERTY
-// $Inate_properties.splice            = PROPERTY // Weird ref by debugger
+$Inate_properties[$BARRIER]       = undefined
+$Inate_properties._noSuchProperty = undefined
+$Inate_properties.id              = undefined
+// $Inate_properties.splice            = undefined // Weird ref by debugger
 // Perhaps remove these later
-$Inate_properties.beImmutable     = PROPERTY
-$Inate_properties._postCreation   = PROPERTY
-
+$Inate_properties.beImmutable     = undefined
+$Inate_properties._postCreation   = undefined
 
 
 
@@ -119,7 +123,7 @@ Method$root$inner._init = function _init(func_name, func_, mode__) {
 
 Type$root$inner.new = {
   new : function (...args) {
-    let instance$inner = new this._blanker(this._permeability, args)
+    let instance$inner = new this._blanker(args)
     let instance$pulp  = instance$inner[$PULP]
     instance$pulp._init(...args)
     if (instance$inner._postCreation) {
@@ -174,6 +178,13 @@ _Method.addMethod(Method$root$inner._init)
 _Type.addMethod(Type$root$inner._setSharedProperty)
 _Type.addMethod("new", Type$root$inner.new, BASIC_METHOD)
 _Type.addMethod(Type$root$inner.newAsFact, BASIC_METHOD)
+
+
+
+_$Inate.addMethod(function _basicSet(propertyName, value) {
+  return InSetProperty(this[$INNER], propertyName, value, this)
+})
+
 
 
 _Type.addMethod(function addImmediate(...namedFunc_name__handler) {
@@ -263,9 +274,12 @@ _Type.addMethod(function _reinheritProperties() {
     }
   }
 
-  const $root$inner = this._blanker.$root$inner
+  let $root$inner = this._blanker.$root$inner
+  nextProperties  = VisibleProperties($root$inner)
+  next            = nextProperties.length
 
-  for (let selector in $root$inner) {
+  while (next--) {
+    let selector = nextProperties[next]
     if (!validProperties[selector]) { this._deleteSharedProperty(selector) }
   }
   return this
@@ -320,25 +334,15 @@ _Type.addMethod(function _buildAncestry() {
 })
 
 
-// addSetter("name", "setName")
-// addSetter("name", function setName() {})
 
-_Type.addMethod(function addSetter(propertyName, setter) {
-  if (typeof setter === "string") {
-    return this.addMethod(setter, AsBasicSetter(propertyName, setter))
+// addAssigner("name", "setName")
+// addAssigner("name", function () {})
+// addAssigner("name", function setName() {})
+
+_Type.addMethod(function addAssigner(propertyName, loader) {
+  if (typeof loader === "string") {
+    return this.addMethod(loader, AsBasicSetter(propertyName, loader))
   }
-  let setterName = setter.name
-  if (!setterName) {
-    SignalError(this[$RIND], "Setter function must be named!")
-  }
-  return this.addMethod(setterName, AsLoaderSetter(propertyName, setter))
-})
-
-
-// addSetLoader("name", function () {})
-// addSetLoader("name", function setName() {})
-
-_Type.addMethod(function addSetLoader(propertyName, loader) {
   if (loader.name) {
     this.addMethod(loader.name, AsLoaderSetter(propertyName, loader))
   }
@@ -346,10 +350,10 @@ _Type.addMethod(function addSetLoader(propertyName, loader) {
 })
 
 
-// addRequiredSetter("name", "setName")
-// addRequiredSetter("name", function setName() {})
+// addRequiredAssigner("name", "setName")
+// addRequiredAssigner("name", function setName() {})
 
-_Type.addMethod(function addRequiredSetter(propertyName, setter) {
+_Type.addMethod(function addRequiredAssigner(propertyName, setLoader) {
   if (typeof setter === "string") {
     var setterName = name
     this.addMethod(setter, AsBasicSetter(propertyName, setter))
@@ -366,15 +370,7 @@ _Type.addMethod(function addRequiredSetter(propertyName, setter) {
 })
 
 
-const _basicSet = function _basicSet(propertyName, value) {
-  return InSetProperty(this[$INNER], propertyName, value, this)
-}
-
-Type$root$inner._basicSet = _basicSet
-
-
-
-_Type.addSetLoader("supertypes", function setSupertypes(supertypes) {
+_Type.addAssigner("supertypes", function setSupertypes(supertypes) {
   this._basicSet("supertypes", supertypes)
   this._setAsSubtypeFor(supertypes)
   this._buildAncestry()
@@ -389,22 +385,24 @@ _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
 
   blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
   blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
-  this._properties.constructor    = PROPERTY
+  this._properties.constructor    = CONSTRUCTOR
   return this
 })
 
 
 
-_Type.addSetLoader("name", function setName(newName) {
+_Type.addAssigner("name", function setName(newName) {
   const priorName = this.name
   if (newName !== priorName) {
     if (priorName != null) {
       this.removeSharedProperty(AsMembershipSelector(priorName))
     }
     const newMembershipSelector = AsMembershipSelector(newName)
+
     _$Inate.addSharedProperty(newMembershipSelector, false)
     this.addSharedProperty(newMembershipSelector, true)
     this.membershipSelector = newMembershipSelector
+
     this._setDisplayNames(newName)
     this._disguisedFunc.name = newName
   }
@@ -415,11 +413,21 @@ _Type.addSetLoader("name", function setName(newName) {
 
 
 
-_Type.addMethod(function _make$copy(blanker) {
-  // blanker.$root$inner[$COPY] =   Make$copy(blanker)
+// _Type.addMethod(function _make$copy(blanker) {
+//   // blanker.$root$inner[$COPY] =   Make$copy(blanker)
+// })
+
+
+_Type.addMethod(function _initCoreIdentity(name) {
+  const blanker  = this._blanker
+  this._iidCount = 0
+  this.name      = name
+  // blanker.$root$inner[$COPY] = Make_$COPY(blanker)
+
+  this.addSharedProperty("type", this[$RIND])
+  this.addMethod(Make__newBlank(blanker))
 })
 
-_Type.addSharedProperty("_permeability", Impermeable)
 
 _Type.addMethod(function _init(spec, context_) {
   const name       = spec && spec.name
@@ -427,55 +435,26 @@ _Type.addMethod(function _init(spec, context_) {
     spec && (spec.supertypes || spec.supertype && [spec.supertype]) || [Thing]
   const methods    = spec && spec.instanceMethods || []
   const blanker    = this._blanker
-  const newBlanker = Make__newBlank(blanker)
-  // $root$inner[$COPY]    = Make_$copy(Blanker)
-  //
+
   // blanker.$root$outer.constructor = this._disguisedFunc
   // blanker.$root$inner.constructor = MakeVacuousConstructor()
   // this._properties.constructor    = CONSTRUCTOR
 
-  this._iidCount     = 0
   this.subtypes      = new Set()
   this.context       = context_ ? context_[$RIND] : null
-  this.name          = name
   this.supertypes    = supertypes
 
-  this.addSharedProperty("type", this[$RIND])
-  this.addMethod(newBlanker)
+  this._initCoreIdentity(name)
   this.addAllMethods(methods)
   return this
 })
 
 
-_Type._init({name: "Type", supertypes: []})
-
-Type$root$inner._basicSet = _basicSet
-
+_Type  ._init({name: "Type"  , supertypes: []})
 _$Inate._init({name: "$Inate", supertypes: []})
-_$Inate._setDisplayNames("$Outer", "$Inner") // Helps with debugging!!!
-
-
-_$Inate.addMethod(function $() {
-  const $inner = this[$INNER]
-
-  DefineProperty($inner, "$", InvisibleConfiguration)
-  return ($inner[$OUTER].$ = $inner.$ = $inner[$RIND])
-}, BASIC_IMMEDIATE)
-
-
-_$Inate.addMethod(function _super() {
-  const $inner = this[$INNER]
-  const $super = new Proxy($inner, SuperPorosity)
-
-  DefineProperty($inner, "_super", InvisibleConfiguration)
-  return ($inner._super = $super)
-}, BASIC_IMMEDIATE)
-
-
-_Thing._init({name: "Thing" , supertypes: []})
+_Thing ._init({name: "Thing" , supertypes: []})
 _Method._init({name: "Method"})
 
-_Thing.addMethod(_basicSet)
 _Type.setSupertypes([Thing])
 
 

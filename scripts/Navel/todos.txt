@@ -133,3 +133,24 @@ to speed the access within
 copy
 beImmutable
 super
+
+===
+
+function MakeInnerBlanker(PairedOuter) {
+  return function (permeability) {
+
+function MakeInnerBlanker(PairedOuter, Permeability) {
+  return function () {
+
+==
+figure about .type of an object. Should it be _Type or Type
+
+Bat
+_Bat
+
+Bat.Bat_
+
+
+==
+
+$Inate becomes Basic

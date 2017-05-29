@@ -32,7 +32,7 @@ const BaseInnerBehavior = {
 
 
 // UNTESTED
-const DefaultPermeability = {
+const DefaultBehavior = {
   __proto__      : null        ,
   getPrototypeOf : ALWAYS_NULL ,
   setPrototypeOf : ALWAYS_FALSE,
@@ -49,7 +49,7 @@ function Outer(id) {
   this.id = id
 }
 
-const Outer_prototype = Outer.prototype = SpawnFrom(DefaultPermeability)
+const Outer_prototype = Outer.prototype = SpawnFrom(DefaultBehavior)
 
 
 // Setting on things in not allowed because the setting semantics are broken.
@@ -162,7 +162,7 @@ TypeOuter_prototype.apply = function apply(func, receiver, args) {
 // UNTESTED
 function MutableInner() {}
 
-const MutableInner_prototype = MutableInner.prototype = SpawnFrom(null)
+const MutableInner_prototype = MutableInner.prototype = EMPTY_OBJECT
 const Mutability = new MutableInner()
 
 Mutability.get = function get($inner, selector, $pulp) {
@@ -204,7 +204,7 @@ function InSetProperty($inner, selector, value, $pulp) {
         $inner[selector] = $pulp
       }
       else if ((value$inner = InterMap.get(value))) {
-        $inner[selector] = (value = value$inner[COPY](true)[$RIND])
+        $inner[selector] = (value = value$inner[$COPY](true)[$RIND])
       }
       else {
         $inner[selector] = value // (value = CopyObject(value, true))
@@ -298,7 +298,7 @@ TypeInner_prototype.apply = function apply(func, receiver, args) {
 }
 
 
-// TypeInner.prototype = SpawnFrom(DefaultPermeability)
+// TypeInner.prototype = SpawnFrom(DefaultBehavior)
 
 
 
@@ -309,7 +309,7 @@ function ImmutableInner($inner) {
   this.target   = $inner
 }
 
-const ImmutableInner_prototype = ImmutableInner.prototype = SpawnFrom(null)
+const ImmutableInner_prototype = ImmutableInner.prototype = EMPTY_OBJECT
 
 ImmutableInner_prototype.get = function get($inner, selector, $pulp) {
   const value = $inner[selector]
@@ -349,12 +349,13 @@ ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, select
 }
 
 ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, selector, $pulp) {
+  // DOUBLE CHECK THIS!!!
   const target$inner = this.target
   const value        = target$inner[selector]
   return (value !== IMMEDIATE) ? value :
     target$inner[$IMMEDIATES][selector].inner.call(target$inner[$PULP])
 
-  return this.target[selector]
+  // return this.target[selector]
 }
 
 ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, selector, value, $pulp) {
@@ -408,8 +409,8 @@ function SetSuperPropertyFor($inner, selector) {
 }
 
 
-const SuperPorosity = {
-  __proto__ : null,
+const SuperBehavior = {
+  __proto__ : DefaultBehavior,
 
   get ($inner, selector, target) {
     const supers = $inner[$SUPERS]
@@ -429,18 +430,11 @@ const SuperPorosity = {
       // (value && value[$SECRET] === $INNER ?
       //   value.handler.call($inner[$PULP]) : value)
   },
-
-  set            : ALWAYS_FALSE,
-  getPrototypeOf : ALWAYS_NULL ,
-  setPrototypeOf : ALWAYS_FALSE,
-  defineProperty : ALWAYS_FALSE,
-  deleteProperty : ALWAYS_FALSE,
-  isExtensible   : ALWAYS_FALSE,
 }
 
 
-const OwnSuperPorosity = {
-  __proto__ : SuperPorosity,
+const OwnSuperBehavior = {
+  __proto__ : SuperBehavior,
 
   get ($inner, selector, target) {
     // const supers = $inner[SUPERS]

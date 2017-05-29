@@ -5,3 +5,10 @@ NothingBlanker.$root$core[$SECRET] = $INNER
 InPutMethod(NothingBlanker.$root$core, function _noSuchProperty(selector) {
   return undefined
 })
+
+
+Nothing methods
+  _noSuchProperty
+  is
+  type
+  id

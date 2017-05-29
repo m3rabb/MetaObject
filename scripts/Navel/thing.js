@@ -61,7 +61,7 @@ _Thing.addLazyProperty(function uid() {
 
 
 
-_Thing.addSetLoader("id", function _setId(newId_) {
+_Thing.addAssigner("id", function _setId(newId_) {
   const existingId = this.id
   let   newId
 
@@ -79,19 +79,7 @@ _Thing.addSetLoader("id", function _setId(newId_) {
 })
 
 
-
-_Thing.addMethod(function isPermeable() {
-  return (this[$RIND][$SECRET] === $INNER)
-}, BASIC_IMMEDIATE)
-
-const isPermeable_method = InterMap.get(_Thing._properties.isPermeable)
-
-isPermeable_method.outer = BeFrozenFunc(function isPermeable_$outerCustom() {
-  return (this[$SECRET] === $INNER)
-}, isPermeable_method)
-
-
-_Thing.addSetter("name", "_setName")
+_Thing.addAssigner("name", "_setName")
 
 _Thing.addMethod(function _init(spec_) {
   if (spec_) {
@@ -145,6 +133,9 @@ _Thing.addMethod(function _init(spec_) {
 // })
 
 // _Thing.addMethod(function _setCopyId() {
+//    if it has a way to make a new id then set it,
+//    otherwise if mutable, no id, and if immutable set id to ""
+
 //   return this._setId(this.oid)
 // })
 

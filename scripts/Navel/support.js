@@ -88,13 +88,16 @@ function MakeVacuousConstructor(name) {
 
 
 
-function NewBlankerFrom(superBlanker, blankerMaker) {
-  const $root$inner = SpawnFrom(superBlanker.$root$inner)
-  const $root$outer = SpawnFrom(superBlanker.$root$outer)
-  const PairedOuter = MakeNamelessVacuousFunction()
-  const Blanker     = blankerMaker(PairedOuter)
-  const supers      = SpawnFrom(null)
-  const immediates  = SpawnFrom(null)
+function NewBlanker(spec = EMPTY_OBJECT) {
+  const superBlanker = spec.super || $InateBlanker
+  const blankerMaker = spec.maker || superBlanker.maker
+  const permeability = spec.permeability || Impermeable
+  const $root$inner  = SpawnFrom(superBlanker.$root$inner)
+  const $root$outer  = SpawnFrom(superBlanker.$root$outer)
+  const PairedOuter  = MakeNamelessVacuousFunction()
+  const Blanker      = blankerMaker(PairedOuter, permeability)
+  const supers       = SpawnFrom(null)
+  const immediates   = SpawnFrom(null)
 
   $root$inner[$OUTER]   = $root$outer
   PairedOuter.prototype = $root$outer
@@ -102,6 +105,8 @@ function NewBlankerFrom(superBlanker, blankerMaker) {
   Blanker.$root$inner   = $root$inner
   Blanker.$root$pulp    = new Proxy($root$inner, Mutability)
   Blanker.$root$outer   = $root$outer
+  Blanker.maker         = blankerMaker
+  Blanker.permeability  = permeability
 
   supers[$IMMEDIATES]       = SpawnFrom(null)
   supers[$SUPERS]           = supers
@@ -123,35 +128,37 @@ function PreInitType(func, $inner, $outer, permeability) {
   const $rind      = new Proxy(func, porosity)
   // const $rind           = new Proxy(NewAsFact, privacyPorosity)
 
+  $inner._disguisedFunc = func
   $inner[$INNER] = $inner
-  $inner[$PULP]  = $pulp
-  // this[$PULP]  = new Proxy(NewAsFact, mutability)
   $inner[$OUTER] = $outer
   $inner[$RIND]  = $rind
   $outer[$RIND]  = $rind
   InterMap.set($rind, $inner)
+  // this[$PULP]  = new Proxy(NewAsFact, mutability)
+  return ($inner[$PULP] = $pulp)
 }
 
 
-function MakeTypeInnerBlanker(PairedOuter) {
-  return function (permeability, [name_spec]) {  // $Type // NewTypeBlanker
+function MakeTypeInnerBlanker(PairedOuter, Permeability) {
+  return function ([name_spec]) {  // $Type // NewTypeBlanker
     const typeName = (typeof name_spec === "object") ?
       name_spec.name : name_spec
     const func = MakeVacuousConstructor(typeName || "UNNAMED")
+    const $outer = new PairedOuter()
 
-    PreInitType(func, this, new PairedOuter(), permeability)
-    this._disguisedFunc = func
-    this._blanker       = NewBlankerFrom($InateBlanker, MakeInnerBlanker)
-    this._properties    = SpawnFrom(null)
+    PreInitType(func, this, $outer, Permeability)
+    
+    this._properties = SpawnFrom(null)
+    this._blanker    = NewBlanker()
   }
 }
 
 
 
-function MakeInnerBlanker(PairedOuter) {
-  return function (permeability) {
+function MakeInnerBlanker(PairedOuter, Permeability) {
+  return function () {
     const $outer = new PairedOuter()
-    const $rind  = new Proxy($outer, permeability)
+    const $rind  = new Proxy($outer, Permeability)
 
     this[$INNER]  = this
     this[$PULP]   = new Proxy(this, Mutability)

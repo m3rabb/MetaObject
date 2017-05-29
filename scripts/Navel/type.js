@@ -10,25 +10,33 @@ _Type.addLazyProperty(function id() {
 _Type.addMethod(function asPermeable() {
   const type$inner   = this[$INNER]
   const type$outer   = type$inner[$OUTER]
-  const func         = type$inner._disguisedFunc
-  const _type$inner  = SpawnFrom(type$inner)
-  const _type$outer  = SpawnFrom(type$outer)
+  const blanker      = type$inner._blanker
+
+  const type$inner_  = SpawnFrom(type$inner)
+  const type$outer_  = SpawnFrom(type$outer)
+  const typeName_    = type$inner.name + "_"
+  const func_        = MakeVacuousConstructor(typeName_)
   const permeability = type$inner.isPermeable ? Permeable : Impermeable
 
-  PreInitType(func, _type$inner, _type$outer, permeability)
-  _type$inner._permeability = Permeable
+  const type$pulp_ = PreInitType(func_, type$inner_, type$outer_, permeability)
 
-  DefineProperty($inner, "asPermeable", InvisibleConfiguration)
-  return (this.asPermeable = _type$inner[$RIND])
+  type$inner_._blanker = NewBlanker({super: blanker, permeability: Permeable})
+
+  type$pulp_._initCoreIdentity(name)
+  type$pulp_.addSharedProperty("isPermeable", true)
+
+  DefineProperty(type$inner, "asPermeable", InvisibleConfiguration)
+  return (this.asPermeable = type$inner_[$RIND])
 }, BASIC_IMMEDIATE)
 
 
 _Type.addMethod(function asImpermeable() {
-  const $inner = this[$INNER]
-  const target = ($inner._permeability === Permeable) ? RootOf($inner) : $inner
+  const $inner       = this[$INNER]
+  const permeability = $inner._blanker.permeability
+  const primary      = (permeability === Impermeable) ? $inner : RootOf($inner)
 
-  DefineProperty(target, "asImpermeable", InvisibleConfiguration)
-  return (target[$PULP].asImpermeable = target[$RIND])
+  DefineProperty(primary, "asImpermeable", InvisibleConfiguration)
+  return (primary[$PULP].asImpermeable = primary[$RIND])
 }, BASIC_IMMEDIATE)
 
 // _Type.addMethod(function methodAt(selector) {
