@@ -180,7 +180,7 @@ function AsCapitalized(word) {
 
 function AsName(string_symbol) {
   if (typeof string_symbol === "string") { return string_symbol }
-  let name = string_symbol.toString()
+  const name = string_symbol.toString()
   return name.slice(7, name.length - 1)
 }
 
@@ -192,7 +192,7 @@ function AsPropertyNameFromSetterName(name) {
 
 
 function AsPropertySetterLoaderHandler(setter_loader__property, setter_loader_) {
-  let propertyName, setterName, loader, setter
+  var propertyName, setterName, loader, setter
 
   if (setter_loader_) {
     propertyName = setter_loader__property
@@ -297,12 +297,12 @@ const ALWAYS_SELF      = BeFrozenFunc(function () { return this }, SAFE_FUNC)
 
 
 function Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
-  let source  = $source[$RIND]
-  let $inner  = new $source[$BLANKER]()
-  let $pulp   = $inner[$PULP]
-  let $outer  = $inner[$OUTER]
-  let target  = $inner[$RIND]
-  let handler, properties, next, property, value, traversed, value$inner
+  const source  = $source[$RIND]
+  var   $inner  = new $source[$BLANKER]()
+  const $pulp   = $inner[$PULP]
+  const $outer  = $inner[$OUTER]
+  const target  = $inner[$RIND]
+  var handler, next, property, value, traversed, value$inner
 
   visited.set(source, target) // to manage cyclic objects
 
@@ -315,7 +315,7 @@ function Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
     if ($inner[IS_IMMUTABLE]) { return target }
   }
   else {
-    properties = $source[KNOWN_PROPERTIES] ||
+    const properties = $source[KNOWN_PROPERTIES] ||
       SetKnownProperties($source, !$source[IS_IMMUTABLE])
     $outer[KNOWN_PROPERTIES] = $inner[KNOWN_PROPERTIES] = properties
 
@@ -355,10 +355,10 @@ function Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
 // CHANGE TO CHECK FOR PUBLIC PROPERTIES FIRST!!!
 // Note: This should only be called on mutable objects!!!
 function BeImmutable($inner, inPlace, visited = new WeakSet()) {
-  let target, $outer, properties, next, property, value, value$inner
+  var next, property, value, value$inner
 
-  target = $inner[$RIND]
-  $outer = $inner[$OUTER]
+  const target = $inner[$RIND]
+  const $outer = $inner[$OUTER]
 
   visited.add(target)
 
@@ -366,9 +366,10 @@ function BeImmutable($inner, inPlace, visited = new WeakSet()) {
     $inner[$PULP]._setPropertiesImmutable(visited)
   }
   else {
-    properties = $inner[KNOWN_PROPERTIES] || SetKnownProperties($inner, true)
-    next       = properties.length
+    const properties =
+      $inner[KNOWN_PROPERTIES] || SetKnownProperties($inner, true)
 
+    next = properties.length
     while (next--) {
       property = properties[next]
       value    = target[property]
@@ -415,7 +416,7 @@ const BasicBeImmutable = function basicBeImmutable() {
 // Note: The CopyObject is only called AFTER confirming that the source
 //       is NOT a fact!!! ***
 function CopyObject(source, asImmutable, visited = new WeakMap(), pass_) {
-  let target, properties, next, property, value, traversed, value$inner
+  var target, properties, next, property, value, traversed, value$inner
 
   switch (source.constructor) {
     default : // Custom Object

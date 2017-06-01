@@ -150,7 +150,7 @@ TypeOuter_prototype.apply = function newAsFact(func, receiver, args) {
   // return this.$pulp.newAsFact(...args)
 
   // This is the same code as in newAsFact(...args)
-  let instance = this.$pulp.new(...args)
+  const instance = this.$pulp.new(...args)
   if (instance.id == null) { instance.beImmutable }
   return instance
 }
@@ -286,7 +286,7 @@ TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
   // return this.$pulp.newAsFact(...args)
 
   // This is the same code as in newAsFact(...args)
-  let instance = this.$pulp.new(...args)
+  const instance = this.$pulp.new(...args)
   if (instance.id == null) { instance.beImmutable }
   return instance
 }
@@ -376,9 +376,10 @@ const SuperMethodPorosity = new SuperInnerMethod()
 
 
 function SetSuperPropertyFor($inner, selector) {
-  let ancestors = $inner.type.ancestry
-  let next      = ancestors.length
-  let supers    = $inner[$SUPERS]
+  const ancestors = $inner.type.ancestry
+  const supers    = $inner[$SUPERS]
+  var   next      = ancestors.length
+  var   type$inner, nextProperties, value
 
   if ($inner._hasOwn(selector)) { next++ }
 
@@ -387,7 +388,7 @@ function SetSuperPropertyFor($inner, selector) {
     let nextProperties = type$inner._properties
 
     if (selector in nextProperties) {
-      const value = nextProperties[selector]
+      value = nextProperties[selector]
 
       if (value && value.isMethod) {
         if (value.mode.isImmediate) {

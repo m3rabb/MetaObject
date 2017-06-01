@@ -95,12 +95,12 @@ const Method$root$pulp  = MethodBlanker.$root$pulp
 Method$root$pulp.isMethod = true
 
 Method$root$inner._init = function _init(func_name, func_, mode__) {
-  let [selector, handler, mode = STANDARD_METHOD] =
+  const [selector, handler, mode = STANDARD_METHOD] =
     (typeof func_name === "function") ?
       [func_name.name, func_name, func_] : [func_name, func_, mode__]
-  let isPublic  = (selector[0] !== "_")
-  let $inner    = this[$INNER]
-  let $existing = InterMap.get(handler)
+  const isPublic  = (selector[0] !== "_")
+  const $inner    = this[$INNER]
+  const $existing = InterMap.get(handler)
 
   if ($existing && $existing.mode !== mode) {
     ImproperMethodHandlerError($inner[$RIND])
@@ -127,8 +127,8 @@ Method$root$inner._init = function _init(func_name, func_, mode__) {
 
 Type$root$inner.new = {
   new : function (...args) {
-    let $instance = new this._blanker(args)
-    let _instance  = $instance[$PULP]
+    const $instance = new this._blanker(args)
+    const _instance  = $instance[$PULP]
     _instance._init(...args)
     if ($instance._postCreation) {
       const result = _instance._postCreation()[$RIND]
@@ -204,7 +204,7 @@ _Type.addMethod(function removeSharedProperty(selector) {
 })
 
 _Type.addMethod(function addAllMethods(methods) {
-  let next = methods.length
+  var next = methods.length
   while (next--) { this.addMethod(methods[next]) }
   return this
 })
@@ -230,18 +230,20 @@ _Type.addMethod(function _propagateIntoSubtypes(selector) {
 })
 
 _Type.addMethod(function _inheritProperty(selector) {
-  let properties = this._properties
+    const properties = this._properties
   if (selector in properties) { return this }
 
-  let ancestry = this.ancestry
-  let next = ancestry.length - 1
+  const ancestry = this.ancestry
+
+  var next, $nextType, nextProperties, value
+  next = ancestry.length - 1
 
   while (next--) {
-    let $nextType      = InterMap.get(ancestry[next])
-    let nextProperties = $nextType._properties
+    $nextType      = InterMap.get(ancestry[next])
+    nextProperties = $nextType._properties
 
     if (selector in nextProperties) {
-      let value = nextProperties[selector]
+      value = nextProperties[selector]
       return this._setSharedProperty(selector, value, false)
     }
   }
@@ -254,18 +256,21 @@ _Type.addMethod(function _inheritProperty(selector) {
 // them, since instance may need to use them, so instead we rebuild them layer
 // by layer from supertype to supertype, and then delete invalide properites last.
 _Type.addMethod(function _reinheritProperties() {
-  let validProperties = SpawnFrom(null)
-  let ancestry = this.ancestry
-  let nextProperties = this._properties
-  let next = ancestry.length - 1
+  const validProperties = SpawnFrom(null)
+  const ancestry        = this.ancestry
+  const $root$inner     = this._blanker.$root$inner
 
-  for (let selector in nextProperties) { validProperties[selector] = true }
+  var nextProperties, next, selector, $nextType
+  nextProperties = this._properties
+  next           = ancestry.length - 1
+
+  for (selector in nextProperties) { validProperties[selector] = true }
 
   while (next--) {
-    let $nextType  = InterMap.get(ancestry[next])
+    $nextType  = InterMap.get(ancestry[next])
     nextProperties = $nextType._properties
 
-    for (let selector in nextProperties) {
+    for (selector in nextProperties) {
       if (!validProperties[selector]) {
         validProperties[selector] = true
         this._setSharedProperty(selector, nextProperties[selector], false)
@@ -273,12 +278,11 @@ _Type.addMethod(function _reinheritProperties() {
     }
   }
 
-  let $root$inner = this._blanker.$root$inner
-  nextProperties  = VisibleProperties($root$inner)
-  next            = nextProperties.length
+  nextProperties = VisibleProperties($root$inner)
+  next           = nextProperties.length
 
   while (next--) {
-    let selector = nextProperties[next]
+    selector = nextProperties[next]
     if (!validProperties[selector]) { this._deleteSharedProperty(selector) }
   }
   return this
@@ -289,11 +293,13 @@ _Type.addMethod(function _setAsSubtypeOfSupertypes() {
   // LOOK: add logic to invalidate connected types if supertypes changes!!!
   const supertypes = this.supertypes
   const subtype = this[$RIND]
-  let   next = supertypes.length
+
+  var next, $supertype, subtypes
+  next = supertypes.length
 
   while (next--) {
-    let $supertype = InterMap.get(supertypes[next])
-    let subtypes = new Set($supertype.subtypes)
+    $supertype = InterMap.get(supertypes[next])
+    subtypes = new Set($supertype.subtypes)
     subtypes.add(subtype)
     $supertype[$PULP].subtypes = SetImmutable(subtypes)
   }
@@ -301,17 +307,17 @@ _Type.addMethod(function _setAsSubtypeOfSupertypes() {
 })
 
 _Type.addMethod(function _buildRoughAncestry(explicitTypes_) {
-  let supertypes = this.supertypes
-  let roughAncestry = []
-  let explicitTypes = explicitTypes_ || new Set(supertypes)
+  const supertypes = this.supertypes
+  const roughAncestry = []
+  const explicitTypes = explicitTypes_ || new Set(supertypes)
+  var index, count, nextType, $nextType, nextAncestry
 
-  for (let index = 0, count = supertypes.length; index < count; index++) {
-    let nextType  = supertypes[index]
-    let $nextType = InterMap.get(nextType)
+  for (index = 0, count = supertypes.length; index < count; index++) {
+    nextType  = supertypes[index]
+    $nextType = InterMap.get(nextType)
     if (explicitTypes_ && explicitTypes_.has(nextType)) { continue }
 
-
-    let nextAncestry = $nextType._buildRoughAncestry(explicitTypes)
+    nextAncestry = $nextType._buildRoughAncestry(explicitTypes)
     roughAncestry.push(...nextAncestry)
   }
   roughAncestry.push(this[$RIND])
@@ -322,10 +328,12 @@ _Type.addMethod(function _buildAncestry() {
   const roughAncestry = this._buildRoughAncestry()
   const visited = new Set()
   const dupFreeAncestry = []
-  let next = roughAncestry.length
+
+  var next, type
+  next = roughAncestry.length
 
   while (next--) {
-    let type = roughAncestry[next]
+    type = roughAncestry[next]
     if (!visited.has(type)) {
       dupFreeAncestry.push(type)
       visited.add(type)
@@ -343,7 +351,7 @@ _Type.addMethod(function _buildAncestry() {
 // addAssigner("property", function setName() {})
 
 _Type.addMethod(function addAssigner(setter_loader__property, setter_loader_) {
-  let [propertyName, setterName, loader, setter] =
+  const [propertyName, setterName, loader, setter] =
     AsPropertySetterLoaderHandler(setter_loader__property, setter_loader_)
 
   if (setterName) { this.addMethod(setterName, setter) }
@@ -358,7 +366,7 @@ _Type.addMethod(function addAssigner(setter_loader__property, setter_loader_) {
 // addMandatorySetter("property", function setName() {})
 
 _Type.addMethod(function addMandatorySetter(setter_loader__property, setter_loader_) {
-  let [propertyName, setterName, loader, setter] =
+  var [propertyName, setterName, loader, setter] =
     AsPropertySetterLoaderHandler(setter_loader__property, setter_loader_)
 
   if (!setterName) { UnnamedLoaderError(this[$RIND]) }

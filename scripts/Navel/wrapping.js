@@ -112,8 +112,8 @@ function AsOuterFact(selector, Handler) {
   const name = `${AsName(selector)}_$outer$act`
   return {
     [name] : function (...args) {
-      let result, result$inner, barrier, $pulp
-      let $inner = InterMap.get(this)
+      const $inner  = InterMap.get(this)
+      var barrier, result, result$inner, $pulp
 
       if ((barrier = $inner[$BARRIER])) { // means $inner[IS_IMMUTABLE]
         if (barrier.inUse) { barrier = new ImmutableInner($inner) }
@@ -152,8 +152,8 @@ function AsOuterState(selector, Handler) {
   const name = `${AsName(selector)}_$outer$state`
   return {
     [name] : function (...args) {
-      let result, barrier, $pulp
-      let $inner = InterMap.get(this)
+      const $inner = InterMap.get(this)
+      var barrier, result, $pulp
 
       if ((barrier = $inner[$BARRIER])) { // means $inner[IS_IMMUTABLE]
         if (barrier.inUse) { barrier = new ImmutableInner($inner) }
@@ -182,8 +182,8 @@ function AsOuterValue(selector, Handler) {
   const name = `${AsName(selector)}_$outer$value`
   return {
     [name] : function (...args) {
-      let result, result$inner, $pulp
-      let $inner = InterMap.get(this)
+      const $inner = InterMap.get(this)
+      var barrier, result, result$inner, $pulp
 
       if ((barrier = $inner[$BARRIER])) { // means $inner[IS_IMMUTABLE]
         if (barrier.inUse) { barrier = new ImmutableInner($inner) }
@@ -226,8 +226,8 @@ function AsOuterLazyLoader(Selector, Handler) {
   const name = `${AsName(Selector)}_$outer$lazy`
   return {
     [name] : function () {
-      let result, result$inner, $pulp
-      let $inner = InterMap.get(this)
+      const $inner = InterMap.get(this)
+      var barrier, result, result$inner, $pulp
 
       if ((barrier = $inner[$BARRIER])) { // means $inner[IS_IMMUTABLE]
         if (barrier.inUse) { barrier = new ImmutableInner($inner) }

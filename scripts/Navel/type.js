@@ -74,7 +74,7 @@ _Type.addAlias("removeMethod", "removeSharedProperty")
 
 _Type.addMethod(function newAsFact(...args) {
   // Note: same as implementation in TypeOuter and TypeInner
-  let instance = this.new(...args)
+  const instance = this.new(...args)
   if (instance.id == null) { instance.beImmutable }
   return instance
 })

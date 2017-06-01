@@ -74,7 +74,7 @@ _Thing.addLazyProperty(function uid() {
 
 _Thing.addAssigner("id", function _setId(newId_) {
   const existingId = this.id
-  let   newId
+  var   newId
 
   if (newId_ === undefined) {
     if (existingId !== undefined) { return existingId }
@@ -83,7 +83,7 @@ _Thing.addAssigner("id", function _setId(newId_) {
   else { newId = newId_ }
 
   if (existingId !== undefined) {
-    let priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
+    const priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
     priorIds[priorIds.length] = existingId
   }
   return newId

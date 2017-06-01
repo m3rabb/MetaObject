@@ -1,9 +1,9 @@
 const ErrorLog = []
 
-let HandleErrorsQuietly = true
-let LogErrors           = false
+var HandleErrorsQuietly = true
+var LogErrors           = false
 
-// let HandleInheritancePoisoning = true
+// var HandleInheritancePoisoning = true
 
 function SignalError(target, message) {
   if (LogErrors) { ErrorLog.push(`${target}: ${message}`) }
