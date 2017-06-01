@@ -17,6 +17,10 @@
 // Thing.addMethod("_hasOwn", HasOwnProperty)
 
 
+_Thing.addMethod(function _newBlank() {
+  return new this[$BLANKER]()[$RIND]
+})
+
 
 _Thing.addMethod(function has(propertyName) {
   return (propertyName in this[$OUTER])
@@ -28,35 +32,42 @@ _Thing.addMethod(function _has(propertyName) {
 
 _Thing.addMethod(function hasOwn(propertyName) {
   if (propertyName[0] === "_") { return undefined }
-  const names = this[KNOWN_PROPERTIES] || ResetKnownProperties(this)
-  return (names[propertyName] !== undefined)
-}, BASIC_METHOD)
-
-_Thing.addMethod(function _hasOwn(propertyName) {
-  const names = this[KNOWN_PROPERTIES] || ResetKnownProperties(this)
-  return (names[propertyName] !== undefined)
+  return this._hasOwn(propertyName)
 }, BASIC_METHOD)
 
 
+_Thing.addMethod("_hasOwn", HasOwnProperty, BASIC_METHOD)
+
+// _Thing.addMethod(function _hasOwn(propertyName) {
+//   const properties = this[$KNOWN_PROPERTIES] || ResetKnownProperties(this)
+//   return (properties[propertyName] !== undefined)
+// }, BASIC_METHOD)
 
 
 
 _Thing.addMethod(function iid() {
-  DefineProperty(this[$INNER], "iid", InvisibleConfiguration)
-  return (this.iid = InterMap.get(this.type)[$PULP]._nextIID)
+  const $inner = this[$INNER]
+
+  if ($inner[IS_IMMUTABLE]) {
+    // Will set the iid even on an immutable object!!!
+    return $inner.iid || ($inner.iid = InterMap.get(this.type)._nextIID)
+  }
+
+  DefineProperty($inner, "iid", InvisibleConfiguration)
+  return ($inner[$OUTER].iid = $inner.iid = InterMap.get(this.type)._nextIID)
 }, BASIC_IMMEDIATE)
 
+
 _Thing.addImmediate(function oid() {
-  const type = this.type
-  const context = type.context
-  const prefix = context ? context.id + "@" : ""
-  return `${this.iid}.${prefix}${type.name}`
+  return `${this.iid}.${this.type.formalName}`
   // `${type.name}<${NewUniqueId()}>`
 })
 
 _Thing.addLazyProperty(function uid() {
   return this._hasOwn("guid") ? this.guid : `<${NewUniqueId()}>`
 })
+
+
 
 
 
@@ -90,7 +101,6 @@ _Thing.addMethod(function _init(spec_) {
   name && (this.name = name)
   return this
 })
-
 
 
 
@@ -141,7 +151,7 @@ _Thing.addMethod(function _init(spec_) {
 
 
 
-// _Thing.addMethod(function _postCreation(beImmutable_) {
+// _Thing.addMethod(function _postCreation() {
 //   this.id = this.oid
 //   return this
 // })

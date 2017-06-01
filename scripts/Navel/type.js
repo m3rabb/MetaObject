@@ -7,6 +7,17 @@ _Type.addLazyProperty(function id() {
 })
 
 
+_Type.addLazyProperty(function formalName() {
+  const context = this.context
+  const prefix = context ? context.id + "@" : ""
+  return `${prefix}${this.name}`
+})
+
+
+
+
+
+
 _Type.addMethod(function asPermeable() {
   const type$inner   = this[$INNER]
   const type$outer   = type$inner[$OUTER]
@@ -39,19 +50,34 @@ _Type.addMethod(function asImpermeable() {
   return (primary[$PULP].asImpermeable = primary[$RIND])
 }, BASIC_IMMEDIATE)
 
-// _Type.addMethod(function methodAt(selector) {
-//   // FINISH THIS
-// })
-//
-// _Type.addMethod(function addAlias(aliasName, name_method) {
-//   const sourceMethod = name_method.isMethod ?
-//     name_method : this.methodAt(name_method)
-//   return this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
-// })
-//
-// _Type.addAlias("basicNew", "new")
-// _Type.addAlias("removeMethod", "removeProperty")
-//
+
+
+_Type.addMethod(function methodAt(selector) {
+  const value = this._blanker.$root$inner[selector]
+  if (typeof value !== "function") { return null }
+
+  const marker = InterMap.get(value)
+  return marker.isMethod ? marker[$RIND] : null
+})
+
+_Type.addMethod(function addAlias(aliasName, name_method) {
+  const sourceMethod = name_method.isMethod ?
+    name_method : this.methodAt(name_method)
+  if (sourceMethod == null) {
+    SignalError(this[$RIND], `Can't find method '${name_method}' to alias!!`)
+  }
+  return this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
+})
+
+_Type.addAlias("basicNew", "new")
+_Type.addAlias("removeMethod", "removeSharedProperty")
+
+_Type.addMethod(function newAsFact(...args) {
+  // Note: same as implementation in TypeOuter and TypeInner
+  let instance = this.new(...args)
+  if (instance.id == null) { instance.beImmutable }
+  return instance
+})
 
 
 // Type.addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])

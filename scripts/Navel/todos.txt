@@ -143,10 +143,7 @@ function MakeInnerBlanker(PairedOuter, Permeability) {
   return function () {
 
 ==
-figure about .type of an object. Should it be _Type or Type
-
-Bat
-_Bat
+enable this immediate method
 
 Bat.Bat_
 
@@ -154,3 +151,36 @@ Bat.Bat_
 ==
 
 $Inate becomes Basic
+
+==
+Consider disallowing assignment of undefined, enabling us to avoid using "in" and BaseInnerBehavior
+
+Mutability.get = function get($inner, selector, $pulp) {
+  const value = $inner[selector]
+  if (value !== undefined) { return value }
+
+  const method = $inner[$IMMEDIATES][selector]
+  if (method) { return method.inner.call($pulp) }
+
+  return $inner._noSuchProperty ?
+    $pulp._noSuchProperty(selector) : undefined
+}
+
+
+==
+Consider making methods that return undefined mean they're returning 'this'.
+The downside to this is private value methods would be slower as they could no
+longer be passthrus, and would need to be wrapped as well.
+
+==
+Consider going back to code below, where when self is stored as a propertyName
+within itself, it stores $pulp within its inner, vs $rind in the outerValue
+VS always storing the $rind.
+
+if (value === $pulp) {  // Perhaps will force assignments to always be target!!!
+  $inner[selector] = $pulp
+  value = $inner[$RIND]
+}
+else if (value === $inner[$RIND]) {
+  $inner[selector] = $pulp
+}

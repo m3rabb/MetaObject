@@ -43,6 +43,7 @@ const $PRIOR_IDS         = Symbol("$priorIds")
 const $SECRET            = Symbol("$secret")
 
 const $IMMEDIATES        = Symbol("$immediates")
+const $BLANKER           = Symbol("$blanker")
 const $SUPERS            = Symbol("$supers")
 const $SUPER             = Symbol("$super")
 const $SET_LOADERS       = Symbol("$set_loaders")
@@ -84,3 +85,8 @@ const EMPTY_OBJECT    = Frost(SpawnFrom(null))
 const InterMap      = new WeakMap()
 // Safe functions are stored in here so that the diguised Types function are
 // automatically recognized as safe functions too
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/

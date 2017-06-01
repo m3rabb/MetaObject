@@ -8,13 +8,42 @@ let LogErrors           = false
 function SignalError(target, message) {
   if (LogErrors) { ErrorLog.push(`${target}: ${message}`) }
 
-  if (HandleErrorsQuietly) {
-    console.warn(message) // eslint-disable-line no-console
-  } else {
-    const error = new Error(message)
-    error.name = "Purple Carrot Error"
-    error.target = target
-    throw error
-  }
-  return null
+  const error = new Error(message)
+  error.name = "Navel Error"
+  error.target = target
+  throw error
+}
+
+
+// function SignalError(target, message) {
+//   if (LogErrors) { ErrorLog.push(`${target}: ${message}`) }
+//
+//   if (HandleErrorsQuietly) {
+//     console.warn(message) // eslint-disable-line no-console
+//   } else {
+//     const error = new Error(message)
+//     error.name = "Purple Carrot Error"
+//     error.target = target
+//     throw error
+//   }
+//   return null
+// }
+
+
+
+
+function ImproperMethodHandlerError(target) {
+  SignalError(target[$RIND], "Can't reuse same handler function for different types of methods!!")
+}
+
+function UnnamedLoaderError(target) {
+  SignalError(target, "Assigner function must be named!!")
+}
+
+function DirectAssignmentFromOutsideError(target) {
+  SignalError(target, "Direct assignment is not allowed to the outside of an object, use a method instead!!")
+}
+
+function AssignmentOfUndefinedError(target) {
+  SignalError(target, "Assignment of undefined is forbidden, use null instead!")
 }

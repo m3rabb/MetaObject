@@ -60,7 +60,7 @@ const Outer_prototype = Outer.prototype = SpawnFrom(DefaultBehavior)
 // was tried to be set to, regardless of whether it was successful or not.
 
 Outer_prototype.set = function set($outer, selector, value, $rind) {
-  SignalError($rind, "Assignment is not allowed to the outside of an object, use a setter instead!")
+  DirectAssignmentFromOutsideError($rind)
   return false
   // return InterMap.get($rind)._externalWrite(selector, value) || false
 }
@@ -145,7 +145,7 @@ TypeOuter_prototype.has = function has(disguisedFunc, selector) {
   return this.permeability.has(this.$outer, selector)
 }
 
-TypeOuter_prototype.apply = function apply(func, receiver, args) {
+TypeOuter_prototype.apply = function newAsFact(func, receiver, args) {
   // return func.apply(this.$inner, args)
   // return this.$pulp.newAsFact(...args)
 
@@ -188,29 +188,23 @@ function InSetProperty($inner, selector, value, $pulp) {
   }
 
   switch (typeof value) {
+    // case "undefined" :
+    // AssignmentOfUndefinedError($inner[$RIND])
+    //   break
+
     case "object" :
       if (!isPublic) { break }
 
-      if (value === $pulp) {  // Perhaps will force assignments to always be target!!!
-        $inner[selector] = $pulp
-        value = $inner[$RIND]
-      }
-      else if (value === null || value[IS_IMMUTABLE] || value.id != null) {
-        $inner[selector] = value
-      }
+      if (value === null || value[IS_IMMUTABLE] || value.id != null) { }
+      else if (value === $pulp) { value = $inner[$RIND] }
+      else if (value === $inner[$RIND]) { }
       else if (value === $inner[selector]) { return $pulp }
-
-      else if (value === $inner[$RIND]) {
-        $inner[selector] = $pulp
-      }
-      else if ((value$inner = InterMap.get(value))) {
-        $inner[selector] = (value = value$inner[$COPY](true)[$RIND])
-      }
       else {
-        $inner[selector] = value // (value = CopyObject(value, true))
+        value = (value$inner = InterMap.get(value)) ?
+          Copy(value$inner, true) : CopyObject(value, true)
       }
       $inner[$OUTER][selector] = value
-      return $pulp
+      break
 
     case "function" : // LOOK: will catch Type things!!!
       // NOTE: Checking for value.constructor is inadequate to prevent func spoofing
@@ -287,7 +281,7 @@ TypeInner_prototype.deleteProperty = function deleteProperty(disguisedFunc, sele
   // return Mutability.deleteProperty(this.$inner, selector, $pulp)
 }
 
-TypeInner_prototype.apply = function apply(func, receiver, args) {
+TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
   // return func.apply(this.$inner, args)
   // return this.$pulp.newAsFact(...args)
 
@@ -309,7 +303,8 @@ function ImmutableInner($inner) {
   this.target   = $inner
 }
 
-const ImmutableInner_prototype = ImmutableInner.prototype = EMPTY_OBJECT
+const ImmutableInner_prototype = SpawnFrom(EMPTY_OBJECT)
+ImmutableInner.prototype = ImmutableInner_prototype
 
 ImmutableInner_prototype.get = function get($inner, selector, $pulp) {
   const value = $inner[selector]

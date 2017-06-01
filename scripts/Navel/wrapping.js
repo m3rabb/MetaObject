@@ -5,11 +5,11 @@ const FuncGlobals = {
   $PULP                  : $PULP,
   $INNER                 : $INNER,
   $BARRIER               : $BARRIER,
-  $COPY                  : $COPY,
   IS_IMMUTABLE           : IS_IMMUTABLE,
   InterMap               : InterMap,
   ImmutableInner         : ImmutableInner,
-  CopyObject             : "COPY_OBJECT",  // CopyObject
+  Copy                   : Copy,
+  CopyObject             : CopyObject,
   DefineProperty         : DefineProperty,
   InSetProperty          : InSetProperty,
   InvisibleConfiguration : InvisibleConfiguration,
@@ -49,7 +49,7 @@ function AsTameFunc(Func) {
 
 
 function AsBasicSetter(PropertyName, setterName) {
-  const name = `${AsFunctionName(setterName)}_$setter`
+  const name = `${AsName(setterName)}_$setter$basic`
   return {
     [name] : function (value) {
       return InSetProperty(this[$INNER], PropertyName, value, this)
@@ -58,11 +58,12 @@ function AsBasicSetter(PropertyName, setterName) {
 }
 
 function AsLoaderSetter(PropertyName, Loader) {
-  const name = `${Loader.name}_$loader`
+  const name = `${Loader.name}_$setter$loader`
   return {
     [name] : function (value) {
       const newValue = Loader.call(this, value)
-      return InSetProperty(this[$INNER], PropertyName, newValue, this)
+      return (newValue === undefined) ? this :
+        InSetProperty(this[$INNER], PropertyName, newValue, this)
     }
   }[name]
 }
@@ -108,7 +109,7 @@ function AsLoaderSetter(PropertyName, Loader) {
 
 
 function AsOuterFact(selector, Handler) {
-  const name = `${AsFunctionName(selector)}_$outerFact`
+  const name = `${AsName(selector)}_$outer$act`
   return {
     [name] : function (...args) {
       let result, result$inner, barrier, $pulp
@@ -141,14 +142,14 @@ function AsOuterFact(selector, Handler) {
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
       return ((result$inner = InterMap.get(result))) ?
-        result$inner[$COPY](true)[$RIND] : CopyObject(result, true)
+        Copy(result$inner, true) : CopyObject(result, true)
     }
   }[name]
 }
 
 // This might not be a good idea???
 function AsOuterState(selector, Handler) {
-  const name = `${AsFunctionName(selector)}_$outerState`
+  const name = `${AsName(selector)}_$outer$state`
   return {
     [name] : function (...args) {
       let result, barrier, $pulp
@@ -178,7 +179,7 @@ function AsOuterState(selector, Handler) {
 }
 
 function AsOuterValue(selector, Handler) {
-  const name = `${AsFunctionName(selector)}_$outerValue`
+  const name = `${AsName(selector)}_$outer$value`
   return {
     [name] : function (...args) {
       let result, result$inner, $pulp
@@ -213,7 +214,7 @@ function AsOuterValue(selector, Handler) {
 }
 
 function AsOuterBasic(selector, Handler) {
-  const name = `${AsFunctionName(selector)}_$outerBasic`
+  const name = `${AsName(selector)}_$outer$basic`
   return {
     [name] : function (...args) {
       return Handler.apply(InterMap.get(this)[$PULP], args) // <<----------
@@ -222,7 +223,7 @@ function AsOuterBasic(selector, Handler) {
 }
 
 function AsOuterLazyLoader(Selector, Handler) {
-  const name = `${AsFunctionName(Selector)}_$outerLazy`
+  const name = `${AsName(Selector)}_$outer$lazy`
   return {
     [name] : function () {
       let result, result$inner, $pulp
@@ -249,7 +250,7 @@ function AsOuterLazyLoader(Selector, Handler) {
         if (typeof result !== "object" || result === null) { return result }
         if (result[IS_IMMUTABLE] || result.id != null)     { return result }
         return ((result$inner = InterMap.get(result))) ?
-          result$inner[$COPY](true).$ : CopyObject(result, true)
+          Copy(result$inner, true) : CopyObject(result, true)
       }
 
       $pulp = $inner[$PULP]
@@ -261,7 +262,7 @@ function AsOuterLazyLoader(Selector, Handler) {
 
 
 function AsInnerFact(selector, Handler) {
-  const name = `${AsFunctionName(selector)}_$innerFact`
+  const name = `${AsName(selector)}_$inner$fact`
   return {
     [name] : function (...args) {
       // this is $pulp
@@ -271,14 +272,14 @@ function AsInnerFact(selector, Handler) {
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
       return ((result$inner = InterMap.get(result))) ?
-        result$inner[$COPY](true).$ : CopyObject(result, true)
+        Copy(result$inner, true) : CopyObject(result, true)
     }
   }[name]
 }
 
 // This might not be a good idea???
 function AsInnerState(selector, Handler) {
-  const name = `${AsFunctionName(selector)}_$innerState`
+  const name = `${AsName(selector)}_$inner$state`
   return {
     [name] : function (...args) {
       // this is $pulp
@@ -289,7 +290,7 @@ function AsInnerState(selector, Handler) {
 }
 
 function AsInnerLazyLoader(Selector, Handler) {
-  const name = `${AsFunctionName(Selector)}_$innerLazy`
+  const name = `${AsName(Selector)}_$inner$lazy`
   return {
     [name] : function () {
       // this is $pulp
@@ -302,7 +303,7 @@ function AsInnerLazyLoader(Selector, Handler) {
 
 // function AsOuterBasicLazyLoader(Selector, Handler) {
 //   // FIGURE A WAY TO MAKE THIS WORK WITH selector as a Symbol AS WELL!!!
-//   const name = `${AsFunctionName(Selector)}_$outerLazy`
+//   const name = `${AsName(Selector)}_$outer$lazy`
 //   return {
 //     [name] : function () {
 //       let $inner = InterMap.get(this)
@@ -316,7 +317,7 @@ function AsInnerLazyLoader(Selector, Handler) {
 
 
 function AsSuperFact(selector, Handler) {
-  const name = `${AsFunctionName(selector)}_$superFact`
+  const name = `${AsName(selector)}_$super$fact`
   return {
     [name] : function (...args) {
       // this is $super. Need to use $pulp instead
@@ -327,14 +328,14 @@ function AsSuperFact(selector, Handler) {
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
       return ((result$inner = InterMap.get(result))) ?
-        result$inner[$COPY](true).$ : CopyObject(result, true)
+        Copy(result$inner, true) : CopyObject(result, true)
     }
   }[name]
 }
 
 // This might not be a good idea???
 function AsSuperState(selector, Handler) {
-  const name = `${AsFunctionName(selector)}_$superState`
+  const name = `${AsName(selector)}_$super$state`
   return {
     [name] : function (...args) {
     // this is $super. Need to use $pulp instead
@@ -345,7 +346,7 @@ function AsSuperState(selector, Handler) {
 }
 
 function AsGenericSuper(selector, Handler) {
-  const name = `${AsFunctionName(selector)}_$superGeneric`
+  const name = `${AsName(selector)}_$super$generic`
   return {
     [name] : function (...args) {
       // this is $super. Need to use $pulp instead
@@ -356,7 +357,7 @@ function AsGenericSuper(selector, Handler) {
 
 
 function AsSuperLazyLoader(Selector, Handler) {
-  const name = `${AsFunctionName(Selector)}_$superLazy`
+  const name = `${AsName(Selector)}_$super$lazy`
   return {
     [name] : function () {
       // this is $super. Need to use $pulp instead
