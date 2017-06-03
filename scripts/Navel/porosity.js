@@ -178,9 +178,8 @@ function InSetProperty($inner, property, value, $pulp) {
   }
 
   switch (typeof value) {
-    // case "undefined" :
-    // AssignmentOfUndefinedError($inner[$RIND])
-    //   break
+    case "undefined" :
+      return AssignmentOfUndefinedError($inner[$RIND])
 
     case "object" :
       if (!isPublic) { break }

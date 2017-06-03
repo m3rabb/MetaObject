@@ -53,21 +53,21 @@ const $Inate$root$outer = $InateBlanker.$root$outer
 
 
 // Stubs for default properties
-$Inate$root$inner[$MAIN_BARRIER]          = undefined
-$Inate$root$inner._noSuchProperty         = undefined
+$Inate$root$inner[$MAIN_BARRIER]          = null
+$Inate$root$inner._noSuchProperty         = null
 
 // This secret is only known by inner objects
 $Inate$root$inner[$SECRET]                = $INNER
-$Inate$root$outer[$SECRET]                = undefined
+$Inate$root$outer[$SECRET]                = null
 
 $Inate$root$pulp[IS_IMMUTABLE]            = false
 // $Inate$root$pulp[IMMUTABILITY]    = null
-$Inate$root$pulp.id                       = undefined
+$Inate$root$pulp.id                       = null
 // $Inate$root$pulp.splice             = undefined // Weird ref by debugger
 // Perhaps remove these later
-$Inate$root$inner._postInit               = undefined
-$Inate$root$inner._initFrom_              = undefined
-$Inate$root$inner._setPropertiesImmutable = undefined
+$Inate$root$inner._postInit               = null
+$Inate$root$inner._initFrom_              = null
+$Inate$root$inner._setPropertiesImmutable = null
 
 
 const $Inate = _$Inate[$RIND]
@@ -78,14 +78,14 @@ const Type   = _Type  [$RIND]
 
 const $Inate_properties = _$Inate._properties
 
-$Inate_properties[$MAIN_BARRIER]          = undefined
-$Inate_properties._noSuchProperty         = undefined
-$Inate_properties.id                      = undefined
+$Inate_properties[$MAIN_BARRIER]          = null
+$Inate_properties._noSuchProperty         = null
+$Inate_properties.id                      = null
 // $Inate_properties.splice            = undefined // Weird ref by debugger
 // Perhaps remove these later
-$Inate_properties._postInit               = undefined
-$Inate_properties._initFrom_              = undefined
-$Inate_properties._setPropertiesImmutable = undefined
+$Inate_properties._postInit               = null
+$Inate_properties._initFrom_              = null
+$Inate_properties._setPropertiesImmutable = null
 
 
 
@@ -135,6 +135,8 @@ Type$root$inner.new = {
 }.new
 
 Type$root$inner._propagateIntoSubtypes = ALWAYS_SELF
+
+// Note: value must never be undefined!!!
 
 Type$root$inner._setSharedProperty = function _setSharedProperty(property, value, isOwn) {
   const properties  = this._properties
@@ -205,11 +207,12 @@ _Type.addMethod(function addLazyProperty(...namedFunc_name__handler) {
 })
 
 _Type.addMethod(function addSharedProperty(property, value) {
+  if (value === undefined) { AssignmentOfUndefinedError(this[$RIND]) }
   return this._setSharedProperty(property, value, true)
 })
 
 _Type.addMethod(function removeSharedProperty(property) {
-  return (property in this._properties) ?
+  return (this._properties[property] !== undefined) ?
     this._deleteSharedProperty(property) : this
 })
 
@@ -240,8 +243,8 @@ _Type.addMethod(function _propagateIntoSubtypes(property) {
 })
 
 _Type.addMethod(function _inheritProperty(property) {
-    const properties = this._properties
-  if (property in properties) { return this }
+  const properties = this._properties
+  if (properties[property] !== undefined) { return this }
 
   const ancestry = this.ancestry
 
@@ -249,11 +252,10 @@ _Type.addMethod(function _inheritProperty(property) {
   next = ancestry.length - 1
 
   while (next--) {
-    $nextType      = InterMap.get(ancestry[next])
-    nextProperties = $nextType._properties
+    $nextType = InterMap.get(ancestry[next])
+    value     = $nextType._properties[property]
 
-    if (property in nextProperties) {
-      value = nextProperties[property]
+    if (value !== undefined) {
       return this._setSharedProperty(property, value, false)
     }
   }
