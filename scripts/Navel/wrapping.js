@@ -93,8 +93,8 @@ function AsLoaderSetter(PropertyName, Loader) {
 
 
 
-function AsOuterFact(selector, Handler) {
-  const name = `${AsName(selector)}_$outer$fact`
+function AsOuterFact(property, Handler) {
+  const name = `${AsName(property)}_$outer$fact`
   return {
     [name] : function (...args) {
       const $inner = InterMap.get(this)
@@ -132,8 +132,8 @@ function AsOuterFact(selector, Handler) {
   }[name]
 }
 
-function AsOuterValue(selector, Handler) {
-  const name = `${AsName(selector)}_$outer$value`
+function AsOuterValue(property, Handler) {
+  const name = `${AsName(property)}_$outer$value`
   return {
     [name] : function (...args) {
       const $inner = InterMap.get(this)
@@ -167,8 +167,8 @@ function AsOuterValue(selector, Handler) {
   }[name]
 }
 
-function AsOuterBasicValue(selector, Handler) {
-  const name = `${AsName(selector)}_$outer$basicValue`
+function AsOuterBasicValue(property, Handler) {
+  const name = `${AsName(property)}_$outer$basicValue`
   return {
     [name] : function (...args) {
       return Handler.apply(InterMap.get(this)[$PULP], args) // <<----------
@@ -176,8 +176,8 @@ function AsOuterBasicValue(selector, Handler) {
   }[name]
 }
 
-function AsOuterBasicSelf(selector, Handler) {
-  const name = `${AsName(selector)}_$outer$basicSelf`
+function AsOuterBasicSelf(property, Handler) {
+  const name = `${AsName(property)}_$outer$basicSelf`
   return {
     [name] : function (...args) {
       const $inner = InterMap.get(this)
@@ -187,8 +187,8 @@ function AsOuterBasicSelf(selector, Handler) {
   }[name]
 }
 
-function AsOuterLazyLoader(Selector, Handler) {
-  const name = `${AsName(Selector)}_$outer$lazy`
+function AsOuterLazyLoader(Property, Handler) {
+  const name = `${AsName(Property)}_$outer$lazy`
   return {
     [name] : function () {
       const $inner = InterMap.get(this)
@@ -219,15 +219,15 @@ function AsOuterLazyLoader(Selector, Handler) {
       }
 
       $pulp = $inner[$PULP]
-      DefineProperty($inner, Selector, InvisibleConfiguration)
-      return ($pulp[Selector] = Handler.call($pulp)) // <<----------
+      DefineProperty($inner, Property, InvisibleConfiguration)
+      return ($pulp[Property] = Handler.call($pulp)) // <<----------
     }
   }[name]
 }
 
 
-function AsInnerFact(selector, Handler) {
-  const name = `${AsName(selector)}_$inner$fact`
+function AsInnerFact(property, Handler) {
+  const name = `${AsName(property)}_$inner$fact`
   return {
     [name] : function (...args) {
       // this is $pulp
@@ -244,8 +244,8 @@ function AsInnerFact(selector, Handler) {
   }[name]
 }
 
-function AsInnerValue(selector, Handler) {
-  const name = `${AsName(selector)}_$inner$value`
+function AsInnerValue(property, Handler) {
+  const name = `${AsName(property)}_$inner$value`
   return {
     [name] : function (...args) {
       // this is $pulp
@@ -256,35 +256,35 @@ function AsInnerValue(selector, Handler) {
 }
 
 
-function AsInnerLazyLoader(Selector, Handler) {
-  const name = `${AsName(Selector)}_$inner$lazy`
+function AsInnerLazyLoader(Property, Handler) {
+  const name = `${AsName(Property)}_$inner$lazy`
   return {
     [name] : function () {
       // this is $pulp
-      DefineProperty(this[$INNER], Selector, InvisibleConfiguration)
-      return (this[Selector] = Handler.call(this)) // <<----------
+      DefineProperty(this[$INNER], Property, InvisibleConfiguration)
+      return (this[Property] = Handler.call(this)) // <<----------
     }
   }[name]
 }
 
 
-// function AsOuterBasicLazyLoader(Selector, Handler) {
-//   // FIGURE A WAY TO MAKE THIS WORK WITH selector as a Symbol AS WELL!!!
-//   const name = `${AsName(Selector)}_$outer$lazy`
+// function AsOuterBasicLazyLoader(Property, Handler) {
+//   // FIGURE A WAY TO MAKE THIS WORK WITH property as a Symbol AS WELL!!!
+//   const name = `${AsName(Property)}_$outer$lazy`
 //   return {
 //     [name] : function () {
 //       let $inner = InterMap.get(this)
 //       let $pulp = $inner[$PULP]
-//       DefineProperty($inner, Selector, InvisibleConfiguration)
-//       return ($pulp[Selector] = Handler.call($pulp)) // <<----------
+//       DefineProperty($inner, Property, InvisibleConfiguration)
+//       return ($pulp[Property] = Handler.call($pulp)) // <<----------
 //     }
 //   }[name]
 // }
 
 
 
-function AsSuperFact(selector, Handler) {
-  const name = `${AsName(selector)}_$super$fact`
+function AsSuperFact(property, Handler) {
+  const name = `${AsName(property)}_$super$fact`
   return {
     [name] : function (...args) {
       // this is $super. Need to use $pulp instead
@@ -302,8 +302,8 @@ function AsSuperFact(selector, Handler) {
   }[name]
 }
 
-function AsGenericSuper(selector, Handler) {
-  const name = `${AsName(selector)}_$super$generic`
+function AsGenericSuper(property, Handler) {
+  const name = `${AsName(property)}_$super$generic`
   return {
     [name] : function (...args) {
       // this is $super. Need to use $pulp instead
@@ -313,38 +313,38 @@ function AsGenericSuper(selector, Handler) {
 }
 
 
-function AsSuperLazyLoader(Selector, Handler) {
-  const name = `${AsName(Selector)}_$super$lazy`
+function AsSuperLazyLoader(Property, Handler) {
+  const name = `${AsName(Property)}_$super$lazy`
   return {
     [name] : function () {
       // this is $super. Need to use $pulp instead
       const $inner = this[$INNER]
       const $pulp  = $inner[$PULP]
 
-      DefineProperty($inner, Selector, InvisibleConfiguration)
-      return ($pulp[Selector] = Handler.call($pulp)) // <<----------
+      DefineProperty($inner, Property, InvisibleConfiguration)
+      return ($pulp[Property] = Handler.call($pulp)) // <<----------
     }
   }[name]
 }
 
 
-function PassThru(selector, handler) {
+function PassThru(property, handler) {
   return handler
 }
 
-function AsOuterStandard(selector, handler, isPublic) {
+function AsOuterStandard(property, handler, isPublic) {
   return isPublic ?
-    AsOuterFact(selector, handler) : AsOuterValue(selector, handler)
+    AsOuterFact(property, handler) : AsOuterValue(property, handler)
 }
 
-function AsInnerStandard(selector, handler, isPublic) {
+function AsInnerStandard(property, handler, isPublic) {
   return isPublic ?
-    AsInnerFact(selector, handler) : AsInnerValue(selector, handler)
+    AsInnerFact(property, handler) : AsInnerValue(property, handler)
 }
 
-function AsSuperStandard(selector, handler, isPublic) {
+function AsSuperStandard(property, handler, isPublic) {
   return isPublic ?
-    AsSuperFact(selector, handler) : AsGenericSuper(selector, handler)
+    AsSuperFact(property, handler) : AsGenericSuper(property, handler)
 }
 
 

@@ -96,20 +96,20 @@ const Method$root$pulp  = MethodBlanker.$root$pulp
 Method$root$pulp.isMethod = true
 
 Method$root$inner._init = function _init(func_name, func_, mode__) {
-  const [selector, handler, mode = STANDARD_METHOD] =
+  const [name, handler, mode = STANDARD_METHOD] =
     (typeof func_name === "function") ?
       [func_name.name, func_name, func_] : [func_name, func_, mode__]
-  const isPublic = (selector[0] !== "_")
+  const isPublic = (name[0] !== "_")
 
   this.isPublic = isPublic
-  this.selector = selector
+  this.name     = name
   this.mode     = mode
   this.handler  = MarkFunc(handler, KNOWN_HANDLER_FUNC)
   // this.super --> is a lazy property
 
   if (mode !== SET_LOADER) {
-    const outer  = mode.outer(selector, handler, isPublic)
-    const inner  = mode.inner(selector, handler, isPublic)
+    const outer  = mode.outer(name, handler, isPublic)
+    const inner  = mode.inner(name, handler, isPublic)
     inner.outer  = outer    // For access via Permeable outer
     outer.method = inner.method = this[$RIND]
     this.outer   = SetImmutableFunc(outer, WRAPPER_FUNC)
@@ -136,9 +136,9 @@ Type$root$inner.new = {
 
 Type$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
-Type$root$inner._setSharedProperty = function _setSharedProperty(selector, value, isOwn) {
+Type$root$inner._setSharedProperty = function _setSharedProperty(property, value, isOwn) {
   const properties  = this._properties
-  const existing    = properties[selector]
+  const existing    = properties[property]
 
   if (existing === value) { return this }
 
@@ -146,14 +146,14 @@ Type$root$inner._setSharedProperty = function _setSharedProperty(selector, value
   const $root$inner = blanker.$root$inner
   const $root$pulp  = blanker.$root$pulp
 
-  if (isOwn) { properties[selector] = value }
+  if (isOwn) { properties[property] = value }
 
-  delete $root$pulp[selector]
+  delete $root$pulp[property]
   if (value && value.isMethod) { SetMethod($root$inner, value) }
-  else                         { $root$pulp[selector] = value  }
+  else                         { $root$pulp[property] = value  }
 
-  delete $root$inner[$SUPERS][selector]
-  return this._propagateIntoSubtypes(selector)
+  delete $root$inner[$SUPERS][property]
+  return this._propagateIntoSubtypes(property)
 }
 
 
@@ -173,7 +173,7 @@ const _BasicSetImmutable = function _basicSetImmutable() {
 
 const AddMethod = function addMethod(method_namedFunc__name, func__, mode___) {
   const method = AsMethod(method_namedFunc__name, func__, mode___)
-  return this._setSharedProperty(method.selector, method, true)
+  return this._setSharedProperty(method.name, method, true)
 }
 
 
@@ -204,13 +204,13 @@ _Type.addMethod(function addLazyProperty(...namedFunc_name__handler) {
   return this.addMethod(...namedFunc_name__handler, LAZY_INSTALLER)
 })
 
-_Type.addMethod(function addSharedProperty(selector, value) {
-  return this._setSharedProperty(selector, value, true)
+_Type.addMethod(function addSharedProperty(property, value) {
+  return this._setSharedProperty(property, value, true)
 })
 
-_Type.addMethod(function removeSharedProperty(selector) {
-  return (selector in this._properties) ?
-    this._deleteSharedProperty(selector) : this
+_Type.addMethod(function removeSharedProperty(property) {
+  return (property in this._properties) ?
+    this._deleteSharedProperty(property) : this
 })
 
 _Type.addMethod(function addAllMethods(methods) {
@@ -219,29 +219,29 @@ _Type.addMethod(function addAllMethods(methods) {
   return this
 })
 
-_Type.addMethod(function _deleteSharedProperty(selector) {
+_Type.addMethod(function _deleteSharedProperty(property) {
   const blanker     = this._blanker
   const $root$inner = blanker.$root$inner
   const supers      = $root$inner[$SUPERS]
 
-  delete this._properties[selector]
-  delete blanker.$root$pulp[selector]
-  delete $root$inner[$IMMEDIATES][selector]
-  delete supers[selector]
-  delete supers[$IMMEDIATES][selector]
-  return this._inheritProperty(selector)
+  delete this._properties[property]
+  delete blanker.$root$pulp[property]
+  delete $root$inner[$IMMEDIATES][property]
+  delete supers[property]
+  delete supers[$IMMEDIATES][property]
+  return this._inheritProperty(property)
 })
 
-_Type.addMethod(function _propagateIntoSubtypes(selector) {
+_Type.addMethod(function _propagateIntoSubtypes(property) {
   this.subtypes.forEach(subtype => {
-    InterMap.get(subtype)[$PULP]._inheritProperty(selector)
+    InterMap.get(subtype)[$PULP]._inheritProperty(property)
   })
   return this
 })
 
-_Type.addMethod(function _inheritProperty(selector) {
+_Type.addMethod(function _inheritProperty(property) {
     const properties = this._properties
-  if (selector in properties) { return this }
+  if (property in properties) { return this }
 
   const ancestry = this.ancestry
 
@@ -252,9 +252,9 @@ _Type.addMethod(function _inheritProperty(selector) {
     $nextType      = InterMap.get(ancestry[next])
     nextProperties = $nextType._properties
 
-    if (selector in nextProperties) {
-      value = nextProperties[selector]
-      return this._setSharedProperty(selector, value, false)
+    if (property in nextProperties) {
+      value = nextProperties[property]
+      return this._setSharedProperty(property, value, false)
     }
   }
   return this
@@ -270,20 +270,20 @@ _Type.addMethod(function _reinheritProperties() {
   const ancestry        = this.ancestry
   const $root$inner     = this._blanker.$root$inner
 
-  var nextProperties, next, selector, $nextType
+  var nextProperties, next, property, $nextType
   nextProperties = this._properties
   next           = ancestry.length - 1
 
-  for (selector in nextProperties) { validProperties[selector] = true }
+  for (property in nextProperties) { validProperties[property] = true }
 
   while (next--) {
     $nextType  = InterMap.get(ancestry[next])
     nextProperties = $nextType._properties
 
-    for (selector in nextProperties) {
-      if (!validProperties[selector]) {
-        validProperties[selector] = true
-        this._setSharedProperty(selector, nextProperties[selector], false)
+    for (property in nextProperties) {
+      if (!validProperties[property]) {
+        validProperties[property] = true
+        this._setSharedProperty(property, nextProperties[property], false)
       }
     }
   }
@@ -292,8 +292,8 @@ _Type.addMethod(function _reinheritProperties() {
   next           = nextProperties.length
 
   while (next--) {
-    selector = nextProperties[next]
-    if (!validProperties[selector]) { this._deleteSharedProperty(selector) }
+    property = nextProperties[next]
+    if (!validProperties[property]) { this._deleteSharedProperty(property) }
   }
   return this
 })

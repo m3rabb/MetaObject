@@ -53,10 +53,10 @@ function AssignmentOfUndefinedError(target) {
   SignalError(target, "Assignment of undefined is forbidden, use null instead!")
 }
 
-function PrivateAccessFromOutsideError(target, selector) {
-  SignalError(target, `Access to private property '${selector}' from outside of an object is forbidden!!`)
+function PrivateAccessFromOutsideError(target, property) {
+  SignalError(target, `Access to private property '${property}' from outside of an object is forbidden!!`)
 }
 
-function UnknownMethodToAliasError(target, selector) {
-  SignalError(target, `Can't find method '${selector}' to alias!!`)
+function UnknownMethodToAliasError(target, property) {
+  SignalError(target, `Can't find method '${property}' to alias!!`)
 }

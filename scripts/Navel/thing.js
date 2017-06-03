@@ -120,7 +120,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 // _Thing.addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
 //   const $inner   = this[$INNER]
 //   const method   = AsMethod(method_namedFunc__name, func__, mode___)
-//   const selector = method.selector
+//   const selector = method.name
 //   const methods  = $inner[OWN_METHODS]|| ($inner[OWN_METHODS] = SpawnFrom(null))
 //   const supers   = $inner[$SUPERS]    || ($inner[$SUPERS]     = SpawnFrom(null))
 //   SetMethod($inner, method)
@@ -142,7 +142,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 //   const type = method_func__name.type
 //   const method = type && type.is(Method) ?
 //     method_func__name : Method.new(method_func__name, func__)
-//   const selector = method.selector
+//   const selector = method.name
 //   const methods = (this[INSTANCE_METHODS] ||
 //     this[INSTANCE_METHODS] = { __proto__ : null })
 //   methods[selector] = method
@@ -151,7 +151,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 // })
 
 
-// _Thing.addMethod(function _noSuchProperty(selector) {
+// _Thing.addMethod(function _noSuchProperty(property) {
 //   return SOME VALUE | this._signalError(this.oid)
 // })
 
@@ -181,7 +181,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 
 
 // Obsolete and unnecessary
-// Thing.addMethod(function _quietGet(selector) {
-//   const descriptor = PropertyDescriptor(this, selector)
+// Thing.addMethod(function _quietGet(property) {
+//   const descriptor = PropertyDescriptor(this, property)
 //   return descriptor.value
 // })

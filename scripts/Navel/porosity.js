@@ -5,13 +5,13 @@
 const BaseOuterBehavior = {
   __proto__ : null,
 
-  get (base$root, selector, $outer) {
+  get (base$root, property, $outer) {
     const $inner = InterMap.get($outer[$RIND])
-    if (selector[0] === "_") {
-      return PrivateAccessFromOutsideError($inner[$RIND], selector)
+    if (property[0] === "_") {
+      return PrivateAccessFromOutsideError($inner[$RIND], property)
     }
     return $inner._noSuchProperty ?
-      $inner[$PULP]._noSuchProperty(selector) : undefined
+      $inner[$PULP]._noSuchProperty(property) : undefined
   },
   // getPrototypeOf (base$root) { return base$root }
 }
@@ -19,9 +19,9 @@ const BaseOuterBehavior = {
 const BaseInnerBehavior = {
   __proto__ : null,
 
-  get (base$root, selector, $inner) {
+  get (base$root, property, $inner) {
     return $inner._noSuchProperty ?
-      $inner[$PULP]._noSuchProperty(selector) : undefined
+      $inner[$PULP]._noSuchProperty(property) : undefined
   },
 
   // getPrototypeOf (base$root) { return base$root }
@@ -57,19 +57,19 @@ const Outer_prototype = Outer.prototype = SpawnFrom(DefaultBehavior)
 // Further, note that the return value of a set always returns the value that
 // was tried to be set to, regardless of whether it was successful or not.
 
-Outer_prototype.set = function set($outer, selector, value, $rind) {
+Outer_prototype.set = function set($outer, property, value, $rind) {
   return DirectAssignmentFromOutsideError($rind) || false
-  // return InterMap.get($rind)._externalWrite(selector, value) || false
+  // return InterMap.get($rind)._externalWrite(property, value) || false
 }
 
 
-// getOwnPropertyDescriptor ($outer, selector) {
-//   switch (selector[0]) {
-//     case "_"       : return $outer._externalPrivateRead(selector) || undefined
-//     // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
+// getOwnPropertyDescriptor ($outer, property) {
+//   switch (property[0]) {
+//     case "_"       : return $outer._externalPrivateRead(property) || undefined
+//     // case undefined : if (!(property in VISIBLE_SYMBOLS)) { return false }
 //     case undefined : return undefined
 //   }
-//   return PropertyDescriptor($outer, selector)
+//   return PropertyDescriptor($outer, property)
 // },
 
 // ownKeys ($outer) { },
@@ -78,40 +78,40 @@ Outer_prototype.set = function set($outer, selector, value, $rind) {
 
 const Impermeable = new Outer("Impermeable")
 
-Impermeable.get = function get($outer, selector, $rind) {
-  const value = $outer[selector]
+Impermeable.get = function get($outer, property, $rind) {
+  const value = $outer[property]
   return (value !== IMMEDIATE) ? value :
-    $outer[$IMMEDIATES][selector].outer.call($rind)
+    $outer[$IMMEDIATES][property].outer.call($rind)
 }
 
-Impermeable.has = function has($outer, selector) {
-  // const firstChar = (typeof selector === "symbol") ?
-  //   selector.toString()[7] : selector[0]
-  switch (selector[0]) {
+Impermeable.has = function has($outer, property) {
+  // const firstChar = (typeof property === "symbol") ?
+  //   property.toString()[7] : property[0]
+  switch (property[0]) {
     case "_"       :
-      return PrivateAccessFromOutsideError($inner[$RIND], selector) || false
-    // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
+      return PrivateAccessFromOutsideError($inner[$RIND], property) || false
+    // case undefined : if (!(property in VISIBLE_SYMBOLS)) { return false }
     case undefined :
       return false
   }
-  return (selector in $outer)
+  return (property in $outer)
 }
 
 
 const Permeable = new Outer("Permeable")
 
-Permeable.get = function get($outer, selector, $rind) {
-  const $method = $outer[$IMMEDIATES][selector]
+Permeable.get = function get($outer, property, $rind) {
+  const $method = $outer[$IMMEDIATES][property]
   if ($method) { return $method.outer.call($rind) }
 
   const $inner = InterMap.get($rind)
-  const value  = $inner[selector]
+  const value  = $inner[property]
   return (typeof value !== "function") ? value : value.outer || value
 }
 
-Permeable.has = function has($outer, selector) {
+Permeable.has = function has($outer, property) {
   const $inner = InterMap.get($outer[$RIND])
-  return (selector in $inner)
+  return (property in $inner)
 }
 
 
@@ -125,12 +125,12 @@ function TypeOuter($pulp, $outer, permeability) {
 const TypeOuter_prototype = SpawnFrom(Outer_prototype)
 TypeOuter.prototype = TypeOuter_prototype
 
-TypeOuter_prototype.get = function get(disguisedFunc, selector, $rind) {
-  return this.permeability.get(this.$outer, selector, $rind)
+TypeOuter_prototype.get = function get(disguisedFunc, property, $rind) {
+  return this.permeability.get(this.$outer, property, $rind)
 }
 
-TypeOuter_prototype.has = function has(disguisedFunc, selector) {
-  return this.permeability.has(this.$outer, selector)
+TypeOuter_prototype.has = function has(disguisedFunc, property) {
+  return this.permeability.has(this.$outer, property)
 }
 
 TypeOuter_prototype.apply = function newAsFact(func, receiver, args) {
@@ -154,24 +154,24 @@ function MutableInner() {}
 const MutableInner_prototype = MutableInner.prototype = EMPTY_OBJECT
 const Mutability = new MutableInner()
 
-Mutability.get = function get($inner, selector, $pulp) {
-  const value = $inner[selector]
+Mutability.get = function get($inner, property, $pulp) {
+  const value = $inner[property]
   return (value !== IMMEDIATE) ? value :
-    $inner[$IMMEDIATES][selector].inner.call($pulp)
+    $inner[$IMMEDIATES][property].inner.call($pulp)
 }
 
 
-Mutability.set = function set($inner, selector, value, $pulp) {
-  const loader   = $inner[$SET_LOADERS][selector]
+Mutability.set = function set($inner, property, value, $pulp) {
+  const loader   = $inner[$SET_LOADERS][property]
   const newValue = (loader) ? loader.call($pulp, value) : value
-  InSetProperty($inner, selector, newValue, $pulp)
+  InSetProperty($inner, property, newValue, $pulp)
   return true
 }
 
-function InSetProperty($inner, selector, value, $pulp) {
-  const isPublic = (selector[0] !== "_")
+function InSetProperty($inner, property, value, $pulp) {
+  const isPublic = (property[0] !== "_")
 
-  if (!(selector in $inner)) {
+  if (!(property in $inner)) {
     // Consider making id invisible, and ensuring that id is only set thru a special method here!!!
     delete $inner[KNOWN_PROPERTIES]
     delete $inner[$OUTER][KNOWN_PROPERTIES]
@@ -188,12 +188,12 @@ function InSetProperty($inner, selector, value, $pulp) {
       if (value === null || value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
       else if (value === $pulp)                        { value = $inner[$RIND] }
       else if (value === $inner[$RIND])                {       /* NOP */       }
-      else if (value === $inner[selector])             {     return $pulp      }
+      else if (value === $inner[property])             {     return $pulp      }
       else {
         value = ($value = InterMap.get(value)) ?
           $Copy($value, true)[$RIND] : CopyObject(value, true)
       }
-      $inner[$OUTER][selector] = value
+      $inner[$OUTER][property] = value
       break
 
     case "function" : // LOOK: will catch Type things!!!
@@ -204,7 +204,7 @@ function InSetProperty($inner, selector, value, $pulp) {
         case undefined    : value = AsTameFunc(value); break
       }
 
-      // if (selector === "_initFrom_") {
+      // if (property === "_initFrom_") {
       //   value = ((tag = InterMap.get(value)) && tag === "_initFrom_") ?
       //     value : Wrap_initFrom_(value)
       // }
@@ -214,26 +214,26 @@ function InSetProperty($inner, selector, value, $pulp) {
 
       // break omitted
     default :
-      if (isPublic) { $inner[$OUTER][selector] = value }
+      if (isPublic) { $inner[$OUTER][property] = value }
       break
   }
 
-  $inner[selector] = value
+  $inner[property] = value
   return $pulp
 }
 
-Mutability.deleteProperty = function deleteProperty($inner, selector, $pulp) {
-  // const selector = SymbolPropertyMap[symbol]
+Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
+  // const property = SymbolPropertyMap[symbol]
   //
-  // if (selector === undefined) {
+  // if (property === undefined) {
   //   const message = "Use property setter instead of delete!"
   //   return SignalError($pulp, message)
   // }
 
-  if (selector in $inner) {
-    delete $inner[selector]
+  if (property in $inner) {
+    delete $inner[property]
     delete $inner[KNOWN_PROPERTIES]
-    delete $inner[$OUTER][selector]
+    delete $inner[$OUTER][property]
   }
   return true
 }
@@ -252,27 +252,27 @@ function TypeInner($inner) {
 const TypeInner_prototype = TypeInner.prototype = SpawnFrom(MutableInner_prototype)
 
 
-TypeInner_prototype.get = function get(disguisedFunc, selector, $pulp) {
-  // return Mutability.get(this.$inner, selector, $pulp)
+TypeInner_prototype.get = function get(disguisedFunc, property, $pulp) {
+  // return Mutability.get(this.$inner, property, $pulp)
   const $inner = this.$inner
-  const value  = $inner[selector]
+  const value  = $inner[property]
   return (value !== IMMEDIATE) ? value :
-    $inner[$IMMEDIATES][selector].inner.call($pulp)
+    $inner[$IMMEDIATES][property].inner.call($pulp)
 }
 
 
-TypeInner_prototype.set = function set(disguisedFunc, selector, value, $pulp) {
-  return Mutability.set(this.$inner, selector, value, $pulp)
-  // return Mutability.set(this.$inner, selector, value, $pulp)
+TypeInner_prototype.set = function set(disguisedFunc, property, value, $pulp) {
+  return Mutability.set(this.$inner, property, value, $pulp)
+  // return Mutability.set(this.$inner, property, value, $pulp)
 }
 
-TypeInner_prototype.has = function has(disguisedFunc, selector, $pulp) {
-  return (selector in this.$inner)
+TypeInner_prototype.has = function has(disguisedFunc, property, $pulp) {
+  return (property in this.$inner)
 }
 
-TypeInner_prototype.deleteProperty = function deleteProperty(disguisedFunc, selector, $pulp) {
-  return Mutability.deleteProperty(this.$inner, selector, $pulp)
-  // return Mutability.deleteProperty(this.$inner, selector, $pulp)
+TypeInner_prototype.deleteProperty = function deleteProperty(disguisedFunc, property, $pulp) {
+  return Mutability.deleteProperty(this.$inner, property, $pulp)
+  // return Mutability.deleteProperty(this.$inner, property, $pulp)
 }
 
 TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
@@ -298,18 +298,18 @@ function ImmutableInner() {}
 const ImmutableInner_prototype = SpawnFrom(EMPTY_OBJECT)
 ImmutableInner.prototype = ImmutableInner_prototype
 
-ImmutableInner_prototype.get = function get($inner, selector, $pulp) {
-  // Might need to put in check for $PULP selector, if so return this proxy???
-  const value = $inner[selector]
+ImmutableInner_prototype.get = function get($inner, property, $pulp) {
+  // Might need to put in check for $PULP property, if so return this proxy???
+  const value = $inner[property]
   return (value !== IMMEDIATE) ? value :
-    $inner[$IMMEDIATES][selector].inner.call($pulp)
+    $inner[$IMMEDIATES][property].inner.call($pulp)
 }
 
-ImmutableInner_prototype.set = function set($inner, selector, value, $pulp) {
-  if ($inner[selector] !== value) {
-    const $copy  = $Copy($inner, false, undefined, selector)
+ImmutableInner_prototype.set = function set($inner, property, value, $pulp) {
+  if ($inner[property] !== value) {
+    const $copy  = $Copy($inner, false, undefined, property)
 
-    $copy[$PULP][selector] = value
+    $copy[$PULP][property] = value
     this.$target           = $copy
     this.set               = this.retargetedSet
     this.get               = this.retargetedGet
@@ -318,14 +318,14 @@ ImmutableInner_prototype.set = function set($inner, selector, value, $pulp) {
   return true
 }
 
-ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, selector, $pulp) {
+ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp) {
   var $copy
-  switch (selector) {
+  switch (property) {
     case _DELETE_IMMUTABILITY   : $copy = $Copy($inner, false); break
     case _DELETE_ALL_PROPERTIES : $copy = $inner[$BLANKER]()  ; break
     default :
-      if (!$inner._hasOwn(selector)) { return true }
-      $copy = $Copy($inner, false, undefined, selector)
+      if (!$inner._hasOwn(property)) { return true }
+      $copy = $Copy($inner, false, undefined, property)
       break
   }
 
@@ -336,21 +336,21 @@ ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, select
   return true
 }
 
-ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, selector, $pulp) {
+ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, property, $pulp) {
   // DOUBLE CHECK THIS!!!
   const $target = this.$target
-  const value   = $target[selector]
+  const value   = $target[property]
   return (value !== IMMEDIATE) ? value :
-    $target[$IMMEDIATES][selector].inner.call($target[$PULP])
+    $target[$IMMEDIATES][property].inner.call($target[$PULP])
 }
 
-ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, selector, value, $pulp) {
-  this.$target[$PULP][selector] = value
+ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, property, value, $pulp) {
+  this.$target[$PULP][property] = value
   return true
 }
 
-ImmutableInner_prototype.retargetedDelete = function retargetedDelete($inner, selector, $pulp) {
-  delete this.$target[$PULP][selector]
+ImmutableInner_prototype.retargetedDelete = function retargetedDelete($inner, property, $pulp) {
+  delete this.$target[$PULP][property]
   return true
 }
 
@@ -366,50 +366,50 @@ class SuperInnerMethod {
 const SuperMethodPorosity = new SuperInnerMethod()
 
 // REVISIT!!!
-function SetSuperPropertyFor($inner, selector) {
+function SetSuperPropertyFor($inner, property) {
   const ancestors = $inner.type.ancestry
   const supers    = $inner[$SUPERS]
   var   next      = ancestors.length
   var   type$inner, nextProperties, value
 
-  if ($inner._hasOwn(selector)) { next++ }
+  if ($inner._hasOwn(property)) { next++ }
 
   while (next--) {
     let type$inner = InterMap.get(ancestors[next])
     let nextProperties = type$inner._properties
 
-    if (selector in nextProperties) {
-      value = nextProperties[selector]
+    if (property in nextProperties) {
+      value = nextProperties[property]
 
       if (value && value.isMethod) {
         if (value.mode.isImmediate) {
-          supers[$IMMEDIATES][selector] = value.super
-          return (supers[selector] = IMMEDIATE)
+          supers[$IMMEDIATES][property] = value.super
+          return (supers[property] = IMMEDIATE)
         }
-        return (supers[selector] = value.super)
+        return (supers[property] = value.super)
       }
-      return (supers[selector] = value)
+      return (supers[property] = value)
     }
   }
 
-  return (supers[selector] = NO_SUPER)
+  return (supers[property] = NO_SUPER)
 }
 
 
 const SuperBehavior = {
   __proto__ : DefaultBehavior,
 
-  get ($inner, selector, target) {
+  get ($inner, property, target) {
     const supers = $inner[$SUPERS]
-    const value = (selector in supers) ?
-      supers[selector] : SetSuperPropertyFor($inner, selector)
+    const value = (property in supers) ?
+      supers[property] : SetSuperPropertyFor($inner, property)
 
     switch (value) {
       case NO_SUPER  :
         return $inner._noSuchProperty ?
-          $inner[$PULP]._noSuchProperty(selector) : undefined
+          $inner[$PULP]._noSuchProperty(property) : undefined
       case IMMEDIATE :
-        return supers[$IMMEDIATES][selector].call($inner[$PULP])
+        return supers[$IMMEDIATES][property].call($inner[$PULP])
       default :
         return value // if method, answer sf|sx|sl wrapper handler
     }
@@ -423,26 +423,26 @@ const SuperBehavior = {
 const OwnSuperBehavior = {
   __proto__ : SuperBehavior,
 
-  get ($inner, selector, target) {
+  get ($inner, property, target) {
     // const supers = $inner[SUPERS]
     // const value =
     //
-    // if (selector in supers) {
+    // if (property in supers) {
     //   let sharedSupers = supers[SUPERS]
     //   if (sharedSupers !== supers) { // instance has its own SUPERS
-    //     if (!(selector in sharedSupers)) {
+    //     if (!(property in sharedSupers)) {
     //
     //     }
     //
     //   }
-    //   value = supers[selector]
+    //   value = supers[property]
     // }
     // else {
-    //   value = SetSuperPropertyFor($inner, selector)
+    //   value = SetSuperPropertyFor($inner, property)
     // }
     // return (value === NO_SUPER) ?
     //   ($inner._noSuchProperty ?
-    //     $inner[$PULP]._noSuchProperty(selector) : undefined) :
+    //     $inner[$PULP]._noSuchProperty(property) : undefined) :
     //   (value && value[$SECRET] === $INNER ?
     //     value.handler.call($inner[$PULP]) : value)
   }

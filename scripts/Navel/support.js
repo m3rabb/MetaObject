@@ -38,7 +38,7 @@ function AsMethod(method_func__name, func__, mode___) {
 function SetMethod($inner, method) {
   const $outer   = $inner[$OUTER]
   const $method  = InterMap.get(method)
-  const selector = $method.selector
+  const selector = $method.name
   const mode     = $method.mode
 
   if (mode === SET_LOADER) {
