@@ -38,33 +38,33 @@ _Type.addMethod(function asPermeable() {
 
   DefineProperty(type$inner, "asPermeable", InvisibleConfiguration)
   return (this.asPermeable = type$inner_[$RIND])
-}, BASIC_IMMEDIATE)
+}, BASIC_VALUE_IMMEDIATE)
 
 
 _Type.addMethod(function asImpermeable() {
   const $inner       = this[$INNER]
   const permeability = $inner._blanker.permeability
-  const primary      = (permeability === Impermeable) ? $inner : RootOf($inner)
+  const $primary     = (permeability === Impermeable) ? $inner : RootOf($inner)
 
   DefineProperty(primary, "asImpermeable", InvisibleConfiguration)
-  return (primary[$PULP].asImpermeable = primary[$RIND])
-}, BASIC_IMMEDIATE)
+  return ($primary[$PULP].asImpermeable = $primary[$RIND])
+}, BASIC_VALUE_IMMEDIATE)
 
 
 
+// REVISIT!!!
 _Type.addMethod(function methodAt(selector) {
   const value = this._blanker.$root$inner[selector]
   if (typeof value !== "function") { return null }
-
-  const marker = InterMap.get(value)
-  return marker.isMethod ? marker[$RIND] : null
+  if (InterMap.get(value)) { return value.method || null }
+  return null
 })
 
 _Type.addMethod(function addAlias(aliasName, name_method) {
   const sourceMethod = name_method.isMethod ?
     name_method : this.methodAt(name_method)
   if (sourceMethod == null) {
-    SignalError(this[$RIND], `Can't find method '${name_method}' to alias!!`)
+    return UnknownMethodToAliasError(this[$RIND], name_method)
   }
   return this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
 })

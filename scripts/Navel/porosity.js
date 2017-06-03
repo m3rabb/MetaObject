@@ -8,9 +8,7 @@ const BaseOuterBehavior = {
   get (base$root, selector, $outer) {
     const $inner = InterMap.get($outer[$RIND])
     if (selector[0] === "_") {
-      if ($inner._externalPrivateAccess) {
-        return $inner[$PULP]._externalPrivateAccess(selector)
-      }
+      return PrivateAccessFromOutsideError($inner[$RIND], selector)
     }
     return $inner._noSuchProperty ?
       $inner[$PULP]._noSuchProperty(selector) : undefined
@@ -60,8 +58,7 @@ const Outer_prototype = Outer.prototype = SpawnFrom(DefaultBehavior)
 // was tried to be set to, regardless of whether it was successful or not.
 
 Outer_prototype.set = function set($outer, selector, value, $rind) {
-  DirectAssignmentFromOutsideError($rind)
-  return false
+  return DirectAssignmentFromOutsideError($rind) || false
   // return InterMap.get($rind)._externalWrite(selector, value) || false
 }
 
@@ -91,9 +88,11 @@ Impermeable.has = function has($outer, selector) {
   // const firstChar = (typeof selector === "symbol") ?
   //   selector.toString()[7] : selector[0]
   switch (selector[0]) {
-    case "_"       : return $outer._externalPrivateRead(selector) || false
+    case "_"       :
+      return PrivateAccessFromOutsideError($inner[$RIND], selector) || false
     // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
-    case undefined : return false
+    case undefined :
+      return false
   }
   return (selector in $outer)
 }
@@ -102,27 +101,16 @@ Impermeable.has = function has($outer, selector) {
 const Permeable = new Outer("Permeable")
 
 Permeable.get = function get($outer, selector, $rind) {
-  const method = $outer[$IMMEDIATES][selector]
-  if (method) { return method.outer.call($rind) }
-
-  if (selector in $outer) { return $outer[selector] }
+  const $method = $outer[$IMMEDIATES][selector]
+  if ($method) { return $method.outer.call($rind) }
 
   const $inner = InterMap.get($rind)
-
-  if (selector in $inner) {
-    const value = $inner[selector]
-    if (typeof value !== "function") {
-      return (value === $inner[$PULP]) ? $rind : value
-    }
-
-    const marker = InterMap.get(value)
-    return marker.isMethod ? marker.outer : value
-  }
-
-  return $outer[selector]
+  const value  = $inner[selector]
+  return (typeof value !== "function") ? value : value.outer || value
 }
 
 Permeable.has = function has($outer, selector) {
+  const $inner = InterMap.get($outer[$RIND])
   return (selector in $inner)
 }
 
@@ -185,6 +173,7 @@ function InSetProperty($inner, selector, value, $pulp) {
   if (!(selector in $inner)) {
     // Consider making id invisible, and ensuring that id is only set thru a special method here!!!
     delete $inner[KNOWN_PROPERTIES]
+    delete $inner[$OUTER][KNOWN_PROPERTIES]
   }
 
   switch (typeof value) {
@@ -200,15 +189,19 @@ function InSetProperty($inner, selector, value, $pulp) {
       else if (value === $inner[$RIND]) { }
       else if (value === $inner[selector]) { return $pulp }
       else {
-        value = (value$inner = InterMap.get(value)) ?
-          Copy(value$inner, true) : CopyObject(value, true)
+        value = ($value = InterMap.get(value)) ?
+          $Copy($value, true)[$RIND] : CopyObject(value, true)
       }
       $inner[$OUTER][selector] = value
       break
 
     case "function" : // LOOK: will catch Type things!!!
-      // NOTE: Checking for value.constructor is inadequate to prevent func spoofing
-      value = (InterMap.get(value)) ? value : AsTameFunc(value)
+      // Note: Checking for value.constructor is inadequate to prevent func spoofing
+      switch (InterMap.get(value)) {
+        default           : break
+        // case WRAPPER_FUNC : return $pulp.addOwnMethod(value.method)
+        case undefined    : value = AsTameFunc(value); break
+      }
 
       // if (selector === "_initFrom_") {
       //   value = ((tag = InterMap.get(value)) && tag === "_initFrom_") ?
@@ -250,7 +243,6 @@ Mutability.deleteProperty = function deleteProperty($inner, selector, $pulp) {
 
 
 // CHECK THAT BARRIER WORK ON TYPE PROXIES!!!
-
 function TypeInner($inner) {
   this.$inner = $inner
   // this.$pulp  = $pulp // this is the proxy, which is now set from the outside
@@ -260,12 +252,13 @@ const TypeInner_prototype = TypeInner.prototype = SpawnFrom(MutableInner_prototy
 
 
 TypeInner_prototype.get = function get(disguisedFunc, selector, $pulp) {
-  // Double check this!!!
+  // return Mutability.get(this.$inner, selector, $pulp)
   const $inner = this.$inner
   const value  = $inner[selector]
   return (value !== IMMEDIATE) ? value :
     $inner[$IMMEDIATES][selector].inner.call($pulp)
 }
+
 
 TypeInner_prototype.set = function set(disguisedFunc, selector, value, $pulp) {
   return Mutability.set(this.$inner, selector, value, $pulp)
@@ -296,17 +289,15 @@ TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
 
 
 
-
-function ImmutableInner($inner) {
-  $inner[$PULP] = new Proxy($inner, this)
-  this.inUse    = false
-  this.target   = $inner
-}
+// BEWARE!!! The $pulp of the original target of the barrier/proxy always
+// references the original pulp proxy.
+function ImmutableInner() {}
 
 const ImmutableInner_prototype = SpawnFrom(EMPTY_OBJECT)
 ImmutableInner.prototype = ImmutableInner_prototype
 
 ImmutableInner_prototype.get = function get($inner, selector, $pulp) {
+  // Might need to put in check for $PULP selector, if so return this proxy???
   const value = $inner[selector]
   return (value !== IMMEDIATE) ? value :
     $inner[$IMMEDIATES][selector].inner.call($pulp)
@@ -314,29 +305,29 @@ ImmutableInner_prototype.get = function get($inner, selector, $pulp) {
 
 ImmutableInner_prototype.set = function set($inner, selector, value, $pulp) {
   if ($inner[selector] !== value) {
-    const copy = $pulp.mutableCopyExcept(selector) // Check returns rind|pulp
+    const $copy  = $Copy($inner, false, undefined, selector)
 
-    copy[selector]      = value
-    this.target         = InterMap.get(copy)
-    this.set            = this.retargetedSet
-    this.get            = this.retargetedGet
-    this.deleteProperty = this.retargetedDelete
+    $copy[$PULP][selector] = value
+    this.$target           = $copy
+    this.set               = this.retargetedSet
+    this.get               = this.retargetedGet
+    this.deleteProperty    = this.retargetedDelete
   }
   return true
 }
 
 ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, selector, $pulp) {
-  let copy
+  var $copy
   switch (selector) {
-    case "_IMMUTABILITY" : copy = $inner.asMutableCopy; break
-    case "_ALL"          : copy = $inner._newBlank()  ; break
+    case _DELETE_IMMUTABILITY   : $copy = $Copy($inner, false); break
+    case _DELETE_ALL_PROPERTIES : $copy = $inner[$BLANKER]()  ; break
     default :
       if (!$inner._hasOwn(selector)) { return true }
-      copy = $pulp.mutableCopyExcept(selector)
+      $copy = $Copy($inner, false, undefined, selector)
       break
   }
 
-  this.target         = InterMap.get(copy)
+  this.$target         = $copy
   this.set            = this.retargetedSet
   this.get            = this.retargetedGet
   this.deleteProperty = this.retargetedDelete
@@ -345,21 +336,19 @@ ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, select
 
 ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, selector, $pulp) {
   // DOUBLE CHECK THIS!!!
-  const target$inner = this.target
-  const value        = target$inner[selector]
+  const $target = this.$target
+  const value   = $target[selector]
   return (value !== IMMEDIATE) ? value :
-    target$inner[$IMMEDIATES][selector].inner.call(target$inner[$PULP])
-
-  // return this.target[selector]
+    $target[$IMMEDIATES][selector].inner.call($target[$PULP])
 }
 
 ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, selector, value, $pulp) {
-  this.target[$PULP][selector] = value
+  this.$target[$PULP][selector] = value
   return true
 }
 
 ImmutableInner_prototype.retargetedDelete = function retargetedDelete($inner, selector, $pulp) {
-  delete this.target[$PULP][selector]
+  delete this.$target[$PULP][selector]
   return true
 }
 
@@ -374,7 +363,7 @@ class SuperInnerMethod {
 
 const SuperMethodPorosity = new SuperInnerMethod()
 
-
+// REVISIT!!!
 function SetSuperPropertyFor($inner, selector) {
   const ancestors = $inner.type.ancestry
   const supers    = $inner[$SUPERS]

@@ -36,7 +36,7 @@ const $PULP              = Symbol("$pulp")
 const $OUTER             = Symbol("$outer")
 const $RIND              = Symbol("$rind")  // Consider simply using $ !!!
 
-const $BARRIER           = Symbol("$barrier")
+const $MAIN_BARRIER      = Symbol("$mainBarrier")
 const $COPY              = Symbol("$copy")
 //const $IID               = Symbol("$instanceId")
 const $PRIOR_IDS         = Symbol("$priorIds")
@@ -46,7 +46,7 @@ const $IMMEDIATES        = Symbol("$immediates")
 const $BLANKER           = Symbol("$blanker")
 const $SUPERS            = Symbol("$supers")
 const $SUPER             = Symbol("$super")
-const $SET_LOADERS       = Symbol("$set_loaders")
+const $SET_LOADERS       = Symbol("$setLoaders")
 
 
 // Sentinels
@@ -74,11 +74,6 @@ const InvisibleConfiguration = {
 
 
 // const SymbolPropertyMap  = SpawnFrom(null)
-
-const SAFE_FUNC       = Frost({id: "SAFE_FUNC"      , [IS_IMMUTABLE] : true})
-const BLANKER_FUNC    = Frost({id: "BLANKER_FUNC"   , [IS_IMMUTABLE] : true})
-const TAMED_FUNC      = Frost({id: "TAMED_FUNC"     , [IS_IMMUTABLE] : true})
-const SET_LOADER_FUNC = Frost({id: "SET_LOADER_FUNC", [IS_IMMUTABLE] : true})
 
 const EMPTY_OBJECT    = Frost(SpawnFrom(null))
 

@@ -184,3 +184,7 @@ if (value === $pulp) {  // Perhaps will force assignments to always be target!!!
 else if (value === $inner[$RIND]) {
   $inner[selector] = $pulp
 }
+
+
+==
+change method selector to name

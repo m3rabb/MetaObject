@@ -35,25 +35,23 @@ function AsMethod(method_func__name, func__, mode___) {
     method_func__name : Method(method_func__name, func__, mode___)
 }
 
-
-
 function SetMethod($inner, method) {
-  const $outer       = $inner[$OUTER]
-  const method$inner = InterMap.get(method)
-  const selector     = method$inner.selector
-  const mode         = method$inner.mode
+  const $outer   = $inner[$OUTER]
+  const $method  = InterMap.get(method)
+  const selector = $method.selector
+  const mode     = $method.mode
 
-  if (mode.isImmediate) {
-    $inner[$IMMEDIATES][selector] = method$inner
-    $inner[selector] = IMMEDIATE
-    if (method$inner.isPublic) { $outer[selector] = IMMEDIATE }
+  if (mode === SET_LOADER) {
+    $inner[$SET_LOADERS][selector] = $method.handler
   }
-  else if (mode === SET_LOADER) {
-    $inner[$SET_LOADERS][selector] = method$inner.handler
+  else if (mode.isImmediate) {
+    $inner[$IMMEDIATES][selector] = $method
+    $inner[selector] = IMMEDIATE
+    if ($method.isPublic) { $outer[selector] = IMMEDIATE }
   }
   else {
-    $inner[selector] = method$inner.inner
-    if (method$inner.isPublic) { $outer[selector] = method$inner.outer }
+    $inner[selector] = $method.inner
+    if ($method.isPublic) { $outer[selector] = $method.outer }
   }
 }
 
@@ -61,7 +59,7 @@ function SetMethod($inner, method) {
 // Consider caching these!!!
 function MakeAssignmentError(Property, Setter) {
   return function $assignmentError(_target) {
-    SignalError(_target[$RIND], `Assignment to property '${Property}' is not allowed, use '${Setter}' method instead!!`)
+    DisallowedAssignmentError(_target[$RIND], Property, Setter)
   }
 }
 
@@ -151,8 +149,6 @@ function MakeTypeInnerBlanker(PairedOuter, Permeability) {
     this._blanker    = NewBlanker()
   }
 }
-
-
 
 function MakeInnerBlanker(PairedOuter, Permeability) {
   return function () {
@@ -261,21 +257,6 @@ function SetKnownProperties(target, setOuter_) {
 // }
 
 
-function BeFrozenFunc(func, marker) {
-  if (InterMap.get(func)) { return func }
-
-  func[IS_IMMUTABLE] = true
-  InterMap.set(func, marker)
-  Frost(func.prototype)
-  return Frost(func)
-}
-
-
-// Simpleton function
-const ALWAYS_FALSE     = BeFrozenFunc(() => false                , SAFE_FUNC)
-const ALWAYS_NULL      = BeFrozenFunc(() => null                 , SAFE_FUNC)
-const ALWAYS_UNDEFINED = BeFrozenFunc(() => undefined            , SAFE_FUNC)
-const ALWAYS_SELF      = BeFrozenFunc(function () { return this }, SAFE_FUNC)
 
 
 // function CopyLog() {
@@ -296,23 +277,23 @@ const ALWAYS_SELF      = BeFrozenFunc(function () { return this }, SAFE_FUNC)
 
 
 
-function Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
+function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   const source  = $source[$RIND]
-  var   $inner  = new $source[$BLANKER]()
-  const $pulp   = $inner[$PULP]
+  const $inner  = new $source[$BLANKER]()
   const $outer  = $inner[$OUTER]
+  const $pulp   = $inner[$PULP]
   const target  = $inner[$RIND]
-  var handler, next, property, value, traversed, value$inner
+  var handler, next, property, value, traversed, $value, barrier
 
   visited.set(source, target) // to manage cyclic objects
 
   if ((handler = $inner._initFrom_)) {
-    if (handler.length < 4) {
-      $pulp._initFrom_($source[$PULP], visited, exceptProperty_)
-    } else {
+    (handler.length < 4) ?
+      $pulp._initFrom_($source[$PULP], visited, exceptProperty_) :
       $pulp._initFrom_($source[$PULP], visited, exceptProperty_, asImmutable)
-    }
-    if ($inner[IS_IMMUTABLE]) { return target }
+    if ($inner._postInit) { $pulp._postInit() }
+    if (asImmutable && !$inner[IS_IMMUTABLE]) { $pulp._setImmutable(visited) }
+    return $inner
   }
   else {
     const properties = $source[KNOWN_PROPERTIES] ||
@@ -329,94 +310,35 @@ function Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
       else if (value === source)                        { value = target    }
       else if (value[IS_IMMUTABLE] || value.id != null) {     /* NOP */     }
       else if ((traversed   =  visited.get(value)))     { value = traversed }
-      else if ((value$inner = InterMap.get(value)))
-           { value = Copy(value$inner, asImmutable, visited) }
-      else { value = CopyObject(value, asImmutable, visited) }
+      else {
+        value = ($value = InterMap.get(value)) ?
+          $Copy($value, asImmutable, visited)[$RIND] :
+          CopyObject(value, asImmutable, visited)
+      }
 
       $inner[property] = value
       if (property[0] !== "_") { $outer[property] = value }
     }
   }
 
-  if ($inner._postCreation) { $inner = $pulp._postCreation()[$INNER] }
+  if ($inner._postInit) { $pulp._postInit() }
 
   if (asImmutable) {
-    if (handler) { return BeImmutable($inner) }
-
-    $inner[IS_IMMUTABLE] = $inner[$OUTER][IS_IMMUTABLE] = true
-    $inner[$BARRIER]     = new ImmutableInner($inner)
+    barrier               = new ImmutableInner($inner)
+    $inner[$PULP]         = new Proxy($inner, barrier)
+    $inner[$MAIN_BARRIER] = barrier
+    $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
     Frost($outer)
   }
 
-  return $inner[$RIND]
+  return $inner
 }
-
-// ADD ABILITY TO BE IMMUTABLE 'INPLACE'!!!
-// CHANGE TO CHECK FOR PUBLIC PROPERTIES FIRST!!!
-// Note: This should only be called on mutable objects!!!
-function BeImmutable($inner, inPlace, visited = new WeakSet()) {
-  var next, property, value, value$inner
-
-  const target = $inner[$RIND]
-  const $outer = $inner[$OUTER]
-
-  visited.add(target)
-
-  if ($inner._setPropertiesImmutable) {
-    $inner[$PULP]._setPropertiesImmutable(visited)
-  }
-  else {
-    const properties =
-      $inner[KNOWN_PROPERTIES] || SetKnownProperties($inner, true)
-
-    next = properties.length
-    while (next--) {
-      property = properties[next]
-      value    = target[property]
-
-      if (typeof value !== "object" || value === null)  { continue }
-      if (value === target)                             { continue }
-      if (value[IS_IMMUTABLE] || value.id != null)      { continue }
-      if (visited.has(value))                           { continue }
-
-      value$inner = InterMap.get(value)
-      if (inPlace) {
-        if (value$inner) { BeImmutable(value$inner, true, visited) }
-        else             { BeImmutableObject(value, true, visited) }
-      }
-      else {
-        value = value$inner ? Copy(value$inner, true) : CopyObject(value, true)
-        $inner[property] = value
-        if (property[0] !== "_") { $outer[property] = value }
-      }
-    }
-  }
-
-  $outer[IS_IMMUTABLE] = $inner[IS_IMMUTABLE] = true
-  $inner[$BARRIER]     = new ImmutableInner($inner)
-  Frost($outer)
-  return target
-}
-
-
-const BasicBeImmutable = function basicBeImmutable() {
-  const $inner = this[$INNER]
-  if ($inner[IS_IMMUTABLE]) { return $inner[$RIND] }
-  const $outer = $inner[$OUTER]
-  $outer[IS_IMMUTABLE] = $inner[IS_IMMUTABLE] = true
-  $inner[$BARRIER]     = new ImmutableInner($inner)
-  Frost($outer)
-  return $inner[$RIND]
-}
-//   delete this._captureChanges
-//   delete this._captureOverwrite
-
 
 
 // Note: The CopyObject is only called AFTER confirming that the source
 //       is NOT a fact!!! ***
 function CopyObject(source, asImmutable, visited = new WeakMap(), pass_) {
-  var target, properties, next, property, value, traversed, value$inner
+  var target, properties, next, property, value, traversed, $value
 
   switch (source.constructor) {
     default : // Custom Object
@@ -468,9 +390,11 @@ function CopyObject(source, asImmutable, visited = new WeakMap(), pass_) {
     else if (value === source)                        { value = target    }
     else if (value[IS_IMMUTABLE] || value.id != null) {     /* NOP */     }
     else if ((traversed   =  visited.get(value)))     { value = traversed }
-    else if ((value$inner = InterMap.get(value)))
-         { value = Copy(value$inner, asImmutable, visited) }
-    else { value = CopyObject(value, asImmutable, visited) }
+    else {
+      value = ($value = InterMap.get(value)) ?
+        $Copy($value, asImmutable, visited)[$RIND] :
+        CopyObject(value, asImmutable, visited)
+    }
 
     target[property] = value
   }
@@ -494,7 +418,7 @@ const ReliableObjectCopy = function copy(asImmutable_, visited_) {
 
 
 function BeImmutableObject(target, inPlace, visited = new WeakSet()) {
-  let properties, next, property, value, value$inner
+  let properties, next, property, value, $value
 
   visited.add(target)
 
@@ -518,14 +442,14 @@ function BeImmutableObject(target, inPlace, visited = new WeakSet()) {
     if (value[IS_IMMUTABLE] || value.id != null)     { continue }
     if (visited.has(value))                          { continue }
 
-    value$inner = InterMap.get(value)
+    $value = InterMap.get(value)
     if (inPlace) {
-      if (value$inner) { BeImmutable(value$inner, true, visited) }
-      else             { BeImmutableObject(value, true, visited) }
+      if ($value) { $value[$PULP].beImmutable(true, visited) }
+      else        { BeImmutableObject(value, true, visited)  }
     }
     else {
-      target[selector] = value$inner ?
-        Copy(value$inner, true) : CopyObject(value, true)
+      target[selector] = $value ?
+        $Copy($value, true)[$RIND] : CopyObject(value, true)
     }
   }
 
@@ -534,11 +458,41 @@ function BeImmutableObject(target, inPlace, visited = new WeakSet()) {
 }
 
 
-// function BasicBeImmutableObject(target) {
 function SetImmutable(target) {
   target[IS_IMMUTABLE] = true
   return Frost(target)
 }
+
+
+function SetImmutableFunc(func, marker = SAFE_FUNC) {
+  if (InterMap.get(func)) { return func }
+
+  func[IS_IMMUTABLE] = true
+  InterMap.set(func, marker)
+  Frost(func.prototype)
+  return Frost(func)
+}
+
+function MarkFunc(func, marker) {
+  if (InterMap.get(func)) { return func }
+  InterMap.set(func, marker)
+  return func
+}
+
+
+const SAFE_FUNC          = Frost({id: "SAFE_FUNC"      , [IS_IMMUTABLE] : true})
+const BLANKER_FUNC       = Frost({id: "BLANKER_FUNC"   , [IS_IMMUTABLE] : true})
+const TAMED_FUNC         = Frost({id: "TAMED_FUNC"     , [IS_IMMUTABLE] : true})
+const WRAPPER_FUNC       = Frost({id: "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true})
+const KNOWN_HANDLER_FUNC = Frost({id: "HANDLER_FUNC"})
+//const SET_LOADER_FUNC = Frost({id: "SET_LOADER_FUNC")
+
+
+// Simpleton function
+const ALWAYS_FALSE     = SetImmutableFunc(          () => false       )
+const ALWAYS_NULL      = SetImmutableFunc(          () => null        )
+const ALWAYS_UNDEFINED = SetImmutableFunc(          () => undefined   )
+const ALWAYS_SELF      = SetImmutableFunc( function () { return this })
 
 
 /*       1         2         3         4         5         6         7         8

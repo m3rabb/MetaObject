@@ -1,21 +1,21 @@
 
-const FuncGlobals = {
-  $SECRET                : $SECRET,
-  $RIND                  : $RIND,
-  $PULP                  : $PULP,
-  $INNER                 : $INNER,
-  $BARRIER               : $BARRIER,
-  IS_IMMUTABLE           : IS_IMMUTABLE,
-  InterMap               : InterMap,
-  ImmutableInner         : ImmutableInner,
-  Copy                   : Copy,
-  CopyObject             : CopyObject,
-  DefineProperty         : DefineProperty,
-  InSetProperty          : InSetProperty,
-  InvisibleConfiguration : InvisibleConfiguration,
-}
-
-const FunctionNamer = new NamedFunctionMaker(FuncGlobals)
+// const FuncGlobals = {
+//   $SECRET                : $SECRET,
+//   $RIND                  : $RIND,
+//   $PULP                  : $PULP,
+//   $INNER                 : $INNER,
+//   $BARRIER               : $BARRIER,
+//   IS_IMMUTABLE           : IS_IMMUTABLE,
+//   InterMap               : InterMap,
+//   ImmutableInner         : ImmutableInner,
+//   Copy                   : Copy,
+//   CopyObject             : CopyObject,
+//   DefineProperty         : DefineProperty,
+//   InSetProperty          : InSetProperty,
+//   InvisibleConfiguration : InvisibleConfiguration,
+// }
+//
+// const FunctionNamer = new NamedFunctionMaker(FuncGlobals)
 
 
 
@@ -30,13 +30,13 @@ const FunctionNamer = new NamedFunctionMaker(FuncGlobals)
 //
 //   const vars  = {$$$$$: Func.name, Func: Func}
 //   const named = FunctionNamer.make(vars, func)
-//   return BeFrozenFunc(func)
+//   return SetImmutableFunc(func)
 // }
 
 
 
 function AsTameFunc(Func) {
-  const name = `${Func.name}_$safe`
+  const name = `${Func.name}_$tamed`
   const func = {
     [name] : function (...args) {
       const receiver =
@@ -44,12 +44,12 @@ function AsTameFunc(Func) {
       return Func.apply(receiver, args)
     }
   }[name]
-  return BeFrozenFunc(func, TAMED_FUNC)
+  return SetImmutableFunc(func, TAMED_FUNC)
 }
 
 
 function AsBasicSetter(PropertyName, setterName) {
-  const name = `${AsName(setterName)}_$setter$basic`
+  const name = `${AsName(setterName)}_$setterBasic`
   return {
     [name] : function (value) {
       return InSetProperty(this[$INNER], PropertyName, value, this)
@@ -58,7 +58,7 @@ function AsBasicSetter(PropertyName, setterName) {
 }
 
 function AsLoaderSetter(PropertyName, Loader) {
-  const name = `${Loader.name}_$setter$loader`
+  const name = `${Loader.name}_$setterLoader`
   return {
     [name] : function (value) {
       const newValue = Loader.call(this, value)
@@ -72,108 +72,62 @@ function AsLoaderSetter(PropertyName, Loader) {
 
 // Method       outer                     inner          super
 //              AsOuterFact               AsInnerFact    AsSuperFact
-// Fact         self$rind|immCopy|fact    this|fact      this|fact ()
-// _Fact                                  this|fact      this|fact ()
-//              AsOuterState              AsInnerState   AsSuperState
-// State        self$rind|immCopy         this           this      ()
-// _State                                 this           this      ()
-//              AsOuterValue              PassThru       AsGenericSuper
-// Value        self$rind|immCopy|result  result         result    ()
-// _Value                                 result         result    ()
-//              AsOuterBasic              PassThru       AsGenericSuper
-// Basic        self$rind|result          result         result    ()
-// _Basic                                 result         result    ()
+// Fact         self|immCopy|fact         _self|fact     _self|fact  ()
 //
-// Immediate    outer                     inner          super
-//              AsOuterFact               AsInnerFact    AsInnerFact
-// Fact         self$rind|immCopy|fact    this|fact      this|fact
-// _Fact                                  this|fact      this|fact
-//              AsOuterState              AsInnerState   AsInnerState
-// State        self$rind|immCopy         this           this
-// _State                                 this           this
-//              AsOuterValue              PassThru       PassThru
-// Value        self$rind|immCopy|result  result         result
-// _Value                                 result         result
-//              AsOuterBasic              PassThru       PassThru
-// Basic        self$rind|result          result         result
-// _Basic                                 result         result
+//              AsOuterValue              AsInnerValue   AsGenericSuper
+// Value        self|immCopy|value        _self|value    _self|value ()
+//
+//              AsOuterBasicValue         PassThru       AsGenericSuper
+// Basic        value                     value          value       ()
+//
+//              AsOuterBasicSelf          PassThru       AsGenericSuper
+// Basic        self                      _self          _self       ()
 //
 //
 // Lazy         AsOuterLazyLoader    AsInnerLazyLoader   AsSuperLazyLoader
-// _Lazy                             AsInnerLazyLoader   AsSuperLazyLoader
+//
 //
 // Method
 //   public  Fact
-//   private _Value
+//   private Value
 
 
 
 function AsOuterFact(selector, Handler) {
-  const name = `${AsName(selector)}_$outer$act`
+  const name = `${AsName(selector)}_$outer$fact`
   return {
     [name] : function (...args) {
-      const $inner  = InterMap.get(this)
-      var barrier, result, result$inner, $pulp
+      const $inner = InterMap.get(this)
+      var   $pulp, barrier, result, $target, $result
 
-      if ((barrier = $inner[$BARRIER])) { // means $inner[IS_IMMUTABLE]
-        if (barrier.inUse) { barrier = new ImmutableInner($inner) }
-        barrier.inUse = true
-        $pulp  = barrier.target[$PULP]
-        result = Handler.apply($pulp, args) // <<----------
-
-        if (result === $pulp) {
-          result = barrier.target
-          if (result !== $inner) {
-            barrier.target = $inner
-            result[$PULP].beImmutable
-          }
-          barrier.inUse = false
-          return result[$RIND]
+      if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
+        if (barrier.$target) {
+          barrier = new ImmutableInner()
+          $pulp = new Proxy($inner, barrier)
+        } else {
+          $pulp = $inner[$PULP]
         }
-        barrier.inUse = false
+        barrier.$target = $inner
+        result = Handler.apply($pulp, args) // <<----------
+        $target = barrier.$target
+        barrier.$target = null
+
+        if (result === undefined || result === $pulp) {
+          if ($target !== $inner) { $target[$PULP].beImmutable }
+          return $target[$RIND]
+        }
       }
       else {
-        $pulp = $inner[$PULP]
+        $pulp  = $inner[$PULP]
         result = Handler.apply($pulp, args) // <<----------
-        if (result === $pulp) { return $inner[$RIND] }
+        if (result === undefined || result === $pulp) { return $inner[$RIND] }
       }
 
       // if (result === $inner[$RIND])                   { return result }
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-      return ((result$inner = InterMap.get(result))) ?
-        Copy(result$inner, true) : CopyObject(result, true)
-    }
-  }[name]
-}
-
-// This might not be a good idea???
-function AsOuterState(selector, Handler) {
-  const name = `${AsName(selector)}_$outer$state`
-  return {
-    [name] : function (...args) {
-      const $inner = InterMap.get(this)
-      var barrier, result, $pulp
-
-      if ((barrier = $inner[$BARRIER])) { // means $inner[IS_IMMUTABLE]
-        if (barrier.inUse) { barrier = new ImmutableInner($inner) }
-        barrier.inUse = true
-        $pulp  = barrier.target[$PULP]
-        Handler.apply($pulp, args) // <<----------
-        result = barrier.target
-
-        if (result !== $inner) {
-          barrier.target = $inner
-          result.beImmutable
-        }
-        barrier.inUse = false
-        return result[$RIND]
-      }
-      else {
-        $pulp = $inner[$PULP]
-        Handler.apply($pulp, args) // <<----------
-        return $inner[$RIND]
-      }
+      return (($result = InterMap.get(result))) ?
+        $Copy($result, true)[$RIND] : CopyObject(result, true)
     }
   }[name]
 }
@@ -183,29 +137,29 @@ function AsOuterValue(selector, Handler) {
   return {
     [name] : function (...args) {
       const $inner = InterMap.get(this)
-      var barrier, result, result$inner, $pulp
+      var   $pulp, barrier, result, $target
 
-      if ((barrier = $inner[$BARRIER])) { // means $inner[IS_IMMUTABLE]
-        if (barrier.inUse) { barrier = new ImmutableInner($inner) }
-        barrier.inUse = true
-        $pulp  = barrier.target[$PULP]
-        result = Handler.apply($pulp, args) // <<----------
-
-        if (result === $pulp) {
-          result = barrier.target
-          if (result !== $inner) {
-            barrier.target = $inner
-            result[$PULP].beImmutable
-          }
-          barrier.inUse = false
-          return result[$RIND]
+      if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
+        if (barrier.$target) {
+          barrier = new ImmutableInner()
+          $pulp = new Proxy($inner, barrier)
+        } else {
+          $pulp = $inner[$PULP]
         }
-        barrier.inUse = false
+        barrier.$target = $inner
+        result = Handler.apply($pulp, args) // <<----------
+        $target = barrier.$target
+        barrier.$target = null
+
+        if (result === undefined || result === $pulp) {
+          if ($target !== $inner) { $target[$PULP].beImmutable }
+          return $target[$RIND]
+        }
       }
       else {
-        $pulp = $inner[$PULP]
+        $pulp  = $inner[$PULP]
         result = Handler.apply($pulp, args) // <<----------
-        if (result === $pulp) { return $inner[$RIND] }
+        if (result === undefined || result === $pulp) { return $inner[$RIND] }
       }
 
       return result
@@ -213,11 +167,22 @@ function AsOuterValue(selector, Handler) {
   }[name]
 }
 
-function AsOuterBasic(selector, Handler) {
-  const name = `${AsName(selector)}_$outer$basic`
+function AsOuterBasicValue(selector, Handler) {
+  const name = `${AsName(selector)}_$outer$basicValue`
   return {
     [name] : function (...args) {
       return Handler.apply(InterMap.get(this)[$PULP], args) // <<----------
+    }
+  }[name]
+}
+
+function AsOuterBasicSelf(selector, Handler) {
+  const name = `${AsName(selector)}_$outer$basicSelf`
+  return {
+    [name] : function (...args) {
+      const $inner = InterMap.get(this)
+      Handler.apply($inner[$PULP], args) // <<----------
+      return $inner[$RIND]
     }
   }[name]
 }
@@ -227,30 +192,30 @@ function AsOuterLazyLoader(Selector, Handler) {
   return {
     [name] : function () {
       const $inner = InterMap.get(this)
-      var barrier, result, result$inner, $pulp
+      var   $pulp, barrier, result, $target, $result
 
-      if ((barrier = $inner[$BARRIER])) { // means $inner[IS_IMMUTABLE]
-        if (barrier.inUse) { barrier = new ImmutableInner($inner) }
-        barrier.inUse = true
-        $pulp  = barrier.target[$PULP]
-        result = Handler.call($pulp) // <<----------
-
-        if (result === $pulp) {
-          result = barrier.target
-          if (result !== $inner) {
-            barrier.target = $inner
-            result[$PULP].beImmutable
-          }
-          barrier.inUse = false
-          return result[$RIND]
+      if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
+        if (barrier.$target) {
+          barrier = new ImmutableInner()
+          $pulp = new Proxy($inner, barrier)
+        } else {
+          $pulp = $inner[$PULP]
         }
-        barrier.inUse = false
+        barrier.$target = $inner
+        result = Handler.apply($pulp, args) // <<----------
+        $target = barrier.$target
+        barrier.$target = null
+
+        if (result === undefined || result === $pulp) {
+          if ($target !== $inner) { $target[$PULP].beImmutable }
+          return $target[$RIND]
+        }
 
         // if (result === $inner[$RIND])                   { return result }
         if (typeof result !== "object" || result === null) { return result }
         if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-        return ((result$inner = InterMap.get(result))) ?
-          Copy(result$inner, true) : CopyObject(result, true)
+        return (($result = InterMap.get(result))) ?
+          Copy($result, true)[$RIND] : CopyObject(result, true)
       }
 
       $pulp = $inner[$PULP]
@@ -267,27 +232,29 @@ function AsInnerFact(selector, Handler) {
     [name] : function (...args) {
       // this is $pulp
       const result = Handler.apply(this, args) // <<----------
+      var   $result
 
-      if (result === this)                               { return result }
+      if (result === undefined || result === this)       { return result }
+      // if (result === $inner[$RIND])                   { return result }
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-      return ((result$inner = InterMap.get(result))) ?
-        Copy(result$inner, true) : CopyObject(result, true)
+      return (($result = InterMap.get(result))) ?
+        Copy($result, true) : CopyObject(result, true)
     }
   }[name]
 }
 
-// This might not be a good idea???
-function AsInnerState(selector, Handler) {
-  const name = `${AsName(selector)}_$inner$state`
+function AsInnerValue(selector, Handler) {
+  const name = `${AsName(selector)}_$inner$value`
   return {
     [name] : function (...args) {
       // this is $pulp
-      Handler.apply(this, args) // <<----------
-      return this
+      const result = Handler.apply(this, args) // <<----------
+      return (result === undefined) ? this : result
     }
   }[name]
 }
+
 
 function AsInnerLazyLoader(Selector, Handler) {
   const name = `${AsName(Selector)}_$inner$lazy`
@@ -323,24 +290,14 @@ function AsSuperFact(selector, Handler) {
       // this is $super. Need to use $pulp instead
       const $pulp  = this[$PULP]
       const result = Handler.apply($pulp, args) // <<----------
+      var   $result
 
-      if (result === $pulp)                              { return result }
+      if (result === undefined || result === $pulp)      { return result }
+      // if (result === $inner[$RIND])                   { return result }
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-      return ((result$inner = InterMap.get(result))) ?
-        Copy(result$inner, true) : CopyObject(result, true)
-    }
-  }[name]
-}
-
-// This might not be a good idea???
-function AsSuperState(selector, Handler) {
-  const name = `${AsName(selector)}_$super$state`
-  return {
-    [name] : function (...args) {
-    // this is $super. Need to use $pulp instead
-      Handler.apply(this[$PULP], args) // <<----------
-      return this
+      return (($result = InterMap.get(result))) ?
+        Copy($result, true) : CopyObject(result, true)
     }
   }[name]
 }
@@ -382,7 +339,7 @@ function AsOuterStandard(selector, handler, isPublic) {
 
 function AsInnerStandard(selector, handler, isPublic) {
   return isPublic ?
-    AsInnerFact(selector, handler) : PassThru(selector, handler)
+    AsInnerFact(selector, handler) : AsInnerValue(selector, handler)
 }
 
 function AsSuperStandard(selector, handler, isPublic) {
@@ -399,26 +356,26 @@ const FACT_METHOD = {
   super       : AsSuperFact,
 }
 
-const STATE_METHOD = {
-  id          : "STATE_METHOD",
-  isImmediate : false,
-  outer       : AsOuterState,
-  inner       : AsInnerState,
-  super       : AsSuperState,
-}
-
 const VALUE_METHOD = {
   id          : "VALUE_METHOD",
   isImmediate : false,
   outer       : AsOuterValue,
+  inner       : AsInnerValue,
+  super       : AsGenericSuper,
+}
+
+const BASIC_VALUE_METHOD = {
+  id          : "BASIC_VALUE_METHOD",
+  isImmediate : false,
+  outer       : AsOuterBasicValue,
   inner       : PassThru,
   super       : AsGenericSuper,
 }
 
-const BASIC_METHOD = {
-  id          : "BASIC_METHOD",
+const BASIC_SELF_METHOD = {
+  id          : "BASIC_SELF_METHOD",
   isImmediate : false,
-  outer       : AsOuterBasic,
+  outer       : AsOuterBasicSelf,
   inner       : PassThru,
   super       : AsGenericSuper,
 }
@@ -432,29 +389,30 @@ const FACT_IMMEDIATE = {
   super       : AsInnerFact,
 }
 
-const STATE_IMMEDIATE = {
-  id          : "STATE_IMMEDIATE",
-  isImmediate : true,
-  outer       : AsOuterState,
-  inner       : AsInnerState,
-  super       : AsInnerState,
-}
-
 const VALUE_IMMEDIATE = {
   id          : "VALUE_IMMEDIATE",
   isImmediate : true,
   outer       : AsOuterValue,
+  inner       : AsInnerValue,
+  super       : AsInnerValue,
+}
+
+const BASIC_VALUE_IMMEDIATE = {
+  id          : "BASIC_VALUE_IMMEDIATE",
+  isImmediate : true,
+  outer       : AsOuterBasicValue,
   inner       : PassThru,
   super       : PassThru,
 }
 
-const BASIC_IMMEDIATE = {
-  id          : "BASIC_IMMEDIATE",
+const BASIC_SELF_IMMEDIATE = {
+  id          : "BASIC_SELF_IMMEDIATE",
   isImmediate : true,
-  outer       : AsOuterBasic,
+  outer       : AsOuterBasicSelf,
   inner       : PassThru,
   super       : PassThru,
 }
+
 
 
 const LAZY_INSTALLER = {
@@ -486,7 +444,6 @@ const STANDARD_METHOD = {
 const STANDARD_IMMEDIATE = {
   id          : "STANDARD_IMMEDIATE",
   isImmediate : true,
-  isLoader    : false,
   outer       : AsOuterStandard,
   inner       : AsInnerStandard,
   super       : AsInnerStandard,

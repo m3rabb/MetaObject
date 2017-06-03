@@ -26,10 +26,12 @@ _$Inate.addLazyProperty(function basicId() {
 
 _$Inate.addMethod(function $() {
   const $inner = this[$INNER]
+  const $rind  = $inner[$RIND]
 
   DefineProperty($inner, "$", InvisibleConfiguration)
-  return ($inner[$OUTER].$ = $inner.$ = $inner[$RIND])
-}, BASIC_IMMEDIATE)
+  if (!$inner[IS_IMMUTABLE]) { $inner[$OUTER].$ = $rind }
+  return ($inner.$ = $rind)
+}, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function _super() {
   const $inner = this[$INNER]
@@ -37,41 +39,43 @@ _$Inate.addMethod(function _super() {
 
   DefineProperty($inner, "_super", InvisibleConfiguration)
   return ($inner._super = $super)
-}, BASIC_IMMEDIATE)
+}, BASIC_VALUE_IMMEDIATE)
 
 
 _$Inate.addMethod(function isImmutable() {
   return this[IS_IMMUTABLE] ? true : false
-}, BASIC_IMMEDIATE)
+}, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function isMutable() {
   return !this[IS_IMMUTABLE]
-}, BASIC_IMMEDIATE)
+}, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function isFact() {
   return this[IS_IMMUTABLE] ? true : (this.id != null)
-}, BASIC_IMMEDIATE)
+}, BASIC_VALUE_IMMEDIATE)
 
 
 
 _$Inate.addMethod(function copy(asImmutable_, visited_) {
-  const [asImmutable, visited] = (typeof visited_asImmutable_ === "object") ?
-    [undefined, visited_asImmutable_] : [visited_asImmutable_, visited__]
-  return (this[IS_IMMUTABLE] && asImmutable !== false) ?
-    this[$RIND] : Copy(this[$INNER], asImmutable, visited)
-}, BASIC_METHOD)
+  const [asImmutable, visited] = (typeof visited_asImmutable_ === "boolean") ?
+    [visited_asImmutable_, visited_] : [undefined, visited_asImmutable_]
+  const $inner = this[$INNER]
+  return (($inner[IS_IMMUTABLE] && asImmutable !== false) ?
+    $inner : $Copy($inner, asImmutable, visited))[$RIND]
+}, BASIC_VALUE_METHOD)
 
 _$Inate.addMethod(function immutableCopy(visited_) {
-  return this[IS_IMMUTABLE] ? this[$RIND] : Copy(this[$INNER], true, visited_)
-}, BASIC_METHOD)
+  const $inner = this[$INNER]
+  return ($inner[IS_IMMUTABLE] ? $inner : $Copy($inner, true, visited_))[$RIND]
+}, BASIC_VALUE_METHOD)
 
 _$Inate.addMethod(function mutableCopy(visited_) {
-  return Copy(this[$INNER], false, visited_)
-}, BASIC_METHOD)
+  return $Copy(this[$INNER], false, visited_)[$RIND]
+}, BASIC_VALUE_METHOD)
 
 _$Inate.addMethod(function mutableCopyExcept(property) {
-  return Copy(this[$INNER], false, undefined, property)
-}, BASIC_METHOD)
+  return $Copy(this[$INNER], false, undefined, property)[$RIND]
+}, BASIC_VALUE_METHOD)
 
 // Thing.add(function _nonCopy() {
 //   return (this[IS_FACT] === IMMUTABLE) ? this._newBlank() : this
@@ -79,74 +83,93 @@ _$Inate.addMethod(function mutableCopyExcept(property) {
 
 
 _$Inate.addMethod(function asCopy() {
-  return this[IS_IMMUTABLE] ? this[$RIND] : Copy(this[$INNER], false)
-}, BASIC_IMMEDIATE)
+  const $inner = this[$INNER]
+  return ($inner[IS_IMMUTABLE] ? $inner : $Copy($inner, false))[$RIND]
+}, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function asMutableCopy() {
-  return Copy(this[$INNER], false)
-}, BASIC_IMMEDIATE)
+  return $Copy(this[$INNER], false)[$RIND]
+}, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function asFact() {
   return this[IS_IMMUTABLE] || (this.id != null) ?
-    this[$RIND] : Copy(this[$INNER], true)
-}, BASIC_IMMEDIATE)
+    this : $Copy(this[$INNER], true)[$RIND]
+}, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function asImmutable() {
-  return this[IS_IMMUTABLE] ? this[$RIND] : Copy(this[$INNER], true)
-}, BASIC_IMMEDIATE)
+  const $inner = this[$INNER]
+  return ($inner[IS_IMMUTABLE] ? $inner : $Copy($inner, true))[$RIND]
+}, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function asMutable() {
-  return this[IS_IMMUTABLE] ? Copy(this[$INNER], false) : this[$RIND]
-}, BASIC_IMMEDIATE)
-
-// ADD ABILITY TO BE IMMUTABLE 'INPLACE'!!!
-_$Inate.addMethod(function beImmutable() {
-  return this[IS_IMMUTABLE] ? this[$RIND] : BeImmutable(this[$INNER])
-}, BASIC_IMMEDIATE)
-
-
-_$Inate.addMethod(function _setImmutable() {
   const $inner = this[$INNER]
-  const $outer = $inner[$OUTER]
-  $outer[IS_IMMUTABLE] = $inner[IS_IMMUTABLE] = true
-  new ImmutableInner($inner)
-  Frost($outer)
-  return $inner[$RIND]
-}, BASIC_IMMEDIATE)
+  return ($inner[IS_IMMUTABLE] ? $Copy($inner, false) : $inner)[$RIND]
+}, BASIC_VALUE_IMMEDIATE)
 
 
-_$Inate.addMethod(BasicBeImmutable, BASIC_IMMEDIATE)
-
-// _$Inate.addMethod(function basicBeImmutable() {
-//   const $inner = this[$INNER]
-//   if ($inner[IS_IMMUTABLE]) { return $inner[$RIND] }
-//   const $outer = $inner[$OUTER]
-//   $outer[IS_IMMUTABLE] = $inner[IS_IMMUTABLE] = true
-//   new ImmutableInner($inner)
-//   Frost($outer)
-//   return $inner[$RIND]
-// }, BASIC_IMMEDIATE)
+_$Inate.addMethod("_basicBeImmutable", BasicBeImmutable, BASIC_SELF_IMMEDIATE)
 
 
+_$Inate.addMethod(function _newBlank() {
+  return new this[$BLANKER]()[$RIND]
+}, BASIC_VALUE_METHOD)
 
+
+_$Inate.addMethod(function has(propertyName) {
+  return (propertyName in this[$OUTER])
+}, BASIC_VALUE_METHOD)
+
+_$Inate.addMethod(function _has(propertyName) {
+  return (propertyName in this[$INNER])
+}, BASIC_VALUE_METHOD)
+
+_$Inate.addMethod(function hasOwn(propertyName) {
+  if (propertyName[0] === "_") { return undefined }
+  return this._hasOwn(propertyName)
+}, BASIC_VALUE_METHOD)
+
+
+_$Inate.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
+
+// _$Inate.addMethod(function _hasOwn(propertyName) {
+//   const properties = this[$KNOWN_PROPERTIES] || ResetKnownProperties(this)
+//   return (properties[propertyName] !== undefined)
+// }, BASIC_VALUE_METHOD)
+
+
+_$Inate.addMethod(function iid() {
+  const $inner = this[$INNER]
+
+  if ($inner[IS_IMMUTABLE]) {
+    // Will set the iid even on an immutable object!!!
+    return $inner.iid || ($inner.iid = InterMap.get(this.type)._nextIID)
+  }
+
+  DefineProperty($inner, "iid", InvisibleConfiguration)
+  return ($inner[$OUTER].iid = $inner.iid = InterMap.get(this.type)._nextIID)
+}, BASIC_VALUE_IMMEDIATE)
 
 
 
 //
 // _$Inate.addImmediate(function _captureChanges() {
 //   const $inner = this[$INNER]
-//   if ($inner[IS_IMMUTABLE]) { delete this._IMMUTABILITY }
+//   if ($inner[IS_IMMUTABLE]) { delete this[_DELETE_IMMUTABILITY] }
 //   DefineProperty($inner, "_captureChanges", InvisibleConfiguration)
 //   return ($inner._captureChanges = this)
-// }, BASIC_IMMEDIATE)
+// }, BASIC_SELF_IMMEDIATE)
 //
 //
 // _$Inate.addImmediate(function _captureOverwrite() {
 //   const $inner = this[$INNER]
-//   if ($inner[IS_IMMUTABLE]) { delete this._ALL }
+//   if ($inner[IS_IMMUTABLE]) { delete this[_DELETE_ALL_PROPERTIES] }
 //   DefineProperty($inner, "_captureOverwrite", InvisibleConfiguration)
 //   return ($inner._captureOverwrite = this)
-// }, BASIC_IMMEDIATE)
+// }, BASIC_SELF_IMMEDIATE)
 
 // Must we delete the _captureChanges and _captureOverwrite when copying or
 // otherwise done using them???
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/

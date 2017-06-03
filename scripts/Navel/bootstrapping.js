@@ -32,8 +32,8 @@ const Type$root$inner = TypeBlanker.$root$inner
 // Temporary bootstrapping #_init
 Type$root$inner._init = function _bootstrap(iid, blanker_) {
   DefineProperty(this, "iid", InvisibleConfiguration)
-  this.iid           = iid
-  this.subtypes      = new Set()
+  this.iid      = iid
+  this.subtypes = new Set()
   if (blanker_) { this._blanker = blanker_ }
   return this[$PULP]
 }
@@ -45,23 +45,20 @@ const _Thing  = new TypeBlanker(["Thing"] )._init(1)
 const _Type   = new TypeBlanker(["Type"]  )._init(2, TypeBlanker)
 const _Method = new TypeBlanker(["Method"])._init(3)
 
-const $Inate = _$Inate[$RIND]
-const Thing  = _Thing [$RIND]
-const Method = _Method[$RIND]
-const Type   = _Type  [$RIND]
-
 
 
 const $Inate$root$inner = $InateBlanker.$root$inner
 const $Inate$root$pulp  = $InateBlanker.$root$pulp
+const $Inate$root$outer = $InateBlanker.$root$outer
 
 
 // Stubs for default properties
-$Inate$root$inner[$BARRIER]               = undefined
+$Inate$root$inner[$MAIN_BARRIER]          = undefined
 $Inate$root$inner._noSuchProperty         = undefined
 
 // This secret is only known by inner objects
 $Inate$root$inner[$SECRET]                = $INNER
+$Inate$root$outer[$SECRET]                = undefined
 
 $Inate$root$pulp[IS_IMMUTABLE]            = false
 // $Inate$root$pulp[IMMUTABILITY]    = null
@@ -74,9 +71,15 @@ $Inate$root$inner._initFrom_              = undefined
 $Inate$root$inner._setPropertiesImmutable = undefined
 
 
+const $Inate = _$Inate[$RIND]
+const Thing  = _Thing [$RIND]
+const Method = _Method[$RIND]
+const Type   = _Type  [$RIND]
+
+
 const $Inate_properties = _$Inate._properties
 
-$Inate_properties[$BARRIER]               = undefined
+$Inate_properties[$MAIN_BARRIER]          = undefined
 $Inate_properties._noSuchProperty         = undefined
 $Inate_properties.id                      = undefined
 // $Inate_properties.splice            = undefined // Weird ref by debugger
@@ -98,26 +101,21 @@ Method$root$inner._init = function _init(func_name, func_, mode__) {
   const [selector, handler, mode = STANDARD_METHOD] =
     (typeof func_name === "function") ?
       [func_name.name, func_name, func_] : [func_name, func_, mode__]
-  const isPublic  = (selector[0] !== "_")
-  const $inner    = this[$INNER]
-  const $existing = InterMap.get(handler)
-
-  if ($existing && $existing.mode !== mode) {
-    ImproperMethodHandlerError($inner[$RIND])
-  }
+  const isPublic = (selector[0] !== "_")
 
   this.isPublic = isPublic
   this.selector = selector
   this.mode     = mode
+  this.handler  = MarkFunc(handler, KNOWN_HANDLER_FUNC)
   // this.super --> is a lazy property
 
-  if (mode === SET_LOADER) {
-    this.handler = BeFrozenFunc(handler, SET_LOADER_FUNC)
-  }
-  else {
-    this.outer   = BeFrozenFunc(mode.outer(selector, handler, isPublic), $inner)
-    this.inner   = BeFrozenFunc(mode.inner(selector, handler, isPublic), $inner)
-    this.handler = BeFrozenFunc(handler, $inner)
+  if (mode !== SET_LOADER) {
+    const outer  = mode.outer(selector, handler, isPublic)
+    const inner  = mode.inner(selector, handler, isPublic)
+    inner.outer  = outer    // For access via Permeable outer
+    outer.method = inner.method = this[$RIND]
+    this.outer   = SetImmutableFunc(outer, WRAPPER_FUNC)
+    this.inner   = SetImmutableFunc(inner, WRAPPER_FUNC)
   }
 
   return this
@@ -161,6 +159,20 @@ Type$root$inner._setSharedProperty = function _setSharedProperty(selector, value
 }
 
 
+const BasicBeImmutable = function _basicBeImmutable() {
+  const $inner = this[$INNER]
+  if ($inner[IS_IMMUTABLE]) { return $inner[$PULP] }
+  const $outer  = $inner[$OUTER]
+  const barrier = new ImmutableInner($inner)
+
+  $inner[$MAIN_BARRIER] = barrier
+  $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
+  Frost($outer)
+  return ($inner[$PULP] = new Proxy($inner, barrier))
+}
+//   delete this._captureChanges
+//   delete this._captureOverwrite
+
 
 const AddMethod = function addMethod(method_namedFunc__name, func__, mode___) {
   const method = AsMethod(method_namedFunc__name, func__, mode___)
@@ -171,11 +183,11 @@ const AddMethod = function addMethod(method_namedFunc__name, func__, mode___) {
 
 AddMethod.call(_Type, AddMethod)
 
-_Method.addMethod("beImmutable", BasicBeImmutable, BASIC_IMMEDIATE)
-_Method.addMethod(Method$root$inner._init)
+_Method.addMethod("beImmutable", BasicBeImmutable, BASIC_SELF_IMMEDIATE)
+_Method.addMethod(Method$root$inner._init, BASIC_SELF_METHOD)
 
 _Type.addMethod(Type$root$inner._setSharedProperty)
-_Type.addMethod("new", Type$root$inner.new, BASIC_METHOD)
+_Type.addMethod("new", Type$root$inner.new, BASIC_VALUE_METHOD)
 _Type.addMethod(_Method._properties.beImmutable.beImmutable)
 _Type._properties.addMethod.beImmutable
 
@@ -443,8 +455,8 @@ _Type.addMethod(function _init(spec, context_) {
   this.subtypes   = SetImmutable(new Set())
   this.context    = context_ ? context_[$RIND] : null
 
-  this.setSupertypes(supertypes)
   this._initCoreIdentity(name)
+  this.setSupertypes(supertypes)
   this.addAllMethods(methods)
   return this
 })
