@@ -67,52 +67,53 @@ _Thing.addMethod(function _init(spec_) {
   return this
 })
 
-// CHANGE TO CHECK FOR PUBLIC PROPERTIES FIRST!!!
-_Thing.addMethod(function beImmutable(visited_inPlace_, visited_) {
-  const [inPlace, visited] = (typeof visited_inPlace_ === "boolean") ?
-    [visited_inPlace_, visited_] : [undefined, visited_inPlace_]
-  const $inner = this[$INNER]
-  if ($inner[IS_IMMUTABLE]) { return $inner[$PULP] }
 
+_Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   var next, property, value, $value, barrier
-  const $rind      = $inner[$RIND]
-  const $outer     = $inner[$OUTER]
-  const properties =
-    $inner[KNOWN_PROPERTIES] || SetKnownProperties($inner, true)
+  const $inner = this[$INNER]
+  const $outer = $inner[$OUTER]
 
-  visited.add($rind)
+  visited.set($rind, $rind)
 
-  next = properties.length
-  while (next--) {
-    property = properties[next]
-    value    = $inner[property]
+  if ($inner._setPropertiesImmutable) {
+    $pulp._setPropertiesImmutable(inPlace, visited)
+  }
+  else {
+    const $rind      = $inner[$RIND]
+    const properties =
+      $inner[KNOWN_PROPERTIES] || SetKnownProperties($inner, SET_OUTER_TOO)
 
-    if (typeof value !== "object" || value === null)  { continue }
-    if (value === $rind)                              { continue }
-    if (value[IS_IMMUTABLE] || value.id != null)      { continue }
-    if (visited.has(value))                           { continue }
+    next = properties.length
+    while (next--) {
+      property = properties[next]
+      if (property[0] !== "_")                          { continue }
 
-    $value = InterMap.get(value)
-    if (inPlace) {
-      if ($value) { $value[$PULP].beImmutable(true, visited) }
-      else        { BeImmutableObject(value, true, visited)  }
-    }
-    else {
-      value = $value ? $Copy($value, true)[$RIND] : CopyObject(value, true)
-      $inner[property] = value
-      if (property[0] !== "_") { $outer[property] = value }
+      value = $inner[property]
+      if (typeof value !== "object" || value === null)  { continue }
+      if (value === $rind)                              { continue }
+      if (value[IS_IMMUTABLE] || value.id != null)      { continue }
+      if (visited.get(value))                           { continue }
+
+      $value = InterMap.get(value)
+      if (inPlace) {
+        if ($value) { $value[$PULP]._setImmutable(true, visited) }
+        else        { BeImmutableObject(value, true, visited)    }
+      }
+      else {
+        $inner[property] = ($value) ?
+          $Copy($value, true, visited)[$RIND] : CopyObject(value, true, visited)
+      }
     }
   }
 
   barrier               = new ImmutableInner($inner)
+  $inner[$PULP]         = new Proxy($inner, barrier)
   $inner[$MAIN_BARRIER] = barrier
   $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
   Frost($outer)
-  return ($inner[$PULP] = new Proxy($inner, barrier))
+  return this
 
-}, BASIC_SELF_IMMEDIATE)
-
-
+}, BASIC_SELF_METHOD)
 
 
 
@@ -163,11 +164,20 @@ _Thing.addMethod(function beImmutable(visited_inPlace_, visited_) {
 
 
 
-// _Thing.addMethod(function _postCreation() {
+// _Thing.addMethod(function _postInit() {
 //   this.id = this.oid
 //   return this
 // })
 
+// _Thing.addMethod(function _setPropertiesImmutable(inPlace, visited) {
+//   this.id = this.oid
+//   return this
+// })
+
+// _Thing.addMethod(function _initFrom_(_source, propertiesBeImmutable, visited, exceptProperty_) {
+//   this.id = this.oid
+//   return this
+// })
 
 
 // Obsolete and unnecessary

@@ -14,7 +14,6 @@
 // USER CAN/SHOULD NEVER REDEFINE INATE METHODS
 //
 
-_$Inate._setDisplayNames("$Outer", "$Inner") // Helps with debugging!!!
 
 _$Inate.addSharedProperty("isPermeable", false)
 
@@ -56,7 +55,7 @@ _$Inate.addMethod(function isFact() {
 
 
 
-_$Inate.addMethod(function copy(asImmutable_, visited_) {
+_$Inate.addMethod(function copy(visited_asImmutable_, visited_) {
   const [asImmutable, visited] = (typeof visited_asImmutable_ === "boolean") ?
     [visited_asImmutable_, visited_] : [undefined, visited_asImmutable_]
   const $inner = this[$INNER]
@@ -107,7 +106,20 @@ _$Inate.addMethod(function asMutable() {
 }, BASIC_VALUE_IMMEDIATE)
 
 
-_$Inate.addMethod("_basicBeImmutable", BasicBeImmutable, BASIC_SELF_IMMEDIATE)
+_$Inate.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+
+_$Inate.addMethod(function setImmutable(visited_inPlace_, visited_) {
+  if (this[IS_IMMUTABLE]) { return this }
+  const [inPlace, visited] = (typeof visited_inPlace_ === "boolean") ?
+    [visited_inPlace_, visited_] : [undefined, visited_inPlace_]
+  return this._setImmutable(inPlace, visited)
+}, BASIC_SELF_METHOD)
+
+_$Inate.addMethod(function beImmutable() {
+  return this[IS_IMMUTABLE] ? this : this._setImmutable()
+}, BASIC_SELF_IMMEDIATE)
+
+
 
 
 _$Inate.addMethod(function _newBlank() {

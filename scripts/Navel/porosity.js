@@ -138,8 +138,9 @@ TypeOuter_prototype.apply = function newAsFact(func, receiver, args) {
   // return this.$pulp.newAsFact(...args)
 
   // This is the same code as in newAsFact(...args)
-  const instance = this.$pulp.new(...args)
-  if (instance.id == null) { instance.beImmutable }
+  const  instance = this.$pulp.new(...args)
+  const _instance = InterMap.get(instance)[$PULP]
+  if (_instance.id == null) { _instance._setImmutable() }
   return instance
 }
 
@@ -184,10 +185,10 @@ function InSetProperty($inner, selector, value, $pulp) {
     case "object" :
       if (!isPublic) { break }
 
-      if (value === null || value[IS_IMMUTABLE] || value.id != null) { }
-      else if (value === $pulp) { value = $inner[$RIND] }
-      else if (value === $inner[$RIND]) { }
-      else if (value === $inner[selector]) { return $pulp }
+      if (value === null || value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
+      else if (value === $pulp)                        { value = $inner[$RIND] }
+      else if (value === $inner[$RIND])                {       /* NOP */       }
+      else if (value === $inner[selector])             {     return $pulp      }
       else {
         value = ($value = InterMap.get(value)) ?
           $Copy($value, true)[$RIND] : CopyObject(value, true)
@@ -279,8 +280,9 @@ TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
   // return this.$pulp.newAsFact(...args)
 
   // This is the same code as in newAsFact(...args)
-  const instance = this.$pulp.new(...args)
-  if (instance.id == null) { instance.beImmutable }
+  const  instance = this.$pulp.new(...args)
+  const _instance = InterMap.get(instance)[$PULP]
+  if (_instance.id == null) { _instance._setImmutable() }
   return instance
 }
 

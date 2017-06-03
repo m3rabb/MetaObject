@@ -103,17 +103,17 @@ function AsOuterFact(selector, Handler) {
       if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
         if (barrier.$target) {
           barrier = new ImmutableInner()
-          $pulp = new Proxy($inner, barrier)
+          $pulp   = new Proxy($inner, barrier)
         } else {
           $pulp = $inner[$PULP]
         }
         barrier.$target = $inner
-        result = Handler.apply($pulp, args) // <<----------
-        $target = barrier.$target
+        result          = Handler.apply($pulp, args) // <<----------
+        $target         = barrier.$target
         barrier.$target = null
 
         if (result === undefined || result === $pulp) {
-          if ($target !== $inner) { $target[$PULP].beImmutable }
+          if ($target !== $inner) { $target[$PULP]._setImmutable() }
           return $target[$RIND]
         }
       }
@@ -142,17 +142,17 @@ function AsOuterValue(selector, Handler) {
       if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
         if (barrier.$target) {
           barrier = new ImmutableInner()
-          $pulp = new Proxy($inner, barrier)
+          $pulp   = new Proxy($inner, barrier)
         } else {
           $pulp = $inner[$PULP]
         }
         barrier.$target = $inner
-        result = Handler.apply($pulp, args) // <<----------
-        $target = barrier.$target
+        result          = Handler.apply($pulp, args) // <<----------
+        $target         = barrier.$target
         barrier.$target = null
 
         if (result === undefined || result === $pulp) {
-          if ($target !== $inner) { $target[$PULP].beImmutable }
+          if ($target !== $inner) { $target[$PULP]._setImmutable() }
           return $target[$RIND]
         }
       }
@@ -197,17 +197,17 @@ function AsOuterLazyLoader(Selector, Handler) {
       if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
         if (barrier.$target) {
           barrier = new ImmutableInner()
-          $pulp = new Proxy($inner, barrier)
+          $pulp   = new Proxy($inner, barrier)
         } else {
           $pulp = $inner[$PULP]
         }
         barrier.$target = $inner
-        result = Handler.apply($pulp, args) // <<----------
-        $target = barrier.$target
+        result          = Handler.apply($pulp, args) // <<----------
+        $target         = barrier.$target
         barrier.$target = null
 
         if (result === undefined || result === $pulp) {
-          if ($target !== $inner) { $target[$PULP].beImmutable }
+          if ($target !== $inner) { $target[$PULP]._setImmutable() }
           return $target[$RIND]
         }
 

@@ -65,8 +65,7 @@ $Inate$root$pulp[IS_IMMUTABLE]            = false
 $Inate$root$pulp.id                       = undefined
 // $Inate$root$pulp.splice             = undefined // Weird ref by debugger
 // Perhaps remove these later
-$Inate$root$pulp.beImmutable              = undefined
-$Inate$root$inner._postCreation           = undefined
+$Inate$root$inner._postInit               = undefined
 $Inate$root$inner._initFrom_              = undefined
 $Inate$root$inner._setPropertiesImmutable = undefined
 
@@ -84,8 +83,7 @@ $Inate_properties._noSuchProperty         = undefined
 $Inate_properties.id                      = undefined
 // $Inate_properties.splice            = undefined // Weird ref by debugger
 // Perhaps remove these later
-$Inate_properties.beImmutable             = undefined
-$Inate_properties._postCreation           = undefined
+$Inate_properties._postInit               = undefined
 $Inate_properties._initFrom_              = undefined
 $Inate_properties._setPropertiesImmutable = undefined
 
@@ -128,8 +126,8 @@ Type$root$inner.new = {
     const $instance = new this._blanker(args)
     const _instance  = $instance[$PULP]
     _instance._init(...args)
-    if ($instance._postCreation) {
-      const result = _instance._postCreation()[$RIND]
+    if ($instance._postInit) {
+      const result = _instance._postInit()[$RIND]
       if (result !== undefined && result !== _instance) { return result }
     }
     return $instance[$RIND]
@@ -159,9 +157,8 @@ Type$root$inner._setSharedProperty = function _setSharedProperty(selector, value
 }
 
 
-const BasicBeImmutable = function _basicBeImmutable() {
+const _BasicSetImmutable = function _basicSetImmutable() {
   const $inner = this[$INNER]
-  if ($inner[IS_IMMUTABLE]) { return $inner[$PULP] }
   const $outer  = $inner[$OUTER]
   const barrier = new ImmutableInner($inner)
 
@@ -180,16 +177,17 @@ const AddMethod = function addMethod(method_namedFunc__name, func__, mode___) {
 }
 
 
+Method$root$inner._setImmutable = _BasicSetImmutable
 
 AddMethod.call(_Type, AddMethod)
 
-_Method.addMethod("beImmutable", BasicBeImmutable, BASIC_SELF_IMMEDIATE)
-_Method.addMethod(Method$root$inner._init, BASIC_SELF_METHOD)
 
-_Type.addMethod(Type$root$inner._setSharedProperty)
 _Type.addMethod("new", Type$root$inner.new, BASIC_VALUE_METHOD)
-_Type.addMethod(_Method._properties.beImmutable.beImmutable)
-_Type._properties.addMethod.beImmutable
+_Type.addMethod(Type$root$inner._setSharedProperty)
+
+_Method.addMethod(Method$root$inner._init)
+_Method.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+
 
 
 _$Inate.addMethod(function _basicSet(propertyName, value) {
@@ -471,6 +469,8 @@ _Thing ._init({name: "Thing" , supertypes: []})
 _Method._init({name: "Method"})
 
 _Type.setSupertypes([Thing])
+
+_$Inate._setDisplayNames("$Outer", "$Inner") // Helps with debugging!!!
 
 
 

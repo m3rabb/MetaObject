@@ -248,8 +248,8 @@ function SetKnownProperties(target, setOuter_) {
 //   let $inner = new this._blanker()
 //   let $pulp  = $inner[$PULP]
 //   $pulp._init(...args)
-//   if ($inner._postCreation) {
-//     const $pulp = $pulp._postCreation()
+//   if ($inner._postInit) {
+//     const $pulp = $pulp._postInit()
 //     if ($pulp[IS_IMMUTABLE]) { return $pulp[$RIND] }
 //   }
 //   if ($pulp.id == null) { $pulp.beImmutable }
@@ -278,22 +278,17 @@ function SetKnownProperties(target, setOuter_) {
 
 
 function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
+  var next, property, value, traversed, $value, barrier
   const source  = $source[$RIND]
   const $inner  = new $source[$BLANKER]()
   const $outer  = $inner[$OUTER]
   const $pulp   = $inner[$PULP]
   const target  = $inner[$RIND]
-  var handler, next, property, value, traversed, $value, barrier
 
   visited.set(source, target) // to manage cyclic objects
 
-  if ((handler = $inner._initFrom_)) {
-    (handler.length < 4) ?
-      $pulp._initFrom_($source[$PULP], visited, exceptProperty_) :
-      $pulp._initFrom_($source[$PULP], visited, exceptProperty_, asImmutable)
-    if ($inner._postInit) { $pulp._postInit() }
-    if (asImmutable && !$inner[IS_IMMUTABLE]) { $pulp._setImmutable(visited) }
-    return $inner
+  if ($inner._initFrom_) {
+    $pulp._initFrom_($source[$PULP], asImmutable, visited, exceptProperty_)
   }
   else {
     const properties = $source[KNOWN_PROPERTIES] ||
@@ -306,18 +301,19 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
       if (property === exceptProperty_) { continue }
 
       value = $source[property]
-      if (typeof value !== "object" || value === null)  {     /* NOP */     }
-      else if (value === source)                        { value = target    }
-      else if (value[IS_IMMUTABLE] || value.id != null) {     /* NOP */     }
-      else if ((traversed   =  visited.get(value)))     { value = traversed }
+
+           if (property[0] !== "_")                 { $outer[property] = value }
+      else if (typeof value !== "object" || value === null){     /* NOP */     }
+      else if (value === source)                           { value = target    }
+      else if (value[IS_IMMUTABLE] || value.id != null)    {     /* NOP */     }
+      else if ((traversed   =  visited.get(value)))        { value = traversed }
       else {
         value = ($value = InterMap.get(value)) ?
-          $Copy($value, asImmutable, visited)[$RIND] :
+          $Copy    ($value, asImmutable, visited)[$RIND] :
           CopyObject(value, asImmutable, visited)
       }
 
       $inner[property] = value
-      if (property[0] !== "_") { $outer[property] = value }
     }
   }
 
@@ -333,6 +329,10 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
 
   return $inner
 }
+
+
+
+
 
 
 // Note: The CopyObject is only called AFTER confirming that the source
@@ -378,6 +378,14 @@ function CopyObject(source, asImmutable, visited = new WeakMap(), pass_) {
       target    = []
       next      = source.length
       break
+
+    // case Set :
+    //
+    // case Map :
+    //
+    // case WeakSet :
+    //
+    // case WeakMap :
   }
 
   visited.set(source, target) // Handles cyclic objects
@@ -389,7 +397,7 @@ function CopyObject(source, asImmutable, visited = new WeakMap(), pass_) {
     if (typeof value !== "object" || value === null)  {     /* NOP */     }
     else if (value === source)                        { value = target    }
     else if (value[IS_IMMUTABLE] || value.id != null) {     /* NOP */     }
-    else if ((traversed   =  visited.get(value)))     { value = traversed }
+    else if ((traversed = visited.get(value)))        { value = traversed }
     else {
       value = ($value = InterMap.get(value)) ?
         $Copy($value, asImmutable, visited)[$RIND] :
@@ -408,19 +416,19 @@ function CopyObject(source, asImmutable, visited = new WeakMap(), pass_) {
 }
 
 
-const ReliableObjectCopy = function copy(asImmutable_, visited_) {
-  const [asImmutable, visited] = (typeof visited_asImmutable_ === "object") ?
-    [undefined, visited_asImmutable_] : [visited_asImmutable_, visited__]
+const ReliableObjectCopy = function copy(visited_asImmutable_, visited_) {
+  const [asImmutable, visited] = (typeof visited_asImmutable_ === "boolean") ?
+    [visited_asImmutable_, visited_] : [undefined, visited_asImmutable_]
   return (this[IS_IMMUTABLE] && asImmutable !== false) ?
     this : CopyObject(this, asImmutable, visited)
 }
 
 
 
-function BeImmutableObject(target, inPlace, visited = new WeakSet()) {
+function BeImmutableObject(target, inPlace, visited = new WeakMap()) {
   let properties, next, property, value, $value
 
-  visited.add(target)
+  visited.set(target, target)
 
   switch (target.constructor) {
     default : // Object or Custom Object
@@ -431,25 +439,33 @@ function BeImmutableObject(target, inPlace, visited = new WeakSet()) {
     case Array :
       next = target.length
       break
+
+    // case Set :
+    //
+    // case Map :
+    //
+    // case WeakSet :
+    //
+    // case WeakMap :
   }
 
   while (next--) {
     property = properties ? properties[next] : next
-    value = target[selector]
+    value = target[property]
 
     if (typeof value !== "object" || value === null) { continue }
     if (value === target)                            { continue }
     if (value[IS_IMMUTABLE] || value.id != null)     { continue }
-    if (visited.has(value))                          { continue }
+    if (visited.get(value))                          { continue }
 
     $value = InterMap.get(value)
     if (inPlace) {
-      if ($value) { $value[$PULP].beImmutable(true, visited) }
-      else        { BeImmutableObject(value, true, visited)  }
+      if ($value) { $value[$PULP]._setImmutable(true, visited) }
+      else        { BeImmutableObject(value, true, visited)    }
     }
     else {
-      target[selector] = $value ?
-        $Copy($value, true)[$RIND] : CopyObject(value, true)
+      target[property] = ($value) ?
+        $Copy($value, true, visited)[$RIND] : CopyObject(value, true, visited)
     }
   }
 

@@ -15,9 +15,6 @@ _Type.addLazyProperty(function formalName() {
 
 
 
-
-
-
 _Type.addMethod(function asPermeable() {
   const type$inner   = this[$INNER]
   const type$outer   = type$inner[$OUTER]
@@ -69,13 +66,19 @@ _Type.addMethod(function addAlias(aliasName, name_method) {
   return this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
 })
 
+
+
 _Type.addAlias("basicNew", "new")
 _Type.addAlias("removeMethod", "removeSharedProperty")
+_Type.addAlias("_setImmutable", "_basicSetImmutable")
+
+
 
 _Type.addMethod(function newAsFact(...args) {
   // Note: same as implementation in TypeOuter and TypeInner
-  const instance = this.new(...args)
-  if (instance.id == null) { instance.beImmutable }
+  const  instance = this.$pulp.new(...args)
+  const _instance = InterMap.get(instance)[$PULP]
+  if (_instance.id == null) { _instance._setImmutable() }
   return instance
 })
 
