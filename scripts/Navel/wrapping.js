@@ -37,13 +37,13 @@ function AsLoaderSetter(PropertyName, Loader) {
 //              AsOuterFact               AsInnerFact    AsSuperFact
 // Fact         self|immCopy|fact         _self|fact     _self|fact  ()
 //
-//              AsOuterValue              AsInnerValue   AsGenericSuper
+//              AsOuterValue              AsInnerValue   AsSuperValue
 // Value        self|immCopy|value        _self|value    _self|value ()
 //
-//              AsOuterBasicValue         PassThru       AsGenericSuper
+//              AsOuterBasicValue         PassThru       AsSuperBasic
 // Basic        value                     value          value       ()
 //
-//              AsOuterBasicSelf          PassThru       AsGenericSuper
+//              AsOuterBasicSelf          PassThru       AsSuperBasic
 // Basic        self                      _self          _self       ()
 //
 //
@@ -265,7 +265,19 @@ function AsSuperFact(property, Handler) {
   }[name]
 }
 
-function AsGenericSuper(property, Handler) {
+function AsSuperValue(property, Handler) {
+  const name = `${AsName(property)}_$inner$value`
+  return {
+    [name] : function (...args) {
+      // this is $super. Need to use $pulp instead
+      const $pulp  = this[$PULP]
+      const result = Handler.apply($pulp, args) // <<----------
+      return (result === undefined) ? $pulp : result
+    }
+  }[name]
+}
+
+function AsSuperBasic(property, Handler) {
   const name = `${AsName(property)}_$super$generic`
   return {
     [name] : function (...args) {
@@ -307,7 +319,7 @@ function AsInnerStandard(property, handler, isPublic) {
 
 function AsSuperStandard(property, handler, isPublic) {
   return isPublic ?
-    AsSuperFact(property, handler) : AsGenericSuper(property, handler)
+    AsSuperFact(property, handler) : AsSuperBasic(property, handler)
 }
 
 
@@ -324,7 +336,7 @@ const VALUE_METHOD = {
   isImmediate : false,
   outer       : AsOuterValue,
   inner       : AsInnerValue,
-  super       : AsGenericSuper,
+  super       : AsSuperValue,
 }
 
 const BASIC_VALUE_METHOD = {
@@ -332,7 +344,7 @@ const BASIC_VALUE_METHOD = {
   isImmediate : false,
   outer       : AsOuterBasicValue,
   inner       : PassThru,
-  super       : AsGenericSuper,
+  super       : AsSuperBasic,
 }
 
 const BASIC_SELF_METHOD = {
@@ -340,7 +352,7 @@ const BASIC_SELF_METHOD = {
   isImmediate : false,
   outer       : AsOuterBasicSelf,
   inner       : PassThru,
-  super       : AsGenericSuper,
+  super       : AsSuperBasic,
 }
 
 

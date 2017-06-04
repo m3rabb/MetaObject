@@ -357,93 +357,96 @@ ImmutableInner_prototype.retargetedDelete = function retargetedDelete($inner, pr
 
 
 
-class SuperInnerMethod {
-  apply (func, receiver, args) {
-    return func.apply(receiver[$PULP], args)
-  }
-}
-
-const SuperMethodPorosity = new SuperInnerMethod()
-
 // REVISIT!!!
 function SetSuperPropertyFor($inner, property) {
   const ancestors = $inner.type.ancestry
   const supers    = $inner[$SUPERS]
-  var   next      = ancestors.length
-  var   type$inner, nextProperties, value
+  var next, $type, nextProperties, value, mode, handler, _super
 
-  if ($inner._hasOwn(property)) { next++ }
+  next = ancestors.length
+  if (!$inner._hasOwn(property)) { next-- }
 
   while (next--) {
-    let type$inner = InterMap.get(ancestors[next])
-    let nextProperties = type$inner._properties
+    $type          = InterMap.get(ancestors[next])
+    nextProperties = $type._properties
+    value          = nextProperties[property]
 
-    if (property in nextProperties) {
-      value = nextProperties[property]
-
+    if (value !== undefined) {
       if (value && value.isMethod) {
-        if (value.mode.isImmediate) {
-          supers[$IMMEDIATES][property] = value.super
+        mode    = value.mode
+        handler = value.super ||
+          (value.super = mode.super(property, value.handler, value.isPublic))
+
+        if (mode.isImmediate) {
+          supers[$IMMEDIATES][property] = handler
           return (supers[property] = IMMEDIATE)
         }
-        return (supers[property] = value.super)
+        return (supers[property] = handler)
       }
       return (supers[property] = value)
     }
   }
-
   return (supers[property] = NO_SUPER)
 }
 
 
-const SuperBehavior = {
-  __proto__ : DefaultBehavior,
+function Super() {}
 
-  get ($inner, property, target) {
-    const supers = $inner[$SUPERS]
-    const value = (property in supers) ?
-      supers[property] : SetSuperPropertyFor($inner, property)
+const Super_prototype = SpawnFrom(DefaultBehavior)
+Super.prototype = Super_prototype
 
+Super_prototype.get = function get($inner, property, $super) {
+  const supers = $inner[$SUPERS]
+  var   value = supers[property]
+
+  do {
     switch (value) {
+      case undefined :
+        value = SetSuperPropertyFor($inner, property)
+      break
+
       case NO_SUPER  :
         return $inner._noSuchProperty ?
           $inner[$PULP]._noSuchProperty(property) : undefined
+
       case IMMEDIATE :
         return supers[$IMMEDIATES][property].call($inner[$PULP])
+
       default :
-        return value // if method, answer sf|sx|sl wrapper handler
+        return value
     }
-      //
-      // (value && value[$SECRET] === $INNER ?
-      //   value.handler.call($inner[$PULP]) : value)
-  },
+  } while (true)
+
+    //
+    // (value && value[$SECRET] === $INNER ?
+    //   value.handler.call($inner[$PULP]) : value)
 }
 
 
-const OwnSuperBehavior = {
-  __proto__ : SuperBehavior,
-
-  get ($inner, property, target) {
-    // const supers = $inner[SUPERS]
-    // const value =
-    //
-    // if (property in supers) {
-    //   let sharedSupers = supers[SUPERS]
-    //   if (sharedSupers !== supers) { // instance has its own SUPERS
-    //     if (!(property in sharedSupers)) {
-    //
-    //     }
-    //
-    //   }
-    //   value = supers[property]
-    // }
-    // else {
-    //   value = SetSuperPropertyFor($inner, property)
-    // }
-    // return (value === NO_SUPER) ?
-    //   ($inner._noSuchProperty ?
-    //     $inner[$PULP]._noSuchProperty(property) : undefined) :
-    //   (value && value[$SECRET] === $INNER ?
-    //     value.handler.call($inner[$PULP]) : value)
-  }
-}
+// const OwnSuperBehavior = {
+//   __proto__ : SuperBehavior,
+//
+//   get ($inner, property, target) {
+//     // const supers = $inner[SUPERS]
+//     // const value =
+//     //
+//     // if (property in supers) {
+//     //   let sharedSupers = supers[SUPERS]
+//     //   if (sharedSupers !== supers) { // instance has its own SUPERS
+//     //     if (!(property in sharedSupers)) {
+//     //
+//     //     }
+//     //
+//     //   }
+//     //   value = supers[property]
+//     // }
+//     // else {
+//     //   value = SetSuperPropertyFor($inner, property)
+//     // }
+//     // return (value === NO_SUPER) ?
+//     //   ($inner._noSuchProperty ?
+//     //     $inner[$PULP]._noSuchProperty(property) : undefined) :
+//     //   (value && value[$SECRET] === $INNER ?
+//     //     value.handler.call($inner[$PULP]) : value)
+//   }
+// }

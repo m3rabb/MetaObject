@@ -11,13 +11,14 @@ module.exports = {
     },
     "rules": {
         // "indent"         : ["error", 2],
-        "linebreak-style": ["error", "unix"],
-        "quotes"         : ["error", "double"],
-        "semi"           : ["error", "never"],
-        "no-unused-vars" : 0,
-        "no-fallthrough" :
+        "linebreak-style"       : ["error", "unix"],
+        "quotes"                : ["error", "double"],
+        "semi"                  : ["error", "never"],
+        "no-unused-vars"        : 0,
+        "no-fallthrough"        :
           ["error", { "commentPattern": "break[\\s\\w]*omitted" }],
-        "no-undef"       : "off",
-        "no-empty"       : "off",
+        "no-undef"              : "off",
+        "no-empty"              : "off",
+        "no-constant-condition" : "off",
     }
 };
