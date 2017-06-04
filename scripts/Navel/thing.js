@@ -72,6 +72,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   var next, property, value, $value, barrier
   const $inner = this[$INNER]
   const $outer = $inner[$OUTER]
+  const $rind  = $inner[$RIND]
 
   visited.set($rind, $rind)
 
@@ -79,29 +80,33 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
     $pulp._setPropertiesImmutable(inPlace, visited)
   }
   else {
-    const $rind      = $inner[$RIND]
-    const properties =
-      $inner[KNOWN_PROPERTIES] || SetKnownProperties($inner, SET_OUTER_TOO)
+    const properties = $inner[KNOWN_PROPERTIES] ||
+      SetKnownProperties($inner, SET_OUTER_TOO)
 
     next = properties.length
+
     while (next--) {
       property = properties[next]
-      if (property[0] !== "_")                          { continue }
+      if (property[0] !== "_")       { continue }
 
       value = $inner[property]
-      if (typeof value !== "object" || value === null)  { continue }
-      if (value === $rind)                              { continue }
-      if (value[IS_IMMUTABLE] || value.id != null)      { continue }
-      if (visited.get(value))                           { continue }
+
+      if (typeof value !== "object") { continue }
+      if (value === null)            { continue }
+      if (value === $rind)           { continue }
+      if (value[IS_IMMUTABLE])       { continue }
+      if (value.id != null)          { continue }
+      if (visited.get(value))        { continue }
 
       $value = InterMap.get(value)
       if (inPlace) {
         if ($value) { $value[$PULP]._setImmutable(true, visited) }
-        else        { BeImmutableObject(value, true, visited)    }
+        else        { SetImmutableObject(value, true, visited)   }
       }
       else {
         $inner[property] = ($value) ?
-          $Copy($value, true, visited)[$RIND] : CopyObject(value, true, visited)
+          $Copy($value, true, visited)[$RIND] :
+          CopyObject(value, true, visited)
       }
     }
   }

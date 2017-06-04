@@ -169,6 +169,8 @@ Mutability.set = function set($inner, property, value, $pulp) {
 }
 
 function InSetProperty($inner, property, value, $pulp) {
+  if (value === $inner[property]) { return $pulp }
+
   const isPublic = (property[0] !== "_")
 
   if (!(property in $inner)) {
@@ -182,18 +184,17 @@ function InSetProperty($inner, property, value, $pulp) {
       return AssignmentOfUndefinedError($inner[$RIND])
 
     case "object" :
-      if (!isPublic) { break }
+           if (!isPublic)                  {          break           }
+      else if (value === null)             {         /* NOP */        }
+      else if (value[IS_IMMUTABLE])        {         /* NOP */        }
+      else if (value.id != null)           {         /* NOP */        }
+      else if (value === $pulp)            {   value = $inner[$RIND]  }
+      else if (value === $inner[$RIND])    {         /* NOP */        }
+      else {   value = ($value = InterMap.get(value)) ?
+                 $Copy($value, true)[$RIND] : CopyObject(value, true) }
 
-      if (value === null || value[IS_IMMUTABLE] || value.id != null) {/* NOP */}
-      else if (value === $pulp)                        { value = $inner[$RIND] }
-      else if (value === $inner[$RIND])                {       /* NOP */       }
-      else if (value === $inner[property])             {     return $pulp      }
-      else {
-        value = ($value = InterMap.get(value)) ?
-          $Copy($value, true)[$RIND] : CopyObject(value, true)
-      }
       $inner[$OUTER][property] = value
-      break
+    break
 
     case "function" : // LOOK: will catch Type things!!!
       // Note: Checking for value.constructor is inadequate to prevent func spoofing
@@ -210,11 +211,11 @@ function InSetProperty($inner, property, value, $pulp) {
       // else {
       //   value = (InterMap.get(value)) ? value : TameFunc(value)
       // }
+    // break omitted
 
-      // break omitted
     default :
       if (isPublic) { $inner[$OUTER][property] = value }
-      break
+    break
   }
 
   $inner[property] = value

@@ -110,6 +110,41 @@ class doesn't protect again skylight. Gotta do it the old fashion way
 Naming functions to work in debugger
 
 
+// const FuncGlobals = {
+//   $SECRET                : $SECRET,
+//   $RIND                  : $RIND,
+//   $PULP                  : $PULP,
+//   $INNER                 : $INNER,
+//   $BARRIER               : $BARRIER,
+//   IS_IMMUTABLE           : IS_IMMUTABLE,
+//   InterMap               : InterMap,
+//   ImmutableInner         : ImmutableInner,
+//   Copy                   : Copy,
+//   CopyObject             : CopyObject,
+//   DefineProperty         : DefineProperty,
+//   InSetProperty          : InSetProperty,
+//   InvisibleConfiguration : InvisibleConfiguration,
+// }
+//
+// const FunctionNamer = new NamedFunctionMaker(FuncGlobals)
+
+
+
+
+// UNTESTED
+// function TameFunc(Func) {
+//   const func = function $$$$$$safe(...args) {
+//     const receiver =
+//       (this != null && this[$SECRET] === $INNER) ? this[$RIND] : this
+//     return Func.apply(receiver, args)
+//   }
+//
+//   const vars  = {$$$$$: Func.name, Func: Func}
+//   const named = FunctionNamer.make(vars, func)
+//   return SetImmutableFunc(func)
+// }
+
+
 
 function MakeVacuousConstructor(name, freeze_) {
   const funcBody = `

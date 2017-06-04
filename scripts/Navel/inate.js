@@ -55,6 +55,64 @@ _$Inate.addMethod(function isFact() {
 
 
 
+
+function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
+  var next, property, value, traversed, $value, barrier
+  const source  = $source[$RIND]
+  const $inner  = new $source[$BLANKER]()
+  const $outer  = $inner[$OUTER]
+  const $pulp   = $inner[$PULP]
+  const target  = $inner[$RIND]
+
+  visited.set(source, target) // to manage cyclic objects
+
+  if ($inner._initFrom_) {
+    $pulp._initFrom_($source[$PULP], asImmutable, visited, exceptProperty_)
+  }
+  else {
+    const setOuterToo = !$source[IS_IMMUTABLE]
+    const properties = $source[KNOWN_PROPERTIES] ||
+      SetKnownProperties($source, setOuterToo)
+
+    $outer[KNOWN_PROPERTIES] = $inner[KNOWN_PROPERTIES] = properties
+    next = properties.length
+
+    while (next--) {
+      property = properties[next]
+      if (property === exceptProperty_) { continue }
+
+      value = $source[property]
+
+           if (property[0] !== "_")              { $outer[property] = value }
+      else if (typeof value !== "object")        {         /* NOP */        }
+      else if (value === null)                   {         /* NOP */        }
+      else if (value === source)                 { value = target           }
+      else if (value[IS_IMMUTABLE])              {         /* NOP */        }
+      else if (value.id != null)                 {         /* NOP */        }
+      else if ((traversed = visited.get(value))) { value = traversed        }
+      else {   value = ($value = InterMap.get(value)) ?
+                 $Copy    ($value, asImmutable, visited)[$RIND] :
+                 CopyObject(value, asImmutable, visited)                    }
+
+      $inner[property] = value
+    }
+  }
+
+  if ($inner._postInit) { $pulp._postInit() }
+
+  if (asImmutable) {
+    barrier               = new ImmutableInner($inner)
+    $inner[$PULP]         = new Proxy($inner, barrier)
+    $inner[$MAIN_BARRIER] = barrier
+    $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
+    Frost($outer)
+  }
+
+  return $inner
+}
+
+
+
 _$Inate.addMethod(function copy(visited_asImmutable_, visited_) {
   const [asImmutable, visited] = (typeof visited_asImmutable_ === "boolean") ?
     [visited_asImmutable_, visited_] : [undefined, visited_asImmutable_]
