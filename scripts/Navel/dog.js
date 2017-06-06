@@ -4,10 +4,11 @@ const Dog = Type({
 
   shared : {
     boneyard : "345 Bone Way",
-    hasTeeth : true,
   },
 
-  methods : [
+  define : [
+    "SHARED", { hasTeeth : true },
+
     function _init(name, age, breed) {
       this.name = name
       this.age  = age

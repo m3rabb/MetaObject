@@ -27,7 +27,6 @@ _Thing.addMethod(function _init(spec_) {
   }
   id   && (this.id   = id)
   name && (this.name = name)
-  return this
 })
 
 

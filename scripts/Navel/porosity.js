@@ -188,10 +188,10 @@ function InSetProperty($inner, property, value, $pulp) {
       case "object" :
              if (value === null)             { if (!isPublic) { break } }
         else if (value[$SECRET] === $INNER)  {
-             if (value === $pulp)            { value = $inner[$RIND]
+          if    (value === $pulp)            { value = $inner[$RIND]
                                                if (!isPublic) { break } }
 
-          else { return $pulp._detectedInnerError(value) }
+          else  { return $pulp._detectedInnerError(value) }
         }
         else if (!isPublic)                  {          break           }
         else if (value[IS_IMMUTABLE])        {         /* NOP */        }

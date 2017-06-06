@@ -27,7 +27,8 @@
 
 PropertyLoader = Type("PropertyLoader")
 
-const modeNames = "METHOD IMMEDIATE LAZY ALIAS ASSIGNER MANDATORY SHARED"
+const modeNames =
+  "STANDARD METHOD IMMEDIATE LAZY ALIAS ASSIGNER MANDATORY SHARED"
 
 PropertyLoader.addSharedProperty("modes", modeNames.split(" "))
 
@@ -57,7 +58,7 @@ PropertyLoader.addMethod(function isMode(string) {
 })
 
 
-PropertyLoader.addMethod(function load(item, mode = "METHOD") {
+PropertyLoader.addMethod(function load(item, mode = "STANDARD") {
   if (item.constructor !== Array && item.constructor !== Object) {
     return this._signalError("Parameter must be object|list!!")
   }
@@ -116,6 +117,7 @@ PropertyLoader.addMethod(function _loadPair(name, value, mode) {
     case "ALIAS"     : return this._saveAlias(name, value)
     case "SHARED"    : return this._type.addSharedProperty(name, value)
 
+    case "STANDARD"  : return this._type.addMethod         (name, value)
     case "METHOD"    : return this._type.addMethod         (name, value)
     case "IMMEDIATE" : return this._type.addImmediate      (name, value)
     case "LAZY"      : return this._type.addLazyProperty   (name, value)
@@ -128,6 +130,7 @@ PropertyLoader.addMethod(function _loadPair(name, value, mode) {
 
 PropertyLoader.addMethod(function _loadFunc(func, mode) {
   switch (mode) {
+    case "STANDARD"  : return this._type.addMethod         (func)
     case "METHOD"    : return this._type.addMethod         (func)
     case "IMMEDIATE" : return this._type.addImmediate      (func)
     case "LAZY"      : return this._type.addLazyProperty   (func)

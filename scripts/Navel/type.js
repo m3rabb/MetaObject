@@ -66,16 +66,16 @@ _Type.addMethod(function addAlias(aliasName, name_method) {
   if (sourceMethod == null) {
     return this._unknownMethodToAliasError(name_method)
   }
-  return this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
+  this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
 })
 
 
 _Type.addMethod(function _addValueMethod(...namedFunc_name__handler) {
-  return this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
+  this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
 })
 
 _Type.addMethod(function _addValueImmediate(...namedFunc_name__handler) {
-  return this.addMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
+  this.addMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
 })
 
 
@@ -88,16 +88,16 @@ _Type.addMethod(function addMethods(items) {
 })
 
 
-
-_Type.addAlias("basicNew"     , "new")
-_Type.addAlias("removeMethod" , "removeSharedProperty")
+_Type.addAlias("define"      , "addMethods")
+_Type.addAlias("basicNew"    , "new")
+_Type.addAlias("removeMethod", "removeSharedProperty")
 // _Type.addAlias("_setImmutable", "_basicSetImmutable")
 
 
 _Type.addMethod(function _setImmutable() {
   const new$pulp = this._basicSetImmutable()
   InterMap.set(new$pulp, TYPE_PULP)
-  return
+  return new$pulp
 }, BASIC_SELF_METHOD)
 
 

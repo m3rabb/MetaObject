@@ -124,8 +124,6 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
     this.outer   = SetImmutableFunc(outer, WRAPPER_FUNC)
     this.inner   = SetImmutableFunc(inner, WRAPPER_FUNC)
   }
-
-  return this
 }
 
 
@@ -203,26 +201,27 @@ _Method.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 _$Inate.addMethod(function _basicSet(propertyName, value) {
   return InSetProperty(this[$INNER], propertyName, value, this)
-})
+}, BASIC_SELF_METHOD)
 
 
 
 _Type.addMethod(function addImmediate(...namedFunc_selector__handler) {
-  return this.addMethod(...namedFunc_selector__handler, STANDARD_IMMEDIATE)
+  this.addMethod(...namedFunc_selector__handler, STANDARD_IMMEDIATE)
 })
 
 _Type.addMethod(function addLazyProperty(...namedFunc_selector__handler) {
-  return this.addMethod(...namedFunc_selector__handler, LAZY_INSTALLER)
+  this.addMethod(...namedFunc_selector__handler, LAZY_INSTALLER)
 })
 
 _Type.addMethod(function addSharedProperty(property, value) {
   if (value === undefined) { return this._assignmentOfUndefinedError() }
-  return this._setSharedProperty(property, value, true)
+  this._setSharedProperty(property, value, true)
 })
 
 _Type.addMethod(function removeSharedProperty(property) {
-  return (this._properties[property] !== undefined) ?
-    this._deleteSharedProperty(property) : this
+  if (this._properties[property] !== undefined) {
+    this._deleteSharedProperty(property)
+  }
 })
 
 
@@ -236,19 +235,19 @@ _Type.addMethod(function _deleteSharedProperty(property) {
   delete $root$inner[$IMMEDIATES][property]
   delete supers[property]
   delete supers[$IMMEDIATES][property]
-  return this._inheritProperty(property)
+
+  this._inheritProperty(property)
 })
 
 _Type.addMethod(function _propagateIntoSubtypes(property) {
   this.subtypes.forEach(subtype => {
     InterMap.get(subtype)[$PULP]._inheritProperty(property)
   })
-  return this
 })
 
 _Type.addMethod(function _inheritProperty(property) {
   const properties = this._properties
-  if (properties[property] !== undefined) { return this }
+  if (properties[property] !== undefined) { return }
 
   const ancestry = this.ancestry
 
@@ -263,7 +262,6 @@ _Type.addMethod(function _inheritProperty(property) {
       return this._setSharedProperty(property, value, false)
     }
   }
-  return this
 })
 
 
@@ -301,7 +299,6 @@ _Type.addMethod(function _reinheritProperties() {
     property = nextProperties[next]
     if (!validProperties[property]) { this._deleteSharedProperty(property) }
   }
-  return this
 })
 
 
@@ -319,7 +316,6 @@ _Type.addMethod(function _setAsSubtypeOfSupertypes() {
     subtypes.add(subtype)
     $supertype[$PULP].subtypes = SetImmutable(subtypes)
   }
-  return this
 })
 
 _Type.addMethod(function _buildRoughAncestry(explicitTypes_) {
@@ -356,7 +352,6 @@ _Type.addMethod(function _buildAncestry() {
     }
   }
   this.ancestry = dupFreeAncestry.reverse()
-  return this
 })
 
 
@@ -438,7 +433,7 @@ _Type.addMethod(function addMandatorySetter(setter_property, setter_) {
   if (!setterName) { return this._unnamedFuncError("Setter") }
   this.addMethod(setterName, setter)
   loader = MakeAssignmentError(propertyName, setterName)
-  return this.addMethod(propertyName, loader, SET_LOADER)
+  this.addMethod(propertyName, loader, SET_LOADER)
 })
 
 
@@ -460,7 +455,6 @@ _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
   blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
   blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
   this._properties.constructor    = PROPERTY
-  return this
 })
 
 
@@ -500,12 +494,20 @@ _Type.addMethod(function _initCoreIdentity(name) {
 
 
 _Type.addMethod(function _init(spec_name, context_) {
-  const name       = spec_name.name || spec_name
-  const supertypes =
-    (spec_name.supertypes || spec_name.supertype && [spec_name.supertype])
-    || [Thing]
-  const shared     = spec_name.shared  || spec_name.sharedProperties
-  const methods    = spec_name.methods || spec_name.instanceMethods
+  var name, supertypes, supertype, shared, methods
+
+  name       = spec_name.name || spec_name
+  supertypes = spec_name.supertypes
+
+  if (supertypes === undefined) {
+    supertype  = spec_name.supertype
+    supertypes = (supertype === undefined) ? [Thing] :
+      (supertype === null) ? [] : [supertype]
+  }
+  else if (supertypes === null || supertypes.isNothing) { supertypes = [] }
+
+  shared  = spec_name.shared || spec_name.sharedProperties
+  methods = spec_name.define || spec_name.methods || spec_name.instanceMethods
 
   this.subtypes = SetImmutable(new Set())
   this.context  = context_ || spec_name.context || null
