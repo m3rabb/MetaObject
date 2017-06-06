@@ -145,6 +145,19 @@ Naming functions to work in debugger
 // }
 
 
+function NamedFunction(name, globals, functionSource) {
+  const innerFunc = functionSource
+  const funcBody = `
+    return function (Globals) {
+      return function ${name}(OriginalMethod) {
+        let inner, porosity, receiver, result
+        ...
+        return (result === receiver) ? result.$ : result
+      }
+    }
+  `
+}
+
 
 function MakeVacuousConstructor(name, freeze_) {
   const funcBody = `

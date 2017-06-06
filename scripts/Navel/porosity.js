@@ -162,6 +162,8 @@ Mutability.get = function get($inner, property, $pulp) {
 
 
 Mutability.set = function set($inner, property, value, $pulp) {
+  if ($inner[IS_IMMUTABLE]) { return $pulp._invalidPulpError() }
+
   const loader   = $inner[$SET_LOADERS][property]
   const newValue = (loader) ? loader.call($pulp, value) : value
   InSetProperty($inner, property, newValue, $pulp)
@@ -181,17 +183,22 @@ function InSetProperty($inner, property, value, $pulp) {
 
   switch (typeof value) {
     case "undefined" :
-      return AssignmentOfUndefinedError($inner[$RIND])
+      return $pulp._assignmentOfUndefinedError()
 
-    case "object" :
-           if (!isPublic)                  {          break           }
-      else if (value === null)             {         /* NOP */        }
-      else if (value[IS_IMMUTABLE])        {         /* NOP */        }
-      else if (value.id != null)           {         /* NOP */        }
-      else if (value === $pulp)            {   value = $inner[$RIND]  }
-      else if (value === $inner[$RIND])    {         /* NOP */        }
-      else {   value = ($value = InterMap.get(value)) ?
-                 $Copy($value, true)[$RIND] : CopyObject(value, true) }
+      case "object" :
+             if (value === null)             { if (!isPublic) { break } }
+        else if (value[$SECRET] === $INNER)  {
+             if (value === $pulp)            { value = $inner[$RIND]
+                                               if (!isPublic) { break } }
+
+          else { return $pulp._detectedInnerError(value) }
+        }
+        else if (!isPublic)                  {          break           }
+        else if (value[IS_IMMUTABLE])        {         /* NOP */        }
+        else if (value.id != null)           {         /* NOP */        }
+        else if (value === $inner[$RIND])    {         /* NOP */        }
+        else {   value = ($value = InterMap.get(value)) ?
+                   $Copy($value, true)[$RIND] : CopyObject(value, true) }
 
       $inner[$OUTER][property] = value
     break
@@ -200,17 +207,10 @@ function InSetProperty($inner, property, value, $pulp) {
       // Note: Checking for value.constructor is inadequate to prevent func spoofing
       switch (InterMap.get(value)) {
         default           : break
+        case TYPE_PULP    : return $pulp._detectedInnerError(value)
         // case WRAPPER_FUNC : return $pulp.addOwnMethod(value.method)
         case undefined    : value = AsTameFunc(value); break
       }
-
-      // if (property === "_initFrom_") {
-      //   value = ((tag = InterMap.get(value)) && tag === "_initFrom_") ?
-      //     value : Wrap_initFrom_(value)
-      // }
-      // else {
-      //   value = (InterMap.get(value)) ? value : TameFunc(value)
-      // }
     // break omitted
 
     default :
@@ -243,7 +243,7 @@ Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
 // }
 
 
-// CHECK THAT BARRIER WORK ON TYPE PROXIES!!!
+// CHECK THAT BARRIER WORK ON TYPE PROXIES, IMMUTABLE AS WELL AS MUTABLE!!!
 function TypeInner($inner) {
   this.$inner = $inner
   // this.$pulp  = $pulp // this is the proxy, which is now set from the outside
@@ -374,8 +374,7 @@ function SetSuperPropertyFor($inner, property) {
     if (value !== undefined) {
       if (value && value.isMethod) {
         mode    = value.mode
-        handler = value.super ||
-          (value.super = mode.super(property, value.handler, value.isPublic))
+        handler = value.super
 
         if (mode.isImmediate) {
           supers[$IMMEDIATES][property] = handler
@@ -416,10 +415,6 @@ Super_prototype.get = function get($inner, property, $super) {
         return value
     }
   } while (true)
-
-    //
-    // (value && value[$SECRET] === $INNER ?
-    //   value.handler.call($inner[$PULP]) : value)
 }
 
 

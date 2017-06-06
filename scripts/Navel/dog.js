@@ -1,0 +1,46 @@
+const Dog = Type({
+  name : "Dog",
+  supertype : Thing,
+
+  shared : {
+    boneyard : "345 Bone Way",
+    hasTeeth : true,
+  },
+
+  methods : [
+    function _init(name, age, breed) {
+      this.name = name
+      this.age  = age
+      this.breed = breed
+    },
+
+    "ALIAS", {
+      yowl : "howl"
+    },
+
+    {
+      IMMEDIATE : [
+        function speak() {
+          return `My name is ${this.name}!`
+        },
+
+        function howl() {
+          return "AooooohhH!!!"
+        }
+      ],
+      ASSIGNER : "setBreed",
+    },
+
+    "LAZY", function humanAge() {
+      return this.age * 7
+    },
+
+    "MANDATORY", [
+      function setName(name) {
+        this.name = name
+      },
+
+      "setAge"
+    ]
+  ]
+})

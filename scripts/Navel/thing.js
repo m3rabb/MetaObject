@@ -1,42 +1,4 @@
 
-
-
-// _Type.addMethod(function _resetId(newId_) {
-//   // delete this[$PRIOR_IDS]
-//   this.id = (newId_ !== undefined) ? newId : this.oid
-// })
-// Move to the safer version of the RelaxedMethodPorosity after mutable copy methods defined
-
-// mutableCopyExcept
-// mutableCopy
-// asMutable
-// asMutableCopy
-
-// Thing.addMethod(_basicSet)
-
-// Thing.addMethod("_hasOwn", HasOwnProperty)
-
-
-
-
-
-
-
-
-_Thing.addImmediate(function oid() {
-  return `${this.iid}.${this.type.formalName}`
-  // `${type.name}<${NewUniqueId()}>`
-})
-
-_Thing.addLazyProperty(function uid() {
-  return this._hasOwn("guid") ? this.guid : `<${NewUniqueId()}>`
-})
-
-
-
-
-
-
 _Thing.addAssigner("id", function _setId(newId_) {
   const existingId = this.id
   var   newId
@@ -45,6 +7,7 @@ _Thing.addAssigner("id", function _setId(newId_) {
     if (existingId !== undefined) { return existingId }
     newId = this.oid
   }
+  else if (newId_ === existingId) { return existingId }
   else { newId = newId_ }
 
   if (existingId !== undefined) {
@@ -70,9 +33,10 @@ _Thing.addMethod(function _init(spec_) {
 
 _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   var next, property, value, $value, barrier
-  const $inner = this[$INNER]
-  const $outer = $inner[$OUTER]
-  const $rind  = $inner[$RIND]
+  const $inner      = this[$INNER]
+  const $outer      = $inner[$OUTER]
+  const $rind       = $inner[$RIND]
+  const setOuterToo = true
 
   visited.set($rind, $rind)
 
@@ -81,7 +45,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   }
   else {
     const properties = $inner[KNOWN_PROPERTIES] ||
-      SetKnownProperties($inner, SET_OUTER_TOO)
+      SetKnownProperties($inner, setOuterToo)
 
     next = properties.length
 
@@ -112,11 +76,10 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   }
 
   barrier               = new ImmutableInner($inner)
-  $inner[$PULP]         = new Proxy($inner, barrier)
   $inner[$MAIN_BARRIER] = barrier
   $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
   Frost($outer)
-  return this
+  return ($inner[$PULP] = new Proxy($inner, barrier))
 
 }, BASIC_SELF_METHOD)
 
@@ -125,7 +88,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 // _Thing.addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
 //   const $inner   = this[$INNER]
 //   const method   = AsMethod(method_namedFunc__name, func__, mode___)
-//   const selector = method.name
+//   const selector = method.selector
 //   const methods  = $inner[OWN_METHODS]|| ($inner[OWN_METHODS] = SpawnFrom(null))
 //   const supers   = $inner[$SUPERS]    || ($inner[$SUPERS]     = SpawnFrom(null))
 //   SetMethod($inner, method)
@@ -147,7 +110,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 //   const type = method_func__name.type
 //   const method = type && type.is(Method) ?
 //     method_func__name : Method.new(method_func__name, func__)
-//   const selector = method.name
+//   const selector = method.selector
 //   const methods = (this[INSTANCE_METHODS] ||
 //     this[INSTANCE_METHODS] = { __proto__ : null })
 //   methods[selector] = method

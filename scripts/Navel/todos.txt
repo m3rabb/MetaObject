@@ -22,9 +22,9 @@
 - consider making isIdentical use value vs structure for immutables
 - switch back to using typeof instead of constructor
 
-- make type only answer public methods
++ make type only answer public methods
 
-- make precalculated super methods
++ make precalculated super methods
 
 - check how outer cache holds values that are created via getters from inner,
   such as with span in List
@@ -87,11 +87,11 @@ The challenge with JS immutability is that it forces all properties to be visibl
 XX) I must use #4 because using INNER is a security risk, if a proxied villain hijacks one of the methods and calls it on itself and discovers the INNER selector, and then reuses it on a valid thing to steal its secrets.
 
 
-==
+++
 keep track of "volatiles", getter properties that should be copied as getters,
 as opposed to as values. keep track of lazy values, that should be copied at all
 
-==
+++
 only copyable properties should be visible
 
 ==
@@ -99,24 +99,24 @@ Add object level properties and methods
 
 
 
-==
+++
 Make immutable copy on demand work from calls to this as well!!!
-==
+++
 Consider making all public methods answer facts
 
-==
+++
 Consider not allowing anything to be set to undefined as an implementation sentinel
 
-==
+++
 ensure symbols arent "has-able" thru proxies
 
 change _subtypes and _supertypes to be subtypes and supertypes after implementing CopyObject
 
-==
+++
 Check that getters called on $pulp actual have the $pulp as the receiver
 
 
-==
+++
 See if there is a way for the ImmutableInner to store $inner instead of just $pulp
 to speed the access within
 
@@ -129,12 +129,12 @@ to speed the access within
 // }
 
 
-==
+++
 copy
 beImmutable
 super
 
-===
+++
 
 function MakeInnerBlanker(PairedOuter) {
   return function (permeability) {
@@ -148,11 +148,11 @@ enable this immediate method
 Bat.Bat_
 
 
-==
+++
 
 $Inate becomes Basic
 
-==
+++
 Consider disallowing assignment of undefined, enabling us to avoid using "in" and BaseInnerBehavior
 
 Mutability.get = function get($inner, selector, $pulp) {
@@ -167,7 +167,7 @@ Mutability.get = function get($inner, selector, $pulp) {
 }
 
 
-==
+++
 Consider making methods that return undefined mean they're returning 'this'.
 The downside to this is private value methods would be slower as they could no
 longer be passthrus, and would need to be wrapped as well.
@@ -187,4 +187,27 @@ else if (value === $inner[$RIND]) {
 
 
 ==
-change method selector to name
+Add Nothing/Void
+
+==
+Add object addOwnMethod
+
+==
+Make copy method work for types
+
+==
+Consider pulp reassignment paradox
+rename as beAsImmutable|setAsImmutable???
+
+
+==
+Consider if we need to be worried about outside assignment to the _initFrom_
+property.  FYI, I'm no longer worried about it.
+
+      // if (property === "_initFrom_") {
+      //   value = ((tag = InterMap.get(value)) && tag === "_initFrom_") ?
+      //     value : Wrap_initFrom_(value)
+      // }
+      // else {
+      //   value = (InterMap.get(value)) ? value : TameFunc(value)
+      // }

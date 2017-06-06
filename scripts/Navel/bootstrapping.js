@@ -55,10 +55,14 @@ const $Inate$root$outer = $InateBlanker.$root$outer
 // Stubs for default properties
 $Inate$root$inner[$MAIN_BARRIER]          = null
 $Inate$root$inner._noSuchProperty         = null
+$Inate$root$inner.isOuter                 = false
+$Inate$root$inner.isInner                 = true
 
 // This secret is only known by inner objects
 $Inate$root$inner[$SECRET]                = $INNER
 $Inate$root$outer[$SECRET]                = null
+$Inate$root$outer.isOuter                 = true
+$Inate$root$outer.isInner                 = false
 
 $Inate$root$pulp[IS_IMMUTABLE]            = false
 // $Inate$root$pulp[IMMUTABILITY]    = null
@@ -78,14 +82,16 @@ const Type   = _Type  [$RIND]
 
 const $Inate_properties = _$Inate._properties
 
-$Inate_properties[$MAIN_BARRIER]          = null
-$Inate_properties._noSuchProperty         = null
-$Inate_properties.id                      = null
+$Inate_properties[$MAIN_BARRIER]          = PROPERTY
+$Inate_properties._noSuchProperty         = PROPERTY
+$Inate_properties.isOuter                 = PROPERTY
+$Inate_properties.isInner                 = PROPERTY
+$Inate_properties.id                      = PROPERTY
 // $Inate_properties.splice            = undefined // Weird ref by debugger
 // Perhaps remove these later
-$Inate_properties._postInit               = null
-$Inate_properties._initFrom_              = null
-$Inate_properties._setPropertiesImmutable = null
+$Inate_properties._postInit               = PROPERTY
+$Inate_properties._initFrom_              = PROPERTY
+$Inate_properties._setPropertiesImmutable = PROPERTY
 
 
 
@@ -95,21 +101,24 @@ const Method$root$pulp  = MethodBlanker.$root$pulp
 
 Method$root$pulp.isMethod = true
 
-Method$root$inner._init = function _init(func_name, func_, mode__) {
-  const [name, handler, mode = STANDARD_METHOD] =
-    (typeof func_name === "function") ?
-      [func_name.name, func_name, func_] : [func_name, func_, mode__]
-  const isPublic = (name[0] !== "_")
+Method$root$inner._init = function _init(func_selector, func_, mode__) {
+  const [selector, handler, mode = STANDARD_METHOD] =
+    (typeof func_selector === "function") ?
+      [func_selector.name, func_selector, func_ ] :
+      [func_selector     , func_        , mode__]
+  const isPublic = (selector[0] !== "_")
+
+  if (!selector) { return this._invalidSelectorError(selector) }
 
   this.isPublic = isPublic
-  this.name     = name
+  this.selector = selector
   this.mode     = mode
   this.handler  = MarkFunc(handler, KNOWN_HANDLER_FUNC)
   // this.super --> is a lazy property
 
   if (mode !== SET_LOADER) {
-    const outer  = mode.outer(name, handler, isPublic)
-    const inner  = mode.inner(name, handler, isPublic)
+    const outer  = mode.outer(selector, handler, isPublic)
+    const inner  = mode.inner(selector, handler, isPublic)
     inner.outer  = outer    // For access via Permeable outer
     outer.method = inner.method = this[$RIND]
     this.outer   = SetImmutableFunc(outer, WRAPPER_FUNC)
@@ -173,9 +182,9 @@ const _BasicSetImmutable = function _basicSetImmutable() {
 //   delete this._captureOverwrite
 
 
-const AddMethod = function addMethod(method_namedFunc__name, func__, mode___) {
-  const method = AsMethod(method_namedFunc__name, func__, mode___)
-  return this._setSharedProperty(method.name, method, true)
+const AddMethod = function addMethod(method_namedFunc__selector, func__, mode___) {
+  const method = AsMethod(method_namedFunc__selector, func__, mode___)
+  return this._setSharedProperty(method.selector, method, true)
 }
 
 
@@ -198,16 +207,16 @@ _$Inate.addMethod(function _basicSet(propertyName, value) {
 
 
 
-_Type.addMethod(function addImmediate(...namedFunc_name__handler) {
-  return this.addMethod(...namedFunc_name__handler, STANDARD_IMMEDIATE)
+_Type.addMethod(function addImmediate(...namedFunc_selector__handler) {
+  return this.addMethod(...namedFunc_selector__handler, STANDARD_IMMEDIATE)
 })
 
-_Type.addMethod(function addLazyProperty(...namedFunc_name__handler) {
-  return this.addMethod(...namedFunc_name__handler, LAZY_INSTALLER)
+_Type.addMethod(function addLazyProperty(...namedFunc_selector__handler) {
+  return this.addMethod(...namedFunc_selector__handler, LAZY_INSTALLER)
 })
 
 _Type.addMethod(function addSharedProperty(property, value) {
-  if (value === undefined) { AssignmentOfUndefinedError(this[$RIND]) }
+  if (value === undefined) { return this._assignmentOfUndefinedError() }
   return this._setSharedProperty(property, value, true)
 })
 
@@ -216,11 +225,6 @@ _Type.addMethod(function removeSharedProperty(property) {
     this._deleteSharedProperty(property) : this
 })
 
-_Type.addMethod(function addAllMethods(methods) {
-  var next = methods.length
-  while (next--) { this.addMethod(methods[next]) }
-  return this
-})
 
 _Type.addMethod(function _deleteSharedProperty(property) {
   const blanker     = this._blanker
@@ -362,13 +366,39 @@ _Type.addMethod(function _buildAncestry() {
 // addAssigner("property", function () {})
 // addAssigner("property", function setName() {})
 
-_Type.addMethod(function addAssigner(setter_loader__property, setter_loader_) {
-  const [propertyName, setterName, loader, setter] =
-    AsPropertySetterLoaderHandler(setter_loader__property, setter_loader_)
+_Type.addMethod(function addAssigner(loader_property, loader_) {
+  var propertyName, setterName, setter, loader
+
+  if (loader_) {
+    propertyName = loader_property
+
+    if (typeof loader_ === "string") {
+      setterName = loader_
+      setter     = AsBasicSetter(propertyName, setterName)
+    }
+    else {
+      loader     = loader_
+      setterName = loader.name
+      setter     = AsLoaderSetter(propertyName, loader)
+    }
+  }
+  else {
+    if (typeof loader_property === "string") {
+      setterName   = loader_property
+      propertyName = AsPropertyNameFromSetterName(setterName)
+      setter       = AsBasicSetter(propertyName, setterName)
+    }
+    else {
+      loader       = loader_property
+      setterName   = loader.name
+      if (!setterName) { return this._unnamedFuncError("Assigner") }
+      propertyName = AsPropertyNameFromSetterName(setterName)
+      setter       = AsLoaderSetter(propertyName, loader)
+    }
+  }
 
   if (setterName) { this.addMethod(setterName, setter) }
   if (loader)     { this.addMethod(propertyName, loader, SET_LOADER) }
-  return this
 })
 
 
@@ -377,15 +407,40 @@ _Type.addMethod(function addAssigner(setter_loader__property, setter_loader_) {
 // addMandatorySetter("property", "setName")
 // addMandatorySetter("property", function setName() {})
 
-_Type.addMethod(function addMandatorySetter(setter_loader__property, setter_loader_) {
-  var [propertyName, setterName, loader, setter] =
-    AsPropertySetterLoaderHandler(setter_loader__property, setter_loader_)
+_Type.addMethod(function addMandatorySetter(setter_property, setter_) {
+  var propertyName, setterName, setter, loader
 
-  if (!setterName) { UnnamedLoaderError(this[$RIND]) }
+  if (setter_) {
+    propertyName = setter_property
+
+    if (typeof setter_ === "string") {
+      setterName = setter_
+      setter     = AsBasicSetter(propertyName, setterName)
+    }
+    else {
+      setter     = setter_
+      setterName = setter.name
+    }
+  }
+  else {
+    if (typeof setter_property === "string") {
+      setterName   = setter_property
+      propertyName = AsPropertyNameFromSetterName(setterName)
+      setter       = AsBasicSetter(propertyName, setterName)
+    }
+    else {
+      setter       = setter_property
+      setterName   = setter.name
+      propertyName = AsPropertyNameFromSetterName(setterName)
+    }
+  }
+
+  if (!setterName) { return this._unnamedFuncError("Setter") }
   this.addMethod(setterName, setter)
   loader = MakeAssignmentError(propertyName, setterName)
   return this.addMethod(propertyName, loader, SET_LOADER)
 })
+
 
 
 
@@ -404,7 +459,7 @@ _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
 
   blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
   blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
-  this._properties.constructor    = CONSTRUCTOR
+  this._properties.constructor    = PROPERTY
   return this
 })
 
@@ -431,34 +486,34 @@ _Type.addAssigner("name", function setName(name) {
 
 
 
-
-
-// _Type.addMethod(function _make$copy(blanker) {
-//   // blanker.$root$inner[$COPY] =   Make$copy(blanker)
-// })
-
-
 _Type.addMethod(function _initCoreIdentity(name) {
   this._iidCount = 0
   this.name      = name
   this.addSharedProperty("type", this[$RIND])
 })
 
+//  spec
+//    name
+//    supertype|supertypes
+//    shared|sharedProperties
+//    methods|instanceMethods
 
-_Type.addMethod(function _init(spec, context_) {
-  const name       = spec && spec.name
+
+_Type.addMethod(function _init(spec_name, context_) {
+  const name       = spec_name.name || spec_name
   const supertypes =
-    spec && (spec.supertypes || spec.supertype && [spec.supertype]) || [Thing]
-  const methods    = spec && spec.instanceMethods || []
-  const blanker    = this._blanker
+    (spec_name.supertypes || spec_name.supertype && [spec_name.supertype])
+    || [Thing]
+  const shared     = spec_name.shared  || spec_name.sharedProperties
+  const methods    = spec_name.methods || spec_name.instanceMethods
 
-  this.subtypes   = SetImmutable(new Set())
-  this.context    = context_ ? context_[$RIND] : null
+  this.subtypes = SetImmutable(new Set())
+  this.context  = context_ || spec_name.context || null
 
   this._initCoreIdentity(name)
   this.setSupertypes(supertypes)
-  this.addAllMethods(methods)
-  return this
+  shared  && this.addSharedProperties(shared)
+  methods && this.addMethods(methods)
 })
 // blanker.$root$outer.constructor = this._disguisedFunc
 // blanker.$root$inner.constructor = MakeVacuousConstructor()
@@ -468,7 +523,7 @@ _Type.addMethod(function _init(spec, context_) {
 _Type  ._init({name: "Type"  , supertypes: []})
 _$Inate._init({name: "$Inate", supertypes: []})
 _Thing ._init({name: "Thing" , supertypes: []})
-_Method._init({name: "Method"})
+_Method._init("Method")
 
 _Type.setSupertypes([Thing])
 
@@ -481,11 +536,6 @@ _$Inate._setDisplayNames("$Outer", "$Inner") // Helps with debugging!!!
 // // Frost(Stash_root)
 // Frost(Implementation_root)
 // Frost(Inner_root)
-
-
-
-
-//  Make earlier methods immutable!!!
 
 
 

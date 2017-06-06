@@ -38,7 +38,7 @@ function AsMethod(method_func__name, func__, mode___) {
 function SetMethod($inner, method) {
   const $outer   = $inner[$OUTER]
   const $method  = InterMap.get(method)
-  const selector = $method.name
+  const selector = $method.selector
   const mode     = $method.mode
 
   if (mode === SET_LOADER) {
@@ -55,13 +55,6 @@ function SetMethod($inner, method) {
   }
 }
 
-
-// Consider caching these!!!
-function MakeAssignmentError(Property, Setter) {
-  return function $assignmentError(_target) {
-    DisallowedAssignmentError(_target[$RIND], Property, Setter)
-  }
-}
 
 
 
@@ -132,6 +125,7 @@ function PreInitType(func, $inner, $outer, permeability) {
   $outer[$RIND]  = $rind
   InterMap.set($rind, $inner)
   // this[$PULP]  = new Proxy(NewAsFact, mutability)
+  InterMap.set($pulp, TYPE_PULP)
   return ($inner[$PULP] = $pulp)
 }
 
@@ -183,38 +177,6 @@ function AsName(string_symbol) {
 function AsPropertyNameFromSetterName(name) {
   const match = name.match(/^[_$]*set([A-Z])(.*$)/)
   return `${match[1].toLowerCase()}${match[2]}`
-}
-
-
-
-function AsPropertySetterLoaderHandler(setter_loader__property, setter_loader_) {
-  var propertyName, setterName, loader, setter
-
-  if (setter_loader_) {
-    propertyName = setter_loader__property
-
-    if (typeof setter_loader_ === "string") {
-      setterName = setter_loader_
-      setter     = AsBasicSetter(propertyName, setterName)
-    }
-    else {
-      loader     = setter_loader_
-      setterName = loader.name
-      setter     = AsLoaderSetter(propertyName, loader)
-    }
-  }
-  else {
-    if (typeof setter_loader__property === "string") {
-      setterName = setter_loader__property
-    }
-    else {
-      loader     = setter_loader__property
-      setterName = loader.name
-    }
-    propertyName = AsPropertyNameFromSetterName(setterName)
-    setter       = AsLoaderSetter(propertyName, loader)
-  }
-  return [propertyName, setterName, loader, setter]
 }
 
 
@@ -309,7 +271,9 @@ const SAFE_FUNC          = Frost({id: "SAFE_FUNC"      , [IS_IMMUTABLE] : true})
 const BLANKER_FUNC       = Frost({id: "BLANKER_FUNC"   , [IS_IMMUTABLE] : true})
 const TAMED_FUNC         = Frost({id: "TAMED_FUNC"     , [IS_IMMUTABLE] : true})
 const WRAPPER_FUNC       = Frost({id: "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true})
-const KNOWN_HANDLER_FUNC = Frost({id: "HANDLER_FUNC"})
+
+const KNOWN_HANDLER_FUNC = Frost({id: "KNOWN_HANDLER_FUNC"})
+const TYPE_PULP          = Frost({id: "TYPE_PULP"         })
 //const SET_LOADER_FUNC = Frost({id: "SET_LOADER_FUNC")
 
 

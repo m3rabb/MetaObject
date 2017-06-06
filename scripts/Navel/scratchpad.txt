@@ -1,0 +1,145 @@
+Animal
+  Vertebrate
+    Mammal
+      Dog
+      Human
+      Bat
+      Squirrel
+      FlyingSquirrel
+    Bird
+      Sparrow
+      Tern
+      Falcon
+    Reptile
+      Lizard
+      Snake
+    Anphibian
+      Frog
+    Fish
+      Shark
+      Carp
+  Invertebrate
+    Insect
+      Grasshopper
+      Bee
+      Ant
+    Octopus
+    Worm
+    Spider
+    HermitCrab
+
+
+Locomotion
+  Terrestrial
+    Walking
+    Running
+    Crawling
+    Slithering
+    Braciation
+  Aquatic
+    Swimming
+      SurfaceSwimming
+      SubaquaticSwimming
+    Diving
+  Avian
+    Flying
+    Gliding
+
+
+Powering
+  BiologicalPowered
+  EnginePowered
+
+Diet
+  Vegetarian
+  Canivorous
+    killer
+    Scavenger
+    ProducedAnimalProducts
+    Ovotarian
+    Omnivorous
+
+Organization
+
+
+A D H I    B C D E F H
+
+A D H I    H E D J
+
+
+
+
+
+
+
+FACT = {
+  __proto__   : null,
+  id          : "FACT",
+  isFact      : true,
+  isIdentity  : false,
+  isImmutable : false,
+  isSnapshot  : false,
+}
+
+SNAPSHOT = {
+  __proto__   : FACT,
+  id          : "SNAPSHOT",
+  isSnapshot  : true,
+}
+
+VALUE_SNAPSHOT = {
+  __proto__   : SNAPSHOT,
+  id          : "VALUE_SNAPSHOT",
+}
+
+IDENTITY_SNAPSHOT = {
+  __proto__   : SNAPSHOT,
+  id          : "IDENTITY_SNAPSHOT",
+  isIdentity  : true,
+}
+
+IMMUTABLE_SNAPSHOT = {
+  __proto__   : SNAPSHOT,
+  id          : "IMMUTABLE_SNAPSHOT",
+  isImmutable : true,
+}
+
+IDENTITY = {
+  __proto__   : SNAPSHOT,
+  id          : "IDENTITY",
+  isIdentity  : true,
+  snapshot    : IDENTITY_SNAPSHOT,
+}
+
+IMMUTABLE = {
+  __proto__   : SNAPSHOT,
+  id          : "IMMUTABLE",
+  isImmutable : true,
+  snapshot    : IMMUTABLE_SNAPSHOT,
+}
+
+Use IMMUTABLE with IMMUTABLE/SNAPSHOT vs IS_IMMUTABLE with true/false
+
+                              id      FACT
+mutable
+mutable w id                  id      IDENTITY
+immutable                     null    IMMUTABLE
+immutable w id                id      IMMUTABLE
+
+snapshot of mutable           null    VALUE_SNAPSHOT
+snapshot of mutable w id      id      IDENTITY_SNAPSHOT
+snapshot of immutable         null    IMMUTABLE_SNAPSHOT
+snapshot of immutable w id    id      IMMUTABLE_SNAPSHOT
+
+
+
+
+
+
+
+
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/

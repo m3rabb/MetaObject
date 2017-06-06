@@ -51,26 +51,54 @@ _Type.addMethod(function asImpermeable() {
 
 // REVISIT!!!
 _Type.addMethod(function methodAt(selector) {
-  const value = this._blanker.$root$inner[selector]
-  if (typeof value !== "function") { return null }
-  if (InterMap.get(value)) { return value.method || null }
-  return null
+  const $root$inner = this._blanker.$root$inner
+  const value       = $root$inner[selector]
+
+  if (value === IMMEDIATE) { return $root$inner[$IMMEDIATES][selector][$RIND] }
+  return (typeof value === "function" && InterMap.get(value)) ?
+    value.method || null : null
 })
+
 
 _Type.addMethod(function addAlias(aliasName, name_method) {
   const sourceMethod = name_method.isMethod ?
     name_method : this.methodAt(name_method)
   if (sourceMethod == null) {
-    return UnknownMethodToAliasError(this[$RIND], name_method)
+    return this._unknownMethodToAliasError(name_method)
   }
   return this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
 })
 
 
+_Type.addMethod(function _addValueMethod(...namedFunc_name__handler) {
+  return this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
+})
 
-_Type.addAlias("basicNew", "new")
-_Type.addAlias("removeMethod", "removeSharedProperty")
-_Type.addAlias("_setImmutable", "_basicSetImmutable")
+_Type.addMethod(function _addValueImmediate(...namedFunc_name__handler) {
+  return this.addMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
+})
+
+
+_Type.addMethod(function addSharedProperties(spec) {
+  PropertyLoader.new(this.$).load(spec, "SHARED")
+})
+
+_Type.addMethod(function addMethods(items) {
+  PropertyLoader.new(this.$).load(items, "METHOD")
+})
+
+
+
+_Type.addAlias("basicNew"     , "new")
+_Type.addAlias("removeMethod" , "removeSharedProperty")
+// _Type.addAlias("_setImmutable", "_basicSetImmutable")
+
+
+_Type.addMethod(function _setImmutable() {
+  const new$pulp = this._basicSetImmutable()
+  InterMap.set(new$pulp, TYPE_PULP)
+  return
+}, BASIC_SELF_METHOD)
 
 
 
@@ -80,6 +108,11 @@ _Type.addMethod(function newAsFact(...args) {
   const _instance = InterMap.get(instance)[$PULP]
   if (_instance.id == null) { _instance._setImmutable() }
   return instance
+})
+
+
+_Type.addMethod(function _unknownMethodToAliasError(property) {
+  this._signalError(`Can't find method '${property}' to alias!!`)
 })
 
 

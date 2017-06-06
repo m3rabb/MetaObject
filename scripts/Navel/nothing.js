@@ -12,3 +12,9 @@ Nothing methods
   is
   type
   id
+  isVoid
+  isNothing
+
+Void
+
+oid === "0.Nothing"

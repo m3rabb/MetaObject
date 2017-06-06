@@ -31,6 +31,16 @@ function AsLoaderSetter(PropertyName, Loader) {
   }[name]
 }
 
+// Consider caching these!!!
+function MakeAssignmentError(Property, Setter) {
+  const name = `${Property}_$assignmentError`
+  return {
+    [name] : function (value) {
+      this._disallowedAssignmentError(Property, Setter)
+    }
+  }[name]
+}
+
 
 
 // Method       outer                     inner          super
@@ -231,20 +241,6 @@ function AsInnerLazyLoader(Property, Handler) {
 }
 
 
-// function AsOuterBasicLazyLoader(Property, Handler) {
-//   // FIGURE A WAY TO MAKE THIS WORK WITH property as a Symbol AS WELL!!!
-//   const name = `${AsName(Property)}_$outer$lazy`
-//   return {
-//     [name] : function () {
-//       let $inner = InterMap.get(this)
-//       let $pulp = $inner[$PULP]
-//       DefineProperty($inner, Property, InvisibleConfiguration)
-//       return ($pulp[Property] = Handler.call($pulp)) // <<----------
-//     }
-//   }[name]
-// }
-
-
 
 function AsSuperFact(property, Handler) {
   const name = `${AsName(property)}_$super$fact`
@@ -278,7 +274,7 @@ function AsSuperValue(property, Handler) {
 }
 
 function AsSuperBasic(property, Handler) {
-  const name = `${AsName(property)}_$super$generic`
+  const name = `${AsName(property)}_$super$basic`
   return {
     [name] : function (...args) {
       // this is $super. Need to use $pulp instead

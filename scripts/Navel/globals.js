@@ -50,7 +50,8 @@ const $SET_LOADERS       = Symbol("$setLoaders")
 
 
 // Sentinels
-const CONSTRUCTOR        = Symbol("CONSTRUCTOR")
+const PROPERTY           = Symbol("PROPERTY")
+// const CONSTRUCTOR        = Symbol("CONSTRUCTOR")
 const NO_SUPER           = Symbol("NO_SUPER")
 const IMMEDIATE          = Symbol("IMMEDIATE")
 
