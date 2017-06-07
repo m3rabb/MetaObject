@@ -30,11 +30,85 @@
 // rind --> core
 
 
-function AsMethod(method_func__name, func__, mode___) {
-  return (method_func__name.isMethod) ?
-    method_func__name : Method(method_func__name, func__, mode___)
+/**
+ * Converts a name into a membership selector.
+ * @private
+ * @param       {string} name - The target to be converted
+ * @returns     {string}
+ */
+function AsMembershipSelector(name) {
+  return `is${name[0].toUpperCase()}${name.slice(1)}`
 }
 
+/**
+ * Capitalizes a word.
+ * @private
+ * @param       {string} word - The target to be capitalized
+ * @returns     {string}
+ */
+function AsCapitalized(word) {
+  return `${word[0].toUpperCase()}${word.slice(1)}`
+}
+
+/**
+ * Answers the name if it's already a string. Otherwise, it converts the
+ * symbol into a name.
+ * @private
+ * @param       {(string|symbol)} string|symbol - The target
+ * @returns     {string}
+ */
+function AsName(string_symbol) {
+  if (typeof string_symbol === "string") { return string_symbol }
+  const name = string_symbol.toString()
+  return name.slice(7, name.length - 1)
+}
+
+/**
+ * Extracts a non-capitalized property name from a setter name.
+ * @private
+ * @param       {string} name - The target setter name
+ * @returns     {string}
+ */
+function AsPropertyNameFromSetterName(name) {
+  const match = name.match(/^[_$]*set([A-Z])(.*$)/)
+  return `${match[1].toLowerCase()}${match[2]}`
+}
+
+/**
+ * Answers the parameter if it's already a method. Otherwise, it answers a new
+ * Method created from the handler function, selector, and mode.
+ * @private
+ * @param       {(selector|function|Method)} selector|namedFunc|method
+ * Selector | Named function | Passthru method
+ * @param       {function|symbol}         handler|mode_|
+ * Method handler | Method mode
+ * @param       {symbol}           mode_
+ * Method mode, defaults to STANDARD
+ * @returns     {Method}
+ *
+ * @example
+ * AsMethod(selector, handler)
+ * AsMethod(selector, handler, mode)
+ * @example
+ * AsMethod(namedHandler)
+ * AsMethod(namedHandler, mode)
+ * @example
+ * AsMethod(method)
+ */
+function AsMethod(method_func__selector, handler__, mode___) {
+  return (method_func__selector.isMethod) ?
+    method_func__selector : Method(method_func__selector, handler__, mode___)
+}
+
+
+/**
+ * Installs a method in a target $root or object. If the method is public, it
+ * installs it in the outer as well as the inner sides of the object, It also,
+ * handles if the method immediate or is a set loader.
+ * @private
+ * @param       {$inner} $inner - The target $inner
+ * @param       {Method} method - The method to install
+ */
 function SetMethod($inner, method) {
   const $outer   = $inner[$OUTER]
   const $method  = InterMap.get(method)
@@ -42,25 +116,48 @@ function SetMethod($inner, method) {
   const mode     = $method.mode
 
   if (mode === SET_LOADER) {
+    // In a set-loader method, its handler is the loader function.
     $inner[$SET_LOADERS][selector] = $method.handler
   }
   else if (mode.isImmediate) {
+    // Store the $inner aspect of the method
     $inner[$IMMEDIATES][selector] = $method
+    // Store the sentinel to direct the execution to the immediates side lookup.
     $inner[selector] = IMMEDIATE
     if ($method.isPublic) { $outer[selector] = IMMEDIATE }
   }
   else {
+    // Store the inner (and outer) wrapper in the property chain.
     $inner[selector] = $method.inner
     if ($method.isPublic) { $outer[selector] = $method.outer }
   }
 }
 
 
+/**
+ * Sets the property of an object.
+ * * If the property is public, it installs the value in the outer as well as
+ * the inner sides of the object.
+ * * It ensures that values assigned to public properties are stored as facts.
+ * * If the value is an unknown - and therefore untrusted - function, it ensures
+ * that it is wrapped to avoid access to the inside of the object when executed
+ * upon it.
+ * * If the value refers to the object itself, it ensures that the $rind of the
+ * object is assigned instead of the $pulp.
+ * * It throws and error if it detects the exposed $pulp of another object.
+ * @private
+ * @param       {$inner}   $inner   The target $inner
+ * @param       {selector} property The target property
+ * @param       {*}        value    The value to be assigned
+ * @param       {$pulp}    $pulp    The target $pulp
+ * @throws      Throws an error if attempting to assign undefined to a property.
+ * @throws      Throws an error if it detects an exposed $pulp.
+ */
 function InSetProperty($inner, property, value, $pulp) {
   if (property in $inner) {
     if (value === $inner[property]) { return $pulp }
   }
-  else {
+  else if ($pulp) { // null|undefined when setting a $root object
     // Consider making id invisible, and ensuring that id is only set thru a special method here!!!
     delete $inner[KNOWN_PROPERTIES]
     delete $inner[$OUTER][KNOWN_PROPERTIES]
@@ -70,6 +167,7 @@ function InSetProperty($inner, property, value, $pulp) {
 
   switch (typeof value) {
     case "undefined" :
+      // Storing undefined is prohibited!
       return $pulp._assignmentOfUndefinedError()
 
       case "object" :
@@ -77,7 +175,7 @@ function InSetProperty($inner, property, value, $pulp) {
         else if (value[$SECRET] === $INNER)  {
           if    (value === $pulp)            { value = $inner[$RIND]
                                                if (!isPublic) { break } }
-
+          // Safety check: detect failure to use 'this.$' elsewhere.
           else  { return $pulp._detectedInnerError(value) }
         }
         else if (!isPublic)                  {          break           }
@@ -93,10 +191,18 @@ function InSetProperty($inner, property, value, $pulp) {
     case "function" : // LOOK: will catch Type things!!!
       // Note: Checking for value.constructor is inadequate to prevent func spoofing
       switch (InterMap.get(value)) {
-        default           : break
-        case TYPE_PULP    : return $pulp._detectedInnerError(value)
+        default           :
+          // Value is either a known function, or a type's $rind ,
+          break
+        case TYPE_PULP    :
+          // Safety check: detect failure to a type's 'this.$' elsewhere.
+          return $pulp._detectedInnerError(value)
+
+        case undefined    :
+          // New unknown untrusted function to be wrapped.
+          value = AsTameFunc(value)
+          break
         // case WRAPPER_FUNC : return $pulp.addOwnMethod(value.method)
-        case undefined    : value = AsTameFunc(value); break
       }
     // break omitted
 
@@ -109,16 +215,36 @@ function InSetProperty($inner, property, value, $pulp) {
   return $pulp
 }
 
-
-function MakeNamelessVacuousFunction() {
+/**
+ * Answers an unnamed empty function.
+ * @private
+ * @return {function}
+ */
+function NewNamelessVacuousFunc() {
   return function () {}
 }
 
-
-function MakeVacuousConstructor(name) {
+/**
+ * Answers a named empty function. The function is a false constructor, only
+ * used for naming instances in the debugger.
+ * @private
+ * @param       {string}   name   The name of the function
+ * @return      {NamedVacuousConstructor}
+ */
+function NewVacuousConstructor(name) {
+  /**
+   * This function is used as a false contructor. It's referenced by the
+   * 'constructor' property in a $root, and is seen by the debugger to
+   * properly name the type of its instance objects. However it is a false
+   * constructor because it is never used to actually generate new instances.
+   * It throws an error if accidentally executed.
+   * @private
+   * @callback NamedVacuousConstructor
+   * @throws Throws an error if executed.
+   */
   const funcBody = `
     return function ${name}() {
-      const message = "This constructor is only used for naming!"
+      const message = "This constructor is only used for naming!!"
       return SignalError(${name}, message)
     }
   `
@@ -128,25 +254,92 @@ function MakeVacuousConstructor(name) {
 }
 
 
+/**
+ * Answers a new blanker function. A 'blanker' a constructor function that
+ * returns a blank object i.e. empty naked virgin instance. This method is a
+ * blanker factory. The produced blanker:
+ * - inherits from a 'super' blanker
+ * - is set by default to produce impermeable vs permeable instances
+ * - is set by default to produce basic objects vs type objects.
+ * @private
+ * @function    NewBlanker
+ * @param       {Blanker}      superBlanker
+ * @param       {$root}        superBlanker.$root$inner
+ * The ancestor for the blanker's $root of each instance's $inner.
+ * @param       {$root}        superBlanker.$root$outer
+ * The ancestor for the blanker's $root of each instance's $outer.
+ * @param       {BlankerMaker} superBlanker.maker  The default BlankerMaker.
+ * @param       {Permeability} [permeability_=Impermeable]
+ * Defines the permeability of the created instances.
+ * @param       {BlankerMaker} [maker_=$InnerBlanker]
+ * The assisting method to make the new blanker.
+ * @returns     {Blanker}
+ */
 
-function NewBlanker(superBlanker, permeability_, maker_) {
-  const isBase       = (superBlanker === $BaseBlanker)
-  const blankerMaker = maker_        || superBlanker.maker
-  const permeability = permeability_ || Impermeable
-  const $root$inner  = SpawnFrom(superBlanker.$root$inner)
-  const $root$outer  = SpawnFrom(superBlanker.$root$outer)
-  const PairedOuter  = MakeNamelessVacuousFunction()
-  const Blanker      = blankerMaker(PairedOuter, permeability)
-  const supers       = SpawnFrom(isBase ? null : $root$inner[$SUPERS])
-  const immediates   = SpawnFrom(isBase ? null : $root$inner[$IMMEDIATES])
+/**
+ * A blankers is a private constructor function that is used by each type to create new
+ * blank empty virgin instances. Blankers are actully composed to two constructors:
+ * the inner blanker which creates the instance's $inner, and the outer blanker
+ * which creates the instance's $outer.  The blanker and the inner blanker are
+ * one and the same, and references the outer blanker.
+ * @private
+ * @typedef {function} Blanker
+ * @param   {(name|spec.name)}  name_|spec_
+ * @returns {$inner}
+ * The parameter is ignored by all blankers, except the Type blanker which uses
+ * the name parameter to set the name of the diguised function for each new
+ * type instance.
+ * @property {BlankerMaker} maker
+ * Its maker. Used to determine the maker of descendent blankers.
+ * @property {Permeability} permeability
+ * Defines the permeability of its created instances.
+ * @property {$root} $root$outer
+ * The $root of $outer of all created instances. $root$Outer has a parallel
+ * hierarchy to $root$inner
+ * @property {stash} $root$outer.$IMMEDIATES
+ * References the side-lookup for the instances' immediate $methods. It's also
+ * referenced from $root$inner.$IMMEDIATES.
+ * @property {$root} $root$inner
+ * Same as the prototype. The $root of $inner of all created instances.
+ * @property {$root} $root$inner.$OUTER
+ * References the parallel $root$outer
+ * @property {stash} $root$inner.$IMMEDIATES
+ * References the side-lookup for the instances' immediate $methods. It's also
+ * referenced from $root$outer.$IMMEDIATES.
+ * @property {stash} $root$inner.$SET_LOADERS
+ * References the side-lookup for the instances' set-loader handlers.
+ * @property {stash} $root$inner.$SUPERS
+ * References the side-lookup for the instances' super properties.
+ * @property {stash} $root$inner.$SUPERS.$IMMEDIATES
+ * References the side-lookup for the instances' super immediate $methods.
+ * @property {Blanker} $root$inner.$BLANKER
+ * Reference from the instances back to their creating blanker, itself.
+ * @property {OuterBlanker} CompanionOuterBlanker
+ * Closure property: The companion blanker that makes the corresponding $outer for each
+ * created instance.
+ */
 
-  Blanker.maker         = blankerMaker
-  Blanker.permeability  = permeability
-  Blanker.prototype     = $root$inner
-  Blanker.$root$inner   = $root$inner
-  Blanker.$root$outer   = $root$outer
-  $root$inner[$OUTER]   = $root$outer
-  PairedOuter.prototype = $root$outer
+ function NewBlanker(superBlanker, permeability_, maker_) {
+  const isBase         = (superBlanker === $BaseBlanker)
+  const blankerMaker   = maker_        || superBlanker.maker
+  const permeability   = permeability_ || Impermeable
+  const $root$inner    = SpawnFrom(superBlanker.$root$inner)
+  const $root$outer    = SpawnFrom(superBlanker.$root$outer)
+  // Note: The blanker function must be unnamed in order for the debugger to
+  // display the type of instances using type name determined by the name of
+  // its constructor function property.
+  const OuterBlanker   = NewNamelessVacuousFunc()
+  const Blanker        = blankerMaker(OuterBlanker, permeability)
+  const supers         = SpawnFrom(isBase ? null : $root$inner[$SUPERS])
+  const immediates     = SpawnFrom(isBase ? null : $root$inner[$IMMEDIATES])
+
+  Blanker.maker             = blankerMaker
+  Blanker.permeability      = permeability
+  Blanker.prototype         = $root$inner
+  Blanker.$root$inner       = $root$inner
+  Blanker.$root$outer       = $root$outer
+  $root$inner[$OUTER]       = $root$outer
+  OuterBlanker.prototype    = $root$outer
 
   supers[$IMMEDIATES]       = SpawnFrom(null)
   $root$inner[$SUPERS]      = supers
@@ -159,8 +352,120 @@ function NewBlanker(superBlanker, permeability_, maker_) {
   return Frost(Blanker)
 }
 
-// NOT TESTED
-function PreInitType(func, $inner, $outer, permeability) {
+
+
+/**
+ * On instantiation, a blank virgin object has its implementation plumbing
+ * connected.
+ * @private
+ * @typedef     $inner
+ * @property    {$inner}       $INNER
+ * @property    {Proxy}        $PULP
+ * @property    {$inner}         $PULP.target
+ * @property    {Mutability}     $PULP.handler
+ * @property    {$outer}       $OUTER
+ * @property    {Proxy}          $OUTER.$RIND
+ * @property    {Proxy}        $RIND
+ * @property    {$outer}         $RIND.target
+ * @property    {Permeability}   $RIND.handler
+ * @property    {symbol}       $SECRET
+ * @property    {symbol}       $MAIN_BARRIER
+ * @property    {Proxy}        _super
+ * @property    {Super}          _super.handler
+ * @property    {$inner}         _super.target
+ */
+
+/**
+ * Called by NewBlanker to assist it in making a new blanker.
+ * @private
+ * @param       {OuterBlanker} CompanionOuterBlanker The companion blanker.
+ * @param       {Permeability} Permeability
+ * Defines the permeability of the created instances.
+ * @returns     {Blanker}
+ */
+function _NewInnerBlanker(CompanionOuterBlanker, Permeability) {
+  // Note: The blanker function must be unnamed in order for the debugger to
+  // display the type of instances using type name determined by the name of
+  // its constructor function property.
+  return function () {
+    const $outer = new CompanionOuterBlanker()
+    const $rind  = new Proxy($outer, Permeability)
+
+    this[$INNER]  = this
+    this[$PULP]   = new Proxy(this, Mutability)
+    this[$OUTER]  = $outer
+    this[$RIND]   = $rind
+    $outer[$RIND] = $rind
+    InterMap.set($rind, this)
+  }
+}
+
+
+/**
+ * On instantiation, a blank virgin type thingy has its implementation plumbing
+ * connected.
+ * @private
+ * @typedef     Type$inner
+ * @property    {$inner}       $INNER
+ * @property    {Proxy}        $PULP
+ * @property    {function}       $PULP.target
+ * @property    {TypeInner}      $PULP.handler
+ * @property    {Type$inner}       $PULP.handler.$target
+ * @property    {Type$outer}   $OUTER
+ * @property    {Proxy}          $OUTER.$RIND
+ * @property    {Proxy}        $RIND
+ * @property    {function}       $RIND.target
+ * @property    {TypeOuter}      $RIND.handler
+ * @property    {Type$outer}       $RIND.handler.$outer
+ * @property    {Proxy}            $RIND.handler.$pulp
+ * @property    {Permeability}     $RIND.handler.permeability
+ * @property    {symbol}       $SECRET
+ * @property    {symbol}       $MAIN_BARRIER
+ * @property    {Proxy}        _super
+ * @property    {Super}          _super.handler
+ * @property    {Type$inner}     _super.target
+ */
+
+/**
+ * Called by NewBlanker to assist it in making a Type blanker.
+ * @private
+ * @param       {OuterBlanker} CompanionOuterBlanker The companion blanker.
+ * @param       {Permeability} Permeability
+ * Defines the permeability of the created instances.
+ * @returns     {Blanker}
+ */
+function _NewTypeInnerBlanker(CompanionOuterBlanker, Permeability) {
+  // Note: The blanker function must be unnamed in order for the debugger to
+  // display the type of instances using type name determined by the name of
+  // its constructor function property.
+  return function ([name_spec]) {  // $Type // NewTypeBlanker
+    var typeName = (typeof name_spec === "string") ? name_spec : name_spec.name
+    var func     = NewVacuousConstructor(typeName || "UNNAMED")
+    var $outer   = new CompanionOuterBlanker()
+
+    // Refactor!!!
+    _PreInitType(func, this, $outer, Permeability)
+  }
+}
+
+
+/**
+ * Called by _NewTypeInnerBlanker and Type#asPermeable to setup the complex
+ * guts of new Type instances. In order the enable the magic of have a type be
+ * a first-class object but also work as function, the type object is hidden
+ * behind proxy over a function.  The type instance's inside and outside proxies
+ * are implemented using special TypeInner and TypeOuter porosity objects, which
+ * each hold a reference to the actual type object. The target of the proxy
+ * instead references the disguised function.
+ * @private
+ * @param       {function}    func         The type's disguised function.
+ * @param       {Type$inner}  $inner       The type's $inner.
+ * @param       {Type$outer}  $outer       The type's $outer.
+ * @param       {Permeability} permeability
+ * Defines the permeability of type's instances.
+ * @return      {Type$pulp} The type's $pulp.
+ */
+function _PreInitType(func, $inner, $outer, permeability) {
   const mutability = new TypeInner($inner)
   const $pulp      = new Proxy(func, mutability)
   mutability.$pulp = $pulp
@@ -180,35 +485,18 @@ function PreInitType(func, $inner, $outer, permeability) {
 }
 
 
-function MakeTypeInnerBlanker(PairedOuter, Permeability) {
-  return function ([name_spec]) {  // $Type // NewTypeBlanker
-    var typeName = (typeof name_spec === "string") ? name_spec : name_spec.name
-    var func = MakeVacuousConstructor(typeName || "UNNAMED")
-    var $outer = new PairedOuter()
-
-    PreInitType(func, this, $outer, Permeability)
-
-    this.subtypes    = SetImmutable(new Set())
-    this._properties = SpawnFrom(null)
-  }
-}
-
-function MakeInnerBlanker(PairedOuter, Permeability) {
-  return function () {
-    const $outer = new PairedOuter()
-    const $rind  = new Proxy($outer, Permeability)
-
-    this[$INNER]  = this
-    this[$PULP]   = new Proxy(this, Mutability)
-    this[$OUTER]  = $outer
-    this[$RIND]   = $rind
-    $outer[$RIND] = $rind
-    InterMap.set($rind, this)
-  }
-}
-
-
-
+/**
+ * Answers the ancestry based on a list of types, ordered in ascending
+ * precedence. The result is considered rough because it may contain duplicates.
+ * @private
+ * @param       {Type[]}     supertypes
+ * The list of types, ordered in ascending precedence.
+ * @param       {Set.<Type>} [originalTypes_]
+ * When first executed, this param is always absent. On recursive calls, it
+ * contains the set of the original types, which are to be ignored on subsequent
+ * calls to BuildRoughAncestryOf.
+ * @returns     {Type[]}
+ */
 function BuildRoughAncestryOf(supertypes, originalTypes_) {
     const roughAncestry = []
   const originalTypes = originalTypes_ || new Set(supertypes)
@@ -224,7 +512,14 @@ function BuildRoughAncestryOf(supertypes, originalTypes_) {
   return roughAncestry
 }
 
-
+/**
+ * Answers the complete ancestry of a type and its supertypes, ordered in
+ * ascending precedence..
+ * @private
+ * @param       {Type}       type         The type.
+ * @param       {Type[]}     supertypes   The type's supertypes.
+ * @returns     {Type[]}
+ */
 function BuildAncestryOf(type, supertypes) {
   const roughAncestry = BuildRoughAncestryOf(supertypes)
   const visited = new Set()
@@ -245,29 +540,15 @@ function BuildAncestryOf(type, supertypes) {
 
 
 
-function AsMembershipSelector(name) {
-  return `is${name[0].toUpperCase()}${name.slice(1)}`
-}
-
-function AsCapitalized(word) {
-  return `${word[0].toUpperCase()}${word.slice(1)}`
-}
-
-function AsName(string_symbol) {
-  if (typeof string_symbol === "string") { return string_symbol }
-  const name = string_symbol.toString()
-  return name.slice(7, name.length - 1)
-}
-
-function AsPropertyNameFromSetterName(name) {
-  const match = name.match(/^[_$]*set([A-Z])(.*$)/)
-  return `${match[1].toLowerCase()}${match[2]}`
-}
-
-
-
-
-
+/**
+ * Creates an immutable list of all of the visible properties of the target,
+ * caching it within the target.
+ * @private
+ * @param       {Something|Object} target   The target object.
+ * @param       {boolean} [setOuter_=false]
+ * When true, it stores the list on outside as well as the inside of the target.
+ * @return      {Array.<name>}  The list of visible properties.
+ */
 function SetKnownProperties(target, setOuter_) {
   const properties = VisibleProperties(target)
   properties[IS_IMMUTABLE] = true
@@ -278,9 +559,73 @@ function SetKnownProperties(target, setOuter_) {
 
 
 
+/**
+ * Makes the target JS object be immutable. Note: This method is quick and
+ * dirty. Use SetImmutableObject instead for comprehensive immutability!
+ * @private
+ * @param       {Object} target The target JS object.
+ * @returns     {Object} Answers the target, itself.
+ * @todo Consider renaming this method BasicSetImmutable
+ */
+function SetImmutable(target) {
+  target[IS_IMMUTABLE] = true
+  return Frost(target)
+}
+
+/**
+ * Makes the target function and its prototype be immutable. Also, marks the
+ * function as safe for use, internally.
+ * @private
+ * @param       {function} target The target function.
+ * @returns     {function} Answers the target function, itself.
+ */
+function SetImmutableFunc(func, marker = SAFE_FUNC) {
+  if (InterMap.get(func)) { return func }
+
+  func[IS_IMMUTABLE] = true
+  InterMap.set(func, marker)
+  Frost(func.prototype)
+  return Frost(func)
+}
+
+
+/**
+ * Marks the target function as safe for use, internally.
+ * @private
+ * @param       {function} target The target function.
+ * @returns     {function} Answers the target function, itself.
+ */
+function MarkFunc(func, marker = KNOWN_FUNC) {
+  if (InterMap.get(func)) { return func }
+  InterMap.set(func, marker)
+  return func
+}
+
+
+// Document these!!!
+const SAFE_FUNC     = Frost({id: "SAFE_FUNC"      , [IS_IMMUTABLE] : true})
+const BLANKER_FUNC  = Frost({id: "BLANKER_FUNC"   , [IS_IMMUTABLE] : true})
+const TAMED_FUNC    = Frost({id: "TAMED_FUNC"     , [IS_IMMUTABLE] : true})
+const WRAPPER_FUNC  = Frost({id: "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true})
+
+const KNOWN_FUNC    = Frost({id: "KNOWN_FUNC"})
+const TYPE_PULP     = Frost({id: "TYPE_PULP" })
+//const SET_LOADER_FUNC = Frost({id: "SET_LOADER_FUNC")
+
+
+// Simpleton function
+const ALWAYS_FALSE     = MarkFunc(          () => false       )
+const ALWAYS_NULL      = MarkFunc(          () => null        )
+const ALWAYS_UNDEFINED = MarkFunc(          () => undefined   )
+const ALWAYS_SELF      = MarkFunc( function () { return this })
+
+
+
+
+
 
 const _BasicSetImmutable = function _basicSetImmutable() {
-  const $inner = this[$INNER]
+  const $inner  = this[$INNER]
   const $outer  = $inner[$OUTER]
   const barrier = new ImmutableInner($inner)
 
@@ -292,6 +637,8 @@ const _BasicSetImmutable = function _basicSetImmutable() {
 //   delete this._captureChanges
 //   delete this._captureOverwrite
 
+
+// Add _basicUnknownProperty!!!
 
 const _NoSuchProperty = function _noSuchProperty(property) {
   return SignalError(this, `Receiver ${this.id} doesn't have a property: ${property}!!`)
@@ -315,47 +662,6 @@ const _SetSharedProperty = function _setSharedProperty(property, value, isOwn) {
   delete $root$inner[$SUPERS][property]
   return this._propagateIntoSubtypes(property)
 }
-
-
-
-function SetImmutable(target) {
-  target[IS_IMMUTABLE] = true
-  return Frost(target)
-}
-
-
-function SetImmutableFunc(func, marker = SAFE_FUNC) {
-  if (InterMap.get(func)) { return func }
-
-  func[IS_IMMUTABLE] = true
-  InterMap.set(func, marker)
-  Frost(func.prototype)
-  return Frost(func)
-}
-
-function MarkFunc(func, marker = KNOWN_FUNC) {
-  if (InterMap.get(func)) { return func }
-  InterMap.set(func, marker)
-  return func
-}
-
-
-const SAFE_FUNC     = Frost({id: "SAFE_FUNC"      , [IS_IMMUTABLE] : true})
-const BLANKER_FUNC  = Frost({id: "BLANKER_FUNC"   , [IS_IMMUTABLE] : true})
-const TAMED_FUNC    = Frost({id: "TAMED_FUNC"     , [IS_IMMUTABLE] : true})
-const WRAPPER_FUNC  = Frost({id: "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true})
-
-const KNOWN_FUNC    = Frost({id: "KNOWN_FUNC"})
-const TYPE_PULP     = Frost({id: "TYPE_PULP" })
-//const SET_LOADER_FUNC = Frost({id: "SET_LOADER_FUNC")
-
-
-// Simpleton function
-const ALWAYS_FALSE     = MarkFunc(          () => false       )
-const ALWAYS_NULL      = MarkFunc(          () => null        )
-const ALWAYS_UNDEFINED = MarkFunc(          () => undefined   )
-const ALWAYS_SELF      = MarkFunc( function () { return this })
-
 
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
