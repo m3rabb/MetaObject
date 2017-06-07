@@ -267,20 +267,6 @@ function AsPropertyNameFromSetterName(name) {
 
 
 
-// function ResetKnownProperties($pulp) {
-//   let $inner     = $pulp[$INNER]
-//   let properties = SpawnFrom(null)
-//   let names      = VisibleProperties($inner)
-//   let next       = selectors.length
-//
-//   while (next--) {
-//     let name         = names[next]
-//     properties[name] = name
-//   }
-//
-//   properties[IS_IMMUTABLE] = true
-//   return ($inner[$KNOWN_PROPERTIES] = Frost(properties))
-// }
 
 function SetKnownProperties(target, setOuter_) {
   const properties = VisibleProperties(target)
@@ -290,36 +276,6 @@ function SetKnownProperties(target, setOuter_) {
 }
 
 
-
-// const NewAsFact = function newAsFact(...args) {
-//   let $inner = new this._blanker()
-//   let $pulp  = $inner[$PULP]
-//   $pulp._init(...args)
-//   if ($inner._postInit) {
-//     const $pulp = $pulp._postInit()
-//     if ($pulp[IS_IMMUTABLE]) { return $pulp[$RIND] }
-//   }
-//   if ($pulp.id == null) { $pulp.beImmutable }
-//   return $pulp[$RIND]
-// }
-
-
-
-
-// function CopyLog() {
-//   const Visited = new Map()
-//
-//   this.pairing = (target, match) => Visited.set(target, match), this
-//   this.pair    = (target) => Visited.get(target)
-// }
-
-// function NewVisitLog() {
-//   const Visited = new Map()
-//
-//   return function $visitLog(target, match_) {
-//     return (match_) ? (Visited.set(target, match_), null) : Visited.get(target)
-//   }
-// }
 
 
 
@@ -377,30 +333,77 @@ function SetImmutableFunc(func, marker = SAFE_FUNC) {
   return Frost(func)
 }
 
-function MarkFunc(func, marker) {
+function MarkFunc(func, marker = KNOWN_FUNC) {
   if (InterMap.get(func)) { return func }
   InterMap.set(func, marker)
   return func
 }
 
 
-const SAFE_FUNC          = Frost({id: "SAFE_FUNC"      , [IS_IMMUTABLE] : true})
-const BLANKER_FUNC       = Frost({id: "BLANKER_FUNC"   , [IS_IMMUTABLE] : true})
-const TAMED_FUNC         = Frost({id: "TAMED_FUNC"     , [IS_IMMUTABLE] : true})
-const WRAPPER_FUNC       = Frost({id: "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true})
+const SAFE_FUNC     = Frost({id: "SAFE_FUNC"      , [IS_IMMUTABLE] : true})
+const BLANKER_FUNC  = Frost({id: "BLANKER_FUNC"   , [IS_IMMUTABLE] : true})
+const TAMED_FUNC    = Frost({id: "TAMED_FUNC"     , [IS_IMMUTABLE] : true})
+const WRAPPER_FUNC  = Frost({id: "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true})
 
-const KNOWN_HANDLER_FUNC = Frost({id: "KNOWN_HANDLER_FUNC"})
-const TYPE_PULP          = Frost({id: "TYPE_PULP"         })
+const KNOWN_FUNC    = Frost({id: "KNOWN_FUNC"})
+const TYPE_PULP     = Frost({id: "TYPE_PULP" })
 //const SET_LOADER_FUNC = Frost({id: "SET_LOADER_FUNC")
 
 
 // Simpleton function
-const ALWAYS_FALSE     = SetImmutableFunc(          () => false       )
-const ALWAYS_NULL      = SetImmutableFunc(          () => null        )
-const ALWAYS_UNDEFINED = SetImmutableFunc(          () => undefined   )
-const ALWAYS_SELF      = SetImmutableFunc( function () { return this })
+const ALWAYS_FALSE     = MarkFunc(          () => false       )
+const ALWAYS_NULL      = MarkFunc(          () => null        )
+const ALWAYS_UNDEFINED = MarkFunc(          () => undefined   )
+const ALWAYS_SELF      = MarkFunc( function () { return this })
 
 
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
+
+
+// function ResetKnownProperties($pulp) {
+//   let $inner     = $pulp[$INNER]
+//   let properties = SpawnFrom(null)
+//   let names      = VisibleProperties($inner)
+//   let next       = selectors.length
+//
+//   while (next--) {
+//     let name         = names[next]
+//     properties[name] = name
+//   }
+//
+//   properties[IS_IMMUTABLE] = true
+//   return ($inner[$KNOWN_PROPERTIES] = Frost(properties))
+// }
+
+
+// const NewAsFact = function newAsFact(...args) {
+//   let $inner = new this._blanker()
+//   let $pulp  = $inner[$PULP]
+//   $pulp._init(...args)
+//   if ($inner._postInit) {
+//     const $pulp = $pulp._postInit()
+//     if ($pulp[IS_IMMUTABLE]) { return $pulp[$RIND] }
+//   }
+//   if ($pulp.id == null) { $pulp.beImmutable }
+//   return $pulp[$RIND]
+// }
+
+
+
+
+// function CopyLog() {
+//   const Visited = new Map()
+//
+//   this.pairing = (target, match) => Visited.set(target, match), this
+//   this.pair    = (target) => Visited.get(target)
+// }
+
+// function NewVisitLog() {
+//   const Visited = new Map()
+//
+//   return function $visitLog(target, match_) {
+//     return (match_) ? (Visited.set(target, match_), null) : Visited.get(target)
+//   }
+// }

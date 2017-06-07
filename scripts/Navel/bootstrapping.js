@@ -65,7 +65,7 @@ const $Inate_properties      = _$Inate._properties
 const Method$root$inner      = _Method._blanker.$root$inner
 
 
-// Stubs for default properties
+// Stubs for known properties
 $Primordial$root$inner[$MAIN_BARRIER]     = null
 // This secret is only known by inner objects
 $Primordial$root$inner[$SECRET]           = $INNER
@@ -74,10 +74,10 @@ $Primordial$root$outer[$SECRET]           = null
 
 $Inate$root$inner.isOuter                 = false
 $Inate$root$outer.isOuter                 = true
-$Inate_properties.isOuter                 = PROPERTY
-
 $Inate$root$inner.isInner                 = true
 $Inate$root$outer.isInner                 = false
+
+$Inate_properties.isOuter                 = PROPERTY
 $Inate_properties.isInner                 = PROPERTY
 
 
@@ -91,17 +91,19 @@ _SetSharedProperty.call(_$Primordial, IS_IMMUTABLE, false, true)
 _SetSharedProperty.call(_$Primordial, "id"        , null , true)
 _SetSharedProperty.call(_$Primordial, $RIND       , null , true)
 
+
 // Perhaps remove these later
-
-
 _SetSharedProperty.call(_$Inate, KNOWN_PROPERTIES         , null, true)
 _SetSharedProperty.call(_$Inate, "_postInit"              , null, true)
 _SetSharedProperty.call(_$Inate, "_initFrom_"             , null, true)
 _SetSharedProperty.call(_$Inate, "_setPropertiesImmutable", null, true)
 
 
-_SetSharedProperty.call(_Method, "type", Method, true)
 
+
+Method$root$inner[$OUTER].type  = Method
+
+Method$root$inner._setImmutable = _BasicSetImmutable
 
 Method$root$inner._init = function _init(func_selector, func_, mode__) {
   const [selector, handler, mode = STANDARD_METHOD] =
@@ -115,7 +117,7 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
   this.isPublic = isPublic
   this.selector = selector
   this.mode     = mode
-  this.handler  = MarkFunc(handler, KNOWN_HANDLER_FUNC)
+  this.handler  = MarkFunc(handler)
   // this.super --> is a lazy property
 
   if (mode !== SET_LOADER) {
@@ -143,10 +145,6 @@ Type$root$inner.new = {
   }
 }.new
 
-
-
-
-
 Type$root$inner._setSharedProperty = _SetSharedProperty
 
 
@@ -157,9 +155,8 @@ const AddMethod = function addMethod(method_namedFunc__selector, func__, mode___
 }
 
 
-Method$root$inner._setImmutable = _BasicSetImmutable
-
 AddMethod.call(_Type, AddMethod)
+
 
 
 _Type.addMethod("new", Type$root$inner.new, BASIC_VALUE_METHOD)

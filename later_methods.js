@@ -234,3 +234,7 @@ rynd
 kontext
 krust
 topjs
+
+Tranya
+Corbomite
+HotSauce
