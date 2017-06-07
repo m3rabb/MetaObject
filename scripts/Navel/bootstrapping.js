@@ -67,7 +67,6 @@ const Method$root$inner      = _Method._blanker.$root$inner
 
 // Stubs for default properties
 $Primordial$root$inner[$MAIN_BARRIER]     = null
-$Primordial$root$inner[$RIND]             = null
 // This secret is only known by inner objects
 $Primordial$root$inner[$SECRET]           = $INNER
 $Primordial$root$outer[$SECRET]           = null
@@ -90,8 +89,12 @@ $Primordial$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
 _SetSharedProperty.call(_$Primordial, IS_IMMUTABLE, false, true)
 _SetSharedProperty.call(_$Primordial, "id"        , null , true)
+_SetSharedProperty.call(_$Primordial, $RIND       , null , true)
 
 // Perhaps remove these later
+
+
+_SetSharedProperty.call(_$Inate, KNOWN_PROPERTIES         , null, true)
 _SetSharedProperty.call(_$Inate, "_postInit"              , null, true)
 _SetSharedProperty.call(_$Inate, "_initFrom_"             , null, true)
 _SetSharedProperty.call(_$Inate, "_setPropertiesImmutable", null, true)
