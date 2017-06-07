@@ -196,8 +196,8 @@ Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
 
 
 // CHECK THAT BARRIER WORK ON TYPE PROXIES, IMMUTABLE AS WELL AS MUTABLE!!!
-function TypeInner($inner) {
-  this.$inner = $inner
+function TypeInner($target) {
+  this.$target = $target
   // this.$pulp  = $pulp // this is the proxy, which is now set from the outside
 }
 
@@ -205,8 +205,8 @@ const TypeInner_prototype = TypeInner.prototype = SpawnFrom(MutableInner_prototy
 
 
 TypeInner_prototype.get = function get(disguisedFunc, property, $pulp) {
-  // return Mutability.get(this.$inner, property, $pulp)
-  const $inner = this.$inner
+  // return Mutability.get(this.$target, property, $pulp)
+  const $inner = this.$target
   const value  = $inner[property]
   return (value !== IMMEDIATE) ? value :
     $inner[$IMMEDIATES][property].inner.call($pulp)
@@ -214,21 +214,19 @@ TypeInner_prototype.get = function get(disguisedFunc, property, $pulp) {
 
 
 TypeInner_prototype.set = function set(disguisedFunc, property, value, $pulp) {
-  return Mutability.set(this.$inner, property, value, $pulp)
-  // return Mutability.set(this.$inner, property, value, $pulp)
+  return Mutability.set(this.$target, property, value, $pulp)
 }
 
 TypeInner_prototype.has = function has(disguisedFunc, property, $pulp) {
-  return (property in this.$inner)
+  return (property in this.$target)
 }
 
 TypeInner_prototype.deleteProperty = function deleteProperty(disguisedFunc, property, $pulp) {
-  return Mutability.deleteProperty(this.$inner, property, $pulp)
-  // return Mutability.deleteProperty(this.$inner, property, $pulp)
+  return Mutability.deleteProperty(this.$target, property, $pulp)
 }
 
 TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
-  // return func.apply(this.$inner, args)
+  // return func.apply(this.$target, args)
   // return this.$pulp.newAsFact(...args)
 
   // This is the same code as in newAsFact(...args)

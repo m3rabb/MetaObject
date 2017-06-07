@@ -23,10 +23,10 @@ _Type.addMethod(function asPermeable() {
   const type$inner_  = SpawnFrom(type$inner)
   const type$outer_  = SpawnFrom(type$outer)
   const typeName_    = type$inner.name + "_"
-  const func_        = MakeVacuousConstructor(typeName_)
+  const func_        = NewVacuousConstructor(typeName_)
   const permeability = type$inner.isPermeable ? Permeable : Impermeable
 
-  const type$pulp_ = PreInitType(func_, type$inner_, type$outer_, permeability)
+  const type$pulp_ = _PreInitType(func_, type$inner_, type$outer_, permeability)
 
   type$inner_._blanker = NewBlanker(blanker, Permeable)
 

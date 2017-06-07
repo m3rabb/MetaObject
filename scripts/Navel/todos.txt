@@ -218,3 +218,50 @@ Test Permeability
 
 ==
 Add NameRec/Kname and Context
+
+
+==
+Fix usable of InSetProperty so that write barrier still works.
+Use deleteProperty instead of set to trigger barrier.
+
+==
+Add markdown to jsdoc - http://usejsdoc.org/plugins-markdown.html
+
+
+*
+  primitive
+    string
+    symbol
+    number
+    null
+    undefined
+    boolean
+  object
+    Something --> thingy
+      Nothing
+      $Inate
+       Thing
+    jsobject
+     Object
+
+
+    /**
+     * On instantiation, a blank virgin object has its implementation plumbing
+     * connected.
+     * @private
+     * @typedef     Something
+     * @property    {boolean} IS_IMMUTABLE
+     * @property    {?identifier}       id
+     * @property    {Proxy}       $
+     */ $ _super
+
+
+
+change
+
+DECLARE:
+SETTER : 
+
+addAssignerFor("set")
+addMandatorySetterFor
+addSetter

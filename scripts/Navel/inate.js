@@ -107,7 +107,9 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
     const properties = $source[KNOWN_PROPERTIES] ||
       SetKnownProperties($source, setOuterToo)
 
-    $outer[KNOWN_PROPERTIES] = $inner[KNOWN_PROPERTIES] = properties
+    if (!$inner[KNOWN_PROPERTIES]) {
+      $outer[KNOWN_PROPERTIES] = $inner[KNOWN_PROPERTIES] = properties
+    }
     next = properties.length
 
     while (next--) {

@@ -18,12 +18,12 @@ const   Base$root$inner = new Proxy(Base$root, BaseInnerBehavior)
 const $BaseBlanker = {
   $root$outer : Base$root$outer,
   $root$inner : Base$root$inner,
-  maker       : MakeInnerBlanker,
+  maker       : _NewInnerBlanker,
 }
 
 const $PrimordialBlanker = NewBlanker($BaseBlanker, null, null)
 const   $InateBlanker    = NewBlanker($PrimordialBlanker)
-const     TypeBlanker    = NewBlanker($InateBlanker, null, MakeTypeInnerBlanker)
+const     TypeBlanker    = NewBlanker($InateBlanker, null, _NewTypeInnerBlanker)
 
 
 
@@ -32,10 +32,12 @@ const Type$root$inner = TypeBlanker.$root$inner
 // Temporary bootstrapping #_init
 Type$root$inner._init = function _bootstrap(iid, blanker_) {
   DefineProperty(this, "iid", InvisibleConfiguration)
-  this.iid        = iid
-  this._blanker   = blanker_ || NewBlanker($InateBlanker)
-  this.supertypes = this[$OUTER].supertypes = EMPTY_ARRAY
-  this.ancestry   = (iid) ? ThingAncestry : EMPTY_ARRAY
+  this.iid         = iid
+  this._properties = SpawnFrom(null)
+  this._blanker    = blanker_ || NewBlanker($InateBlanker)
+  this.supertypes  = (this[$OUTER].supertypes = EMPTY_ARRAY)
+  this.ancestry    = (iid) ? ThingAncestry : EMPTY_ARRAY
+  this.subtypes    = new Set()
   return this[$PULP]
 }
 
@@ -55,7 +57,6 @@ const Type        = _Type  [$RIND]
 const Method      = _Method[$RIND]
 
 ThingAncestry[0] = Thing
-Frost(ThingAncestry)
 
 const $Primordial$root$inner = $PrimordialBlanker.$root$inner
 const $Primordial$root$outer = $PrimordialBlanker.$root$outer
@@ -87,13 +88,13 @@ $Primordial$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
 
 
-_SetSharedProperty.call(_$Primordial, IS_IMMUTABLE, false, true)
-_SetSharedProperty.call(_$Primordial, "id"        , null , true)
-_SetSharedProperty.call(_$Primordial, $RIND       , null , true)
+_SetSharedProperty.call(_$Primordial, KNOWN_PROPERTIES, null , true)
+_SetSharedProperty.call(_$Primordial, IS_IMMUTABLE    , false, true)
+_SetSharedProperty.call(_$Primordial, "id"            , null , true)
+_SetSharedProperty.call(_$Primordial, $RIND           , null , true)
 
 
 // Perhaps remove these later
-_SetSharedProperty.call(_$Inate, KNOWN_PROPERTIES         , null, true)
 _SetSharedProperty.call(_$Inate, "_postInit"              , null, true)
 _SetSharedProperty.call(_$Inate, "_initFrom_"             , null, true)
 _SetSharedProperty.call(_$Inate, "_setPropertiesImmutable", null, true)
@@ -371,7 +372,7 @@ _Type.addMethod(function addMandatorySetter(setter_property, setter_) {
     }
   }
 
-  loader = MakeAssignmentError(propertyName, setterName)
+  loader = NewAssignmentErrorHandler(propertyName, setterName)
 
   this.addDeclaration(propertyName)
   this.addMethod(propertyName, loader, SET_LOADER)
@@ -401,7 +402,9 @@ _Type.addMandatorySetter(function setSupertypes(supertypes) {
   }
   else {
     const superBlanker = inheritsFromThing ? $InateBlanker : $PrimordialBlanker
-    this._blanker = new NewBlanker(superBlanker)
+    this._blanker    = new NewBlanker(superBlanker)
+    this._properties = SpawnFrom(null)
+    this.subtypes    = SetImmutable(new Set())
   }
 
   this.ancestry = ancestry
@@ -415,8 +418,8 @@ _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
   const innerName = innerName_ || ("_" + outerName)
   const blanker   = this._blanker
 
-  blanker.$root$outer.constructor = MakeVacuousConstructor(outerName)
-  blanker.$root$inner.constructor = MakeVacuousConstructor(innerName)
+  blanker.$root$outer.constructor = NewVacuousConstructor(outerName)
+  blanker.$root$inner.constructor = NewVacuousConstructor(innerName)
   this._properties.constructor    = PROPERTY
 })
 
@@ -489,7 +492,7 @@ _Type.addMethod(function _init(spec_name, context_) {
   methods  && this.addMethods(methods)
 })
 // blanker.$root$outer.constructor = this._disguisedFunc
-// blanker.$root$inner.constructor = MakeVacuousConstructor()
+// blanker.$root$inner.constructor = NewVacuousConstructor()
 // this._properties.constructor    = CONSTRUCTOR
 
 

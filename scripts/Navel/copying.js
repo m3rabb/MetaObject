@@ -44,7 +44,7 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
       visited.set(source, (target = target || {})) // Handles cyclic objects
 
       properties = source[KNOWN_PROPERTIES] || SetKnownProperties(source)
-      target[KNOWN_PROPERTIES] = properties
+      if (!target[KNOWN_PROPERTIES]) { target[KNOWN_PROPERTIES] = properties }
       next = properties.length
 
       while (next--) {

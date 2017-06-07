@@ -32,7 +32,7 @@ function AsLoaderSetter(PropertyName, Loader) {
 }
 
 // Consider caching these!!!
-function MakeAssignmentError(Property, Setter) {
+function NewAssignmentErrorHandler(Property, Setter) {
   const name = `${Property}_$assignmentError`
   return {
     [name] : function (value) {
