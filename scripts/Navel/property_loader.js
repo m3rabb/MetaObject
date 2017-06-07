@@ -28,7 +28,7 @@
 PropertyLoader = Type("PropertyLoader")
 
 const modeNames =
-  "STANDARD METHOD IMMEDIATE LAZY ALIAS ASSIGNER MANDATORY SHARED"
+  "STANDARD METHOD IMMEDIATE LAZY ALIAS ASSIGNER MANDATORY SHARED DECLARE"
 
 PropertyLoader.addSharedProperty("modes", modeNames.split(" "))
 
@@ -59,9 +59,6 @@ PropertyLoader.addMethod(function isMode(string) {
 
 
 PropertyLoader.addMethod(function load(item, mode = "STANDARD") {
-  if (item.constructor !== Array && item.constructor !== Object) {
-    return this._signalError("Parameter must be object|list!!")
-  }
   this._load(item, mode)
   this._resolveAliases()
   return this._type
@@ -144,6 +141,8 @@ PropertyLoader.addMethod(function _loadFunc(func, mode) {
 
 PropertyLoader.addMethod(function _loadFromName(name, mode) {
   switch (mode) {
+    case "STANDARD"  : return this._type.addDeclarations   (name)
+    case "DECLARE"   : return this._type.addDeclarations   (name)
     case "ASSIGNER"  : return this._type.addAssigner       (name)
     case "MANDATORY" : return this._type.addMandatorySetter(name)
 

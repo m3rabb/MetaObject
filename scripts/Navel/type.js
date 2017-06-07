@@ -28,7 +28,7 @@ _Type.addMethod(function asPermeable() {
 
   const type$pulp_ = PreInitType(func_, type$inner_, type$outer_, permeability)
 
-  type$inner_._blanker = NewBlanker({super: blanker, permeability: Permeable})
+  type$inner_._blanker = NewBlanker(blanker, Permeable)
 
   type$pulp_._initCoreIdentity(name)
   type$pulp_.addSharedProperty("isPermeable", true)
@@ -85,6 +85,12 @@ _Type.addMethod(function addSharedProperties(spec) {
 
 _Type.addMethod(function addMethods(items) {
   PropertyLoader.new(this.$).load(items, "METHOD")
+})
+
+_Type.addMethod(function addDeclarations(propertyListing) {
+  const properties = propertyListing.split(/\s+/)
+  var   next       = properties.length
+  while (next--) { this._setSharedProperty(properties[next], null, true) }
 })
 
 

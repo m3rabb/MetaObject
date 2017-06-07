@@ -1,20 +1,28 @@
-NothingBlanker.$root$core[$SECRET] = $INNER
 
-// #type #isNothing #is #_noSuchProperty
-
-InPutMethod(NothingBlanker.$root$core, function _noSuchProperty(selector) {
-  return undefined
+const Nothing = Type({
+  name      : "Nothing",
+  supertype : null,
+  define    : _NoSuchProperty // { _noSuchProperty : _NoSuchProperty }
 })
 
 
-Nothing methods
-  _noSuchProperty
-  is
-  type
-  id
-  isVoid
-  isNothing
+const $Nothing = InterMap.get(Nothing)
+const $Void    = new $Nothing._blanker()
+const _Void    = $Void[$PULP]
+const Void     = $Void[$RIND]
 
-Void
+_Void.id     = "Void,0.Nothing"
+_Void.isVoid = true
 
-oid === "0.Nothing"
+_BasicSetImmutable.call($Void)
+
+
+_$Inate.addSharedProperty("isVoid", false)
+
+
+//     Nothing
+//        _noSuchProperty
+//        isNothing
+//       Void
+//        id
+//        isVoid

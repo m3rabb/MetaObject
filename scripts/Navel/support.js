@@ -56,6 +56,58 @@ function SetMethod($inner, method) {
 }
 
 
+function InSetProperty($inner, property, value, $pulp) {
+  if (property in $inner) {
+    if (value === $inner[property]) { return $pulp }
+  }
+  else {
+    // Consider making id invisible, and ensuring that id is only set thru a special method here!!!
+    delete $inner[KNOWN_PROPERTIES]
+    delete $inner[$OUTER][KNOWN_PROPERTIES]
+  }
+
+  const isPublic = (property[0] !== "_")
+
+  switch (typeof value) {
+    case "undefined" :
+      return $pulp._assignmentOfUndefinedError()
+
+      case "object" :
+             if (value === null)             { if (!isPublic) { break } }
+        else if (value[$SECRET] === $INNER)  {
+          if    (value === $pulp)            { value = $inner[$RIND]
+                                               if (!isPublic) { break } }
+
+          else  { return $pulp._detectedInnerError(value) }
+        }
+        else if (!isPublic)                  {          break           }
+        else if (value[IS_IMMUTABLE])        {         /* NOP */        }
+        else if (value.id != null)           {         /* NOP */        }
+        else if (value === $inner[$RIND])    {         /* NOP */        }
+        else {   value = ($value = InterMap.get(value)) ?
+                   $Copy($value, true)[$RIND] : CopyObject(value, true) }
+
+      $inner[$OUTER][property] = value
+    break
+
+    case "function" : // LOOK: will catch Type things!!!
+      // Note: Checking for value.constructor is inadequate to prevent func spoofing
+      switch (InterMap.get(value)) {
+        default           : break
+        case TYPE_PULP    : return $pulp._detectedInnerError(value)
+        // case WRAPPER_FUNC : return $pulp.addOwnMethod(value.method)
+        case undefined    : value = AsTameFunc(value); break
+      }
+    // break omitted
+
+    default :
+      if (isPublic) { $inner[$OUTER][property] = value }
+    break
+  }
+
+  $inner[property] = value
+  return $pulp
+}
 
 
 function MakeNamelessVacuousFunction() {
@@ -77,25 +129,24 @@ function MakeVacuousConstructor(name) {
 
 
 
-function NewBlanker(spec = EMPTY_OBJECT) {
-  const superBlanker = spec.super || $InateBlanker
-  const blankerMaker = spec.maker || superBlanker.maker
-  const permeability = spec.permeability || Impermeable
+function NewBlanker(superBlanker, permeability_, maker_) {
+  const isBase       = (superBlanker === $BaseBlanker)
+  const blankerMaker = maker_        || superBlanker.maker
+  const permeability = permeability_ || Impermeable
   const $root$inner  = SpawnFrom(superBlanker.$root$inner)
   const $root$outer  = SpawnFrom(superBlanker.$root$outer)
   const PairedOuter  = MakeNamelessVacuousFunction()
   const Blanker      = blankerMaker(PairedOuter, permeability)
-  const supers       = SpawnFrom(spec.base ? null : $root$inner[$SUPERS])
-  const immediates   = SpawnFrom(spec.base ? null : $root$inner[$IMMEDIATES])
+  const supers       = SpawnFrom(isBase ? null : $root$inner[$SUPERS])
+  const immediates   = SpawnFrom(isBase ? null : $root$inner[$IMMEDIATES])
 
-  $root$inner[$OUTER]   = $root$outer
-  PairedOuter.prototype = $root$outer
-  Blanker.prototype     = $root$inner
-  Blanker.$root$inner   = $root$inner
-  Blanker.$root$pulp    = new Proxy($root$inner, Mutability)
-  Blanker.$root$outer   = $root$outer
   Blanker.maker         = blankerMaker
   Blanker.permeability  = permeability
+  Blanker.prototype     = $root$inner
+  Blanker.$root$inner   = $root$inner
+  Blanker.$root$outer   = $root$outer
+  $root$inner[$OUTER]   = $root$outer
+  PairedOuter.prototype = $root$outer
 
   supers[$IMMEDIATES]       = SpawnFrom(null)
   supers[$SUPERS]           = supers
@@ -132,15 +183,14 @@ function PreInitType(func, $inner, $outer, permeability) {
 
 function MakeTypeInnerBlanker(PairedOuter, Permeability) {
   return function ([name_spec]) {  // $Type // NewTypeBlanker
-    const typeName = (typeof name_spec === "object") ?
-      name_spec.name : name_spec
-    const func = MakeVacuousConstructor(typeName || "UNNAMED")
-    const $outer = new PairedOuter()
+    var typeName = (typeof name_spec === "string") ? name_spec : name_spec.name
+    var func = MakeVacuousConstructor(typeName || "UNNAMED")
+    var $outer = new PairedOuter()
 
     PreInitType(func, this, $outer, Permeability)
 
+    this.subtypes    = SetImmutable(new Set())
     this._properties = SpawnFrom(null)
-    this._blanker    = NewBlanker()
   }
 }
 
@@ -156,6 +206,42 @@ function MakeInnerBlanker(PairedOuter, Permeability) {
     $outer[$RIND] = $rind
     InterMap.set($rind, this)
   }
+}
+
+
+
+function BuildRoughAncestryOf(supertypes, originalTypes_) {
+    const roughAncestry = []
+  const originalTypes = originalTypes_ || new Set(supertypes)
+
+  supertypes.forEach(nextType => {
+    if (originalTypes_ && originalTypes_.has(nextType)) { /* continue */ }
+    else {
+      var nextAncestry =
+        BuildRoughAncestryOf(nextType.supertypes, originalTypes)
+      roughAncestry.push(...nextAncestry, nextType)
+    }
+  })
+  return roughAncestry
+}
+
+
+function BuildAncestryOf(type, supertypes) {
+  const roughAncestry = BuildRoughAncestryOf(supertypes)
+  const visited = new Set()
+  const dupFreeAncestry = []
+  var next, nextType
+
+  next = roughAncestry.length
+  while (next--) {
+    nextType = roughAncestry[next]
+    if (!visited.has(nextType)) {
+      dupFreeAncestry.push(nextType)
+      visited.add(nextType)
+    }
+  }
+  dupFreeAncestry.reverse().push(type)
+  return dupFreeAncestry
 }
 
 
@@ -238,10 +324,42 @@ function SetKnownProperties(target, setOuter_) {
 
 
 
+const _BasicSetImmutable = function _basicSetImmutable() {
+  const $inner = this[$INNER]
+  const $outer  = $inner[$OUTER]
+  const barrier = new ImmutableInner($inner)
+
+  $inner[$MAIN_BARRIER] = barrier
+  $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
+  Frost($outer)
+  return ($inner[$PULP] = new Proxy($inner, barrier))
+}
+//   delete this._captureChanges
+//   delete this._captureOverwrite
 
 
+const _NoSuchProperty = function _noSuchProperty(property) {
+  return SignalError(this, `Receiver ${this.id} doesn't have a property: ${property}!!`)
+}
 
 
+const _SetSharedProperty = function _setSharedProperty(property, value, isOwn) {
+  const properties  = this._properties
+  const existing    = properties[property]
+
+  if (existing === value) { return this }
+
+  const blanker     = this._blanker
+  const $root$inner = blanker.$root$inner
+
+  if (value && value.type === Method) { SetMethod($root$inner, value) }
+  else      { InSetProperty($root$inner, property, value) }
+
+  if (isOwn) { properties[property] = value }
+
+  delete $root$inner[$SUPERS][property]
+  return this._propagateIntoSubtypes(property)
+}
 
 
 

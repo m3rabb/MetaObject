@@ -45,3 +45,11 @@ function DirectAssignmentFromOutsideError(target) {
 function PrivateAccessFromOutsideError(target, property) {
   SignalError(target, `Access to private property '${property}' from outside of an object is forbidden!!`)
 }
+
+function ImproperChangeToAncestryError(target) {
+  SignalError(target, "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
+}
+
+function AttemptedChangeOfAncestryOfPermeableTypeError(target) {
+  SignalError(target, `Cannot change supertypes of permeable Type '${target.name}', change impermeable version instead!!`)
+}

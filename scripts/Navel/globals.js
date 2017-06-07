@@ -77,6 +77,7 @@ const InvisibleConfiguration = {
 // const SymbolPropertyMap  = SpawnFrom(null)
 
 const EMPTY_OBJECT    = Frost(SpawnFrom(null))
+const EMPTY_ARRAY     = Frost([])
 
 const InterMap      = new WeakMap()
 // Safe functions are stored in here so that the diguised Types function are

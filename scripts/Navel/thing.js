@@ -1,4 +1,7 @@
 
+
+_Thing.addMethod(_NoSuchProperty)
+
 _Thing.addAssigner("id", function _setId(newId_) {
   const existingId = this.id
   var   newId
@@ -117,10 +120,6 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 //   return this
 // })
 
-
-// _Thing.addMethod(function _noSuchProperty(property) {
-//   return SOME VALUE | this._signalError(this.oid)
-// })
 
 // _Thing.addMethod(function _setCopyId() {
 //    if it has a way to make a new id then set it,

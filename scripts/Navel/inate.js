@@ -18,23 +18,6 @@
 _$Inate.addSharedProperty("isPermeable", false)
 
 
-_$Inate.addMethod(function $() {
-  const $inner = this[$INNER]
-  const $rind  = $inner[$RIND]
-
-  DefineProperty($inner, "$", InvisibleConfiguration)
-  if (!$inner[IS_IMMUTABLE]) { $inner[$OUTER].$ = $rind }
-  return ($inner.$ = $rind)
-}, BASIC_VALUE_IMMEDIATE)
-
-_$Inate.addMethod(function _super() {
-  const $inner = this[$INNER]
-  const $super = new Proxy($inner, SuperBehavior)
-
-  DefineProperty($inner, "_super", InvisibleConfiguration)
-  return ($inner._super = $super)
-}, BASIC_VALUE_IMMEDIATE)
-
 
 _$Inate.addMethod(function isImmutable() {
   return this[IS_IMMUTABLE] ? true : false
@@ -47,6 +30,11 @@ _$Inate.addMethod(function isMutable() {
 _$Inate.addMethod(function isFact() {
   return this[IS_IMMUTABLE] ? true : (this.id != null)
 }, BASIC_VALUE_IMMEDIATE)
+
+
+_$Inate.addMethod(function isA(type) {
+  return this[type.membershipSelector]
+}, BASIC_VALUE_METHOD)
 
 
 

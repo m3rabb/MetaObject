@@ -6,12 +6,14 @@ const BaseOuterBehavior = {
   __proto__ : null,
 
   get (base$root, property, $outer) {
-    const $inner = InterMap.get($outer[$RIND])
+    const target = $outer[$RIND]
+    const $inner = InterMap.get(target)
     if (property[0] === "_") {
-      return PrivateAccessFromOutsideError($inner[$RIND], property)
+      return PrivateAccessFromOutsideError(target, property)
     }
     return $inner._noSuchProperty ?
-      $inner[$PULP]._noSuchProperty(property) : undefined
+      $inner[$PULP]._noSuchProperty(property) :
+      _NoSuchProperty.call($inner[$RIND], property)
   },
   // getPrototypeOf (base$root) { return base$root }
 }
@@ -21,7 +23,8 @@ const BaseInnerBehavior = {
 
   get (base$root, property, $inner) {
     return $inner._noSuchProperty ?
-      $inner[$PULP]._noSuchProperty(property) : undefined
+      $inner[$PULP]._noSuchProperty(property) :
+      _NoSuchProperty.call($inner[$RIND], property)
   },
 
   // getPrototypeOf (base$root) { return base$root }
@@ -170,57 +173,6 @@ Mutability.set = function set($inner, property, value, $pulp) {
   return true
 }
 
-function InSetProperty($inner, property, value, $pulp) {
-  if (value === $inner[property]) { return $pulp }
-
-  const isPublic = (property[0] !== "_")
-
-  if (!(property in $inner)) {
-    // Consider making id invisible, and ensuring that id is only set thru a special method here!!!
-    delete $inner[KNOWN_PROPERTIES]
-    delete $inner[$OUTER][KNOWN_PROPERTIES]
-  }
-
-  switch (typeof value) {
-    case "undefined" :
-      return $pulp._assignmentOfUndefinedError()
-
-      case "object" :
-             if (value === null)             { if (!isPublic) { break } }
-        else if (value[$SECRET] === $INNER)  {
-          if    (value === $pulp)            { value = $inner[$RIND]
-                                               if (!isPublic) { break } }
-
-          else  { return $pulp._detectedInnerError(value) }
-        }
-        else if (!isPublic)                  {          break           }
-        else if (value[IS_IMMUTABLE])        {         /* NOP */        }
-        else if (value.id != null)           {         /* NOP */        }
-        else if (value === $inner[$RIND])    {         /* NOP */        }
-        else {   value = ($value = InterMap.get(value)) ?
-                   $Copy($value, true)[$RIND] : CopyObject(value, true) }
-
-      $inner[$OUTER][property] = value
-    break
-
-    case "function" : // LOOK: will catch Type things!!!
-      // Note: Checking for value.constructor is inadequate to prevent func spoofing
-      switch (InterMap.get(value)) {
-        default           : break
-        case TYPE_PULP    : return $pulp._detectedInnerError(value)
-        // case WRAPPER_FUNC : return $pulp.addOwnMethod(value.method)
-        case undefined    : value = AsTameFunc(value); break
-      }
-    // break omitted
-
-    default :
-      if (isPublic) { $inner[$OUTER][property] = value }
-    break
-  }
-
-  $inner[property] = value
-  return $pulp
-}
 
 Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
   // const property = SymbolPropertyMap[symbol]
@@ -372,7 +324,7 @@ function SetSuperPropertyFor($inner, property) {
     value          = nextProperties[property]
 
     if (value !== undefined) {
-      if (value && value.isMethod) {
+      if (value && value.type === Method) {
         mode    = value.mode
         handler = value.super
 
@@ -406,7 +358,8 @@ Super_prototype.get = function get($inner, property, $super) {
 
       case NO_SUPER  :
         return $inner._noSuchProperty ?
-          $inner[$PULP]._noSuchProperty(property) : undefined
+          $inner[$PULP]._noSuchProperty(property) :
+          _NoSuchProperty.call($inner[$RIND], property)
 
       case IMMEDIATE :
         return supers[$IMMEDIATES][property].call($inner[$PULP])
