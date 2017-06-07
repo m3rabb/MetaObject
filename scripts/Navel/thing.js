@@ -87,38 +87,8 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 
 
 
-// _Thing.addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
-//   const $inner   = this[$INNER]
-//   const method   = AsMethod(method_namedFunc__name, func__, mode___)
-//   const selector = method.selector
-//   const methods  = $inner[OWN_METHODS]|| ($inner[OWN_METHODS] = SpawnFrom(null))
-//   const supers   = $inner[$SUPERS]    || ($inner[$SUPERS]     = SpawnFrom(null))
-//   SetMethod($inner, method)
-//   methods[selector] = method
-//   delete supers[selector]
-//   // delete getters
-//   return this
-// })
-//
-// _Thing.addMethod(function addOwnImmediate(...namedFunc_name__handler) {
-//   return this.addOwnMethod(...namedFunc_name__handler, IMMEDIATE)
-// })
-//
-// _Thing.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
-//   return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
-// })
 
-// _Thing.addSMethod(function addOMethod(method_func__name, func_) {
-//   const type = method_func__name.type
-//   const method = type && type.is(Method) ?
-//     method_func__name : Method.new(method_func__name, func__)
-//   const selector = method.selector
-//   const methods = (this[INSTANCE_METHODS] ||
-//     this[INSTANCE_METHODS] = { __proto__ : null })
-//   methods[selector] = method
-//   this[selector] = method.handler
-//   return this
-// })
+
 
 
 // _Thing.addMethod(function _setCopyId() {

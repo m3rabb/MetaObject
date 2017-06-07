@@ -29,9 +29,9 @@
 - check how outer cache holds values that are created via getters from inner,
   such as with span in List
 
-- Consider making a writerbarrier copy is made NOT copying the causal property
++ Consider making a writerbarrier copy is made NOT copying the causal property
 
-- Add IID to obj before it becomes immutable
++ NOT going to do this -> Add IID to obj before it becomes immutable
 
 - remove _elements from Lists
 
@@ -186,7 +186,7 @@ else if (value === $inner[$RIND]) {
 }
 
 
-==
+++
 Add Nothing/Void
 
 ==
@@ -211,3 +211,10 @@ property.  FYI, I'm no longer worried about it.
       // else {
       //   value = (InterMap.get(value)) ? value : TameFunc(value)
       // }
+
+
+==
+Test Permeability
+
+==
+Add NameRec/Kname and Context

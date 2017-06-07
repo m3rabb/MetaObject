@@ -227,6 +227,60 @@ _$Inate.addMethod(function uid() {
 // Navel/30303/Type/367
 
 
+_$Inate.addMethod(function addOwnMethod(method_namedFunc__selector, func__, mode___) {
+  const method   = AsMethod(method_namedFunc__name, func__, mode___)
+  const $inner   = this[$INNER]
+  const selector = method.selector
+  var methods, immediates, supers
+
+  if ((methods = $inner[$OWN_METHODS])) {
+    supers = $inner[$SUPERS]
+  }
+  else {
+    methods              = ($inner[$OWN_METHODS] = SpawnFrom(null))
+    supers               = ($inner[$SUPERS]      = SpawnFrom($inner[$SUPERS]))
+    $inner[$IMMEDIATES]  = SpawnFrom($inner[$IMMEDIATES])
+    $inner[$SET_LOADERS] = SpawnFrom($inner[$SET_LOADERS])
+  }
+
+  SetMethod($inner, method)
+  methods[selector] = method
+  delete supers[selector]
+})
+
+
+_$Inate.addMethod(function addOwnImmediate(...namedFunc_name__handler) {
+  return this.addOwnMethod(...namedFunc_name__handler, IMMEDIATE)
+})
+
+_$Inate.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
+  return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
+})
+
+// _$Inate.addMethod(function _addOwnValueMethod(...namedFunc_name__handler) {
+//   this.addOwnMethod(...namedFunc_name__handler, VALUE_METHOD)
+// })
+//
+// _$Inate.addMethod(function _addOwnValueImmediate(...namedFunc_name__handler) {
+//   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
+// })
+
+_$Inate.addMethod(function addOwnDeclaration(propertyName) {
+  this[propertyName] = null
+})
+
+// _$Inate.addMethod(function addOwnAssigner(loader_property, loader_) {
+//   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
+// })
+//
+// _$Inate.addMethod(function addOwnMandatorySetter(setter_property, setter_) {
+//   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
+// })
+
+
+
+
+
 _$Inate.addMethod(function _signalError(message) {
   return SignalError(this, message)
 })
