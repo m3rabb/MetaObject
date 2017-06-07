@@ -149,7 +149,6 @@ function NewBlanker(superBlanker, permeability_, maker_) {
   PairedOuter.prototype = $root$outer
 
   supers[$IMMEDIATES]       = SpawnFrom(null)
-  supers[$SUPERS]           = supers
   $root$inner[$SUPERS]      = supers
   $root$inner[$SET_LOADERS] = SpawnFrom(null)
   $root$inner[$BLANKER]     = Blanker
