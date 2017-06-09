@@ -12,22 +12,16 @@ function AsTameFunc(Func) {
 
 
 function AsBasicSetter(PropertyName, setterName) {
-  const name = `${AsName(setterName)}_$setterBasic`
+  const name = `${AsName(setterName)}_$setter$basic`
   return {
-    [name] : function (value) {
-      return InSetProperty(this[$INNER], PropertyName, value, this)
-    }
+    [name] : function (value) { this[PropertyName] = value }
   }[name]
 }
 
-function AsLoaderSetter(PropertyName, Loader) {
-  const name = `${Loader.name}_$setterLoader`
+function AsLoaderSetter(Loader, setterName) {
+  const name = `${Loader.name}_$setter$loader`
   return {
-    [name] : function (value) {
-      const newValue = Loader.call(this, value)
-      return (newValue === undefined) ? this :
-        InSetProperty(this[$INNER], PropertyName, newValue, this)
-    }
+    [name] : function (value) { this[PropertyName] = Loader.call(this, value) }
   }[name]
 }
 

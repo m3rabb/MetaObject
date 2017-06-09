@@ -84,7 +84,9 @@ $Inate_properties.isInner                 = PROPERTY
 
 
 $Primordial$root$outer.type                   = null
-$Primordial$root$inner._propagateIntoSubtypes = ALWAYS_SELF
+
+$Inate$root$inner._propagateIntoSubtypes      = ALWAYS_SELF
+$Inate$root$inner._hasOwn                     = HasOwnProperty
 
 
 
@@ -118,10 +120,13 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
   this.isPublic = isPublic
   this.selector = selector
   this.mode     = mode
-  this.handler  = MarkFunc(handler)
   // this.super --> is a lazy property
 
-  if (mode !== SET_LOADER) {
+  if (mode === SET_LOADER) {
+    this.handler = (typeof handler === "function") ? MarkFunc(handler) : handler
+  }
+  else {
+    this.handler = MarkFunc(handler)
     const outer  = mode.outer(selector, handler, isPublic)
     const inner  = mode.inner(selector, handler, isPublic)
     inner.outer  = outer    // For access via Permeable outer
@@ -160,18 +165,21 @@ AddMethod.call(_Type, AddMethod)
 
 
 
-_Type.addMethod("new", Type$root$inner.new, BASIC_VALUE_METHOD)
-_Type.addMethod(Type$root$inner._setSharedProperty)
-
 _Method.addMethod(Method$root$inner._init)
 _Method.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 
+_$Inate.addMethod("_hasOwn", $Inate$root$inner._hasOwn, BASIC_VALUE_METHOD)
 
-_$Inate.addMethod(function _basicSet(propertyName, value) {
-  return InSetProperty(this[$INNER], propertyName, value, this)
+_$Inate.addMethod(function _basicSet(property, value) {
+  const selector = PropertyToSymbol[property] || property
+  this[selector] = value
 }, BASIC_SELF_METHOD)
 
+
+
+_Type.addMethod("new", Type$root$inner.new, BASIC_VALUE_METHOD)
+_Type.addMethod(Type$root$inner._setSharedProperty)
 
 
 _Type.addMethod(function addImmediate(...namedFunc_selector__handler) {
@@ -296,90 +304,102 @@ _Type.addMethod(function addDeclaration(property) {
 })
 
 
-// addAssigner("setName")
-// addAssigner(function setName() {})
-// addAssigner("property", "setName")
-// addAssigner("property", function () {})
-// addAssigner("property", function setName() {})
+// forAddAssigner(function property() {})
+// forAddAssigner("property", function () {})
 
-_Type.addMethod(function addAssigner(loader_property, loader_) {
-  var propertyName, setterName, setter, loader
+_Type.addMethod(function forAddAssigner(property_assigner, assigner_) {
+  const [propertyName, assigner] = (assigner_) ?
+    [property_assigner     , assigner_        ] :
+    [property_assigner.name, property_assigner]
 
-  if (loader_) {
-    propertyName = loader_property
-
-    if (typeof loader_ === "string") {
-      setterName = loader_
-      setter     = AsBasicSetter(propertyName, setterName)
-    }
-    else {
-      loader     = loader_
-      setterName = loader.name
-      setter     = AsLoaderSetter(propertyName, loader)
-    }
-  }
-  else {
-    if (typeof loader_property === "string") {
-      setterName   = loader_property
-      propertyName = AsPropertyNameFromSetterName(setterName)
-      setter       = AsBasicSetter(propertyName, setterName)
-    }
-    else {
-      loader       = loader_property
-      setterName   = loader.name
-      if (!setterName) { return this._unnamedFuncError("Assigner") }
-      propertyName = AsPropertyNameFromSetterName(setterName)
-      setter       = AsLoaderSetter(propertyName, loader)
-    }
-  }
+  if (!propertyName) { return this._unnamedFuncError(assigner) }
 
   this.addDeclaration(propertyName)
-  if (loader)     { this.addMethod(propertyName, loader, SET_LOADER) }
-  if (setterName) { this.addMethod(setterName, setter) }
+  this.addMethod(propertyName, assigner, SET_LOADER)
 })
 
+_Type.addMethod(function _assignerSetterError() {
+  this._signalError("Cannot define setter and assigner functions for the same property!!")
+})
 
-// addMandatorySetter("setName")
-// addMandatorySetter(function setName() {})
-// addMandatorySetter("property", "setName")
-// addMandatorySetter("property", function setName() {})
+_Type.addMethod(function _addSetter(name_setter, property_setter_, mandatory) {
+  var propertyName, loader, errorOnSet, mappedSymbol
+  var [setterName, setter] = (typeof name_setter === "string") ?
+        [name_setter, null] : [name_setter.name, name_setter]
 
-_Type.addMethod(function addMandatorySetter(setter_property, setter_) {
-  var propertyName, setterName, setter, loader
-
-  if (setter_) {
-    propertyName = setter_property
-
-    if (typeof setter_ === "string") {
-      setterName = setter_
-      setter     = AsBasicSetter(propertyName, setterName)
-    }
-    else {
-      setter     = setter_
-      setterName = setter.name
-    }
-  }
-  else {
-    if (typeof setter_property === "string") {
-      setterName   = setter_property
-      propertyName = AsPropertyNameFromSetterName(setterName)
-      setter       = AsBasicSetter(propertyName, setterName)
-    }
-    else {
-      setter       = setter_property
-      setterName   = setter.name
-      propertyName = AsPropertyNameFromSetterName(setterName)
-    }
+  switch (typeof property_setter_) {
+    case "string"   : propertyName = property_setter_ ; break
+    case "function" :
+      if ((propertyName = property_setter_.name)) {
+        if (setter) { return this._assignerSetterError() }
+        loader = property_setter_
+        setter = AsLoaderSetter(loader, setterName)
+      }
+      else { setter = property_setter_ }
+      break
   }
 
-  loader = NewAssignmentErrorHandler(propertyName, setterName)
+  if (!setterName)   { return this._unnamedFuncError(assigner)          }
+  if (!propertyName) { propertyName = AsPropertyFromSetter(setterName)  }
+  if (!setter)       { setter = AsBasicSetter(propertyName, setterName) }
 
   this.addDeclaration(propertyName)
-  this.addMethod(propertyName, loader, SET_LOADER)
-  if (!setterName) { return this._unnamedFuncError("Setter") }
   this.addMethod(setterName, setter)
 
+  if (mandatory) {
+    errorOnSet   = NewAssignmentErrorHandler(propertyName, setterName)
+    mappedSymbol = PropertyToSymbol[propertyName] ||
+      (PropertyToSymbol[propertyName] = Symbol(`$${propertyName}$`))
+
+    this.addMethod(propertyName, errorOnSet  , SET_LOADER)
+    this.addMethod(mappedSymbol, propertyName, SET_LOADER)
+  }
+  else if (loader) {
+    this.addMethod(propertyName, loader      , SET_LOADER)
+  }
 })
+
+
+// addSetter("setterName")
+// addSetter(function setterName() {})
+// addSetter("setterName", "property")
+// addSetter("setterName", function () {})
+// addSetter("setterName", function propertyLoader() {})
+
+_Type.addMethod(function addSetter(name_setter, property_setter_) {
+  this._addSetter(name_setter, property_setter_, false)
+})
+
+
+
+// forAddSetter("propertyName")
+// forAddSetter("propertyName", "setterName")
+
+_Type.addMethod(function forAddSetter(propertyName, setterName_) {
+  const setterName = setterName_ || AsSetterFromProperty(propertyName)
+  this._addSetter(setterName, propertyName, false)
+})
+
+
+
+// addMandatorySetter("setterName")
+// addMandatorySetter(function setterName() {})
+// addMandatorySetter("setterName", "property")
+// addMandatorySetter("setterName", function () {})
+
+_Type.addMethod(function addMandatorySetter(name_setter, property_setter_) {
+  this._addSetter(name_setter, property_setter_, true)
+})
+
+// forAddMandatorySetter("property")
+// forAddMandatorySetter("property", "setterName")
+// forAddMandatorySetter("property", function setterName() {})
+
+_Type.addMethod(function forAddMandatorySetter(propertyName, setter_) {
+  const setter = setter_ || AsSetterFromProperty(propertyName)
+  this._addSetter(setter, propertyName, true)
+})
+
 
 
 _Type.addMethod(function _checkAncestryChange(willInheritFromThing) {
@@ -425,7 +445,7 @@ _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
 
 
 
-_Type.addAssigner("name", function setName(name) {
+_Type.forAddAssigner("name", function setName(name) {
   const properName = AsCapitalized(name)
   const priorName = this.name
   if (properName === priorName) { return priorName }

@@ -150,6 +150,9 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
 }
 
 
+// _$Inate.addMethod(function _basicGet(property) {
+//
+// }, BASIC_VALUE_METHOD)
 
 _$Inate.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
@@ -187,7 +190,10 @@ _$Inate.addMethod(function hasOwn(propertyName) {
 }, BASIC_VALUE_METHOD)
 
 
-_$Inate.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
+// _$Inate.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
+
+
+
 
 // _$Inate.addMethod(function _hasOwn(propertyName) {
 //   const properties = this[$KNOWN_PROPERTIES] || ResetKnownProperties(this)
@@ -288,15 +294,15 @@ _$Inate.addMethod(function _signalError(message) {
 })
 
 _$Inate.addMethod(function _invalidPulpError() {
-  this._signalError("Using old mutual inner, after be|setImmutable has made a new inner proxy!!")
+  this._signalError("Using old mutable inner, after be|setImmutable has made a new inner proxy!!")
 })
 
 _$Inate.addMethod(function _disallowedAssignmentError(property, setter) {
   this._signalError(`Assignment to property '${property}' is not allowed, use '${setter}' method instead!!`)
 })
 
-_$Inate.addMethod(function _unnamedFuncError(funcType) {
-  this._signalError(`${funcType} function must be named!!`)
+_$Inate.addMethod(function _unnamedFuncError(func) {
+  this._signalError(`${func} function must be named!!`)
 })
 
 _$Inate.addMethod(function _assignmentOfUndefinedError() {

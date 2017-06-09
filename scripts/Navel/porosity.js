@@ -167,11 +167,26 @@ Mutability.get = function get($inner, property, $pulp) {
 Mutability.set = function set($inner, property, value, $pulp) {
   if ($inner[IS_IMMUTABLE]) { return $pulp._invalidPulpError() }
 
-  const loader   = $inner[$SET_LOADERS][property]
-  const newValue = (loader) ? loader.call($pulp, value) : value
-  InSetProperty($inner, property, newValue, $pulp)
+  const setLoader = $inner[$SET_LOADERS][property]
+
+  if (setLoader) {
+    if (typeof setLoader !== "function")
+         { property = setLoader                 } // symbol
+    else { value = setLoader.call($pulp, value) } // handler
+
+    if (value === $inner[property] && $inner._hasOwn(property))    {return true}
+  }
+  else if ($inner._hasOwn(property) && value === $inner[property]) {return true}
+
+  const knownProperties = $inner[KNOWN_PROPERTIES]
+  if (knownProperties && !knownProperties.includes(property)) {
+    delete $inner[KNOWN_PROPERTIES]
+    delete $inner[$OUTER][KNOWN_PROPERTIES]
+  }
+  InSetProperty($inner, property, value, $pulp)
   return true
 }
+
 
 
 Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
@@ -256,17 +271,45 @@ ImmutableInner_prototype.get = function get($inner, property, $pulp) {
 }
 
 ImmutableInner_prototype.set = function set($inner, property, value, $pulp) {
-  if ($inner[property] !== value) {
-    const $copy  = $Copy($inner, false, undefined, property)
+  const setLoader = $inner[$SET_LOADERS][property]
+  var   $target   = $inner
+  var   isImmutable = true
 
-    $copy[$PULP][property] = value
-    this.$target           = $copy
-    this.set               = this.retargetedSet
-    this.get               = this.retargetedGet
-    this.deleteProperty    = this.retargetedDelete
+  if (setLoader) {
+    if (typeof setLoader !== "function") { property = setLoader } // symbol
+    else {                                                      // handler
+      value       = setLoader.call($pulp, value) // The loader might causes
+      $target     = $pulp[$INNER]                //  a write, invalidating the
+      isImmutable = $target[IS_IMMUTABLE]        //  target $inner!!
+    }
+
+    if (value === $target[property]) {
+      if (isImmutable || $target._hasOwn(property)) { return true }
+    }
   }
+  else if (property in $inner && value === $inner[property]) { return true }
+
+  if ($target[IS_IMMUTABLE]) {  // After setLoader executes the object might
+                               // have already been copied as writable!!!
+    $target             = $Copy($inner, false, undefined, property)
+    this.$target        = $target
+    this.set            = this.retargetedSet
+    this.get            = this.retargetedGet
+    this.deleteProperty = this.retargetedDelete
+
+    // If was going to assigning property to self, instead assign it to the copy
+    if (value === $pulp || value === $inner[$RIND]) { value = $target[$RIND] }
+  }
+
+  const knownProperties = $target[KNOWN_PROPERTIES]
+  if (knownProperties && !knownProperties.includes(property)) {
+    delete $target[KNOWN_PROPERTIES]
+    delete $target[$OUTER][KNOWN_PROPERTIES]
+  }
+  InSetProperty($target, property, value, $pulp)
   return true
 }
+
 
 ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp) {
   var $copy
@@ -279,7 +322,7 @@ ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, proper
       break
   }
 
-  this.$target         = $copy
+  this.$target        = $copy
   this.set            = this.retargetedSet
   this.get            = this.retargetedGet
   this.deleteProperty = this.retargetedDelete

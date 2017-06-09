@@ -79,6 +79,10 @@ _Type.addMethod(function _addValueImmediate(...namedFunc_name__handler) {
 })
 
 
+_Type.addMethod(function define(spec) {
+  PropertyLoader.new(this.$).load(spec, "STANDARD")
+})
+
 _Type.addMethod(function addSharedProperties(spec) {
   PropertyLoader.new(this.$).load(spec, "SHARED")
 })
@@ -94,7 +98,7 @@ _Type.addMethod(function addDeclarations(propertyListing) {
 })
 
 
-_Type.addAlias("define"      , "addMethods")
+_Type.addAlias("declare"     , "addDeclarations")
 _Type.addAlias("basicNew"    , "new")
 _Type.addAlias("removeMethod", "removeSharedProperty")
 // _Type.addAlias("_setImmutable", "_basicSetImmutable")

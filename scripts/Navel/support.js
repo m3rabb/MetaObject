@@ -64,14 +64,25 @@ function AsName(string_symbol) {
 }
 
 /**
- * Extracts a non-capitalized property name from a setter name.
+ * Makes a setter name from a non-capitalized property name.
  * @private
- * @param       {string} name - The target setter name
+ * @param       {string}
  * @returns     {string}
  */
-function AsPropertyNameFromSetterName(name) {
-  const match = name.match(/^[_$]*set([A-Z])(.*$)/)
-  return `${match[1].toLowerCase()}${match[2]}`
+function AsPropertyFromSetter(setterName) {
+  const match = setterName.match(/^([_$]*)set([A-Z])(.*$)/)
+  return `${match[1]}${match[2].toLowerCase()}${match[3]}`
+}
+
+/**
+ * Makes a property name from a standard setter name.
+ * @private
+ * @param       {string}
+ * @returns     {string}
+ */
+function AsSetterFromProperty(propertyName) {
+  const match = setterName.match(/^([_$]*)([A-Z])(.*$)/)
+  return `${match[1]}set${match[2].toUpperCase()}${match[3]}`
 }
 
 /**
@@ -115,6 +126,9 @@ function SetMethod($inner, method) {
   const selector = $method.selector
   const mode     = $method.mode
 
+  delete $inner[$SET_LOADERS][selector]
+  delete $inner[$IMMEDIATES][selector]
+
   if (mode === SET_LOADER) {
     // In a set-loader method, its handler is the loader function.
     $inner[$SET_LOADERS][selector] = $method.handler
@@ -153,67 +167,59 @@ function SetMethod($inner, method) {
  * @throws      Throws an error if attempting to assign undefined to a property.
  * @throws      Throws an error if it detects an exposed $pulp.
  */
-function InSetProperty($inner, property, value, $pulp) {
-  if (property in $inner) {
-    if (value === $inner[property]) { return $pulp }
-  }
-  else if ($pulp) { // null|undefined when setting a $root object
-    // Consider making id invisible, and ensuring that id is only set thru a special method here!!!
-    delete $inner[KNOWN_PROPERTIES]
-    delete $inner[$OUTER][KNOWN_PROPERTIES]
-  }
+ function InSetProperty($inner, property, value, _instigator) {
+   const isPublic = (property[0] !== "_")
 
-  const isPublic = (property[0] !== "_")
+   switch (typeof value) {
+     case "undefined" :
+       // Storing undefined is prohibited!
+       return _instigator._assignmentOfUndefinedError()
 
-  switch (typeof value) {
-    case "undefined" :
-      // Storing undefined is prohibited!
-      return $pulp._assignmentOfUndefinedError()
+       case "object" :
+              if (value === null)             { if (!isPublic) { break } }
+         else if (value[$SECRET] === $INNER)  {
+           if    (value === _instigator)      { value = $inner[$RIND]
+                                                if (!isPublic) { break } }
+           // Safety check: detect failure to use 'this.$' elsewhere.
+           else  { return _instigator._detectedInnerError(value) }
+         }
+         else if (!isPublic)                  {          break           }
+         else if (value[IS_IMMUTABLE])        {         /* NOP */        }
+         else if (value.id != null)           {         /* NOP */        }
+         else if (value === $inner[$RIND])    {         /* NOP */        }
+         else {   value = ($value = InterMap.get(value)) ?
+                    $Copy($value, true)[$RIND] : CopyObject(value, true) }
 
-      case "object" :
-             if (value === null)             { if (!isPublic) { break } }
-        else if (value[$SECRET] === $INNER)  {
-          if    (value === $pulp)            { value = $inner[$RIND]
-                                               if (!isPublic) { break } }
-          // Safety check: detect failure to use 'this.$' elsewhere.
-          else  { return $pulp._detectedInnerError(value) }
-        }
-        else if (!isPublic)                  {          break           }
-        else if (value[IS_IMMUTABLE])        {         /* NOP */        }
-        else if (value.id != null)           {         /* NOP */        }
-        else if (value === $inner[$RIND])    {         /* NOP */        }
-        else {   value = ($value = InterMap.get(value)) ?
-                   $Copy($value, true)[$RIND] : CopyObject(value, true) }
+       $inner[$OUTER][property] = value
+     break
 
-      $inner[$OUTER][property] = value
-    break
+     case "function" : // LOOK: will catch Type things!!!
+       // Note: Checking for value.constructor is inadequate to prevent func spoofing
+       switch (InterMap.get(value)) {
+         default           :
+           // Value is either a known function, or a type's $rind ,
+           break
+         case TYPE_PULP    :
+           // Safety check: detect failure to a type's 'this.$' elsewhere.
+           return _instigator._detectedInnerError(value)
 
-    case "function" : // LOOK: will catch Type things!!!
-      // Note: Checking for value.constructor is inadequate to prevent func spoofing
-      switch (InterMap.get(value)) {
-        default           :
-          // Value is either a known function, or a type's $rind ,
-          break
-        case TYPE_PULP    :
-          // Safety check: detect failure to a type's 'this.$' elsewhere.
-          return $pulp._detectedInnerError(value)
+         case undefined    :
+           // New unknown untrusted function to be wrapped.
+           value = AsTameFunc(value)
+           break
+         // case WRAPPER_FUNC : return _instigator.addOwnMethod(value.method)
+       }
+     // break omitted
 
-        case undefined    :
-          // New unknown untrusted function to be wrapped.
-          value = AsTameFunc(value)
-          break
-        // case WRAPPER_FUNC : return $pulp.addOwnMethod(value.method)
-      }
-    // break omitted
+     default :
+       if (isPublic) { $inner[$OUTER][property] = value }
+     break
+   }
 
-    default :
-      if (isPublic) { $inner[$OUTER][property] = value }
-    break
-  }
+   $inner[property] = value
+   return _instigator
+ }
 
-  $inner[property] = value
-  return $pulp
-}
 
 /**
  * Answers an unnamed empty function.
@@ -648,18 +654,17 @@ const _NoSuchProperty = function _noSuchProperty(property) {
 const _SetSharedProperty = function _setSharedProperty(property, value, isOwn) {
   const properties  = this._properties
   const existing    = properties[property]
+  const $root$inner = this._blanker.$root$inner
 
   if (existing === value) { return this }
 
-  const blanker     = this._blanker
-  const $root$inner = blanker.$root$inner
-
   if (value && value.type === Method) { SetMethod($root$inner, value) }
-  else      { InSetProperty($root$inner, property, value) }
+  else { InSetProperty($root$inner, property, value, this) }
 
   if (isOwn) { properties[property] = value }
 
   delete $root$inner[$SUPERS][property]
+  delete $root$inner[$SUPERS][$IMMEDIATES][property]
   return this._propagateIntoSubtypes(property)
 }
 

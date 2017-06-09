@@ -227,7 +227,7 @@ Use deleteProperty instead of set to trigger barrier.
 ==
 Add markdown to jsdoc - http://usejsdoc.org/plugins-markdown.html
 
-
+==
 *
   primitive
     string
@@ -245,23 +245,23 @@ Add markdown to jsdoc - http://usejsdoc.org/plugins-markdown.html
      Object
 
 
-    /**
-     * On instantiation, a blank virgin object has its implementation plumbing
-     * connected.
-     * @private
-     * @typedef     Something
-     * @property    {boolean} IS_IMMUTABLE
-     * @property    {?identifier}       id
-     * @property    {Proxy}       $
-     */ $ _super
+/**
+ * On instantiation, a blank virgin object has its implementation plumbing
+ * connected.
+ * @private
+ * @typedef     Something
+ * @property    {boolean} IS_IMMUTABLE
+ * @property    {?identifier}       id
+ * @property    {Proxy}       $
+ */ $ _super
 
+==
 
+Consider not overloading Methods for special set_loader properties
 
-change
+use type of
 
-DECLARE:
-SETTER : 
-
-addAssignerFor("set")
-addMandatorySetterFor
-addSetter
+method      ==> InstallMethod
+onSetLoader ==> InstallSetLoader
+onSetError  ==>
+onSetMapper ==> InstallMappedProperty

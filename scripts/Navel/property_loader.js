@@ -28,7 +28,8 @@
 PropertyLoader = Type("PropertyLoader")
 
 const modeNames =
-  "STANDARD METHOD IMMEDIATE LAZY ALIAS ASSIGNER MANDATORY SHARED DECLARE"
+  `DECLARE SHARED ALIAS STANDARD METHOD IMMEDIATE LAZY
+   FOR_ASSIGN FOR_SETTER FOR_MANDATORY SETTER MANDATORY`
 
 PropertyLoader.addSharedProperty("modes", modeNames.split(" "))
 
@@ -111,15 +112,20 @@ PropertyLoader.addMethod(function _loadFromSpec(item, mode) {
 
 PropertyLoader.addMethod(function _loadPair(name, value, mode) {
   switch (mode) {
-    case "ALIAS"     : return this._saveAlias(name, value)
-    case "SHARED"    : return this._type.addSharedProperty(name, value)
+    case "ALIAS"         : return this._saveAlias(name, value)
+    case "SHARED"        : return this._type.addSharedProperty(name, value)
 
-    case "STANDARD"  : return this._type.addMethod         (name, value)
-    case "METHOD"    : return this._type.addMethod         (name, value)
-    case "IMMEDIATE" : return this._type.addImmediate      (name, value)
-    case "LAZY"      : return this._type.addLazyProperty   (name, value)
-    case "ASSIGNER"  : return this._type.addAssigner       (name, value)
-    case "MANDATORY" : return this._type.addMandatorySetter(name, value)
+    case "STANDARD"      : return this._type.addMethod            (name, value)
+    case "METHOD"        : return this._type.addMethod            (name, value)
+
+    case "IMMEDIATE"     : return this._type.addImmediate         (name, value)
+    case "LAZY"          : return this._type.addLazyProperty      (name, value)
+    case "SETTER"        : return this._type.addSetter            (name, value)
+    case "MANDATORY"     : return this._type.addMandatorySetter   (name, value)
+
+    case "FOR_ASSIGN"    : return this._type.forAddAssigner       (name, value)
+    case "FOR_SETTER"    : return this._type.forAddSetter         (name, value)
+    case "FOR_MANDATORY" : return this._type.forAddMandatorySetter(name, value)
 
     default : return this._signalError(`Invalid pair mode: ${mode}!!`)
   }
@@ -127,24 +133,30 @@ PropertyLoader.addMethod(function _loadPair(name, value, mode) {
 
 PropertyLoader.addMethod(function _loadFunc(func, mode) {
   switch (mode) {
-    case "STANDARD"  : return this._type.addMethod         (func)
-    case "METHOD"    : return this._type.addMethod         (func)
-    case "IMMEDIATE" : return this._type.addImmediate      (func)
-    case "LAZY"      : return this._type.addLazyProperty   (func)
-    case "ASSIGNER"  : return this._type.addAssigner       (func)
-    case "MANDATORY" : return this._type.addMandatorySetter(func)
+    case "STANDARD"      : return this._type.addMethod            (func)
+    case "METHOD"        : return this._type.addMethod            (func)
+
+    case "IMMEDIATE"     : return this._type.addImmediate         (func)
+    case "LAZY"          : return this._type.addLazyProperty      (func)
+    case "SETTER"        : return this._type.addSetter            (func)
+    case "MANDATORY"     : return this._type.addMandatorySetter   (func)
+
+    case "FOR_ASSIGN"    : return this._type.forAddAssigner       (func)
 
     default : return this._signalError(`Invalid method func mode: ${mode}!!`)
   }
 })
 
-
 PropertyLoader.addMethod(function _loadFromName(name, mode) {
   switch (mode) {
-    case "STANDARD"  : return this._type.addDeclarations   (name)
-    case "DECLARE"   : return this._type.addDeclarations   (name)
-    case "ASSIGNER"  : return this._type.addAssigner       (name)
-    case "MANDATORY" : return this._type.addMandatorySetter(name)
+    case "STANDARD"      : return this._type.addDeclarations      (name)
+    case "DECLARE"       : return this._type.addDeclarations      (name)
+
+    case "SETTER"        : return this._type.addSetter            (name)
+    case "MANDATORY"     : return this._type.addMandatorySetter   (name)
+
+    case "FOR_SETTER"    : return this._type.forAddSetter         (name)
+    case "FOR_MANDATORY" : return this._type.forAddMandatorySetter(name)
 
     default : return this._signalError(`$Invalid name mode: ${mode}!!`)
   }

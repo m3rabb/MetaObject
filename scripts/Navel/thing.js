@@ -2,7 +2,7 @@
 
 _Thing.addMethod(_NoSuchProperty)
 
-_Thing.addAssigner("id", function _setId(newId_) {
+_Thing.forAddAssigner("id", function _setId(newId_) {
   const existingId = this.id
   var   newId
 
@@ -21,7 +21,7 @@ _Thing.addAssigner("id", function _setId(newId_) {
 })
 
 
-_Thing.addAssigner("name", "_setName")
+_Thing.forAddAssigner("name", "_setName")
 
 _Thing.addMethod(function _init(spec_) {
   if (spec_) {
@@ -38,7 +38,6 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   const $inner      = this[$INNER]
   const $outer      = $inner[$OUTER]
   const $rind       = $inner[$RIND]
-  const setOuterToo = true
 
   visited.set($rind, $rind)
 
@@ -47,7 +46,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   }
   else {
     const properties = $inner[KNOWN_PROPERTIES] ||
-      SetKnownProperties($inner, setOuterToo)
+      SetKnownProperties($inner, true) // Set outer too
 
     next = properties.length
 
