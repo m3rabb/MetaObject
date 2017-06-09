@@ -348,3 +348,11 @@ function AsInnerFact(selector, Handler) {
   }
   return BeFrozenFunc($innerFact[selector])
 }
+
+
+====
+
+Article on preventing skylighting and why "class" approach doesn't help
+
+
+HandleInheritancePoisoning
