@@ -1,35 +1,6 @@
 
 
 
-// UNTESTED
-const BaseOuterBehavior = {
-  __proto__ : null,
-
-  get (base$root, property, $outer) {
-    const target = $outer[$RIND]
-    const $inner = InterMap.get(target)
-    if (property[0] === "_") {
-      return PrivateAccessFromOutsideError(target, property)
-    }
-    return $inner._noSuchProperty ?
-      $inner[$PULP]._noSuchProperty(property) :
-      _NoSuchProperty.call($inner[$RIND], property)
-  },
-  // getPrototypeOf (base$root) { return base$root }
-}
-
-const BaseInnerBehavior = {
-  __proto__ : null,
-
-  get (base$root, property, $inner) {
-    return $inner._noSuchProperty ?
-      $inner[$PULP]._noSuchProperty(property) :
-      _NoSuchProperty.call($inner[$RIND], property)
-  },
-
-  // getPrototypeOf (base$root) { return base$root }
-}
-
 
 
 // UNTESTED
@@ -46,11 +17,10 @@ const DefaultBehavior = {
 
 
 
-function Outer(id) {
-  this.id = id
-}
+function Outer() {}
 
 const Outer_prototype = Outer.prototype = SpawnFrom(DefaultBehavior)
+const Impermeable     = new Outer()
 
 
 // Setting on things in not allowed because the setting semantics are broken.
@@ -78,13 +48,21 @@ Outer_prototype.set = function set($outer, property, value, $rind) {
 // ownKeys ($outer) { },
 
 
-
-const Impermeable = new Outer("Impermeable")
-
 Impermeable.get = function get($outer, property, $rind) {
   const value = $outer[property]
-  return (value !== IMMEDIATE) ? value :
-    $outer[$IMMEDIATES][property].outer.call($rind)
+  if (value !== undefined) { return value }
+
+  const outerHandler = $outer[$IMMEDIATES][property]
+  if (outerHandler) { return outerHandler.call($rind) }
+
+  if (property[0] === "_") {
+    return PrivateAccessFromOutsideError($rind, property)
+  }
+
+  const $inner = InterMap.get($rind)
+  return $inner._unknownProperty ?
+    $inner[$PULP]._unknownProperty(property) :
+    _UnknownProperty.call($rind, property)
 }
 
 Impermeable.has = function has($outer, property) {
@@ -101,15 +79,28 @@ Impermeable.has = function has($outer, property) {
 }
 
 
-const Permeable = new Outer("Permeable")
+function Outer_() {}
+
+const Outer__prototype = Outer_.prototype = SpawnFrom(Outer_prototype)
+const Permeable        = new Outer_()
+
 
 Permeable.get = function get($outer, property, $rind) {
-  const $method = $outer[$IMMEDIATES][property]
-  if ($method) { return $method.outer.call($rind) }
-
   const $inner = InterMap.get($rind)
   const value  = $inner[property]
-  return (typeof value !== "function") ? value : value.outer || value
+
+  switch (typeof value) {
+    default          : return value
+    case "function"  : return value.outer || value
+    case "undefined" : break
+  }
+
+  const $method = $inner[$IMMEDIATES][property]
+  if ($method) { return $method.outer.call($rind) }
+
+  return $inner._unknownProperty ?
+    $inner[$PULP]._unknownProperty(property) :
+    _UnknownProperty.call($rind, property)
 }
 
 Permeable.has = function has($outer, property) {
@@ -155,28 +146,35 @@ TypeOuter_prototype.apply = function newAsFact(func, receiver, args) {
 function MutableInner() {}
 
 const MutableInner_prototype = MutableInner.prototype = EMPTY_OBJECT
-const Mutability = new MutableInner()
+const Mutability             = new MutableInner()
 
 Mutability.get = function get($inner, property, $pulp) {
   const value = $inner[property]
-  return (value !== IMMEDIATE) ? value :
-    $inner[$IMMEDIATES][property].inner.call($pulp)
+  if (value !== undefined) { return value }
+
+  const $method = $inner[$IMMEDIATES][property]
+  if ($method) { return $method.inner.call($pulp) }
+
+  return $inner._unknownProperty ?
+    $pulp._unknownProperty(property) :
+    _UnknownProperty.call($inner[$RIND], property)
 }
 
 
 Mutability.set = function set($inner, property, value, $pulp) {
   if ($inner[IS_IMMUTABLE]) { return $pulp._invalidPulpError() }
 
-  const setLoader = $inner[$SET_LOADERS][property]
+  const onSetLoader = $inner[$SET_LOADERS][property]
 
-  if (setLoader) {
-    if (typeof setLoader !== "function")
-         { property = setLoader                 } // symbol
-    else { value = setLoader.call($pulp, value) } // handler
-
-    if (value === $inner[property] && $inner._hasOwn(property))    {return true}
+  if (onSetLoader) {
+    if (typeof onSetLoader !== "function")
+         { property = onSetLoader                    } // selector
+    else { value    = onSetLoader.call($pulp, value) } // handler
   }
-  else if ($inner._hasOwn(property) && value === $inner[property]) {return true}
+
+  if (value === $inner[property] && HasOwnProperty.call($inner, property)) {
+    return true
+  }
 
   const knownProperties = $inner[KNOWN_PROPERTIES]
   if (knownProperties && !knownProperties.includes(property)) {
@@ -190,17 +188,16 @@ Mutability.set = function set($inner, property, value, $pulp) {
 
 
 Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
-  // const property = SymbolPropertyMap[symbol]
-  //
-  // if (property === undefined) {
-  //   const message = "Use property setter instead of delete!"
-  //   return SignalError($pulp, message)
-  // }
+  const onSetLoader = $inner[$SET_LOADERS][property]
 
-  if (property in $inner) {
+  if (onSetLoader && onSetLoader.name === "$assignmentError") {
+    return onSetError.call($pulp) || true
+  }
+
+  if (HasOwnProperty.call($inner, property)) {
     delete $inner[property]
-    delete $inner[KNOWN_PROPERTIES]
     delete $inner[$OUTER][property]
+    delete $inner[KNOWN_PROPERTIES]
   }
   return true
 }
@@ -208,6 +205,113 @@ Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
 // has () {
 //   // hide symbols from view
 // }
+
+
+// BEWARE!!! The $pulp of the original target of the barrier/proxy always
+// references the original pulp proxy.
+function ImmutableInner() {}
+
+const ImmutableInner_prototype = SpawnFrom(EMPTY_OBJECT)
+ImmutableInner.prototype = ImmutableInner_prototype
+
+ImmutableInner_prototype.get = Mutability.get
+
+ImmutableInner_prototype.set = function set($inner, property, value, $pulp) {
+  const onSetLoader = $inner[$SET_LOADERS][property]
+  var   $target     = $inner
+  var   isImmutable = true
+
+  if (onSetLoader) {
+    if (typeof onSetLoader !== "function") { property = onSetLoader } // symbol
+    else {                                                            // handler
+      // The loader might cause a write, invalidating the target $inner.
+      value       = onSetLoader.call($pulp, value)
+      $target     = $pulp[$INNER]         // Re-get the (possibly new) $inner
+      isImmutable = $target[IS_IMMUTABLE] // See if it's a new copy
+    }
+  }
+
+  if (value === $target[property]) {
+    if (isImmutable || HasOwnProperty.call($target, property)) { return true }
+  }
+
+  if (isImmutable) { // After onSetLoader executes the object might
+                     // have already been copied as writable!!!
+    $target             = $Copy($inner, false, undefined, property)
+    this.$target        = $target
+    this.set            = this.retargetedSet
+    this.get            = this.retargetedGet
+    this.deleteProperty = this.retargetedDelete
+  }
+
+  // If was going to assigning property to self, instead assign it to the copy
+  if (value === $pulp || value === $inner[$RIND]) { value = $target[$RIND] }
+
+  const knownProperties = $target[KNOWN_PROPERTIES]
+  if (knownProperties && !knownProperties.includes(property)) {
+    delete $target[KNOWN_PROPERTIES]
+    delete $target[$OUTER][KNOWN_PROPERTIES]
+  }
+  InSetProperty($target, property, value, $pulp)
+  return true
+}
+
+
+ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp) {
+  var onSetLoader, $target
+
+  onSetLoader = $inner[$SET_LOADERS][property]
+
+  if (onSetLoader && onSetLoader.name === "$assignmentError") {
+    return onSetError.call($pulp) || true
+  }
+
+  switch (property) {
+    case _DELETE_IMMUTABILITY   : $target = $Copy($inner, false); break
+    case _DELETE_ALL_PROPERTIES : $target = $inner[$BLANKER]()  ; break
+    default :
+      if (!HasOwnProperty.call($inner, property)) { return true }
+      $target = $Copy($inner, false, undefined, property)
+      break
+  }
+
+  this.$target        = $target
+  this.set            = this.retargetedSet
+  this.get            = this.retargetedGet
+  this.deleteProperty = this.retargetedDelete
+
+  delete $target[KNOWN_PROPERTIES]
+  delete $target[$OUTER][KNOWN_PROPERTIES]
+  return true
+}
+
+ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, property, $pulp) {
+  // Note: Could have simply done the following line, but gets need to be fast,
+  // so reimplemented it here.
+  // return Mutability.get(this.$target, property, $target[$PULP])
+
+  const $target = this.$target
+  const value = $target[property]
+  if (value !== undefined) { return value }
+
+  const $method = $target[$IMMEDIATES][property]
+  if ($method) { return $method.inner.call($target[$PULP]) }
+
+  return $target._unknownProperty ?
+    $target[$PULP]._unknownProperty(property) :
+    _UnknownProperty.call($target[$RIND], property)
+}
+
+ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, property, value, $pulp) {
+  const $target = this.$target
+  return Mutability.set($target, property, value, $target[$PULP])
+}
+
+ImmutableInner_prototype.retargetedDelete = function retargetedDelete($inner, property, $pulp) {
+  const $target = this.$target
+  return Mutability.deleteProperty($target, property, $target[$PULP])
+}
+
 
 
 // CHECK THAT BARRIER WORK ON TYPE PROXIES, IMMUTABLE AS WELL AS MUTABLE!!!
@@ -220,13 +324,9 @@ const TypeInner_prototype = TypeInner.prototype = SpawnFrom(MutableInner_prototy
 
 
 TypeInner_prototype.get = function get(disguisedFunc, property, $pulp) {
-  // return Mutability.get(this.$target, property, $pulp)
-  const $inner = this.$target
-  const value  = $inner[property]
-  return (value !== IMMEDIATE) ? value :
-    $inner[$IMMEDIATES][property].inner.call($pulp)
+  // Note: Could reimplement it here is following call is too slow.
+  return Mutability.get(this.$target, property, $pulp)
 }
-
 
 TypeInner_prototype.set = function set(disguisedFunc, property, value, $pulp) {
   return Mutability.set(this.$target, property, value, $pulp)
@@ -253,99 +353,6 @@ TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
 
 
 // TypeInner.prototype = SpawnFrom(DefaultBehavior)
-
-
-
-// BEWARE!!! The $pulp of the original target of the barrier/proxy always
-// references the original pulp proxy.
-function ImmutableInner() {}
-
-const ImmutableInner_prototype = SpawnFrom(EMPTY_OBJECT)
-ImmutableInner.prototype = ImmutableInner_prototype
-
-ImmutableInner_prototype.get = function get($inner, property, $pulp) {
-  // Might need to put in check for $PULP property, if so return this proxy???
-  const value = $inner[property]
-  return (value !== IMMEDIATE) ? value :
-    $inner[$IMMEDIATES][property].inner.call($pulp)
-}
-
-ImmutableInner_prototype.set = function set($inner, property, value, $pulp) {
-  const setLoader = $inner[$SET_LOADERS][property]
-  var   $target   = $inner
-  var   isImmutable = true
-
-  if (setLoader) {
-    if (typeof setLoader !== "function") { property = setLoader } // symbol
-    else {                                                      // handler
-      value       = setLoader.call($pulp, value) // The loader might causes
-      $target     = $pulp[$INNER]                //  a write, invalidating the
-      isImmutable = $target[IS_IMMUTABLE]        //  target $inner!!
-    }
-
-    if (value === $target[property]) {
-      if (isImmutable || $target._hasOwn(property)) { return true }
-    }
-  }
-  else if (property in $inner && value === $inner[property]) { return true }
-
-  if ($target[IS_IMMUTABLE]) {  // After setLoader executes the object might
-                               // have already been copied as writable!!!
-    $target             = $Copy($inner, false, undefined, property)
-    this.$target        = $target
-    this.set            = this.retargetedSet
-    this.get            = this.retargetedGet
-    this.deleteProperty = this.retargetedDelete
-
-    // If was going to assigning property to self, instead assign it to the copy
-    if (value === $pulp || value === $inner[$RIND]) { value = $target[$RIND] }
-  }
-
-  const knownProperties = $target[KNOWN_PROPERTIES]
-  if (knownProperties && !knownProperties.includes(property)) {
-    delete $target[KNOWN_PROPERTIES]
-    delete $target[$OUTER][KNOWN_PROPERTIES]
-  }
-  InSetProperty($target, property, value, $pulp)
-  return true
-}
-
-
-ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp) {
-  var $copy
-  switch (property) {
-    case _DELETE_IMMUTABILITY   : $copy = $Copy($inner, false); break
-    case _DELETE_ALL_PROPERTIES : $copy = $inner[$BLANKER]()  ; break
-    default :
-      if (!$inner._hasOwn(property)) { return true }
-      $copy = $Copy($inner, false, undefined, property)
-      break
-  }
-
-  this.$target        = $copy
-  this.set            = this.retargetedSet
-  this.get            = this.retargetedGet
-  this.deleteProperty = this.retargetedDelete
-  return true
-}
-
-ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, property, $pulp) {
-  // DOUBLE CHECK THIS!!!
-  const $target = this.$target
-  const value   = $target[property]
-  return (value !== IMMEDIATE) ? value :
-    $target[$IMMEDIATES][property].inner.call($target[$PULP])
-}
-
-ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, property, value, $pulp) {
-  this.$target[$PULP][property] = value
-  return true
-}
-
-ImmutableInner_prototype.retargetedDelete = function retargetedDelete($inner, property, $pulp) {
-  delete this.$target[$PULP][property]
-  return true
-}
 
 
 
@@ -395,15 +402,15 @@ Super_prototype.get = function get($inner, property, $super) {
     switch (value) {
       case undefined :
         value = SetSuperPropertyFor($inner, property)
-      break
-
-      case NO_SUPER  :
-        return $inner._noSuchProperty ?
-          $inner[$PULP]._noSuchProperty(property) :
-          _NoSuchProperty.call($inner[$RIND], property)
+        break
 
       case IMMEDIATE :
         return supers[$IMMEDIATES][property].call($inner[$PULP])
+
+      case NO_SUPER  :
+        return $inner._unknownProperty ?
+          $inner[$PULP]._unknownProperty(property) :
+          _UnknownProperty.call($inner[$RIND], property)
 
       default :
         return value
@@ -433,8 +440,8 @@ Super_prototype.get = function get($inner, property, $super) {
 //     //   value = SetSuperPropertyFor($inner, property)
 //     // }
 //     // return (value === NO_SUPER) ?
-//     //   ($inner._noSuchProperty ?
-//     //     $inner[$PULP]._noSuchProperty(property) : undefined) :
+//     //   ($inner._unknownProperty ?
+//     //     $inner[$PULP]._unknownProperty(property) : undefined) :
 //     //   (value && value[$SECRET] === $INNER ?
 //     //     value.handler.call($inner[$PULP]) : value)
 //   }

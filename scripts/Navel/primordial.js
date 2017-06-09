@@ -47,11 +47,11 @@ _$Primordial.addMethod(function is(something) {
 //        isNothing
 //        isThing
 //       Thing
-//          _noSuchProperty
+//          _unknownProperty
 //         Type
 //
 //     Nothing
-//        _noSuchProperty
+//        _unknownProperty
 //        isNothing
 //       Void
 //        id

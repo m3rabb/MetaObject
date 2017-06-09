@@ -1,37 +1,10 @@
-//  spec
-//    name
-//    supertype|supertypes
-//    shared|sharedProperties
-//    methods|instanceMethods
-
-// SHARED      addSharedProperty
-// STANDARD    addMethod
-// IMMEDIATE     addImmediate("name", handler)
-// LAZY          addLazyProperty
-// ASSIGNER      addAssigner
-// MANDATORY     addMandatorySetter
-// ALIAS         addAlias
-
-// addAssigner("setName")
-// addAssigner(function setName() {})
-// addAssigner("property", "setName")
-// addAssigner("property", function () {})
-// addAssigner("property", function setName() {})
-
-// addMandatorySetter("setName")
-// addMandatorySetter(function setName() {})
-// addMandatorySetter("property", "setName")
-// addMandatorySetter("property", function setName() {})
-//
-//
 
 PropertyLoader = Type("PropertyLoader")
 
-const modeNames =
-  `DECLARE SHARED ALIAS STANDARD METHOD IMMEDIATE LAZY
-   FOR_ASSIGN FOR_SETTER FOR_MANDATORY SETTER MANDATORY`
+const modeNames = `DECLARE SHARED ALIAS STANDARD METHOD IMMEDIATE LAZY
+                   FOR_ASSIGN FOR_SETTER FOR_MANDATORY SETTER MANDATORY`
 
-PropertyLoader.addSharedProperty("modes", modeNames.split(" "))
+PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
 
 PropertyLoader.addMethod(function _init(type) {
   this._type    = type
@@ -113,9 +86,8 @@ PropertyLoader.addMethod(function _loadFromSpec(item, mode) {
 PropertyLoader.addMethod(function _loadPair(name, value, mode) {
   switch (mode) {
     case "ALIAS"         : return this._saveAlias(name, value)
-    case "SHARED"        : return this._type.addSharedProperty(name, value)
+    case "SHARED"        : return this._type.addSharedProperty    (name, value)
 
-    case "STANDARD"      : return this._type.addMethod            (name, value)
     case "METHOD"        : return this._type.addMethod            (name, value)
 
     case "IMMEDIATE"     : return this._type.addImmediate         (name, value)
@@ -127,21 +99,25 @@ PropertyLoader.addMethod(function _loadPair(name, value, mode) {
     case "FOR_SETTER"    : return this._type.forAddSetter         (name, value)
     case "FOR_MANDATORY" : return this._type.forAddMandatorySetter(name, value)
 
+    case "STANDARD"      :
+      return this._signalError(
+        `Must define mode for spec containing '${name}'!!`)
+
     default : return this._signalError(`Invalid pair mode: ${mode}!!`)
   }
 })
 
 PropertyLoader.addMethod(function _loadFunc(func, mode) {
   switch (mode) {
-    case "STANDARD"      : return this._type.addMethod            (func)
-    case "METHOD"        : return this._type.addMethod            (func)
+    case "STANDARD"      : return this._type.addMethod         (func)
+    case "METHOD"        : return this._type.addMethod         (func)
 
-    case "IMMEDIATE"     : return this._type.addImmediate         (func)
-    case "LAZY"          : return this._type.addLazyProperty      (func)
-    case "SETTER"        : return this._type.addSetter            (func)
-    case "MANDATORY"     : return this._type.addMandatorySetter   (func)
+    case "IMMEDIATE"     : return this._type.addImmediate      (func)
+    case "LAZY"          : return this._type.addLazyProperty   (func)
+    case "SETTER"        : return this._type.addSetter         (func)
+    case "MANDATORY"     : return this._type.addMandatorySetter(func)
 
-    case "FOR_ASSIGN"    : return this._type.forAddAssigner       (func)
+    case "FOR_ASSIGN"    : return this._type.forAddAssigner    (func)
 
     default : return this._signalError(`Invalid method func mode: ${mode}!!`)
   }

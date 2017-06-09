@@ -10,18 +10,26 @@
 
 
 
-const Base$root         = EMPTY_OBJECT
-// const   Stash$root      = SpawnFrom(Base$root)
-const   Base$root$outer = new Proxy(Base$root, BaseOuterBehavior)
-const   Base$root$inner = new Proxy(Base$root, BaseInnerBehavior)
-
+// Should this be made immutable???
 const $BaseBlanker = {
-  $root$outer : Base$root$outer,
-  $root$inner : Base$root$inner,
+  __proto__   : null,
+  $root$outer : {
+    __proto__      : null,
+    [$IMMEDIATES]  : EMPTY_OBJECT,
+  },
+  $root$inner : {
+    __proto__      : null,
+    [$IMMEDIATES]  : EMPTY_OBJECT,
+    [$SET_LOADERS] : EMPTY_OBJECT,
+    [$SUPERS]      : {
+      __proto__       : null,
+      [$IMMEDIATES]   : EMPTY_OBJECT,
+    },
+  },
   maker       : _NewInnerBlanker,
 }
 
-const $PrimordialBlanker = NewBlanker($BaseBlanker, null, null)
+const $PrimordialBlanker = NewBlanker($BaseBlanker)
 const   $InateBlanker    = NewBlanker($PrimordialBlanker)
 const     TypeBlanker    = NewBlanker($InateBlanker, null, _NewTypeInnerBlanker)
 
@@ -83,10 +91,9 @@ $Inate_properties.isInner                 = PROPERTY
 
 
 
-$Primordial$root$outer.type                   = null
+$Primordial$root$outer.type               = null
 
-$Inate$root$inner._propagateIntoSubtypes      = ALWAYS_SELF
-$Inate$root$inner._hasOwn                     = HasOwnProperty
+$Inate$root$inner._propagateIntoSubtypes  = ALWAYS_SELF
 
 
 
@@ -123,10 +130,11 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
   // this.super --> is a lazy property
 
   if (mode === SET_LOADER) {
-    this.handler = (typeof handler === "function") ? MarkFunc(handler) : handler
+    this.handler = (typeof handler === "function") ?
+      MarkFunc(handler, SET_LOADER_FUNC) : handler
   }
   else {
-    this.handler = MarkFunc(handler)
+    this.handler = MarkFunc(handler, KNOWN_FUNC)
     const outer  = mode.outer(selector, handler, isPublic)
     const inner  = mode.inner(selector, handler, isPublic)
     inner.outer  = outer    // For access via Permeable outer
@@ -169,7 +177,7 @@ _Method.addMethod(Method$root$inner._init)
 _Method.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 
-_$Inate.addMethod("_hasOwn", $Inate$root$inner._hasOwn, BASIC_VALUE_METHOD)
+// _$Inate.addMethod("_hasOwn", $Inate$root$inner._hasOwn, BASIC_VALUE_METHOD)
 
 _$Inate.addMethod(function _basicSet(property, value) {
   const selector = PropertyToSymbol[property] || property
@@ -204,12 +212,14 @@ _Type.addMethod(function removeSharedProperty(property) {
 _Type.addMethod(function _deleteSharedProperty(property) {
   const blanker     = this._blanker
   const $root$inner = blanker.$root$inner
+  const $root$outer = blanker.$root$outer
   const supers      = $root$inner[$SUPERS]
 
   delete this._properties[property]
-  delete blanker.$root$inner[property]
-  delete blanker.$root$outer[property]
+  delete $root$inner[property]
+  delete $root$outer[property]
   delete $root$inner[$IMMEDIATES][property]
+  delete $root$outer[$IMMEDIATES][property]
   delete supers[property]
   delete supers[$IMMEDIATES][property]
 
@@ -402,33 +412,38 @@ _Type.addMethod(function forAddMandatorySetter(propertyName, setter_) {
 
 
 
-_Type.addMethod(function _checkAncestryChange(willInheritFromThing) {
-  const currentlyInheritsFromThing = this.ancestry.includes(Thing)
 
-  if (willInheritFromThing !== currentlyInheritsFromThing) {
-    return ImproperChangeToAncestryError(this[$RIND])
+_Type.addMethod(function inheritsFrom(type) {
+  return (type !== this[$RIND] && this.ancestry.includes(type))
+}, BASIC_VALUE_METHOD)
+
+
+
+_Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
+  if (nextSupertypes.length !== new Set(nextSupertypes).size) {
+    return DuplicateSupertypeError(this)
   }
-  if (this._blanker.permeability === Permeable) {
-    return AttemptedChangeOfAncestryOfPermeableTypeError(this[$RIND])
-  }
-})
+  const nextAncestry = BuildAncestryOf(this[$RIND], nextSupertypes)
+  const isThing      = nextAncestry.includes(Thing)
+  const blanker      = this._blanker
 
-_Type.addMandatorySetter(function setSupertypes(supertypes) {
-  const ancestry          = BuildAncestryOf(this[$RIND], supertypes)
-  const inheritsFromThing = ancestry.includes(Thing)
-
-  if (this._blanker) {
-    this._checkAncestryChange(inheritsFromThing)
+  if (blanker) {
+    if (blanker.permeability === Permeable) {
+      return AttemptedChangeOfAncestryOfPermeableTypeError(this)
+    }
+    if (isThing !== this.ancestry.includes(Thing)) {
+      return ImproperChangeToAncestryError(this)
+    }
   }
   else {
-    const superBlanker = inheritsFromThing ? $InateBlanker : $PrimordialBlanker
+    const superBlanker = isThing ? $InateBlanker : $PrimordialBlanker
     this._blanker    = new NewBlanker(superBlanker)
     this._properties = SpawnFrom(null)
     this.subtypes    = SetImmutable(new Set())
   }
 
-  this.ancestry = ancestry
-  this._basicSet("supertypes", SetImmutable(supertypes))
+  this.ancestry = nextAncestry
+  this._basicSet("supertypes", SetImmutable(nextSupertypes))
   this._setAsSubtypeOfSupertypes()
   this._reinheritProperties()
 })
@@ -481,13 +496,8 @@ _Type.addMethod(function _initCoreIdentity(name) {
 //    methods|instanceMethods
 
 
-_Type.addMethod(function inheritsFrom(type) {
-  return (type !== this[$RIND] && this.ancestry.includes(type))
-}, BASIC_VALUE_METHOD)
-
-
 _Type.addMethod(function _init(spec_name, context_) {
-  var name, supertypes, supertype, shared, methods, superBlanker
+  var name, supertypes, supertype, shared, methods, definitions
 
   name       = spec_name.name || spec_name
   supertypes = spec_name.supertypes
@@ -499,17 +509,20 @@ _Type.addMethod(function _init(spec_name, context_) {
   }
   else if (supertypes === null || supertypes.isNothing) { supertypes = [] }
 
-  declared = spec_name.declare || spec_name.declared
-  shared   = spec_name.shared  || spec_name.sharedProperties
-  methods  = spec_name.define  || spec_name.methods || spec_name.instanceMethods
+  declared    = spec_name.declare || spec_name.declared
+  shared      = spec_name.shared  || spec_name.sharedProperties
+  methods     = spec_name.methods || spec_name.instanceMethods
+  definitions = spec_name.define
 
   this.context  = context_ || spec_name.context || null
 
   this.setSupertypes(supertypes)
   this._initCoreIdentity(name)
-  declared && this.addDeclarations(declared)
-  shared   && this.addSharedProperties(shared)
-  methods  && this.addMethods(methods)
+
+  declared    && this.addDeclarations(declared)
+  shared      && this.addSharedProperties(shared)
+  methods     && this.addMethods(methods)
+  definitions && this.define(definitions)
 })
 // blanker.$root$outer.constructor = this._disguisedFunc
 // blanker.$root$inner.constructor = NewVacuousConstructor()

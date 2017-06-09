@@ -190,7 +190,7 @@ _$Inate.addMethod(function hasOwn(propertyName) {
 }, BASIC_VALUE_METHOD)
 
 
-// _$Inate.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
+_$Inate.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
 
 
 
@@ -238,6 +238,7 @@ _$Inate.addMethod(function uid() {
 _$Inate.addMethod(function addOwnMethod(method_namedFunc__selector, func__, mode___) {
   const method   = AsMethod(method_namedFunc__name, func__, mode___)
   const $inner   = this[$INNER]
+  const $outer   = $inner[$OUTER]
   const selector = method.selector
   var methods, immediates, supers
 
@@ -247,6 +248,7 @@ _$Inate.addMethod(function addOwnMethod(method_namedFunc__selector, func__, mode
   else {
     methods              = ($inner[$OWN_METHODS] = SpawnFrom(null))
     supers               = ($inner[$SUPERS]      = SpawnFrom($inner[$SUPERS]))
+    $outer[$IMMEDIATES]  = SpawnFrom($outer[$IMMEDIATES])
     $inner[$IMMEDIATES]  = SpawnFrom($inner[$IMMEDIATES])
     $inner[$SET_LOADERS] = SpawnFrom($inner[$SET_LOADERS])
   }
@@ -298,7 +300,7 @@ _$Inate.addMethod(function _invalidPulpError() {
 })
 
 _$Inate.addMethod(function _disallowedAssignmentError(property, setter) {
-  this._signalError(`Assignment to property '${property}' is not allowed, use '${setter}' method instead!!`)
+  this._signalError(`Assignment or deletion of property '${property}' is not allowed, use '${setter}' method instead!!`)
 })
 
 _$Inate.addMethod(function _unnamedFuncError(func) {
@@ -353,7 +355,7 @@ _$Inate.addMethod(function _detectedInnerError(value) {
 // AddMethod(_Primordial_root, "equals", _Primordial_root.is)
 //
 //
-// AddMethod(_Primordial_root, function _noSuchProperty(selector, value_) {
+// AddMethod(_Primordial_root, function _unknownProperty(selector, value_) {
 //   const verb = arguments.length > 1 ? "set" : "get"
 //   const message = `External attempt to ${verb} nonexistent property #${selector}!`
 //   return this._signalError(message)

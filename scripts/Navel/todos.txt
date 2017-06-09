@@ -265,3 +265,12 @@ method      ==> InstallMethod
 onSetLoader ==> InstallSetLoader
 onSetError  ==>
 onSetMapper ==> InstallMappedProperty
+
+==
+Determine if it is allowable to assign undefined to a property to delete it
+
+==
+Ensure immutable and super porosity work on type thingies
+
+==
+Make _super work on instances own methods

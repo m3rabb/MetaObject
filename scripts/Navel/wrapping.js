@@ -25,15 +25,7 @@ function AsLoaderSetter(Loader, setterName) {
   }[name]
 }
 
-// Consider caching these!!!
-function NewAssignmentErrorHandler(Property, Setter) {
-  const name = `${Property}_$assignmentError`
-  return {
-    [name] : function (value) {
-      this._disallowedAssignmentError(Property, Setter)
-    }
-  }[name]
-}
+
 
 
 

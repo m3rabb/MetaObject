@@ -128,17 +128,22 @@ function SetMethod($inner, method) {
 
   delete $inner[$SET_LOADERS][selector]
   delete $inner[$IMMEDIATES][selector]
+  delete $outer[$IMMEDIATES][selector]
 
   if (mode === SET_LOADER) {
     // In a set-loader method, its handler is the loader function.
     $inner[$SET_LOADERS][selector] = $method.handler
   }
   else if (mode.isImmediate) {
-    // Store the $inner aspect of the method
+    // Note: the $outer stores the outer handler, but the $inner stores the
+    // entire $method to enable permeable objects to have an easy way to access
+    // the outer of private methods.
+    delete $inner[selector]
     $inner[$IMMEDIATES][selector] = $method
-    // Store the sentinel to direct the execution to the immediates side lookup.
-    $inner[selector] = IMMEDIATE
-    if ($method.isPublic) { $outer[selector] = IMMEDIATE }
+    if ($method.isPublic) {
+      delete $outer[selector]
+      $outer[$IMMEDIATES][selector] = $method.outer
+    }
   }
   else {
     // Store the inner (and outer) wrapper in the property chain.
@@ -221,6 +226,14 @@ function SetMethod($inner, method) {
  }
 
 
+ // Consider caching these!!!
+ function NewAssignmentErrorHandler(Property, Setter) {
+   return function $assignmentError(value) {
+     this._disallowedAssignmentError(Property, Setter)
+   }
+ }
+
+
 /**
  * Answers an unnamed empty function.
  * @private
@@ -269,12 +282,16 @@ function NewVacuousConstructor(name) {
  * - is set by default to produce basic objects vs type objects.
  * @private
  * @function    NewBlanker
- * @param       {Blanker}      superBlanker
- * @param       {$root}        superBlanker.$root$inner
+ * @param       {Blanker}      rootBlanker
+ * @param       {$root}        rootBlanker.$root$inner
  * The ancestor for the blanker's $root of each instance's $inner.
- * @param       {$root}        superBlanker.$root$outer
+ * @param       {$root}        rootBlanker.$root$inner.$IMMEDIATES
+ * @param       {$root}        rootBlanker.$root$inner.$SET_LOADERS
+ * @param       {$root}        rootBlanker.$root$inner.$SUPERS
+ * @param       {$root}        rootBlanker.$root$outer
  * The ancestor for the blanker's $root of each instance's $outer.
- * @param       {BlankerMaker} superBlanker.maker  The default BlankerMaker.
+ * @param       {$root}        rootBlanker.$root$outer.$IMMEDIATES
+ * @param       {BlankerMaker} rootBlanker.maker  The default BlankerMaker.
  * @param       {Permeability} [permeability_=Impermeable]
  * Defines the permeability of the created instances.
  * @param       {BlankerMaker} [maker_=$InnerBlanker]
@@ -303,15 +320,16 @@ function NewVacuousConstructor(name) {
  * The $root of $outer of all created instances. $root$Outer has a parallel
  * hierarchy to $root$inner
  * @property {stash} $root$outer.$IMMEDIATES
- * References the side-lookup for the instances' immediate $methods. It's also
- * referenced from $root$inner.$IMMEDIATES.
+ * References the side-lookup for the instances' $outer immediate handlers.
  * @property {$root} $root$inner
  * Same as the prototype. The $root of $inner of all created instances.
  * @property {$root} $root$inner.$OUTER
  * References the parallel $root$outer
  * @property {stash} $root$inner.$IMMEDIATES
- * References the side-lookup for the instances' immediate $methods. It's also
- * referenced from $root$outer.$IMMEDIATES.
+ * References the side-lookup for the instances' $inner immediate $methods.
+ * Note: Unlike the $outer, the $inner $IMMEDIATES, hold the entire $method
+ * So permeable instance will have an easy way to access the outer handler of
+ * private immediates.
  * @property {stash} $root$inner.$SET_LOADERS
  * References the side-lookup for the instances' set-loader handlers.
  * @property {stash} $root$inner.$SUPERS
@@ -325,34 +343,38 @@ function NewVacuousConstructor(name) {
  * created instance.
  */
 
- function NewBlanker(superBlanker, permeability_, maker_) {
-  const isBase         = (superBlanker === $BaseBlanker)
-  const blankerMaker   = maker_        || superBlanker.maker
-  const permeability   = permeability_ || Impermeable
-  const $root$inner    = SpawnFrom(superBlanker.$root$inner)
-  const $root$outer    = SpawnFrom(superBlanker.$root$outer)
+function NewBlanker(rootBlanker, permeability_, maker_) {
+  const root$root$inner = rootBlanker.$root$inner
+  const root$root$outer = rootBlanker.$root$outer
+  const root$supers     = root$root$inner[$SUPERS]
+
+  const blankerMaker    = maker_        || rootBlanker.maker
+  const permeability    = permeability_ || Impermeable
+
+  const $root$inner     = SpawnFrom(root$root$inner)
+  const $root$outer     = SpawnFrom(root$root$outer)
   // Note: The blanker function must be unnamed in order for the debugger to
   // display the type of instances using type name determined by the name of
   // its constructor function property.
   const OuterBlanker   = NewNamelessVacuousFunc()
   const Blanker        = blankerMaker(OuterBlanker, permeability)
-  const supers         = SpawnFrom(isBase ? null : $root$inner[$SUPERS])
-  const immediates     = SpawnFrom(isBase ? null : $root$inner[$IMMEDIATES])
+                         // Should this simply inherit from null!!!???
+  const supers         = SpawnFrom(root$supers)
+  supers[$IMMEDIATES]  = SpawnFrom(root$supers[$IMMEDIATES])
 
   Blanker.maker             = blankerMaker
   Blanker.permeability      = permeability
   Blanker.prototype         = $root$inner
   Blanker.$root$inner       = $root$inner
   Blanker.$root$outer       = $root$outer
-  $root$inner[$OUTER]       = $root$outer
   OuterBlanker.prototype    = $root$outer
 
-  supers[$IMMEDIATES]       = SpawnFrom(null)
+  $root$inner[$OUTER]       = $root$outer
   $root$inner[$SUPERS]      = supers
-  $root$inner[$SET_LOADERS] = SpawnFrom(null)
+  $root$inner[$SET_LOADERS] = SpawnFrom(root$root$inner[$SET_LOADERS])
+  $root$inner[$IMMEDIATES]  = SpawnFrom(root$root$inner[$IMMEDIATES])
+  $root$outer[$IMMEDIATES]  = SpawnFrom(root$root$outer[$IMMEDIATES])
   $root$inner[$BLANKER]     = Blanker
-  $root$inner[$IMMEDIATES]  = immediates
-  $root$outer[$IMMEDIATES]  = immediates
 
   InterMap.set(Blanker, BLANKER_FUNC)
   return Frost(Blanker)
@@ -609,14 +631,14 @@ function MarkFunc(func, marker = KNOWN_FUNC) {
 
 
 // Document these!!!
-const SAFE_FUNC     = Frost({id: "SAFE_FUNC"      , [IS_IMMUTABLE] : true})
-const BLANKER_FUNC  = Frost({id: "BLANKER_FUNC"   , [IS_IMMUTABLE] : true})
-const TAMED_FUNC    = Frost({id: "TAMED_FUNC"     , [IS_IMMUTABLE] : true})
-const WRAPPER_FUNC  = Frost({id: "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true})
+const SAFE_FUNC    = Frost({ id : "SAFE_FUNC"      , [IS_IMMUTABLE] : true })
+const BLANKER_FUNC = Frost({ id : "BLANKER_FUNC"   , [IS_IMMUTABLE] : true })
+const TAMED_FUNC   = Frost({ id : "TAMED_FUNC"     , [IS_IMMUTABLE] : true })
+const WRAPPER_FUNC = Frost({ id : "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true })
 
-const KNOWN_FUNC    = Frost({id: "KNOWN_FUNC"})
-const TYPE_PULP     = Frost({id: "TYPE_PULP" })
-//const SET_LOADER_FUNC = Frost({id: "SET_LOADER_FUNC")
+const KNOWN_FUNC      = Frost({ id : "KNOWN_FUNC"      })
+const TYPE_PULP       = Frost({ id : "TYPE_PULP"       })
+const SET_LOADER_FUNC = Frost({ id : "SET_LOADER_FUNC" })
 
 
 // Simpleton function
@@ -646,7 +668,7 @@ const _BasicSetImmutable = function _basicSetImmutable() {
 
 // Add _basicUnknownProperty!!!
 
-const _NoSuchProperty = function _noSuchProperty(property) {
+const _UnknownProperty = function _unknownProperty(property) {
   return SignalError(this, `Receiver ${this.id} doesn't have a property: ${property}!!`)
 }
 

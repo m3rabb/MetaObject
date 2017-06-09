@@ -2,7 +2,7 @@
 const Nothing = Type({
   name      : "Nothing",
   supertype : null,
-  define    : _NoSuchProperty // { _noSuchProperty : _NoSuchProperty }
+  define    : _UnknownProperty // { _unknownProperty : _UnknownProperty }
 })
 
 
@@ -21,7 +21,7 @@ _$Inate.addSharedProperty("isVoid", false)
 
 
 //     Nothing
-//        _noSuchProperty
+//        _unknownProperty
 //        isNothing
 //       Void
 //        id

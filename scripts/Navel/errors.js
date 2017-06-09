@@ -39,17 +39,21 @@ function SignalError(target, message) {
 
 
 function DirectAssignmentFromOutsideError(target) {
-  SignalError(target, "Direct assignment is not allowed to the outside of an object, use a method instead!!")
+  SignalError(target[$RIND], "Direct assignment is not allowed to the outside of an object, use a method instead!!")
 }
 
 function PrivateAccessFromOutsideError(target, property) {
-  SignalError(target, `Access to private property '${property}' from outside of an object is forbidden!!`)
+  SignalError(target[$RIND], `Access to private property '${property}' from outside of an object is forbidden!!`)
 }
 
 function ImproperChangeToAncestryError(target) {
-  SignalError(target, "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
+  SignalError(target[$RIND], "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
 }
 
 function AttemptedChangeOfAncestryOfPermeableTypeError(target) {
-  SignalError(target, `Cannot change supertypes of permeable Type '${target.name}', change impermeable version instead!!`)
+  SignalError(target[$RIND], `Cannot change supertypes of permeable Type '${target.name}', change impermeable version instead!!`)
+}
+
+function DuplicateSupertypeError(target) {
+  SignalError(target[$RIND], "Duplicate supertypes are not allowed!!")
 }

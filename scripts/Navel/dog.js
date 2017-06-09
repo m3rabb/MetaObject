@@ -29,7 +29,7 @@ const Dog = Type({
           return "AooooohhH!!!"
         }
       ],
-      ASSIGNER : "setBreed",
+      SETTER : "setBreed",
     },
 
     "LAZY", function humanAge() {

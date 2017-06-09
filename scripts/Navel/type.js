@@ -49,14 +49,22 @@ _Type.addMethod(function asImpermeable() {
 
 
 
-// REVISIT!!!
+
 _Type.addMethod(function methodAt(selector) {
   const $root$inner = this._blanker.$root$inner
-  const value       = $root$inner[selector]
+  const $method     = $root$inner[$IMMEDIATES][selector]
 
-  if (value === IMMEDIATE) { return $root$inner[$IMMEDIATES][selector][$RIND] }
+  if ($method) { return ($method.mode === SET_LOADER) ? null : $method[$RIND] }
+
+  const value = $root$inner[selector]
   return (typeof value === "function" && InterMap.get(value)) ?
-    value.method || null : null
+    (value.method || null) : null
+})
+
+
+_Type.addMethod(function addSupertype(type) {
+  const newSupertypes = SetImmutable([...this.supertypes, types])
+  this.setSupertypes(newSupertypes)
 })
 
 
