@@ -309,6 +309,12 @@ _$Innate.addMethod(function addOwnDeclaration(propertyName) {
 // })
 
 
+_$Primordial.addMethod(Symbol.toPrimitive, function (hint) {
+  return this.toString()
+}, VALUE_METHOD)
+
+
+
 _$Innate.addMethod(function _unknownProperty(property) {
   return this._signalError(`Receiver ${this.id} doesn't have a property: ${AsName(property)}!!`)
 })
