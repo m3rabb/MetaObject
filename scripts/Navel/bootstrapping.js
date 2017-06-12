@@ -153,10 +153,11 @@ Type$root$inner.new = {
   new : function (...args) {
     const $instance = new this._blanker(Impermeable, args)
     const _instance = $instance[$PULP]
+    const _postInit = $instance._postInit
 
     $instance._init.apply(_instance, args)
-    if ($instance._postInit) {
-      const result = $instance._postInit.call(_instance)
+    if (_postInit) {
+      const result = _postInit.call(_instance)
       if (result !== undefined && result !== _instance) { return result }
     }
     return $instance[$RIND]

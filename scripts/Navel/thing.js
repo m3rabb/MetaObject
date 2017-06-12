@@ -34,14 +34,15 @@ _Thing.addMethod(function _init(spec_) {
 
 _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   var next, property, value, $value, barrier
-  const $inner      = this[$INNER]
-  const $outer      = $inner[$OUTER]
-  const $rind       = $inner[$RIND]
+  const $inner                  = this[$INNER]
+  const $outer                  = $inner[$OUTER]
+  const $rind                   = $inner[$RIND]
+  const _setPropertiesImmutable = $inner._setPropertiesImmutable
 
   visited.set($rind, $rind)
 
-  if ($inner._setPropertiesImmutable) {
-    $pulp._setPropertiesImmutable(inPlace, visited)
+  if (_setPropertiesImmutable) {
+    _setPropertiesImmutable.call($pulp, inPlace, visited)
   }
   else {
     const properties = $inner[KNOWN_PROPERTIES] ||

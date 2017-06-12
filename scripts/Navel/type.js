@@ -16,18 +16,20 @@ _Type.addImmediate(function formalName() {
 
 _Type.addMethod(function new_(...args) {
   const $inner = this[$INNER]
-  var instance, $instance, $outer, instance_
+  var instance, $instance, _postInit, $outer, instance_
 
   if ($inner.new === $inner._basicNew) {
     $instance = new this._blanker(Permeable, args)
     _instance = $instance[$PULP]
+    _postInit = $instance._postInit
 
     $instance[$OUTER].$INNER = $instance
     $instance[$PERMEABILITY] = Permeable
 
     $instance._init.apply(_instance, args)
-    if ($instance._postInit) {
-      const result = $instance._postInit.call(_instance)
+
+    if (_postInit) {
+      const result = _postInit.call(_instance)
       if (result !== undefined && result !== _instance) { return result }
     }
     return $instance[$RIND]

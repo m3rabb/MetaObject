@@ -91,6 +91,7 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   const $outer       = $inner[$OUTER]
   const $pulp        = $inner[$PULP]
   const target       = $inner[$RIND]
+  const _initFrom_   = $inner._initFrom_
 
   if (permeability === Permeable) {
     $outer.$INNER         = $inner
@@ -99,8 +100,8 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
 
   visited.set(source, target) // to manage cyclic objects
 
-  if ($inner._initFrom_) {
-    $pulp._initFrom_($source[$PULP], asImmutable, visited, exceptProperty_)
+  if (_initFrom_) {
+   _initFrom_.call($pulp, $source[$PULP], asImmutable, visited, exceptProperty_)
   }
   else {
     const setOuterToo = !$source[IS_IMMUTABLE]
