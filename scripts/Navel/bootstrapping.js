@@ -140,13 +140,13 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
       MarkFunc(handler, SET_LOADER_FUNC) : handler
   }
   else {
-    this.handler          = MarkFunc(handler, KNOWN_FUNC)
     const outer           = mode.outer(selector, handler, isPublic)
     const inner           = mode.inner(selector, handler, isPublic)
     inner[$OUTER_WRAPPER] = outer    // For access via Permeable outer
-    outer.method          = inner.method = this[$RIND]
+    outer.method          = (inner.method = this[$RIND])
     this._outer           = SetImmutableFunc(outer, WRAPPER_FUNC)
     this._inner           = SetImmutableFunc(inner, WRAPPER_FUNC)
+    this.handler          = MarkFunc(handler, KNOWN_FUNC)
   }
 }
 
