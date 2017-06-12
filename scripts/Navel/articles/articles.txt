@@ -356,3 +356,11 @@ Article on preventing skylighting and why "class" approach doesn't help
 
 
 HandleInheritancePoisoning
+
+====
+Why the following is a gotcha!
+The empty array is copied into the property but the value loaded into
+the priorIds is the original array. OUCH!!!
+Whay assignemnt is bad 
+
+priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
