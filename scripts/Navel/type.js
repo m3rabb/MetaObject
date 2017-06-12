@@ -1,5 +1,6 @@
 _Type.addImmediate(function _nextIID() {
-  return ++this._iidCount
+  // This works on an immutable type without creating a new copy.
+  return ++this[$INNER]._iidCount
 })
 
 _Type.addLazyProperty(function id() {
@@ -114,7 +115,6 @@ _Type.addMethod(function addDeclarations(propertyListing) {
 _Type.addAlias("_basicNew"    , "new"                 )
 _Type.addAlias("declare"      , "addDeclarations"     )
 _Type.addAlias("removeMethod" , "removeSharedProperty")
-_Type.addAlias("_setImmutable", "_basicSetImmutable"  )
 
 
 
@@ -137,6 +137,12 @@ _Type.addMethod(function newAsFact_(...args) {
 })
 
 
+
+
+
+
+
+
 _Type.addMethod(function _unknownMethodToAliasError(property) {
   this._signalError(`Can't find method '${property}' to alias!!`)
 })
@@ -145,3 +151,6 @@ _Type.addMethod(function _unknownMethodToAliasError(property) {
 // Type.addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])
 
 // Type.moveMethodTo("", target)
+
+
+// _Type._setImmutable()

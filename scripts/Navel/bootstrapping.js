@@ -30,9 +30,12 @@ const $BaseBlanker = {
   maker       : _NewInnerBlanker,
 }
 
+
+
 const $PrimordialBlanker = NewBlanker($BaseBlanker)
 const   $InnateBlanker   = NewBlanker($PrimordialBlanker)
 const     TypeBlanker    = NewBlanker($InnateBlanker, _NewTypeInnerBlanker)
+
 
 
 
@@ -548,14 +551,34 @@ _$Primordial._setDisplayNames("$Innate$Outer", "$Innate$Inner")
 _$Innate    ._setDisplayNames( "$Outer",  "$Inner")
 
 
+// Note: If this was called before the previous declarations,
+// $IMMEDIATES, $SET_LOADERS, constructor, etc, would not be overridable
+// in the descendent $roots.
+Frost($BaseBlanker.$root$outer)
+Frost($BaseBlanker.$root$inner)
 
 
-// Frost(Base_root)
-// // Frost(Stash_root)
-// Frost(Implementation_root)
-// Frost(Inner_root)
+_$Innate.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
+_Type.addMethod(function _setImmutable() {
+  const $inner       = this[$INNER]
+  const blanker      = $inner._blanker
+  const $root$outer  = blanker.$root$outer
+  const $root$inner  = blanker.$root$inner
+  const $root$supers = $root$inner[$SUPERS]
 
+  Frost($root$outer[$IMMEDIATES])
+  Frost($root$supers[$IMMEDIATES])
+  Frost($root$inner[$IMMEDIATES])
+  Frost($root$inner[$SET_LOADERS])
+  Frost($root$outer)
+  Frost($root$supers)
+  Frost($root$inner)
+
+  return $inner._basicSetImmutable()
+}, BASIC_SELF_METHOD)
+//   delete this._captureChanges
+//   delete this._captureOverwrite
 
 
 /*       1         2         3         4         5         6         7         8

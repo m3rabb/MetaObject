@@ -296,3 +296,7 @@ this[$PRIOR_IDS] = [...priorIds, existingId]
 
 ==
 Add permanent methods distinction/protections
+
+Figure out how to safely make types immutable. Can make entire
+$root$inner/$root$outer frosted, becuase then properties such as constructor
+cannot be overridden by subtypes.  Might need to do it method by method.

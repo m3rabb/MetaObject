@@ -243,7 +243,7 @@ function AsInnerFact(property, Handler) {
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
       return (($result = InterMap.get(result))) ?
-        Copy($result, true) : CopyObject(result, true)
+        $Copy($result, true) : CopyObject(result, true)
     }
   }[name]
 }
@@ -290,7 +290,7 @@ function AsSuperFact(property, Handler) {
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
       return (($result = InterMap.get(result))) ?
-        Copy($result, true) : CopyObject(result, true)
+        $Copy($result, true) : CopyObject(result, true)
     }
   }[name]
 }

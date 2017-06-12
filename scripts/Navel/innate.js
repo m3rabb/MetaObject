@@ -30,6 +30,9 @@ _$Innate.addMethod(function isA(type) {
 }, BASIC_VALUE_METHOD)
 
 
+_$Innate.addSharedProperty("isVoid", false)
+
+
 
 _$Innate.addMethod(function copy(visited_asImmutable_, visited_) {
   const [asImmutable, visited] = (typeof visited_asImmutable_ === "boolean") ?
@@ -160,7 +163,6 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
 //
 // }, BASIC_VALUE_METHOD)
 
-_$Innate.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 // Warning!!! Consider complications of pulp reassignment paradox
 _$Innate.addMethod(function setImmutable(visited_inPlace_, visited_) {
@@ -359,6 +361,10 @@ _$Innate.addMethod(function _detectedInnerError(value) {
 
 // Must we delete the _captureChanges and _captureOverwrite when copying or
 // otherwise done using them???
+
+
+// _$Innate._setImmutable()
+
 
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890

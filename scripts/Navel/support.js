@@ -364,9 +364,7 @@ function NewBlanker(rootBlanker, maker_) {
   const root$root$inner = rootBlanker.$root$inner
   const root$root$outer = rootBlanker.$root$outer
   const root$supers     = root$root$inner[$SUPERS]
-
-  const blankerMaker    = maker_        || rootBlanker.maker
-
+  const blankerMaker    = maker_ || rootBlanker.maker
   const $root$inner     = SpawnFrom(root$root$inner)
   const $root$outer     = SpawnFrom(root$root$outer)
   // Note: The blanker function must be unnamed in order for the debugger to

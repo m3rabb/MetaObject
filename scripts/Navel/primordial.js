@@ -38,6 +38,7 @@ _$Primordial.addMethod(function isImmutable() {
 }, BASIC_VALUE_IMMEDIATE)
 
 
+// _$Primordial._setImmutable()
 
 // $Base
 //

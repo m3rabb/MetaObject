@@ -86,6 +86,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 
 
 
+// _Thing._setImmutable()
 
 
 
