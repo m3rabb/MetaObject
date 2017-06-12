@@ -117,16 +117,18 @@ _Type.addAlias("_setImmutable", "_basicSetImmutable"  )
 _Type.addMethod(function newAsFact(...args) {
   // Note: same as implementation in TypeOuter and TypeInner
   const  instance = this.$pulp.new(...args)
-  const _instance = InterMap.get(instance)[$PULP]
-  if (_instance.id == null) { _instance._setImmutable() }
+  const $instance = InterMap.get(instance)
+  const _instance = $instance[$PULP]
+  if (_instance.id == null) { $instance._setImmutable.call(_instance) }
   return instance
 })
 
 _Type.addMethod(function newAsFact_(...args) {
   // Note: same as implementation in TypeOuter and TypeInner
   const  instance = this.$pulp.new_(...args)
-  const _instance = InterMap.get(instance)[$PULP]
-  if (_instance.id == null) { _instance._setImmutable() }
+  const $instance = InterMap.get(instance)
+  const _instance = $instance[$PULP]
+  if (_instance.id == null) { $instance._setImmutable.call(_instance) }
   return instance
 })
 

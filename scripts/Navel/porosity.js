@@ -32,7 +32,6 @@ const Impermeable     = new Outer()
 
 Outer_prototype.set = function set($outer, property, value, $rind) {
   return DirectAssignmentFromOutsideError($rind) || false
-  // return InterMap.get($rind)._externalWrite(property, value) || false
 }
 
 
@@ -132,8 +131,9 @@ TypeOuter_prototype.apply = function newAsFact(func, receiver, args) {
 
   // This is the same code as in newAsFact(...args)
   const  instance = this.$pulp.new(...args)
-  const _instance = InterMap.get(instance)[$PULP]
-  if (_instance.id == null) { _instance._setImmutable() }
+  const $instance = InterMap.get(instance)
+  const _instance = $instance[$PULP]
+  if (_instance.id == null) { $instance._setImmutable.call(_instance) }
   return instance
 }
 
@@ -350,8 +350,9 @@ TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
 
   // This is the same code as in newAsFact(...args)
   const  instance = this.$pulp.new(...args)
-  const _instance = InterMap.get(instance)[$PULP]
-  if (_instance.id == null) { _instance._setImmutable() }
+  const $instance = InterMap.get(instance)
+  const _instance = $instance[$PULP]
+  if (_instance.id == null) { $instance._setImmutable.call(_instance) }
   return instance
 }
 
@@ -360,8 +361,6 @@ TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
 
 
 
-
-// REVISIT!!!
 function SetSuperPropertyFor($inner, property) {
   const ancestors = $inner.type.ancestry
   const supers    = $inner[$SUPERS]

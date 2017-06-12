@@ -191,7 +191,7 @@ function SetImmutableValue(value, inPlace, visited) {
   const $value = InterMap.get(value)
   if (inPlace) {
     if ($value) {
-      $value[$PULP]._setImmutable(true, visited)
+      $value._setImmutable.call($value[$PULP], true, visited)
       return $value[$RIND]
     }
     return SetImmutableObject(value, true, visited)

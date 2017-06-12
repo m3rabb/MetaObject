@@ -233,7 +233,8 @@ _Type.addMethod(function _deleteSharedProperty(property) {
 
 _Type.addMethod(function _propagateIntoSubtypes(property) {
   this.subtypes.forEach(subtype => {
-    InterMap.get(subtype)[$PULP]._inheritProperty(property)
+    var $subtype = InterMap.get(subtype)
+    $subtype._inheritProperty.call($subtype[$PULP], property)
   })
 })
 

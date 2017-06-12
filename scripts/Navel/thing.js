@@ -64,8 +64,8 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 
       $value = InterMap.get(value)
       if (inPlace) {
-        if ($value) { $value[$PULP]._setImmutable(true, visited) }
-        else        { SetImmutableObject(value, true, visited)   }
+        if ($value) { $value._setImmutable.call($value[$PULP], true, visited) }
+        else        { SetImmutableObject(value, true, visited)                }
       }
       else {
         $inner[property] = ($value) ?
