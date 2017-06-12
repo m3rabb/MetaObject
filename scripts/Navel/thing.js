@@ -20,7 +20,7 @@ _Thing.addSetter("_setId", function id(newId_) {
 })
 
 
-_Thing.addSetter("name", "_setName")
+_Thing.addSetter("_setName", "name")
 
 _Thing.addMethod(function _init(spec_) {
   if (spec_) {
