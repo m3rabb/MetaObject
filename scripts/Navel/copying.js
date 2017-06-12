@@ -7,8 +7,6 @@ const ReliableObjectCopy = function copy(visited_asImmutable_, visited_) {
 
 // Note: The CopyObject is only called AFTER confirming that the source
 //       is NOT a fact!!! ***
-
-
 function CopyObject(source, asImmutable, visited = new WeakMap()) {
   var target, next, value, property, properties
 

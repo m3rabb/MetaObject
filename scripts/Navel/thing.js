@@ -2,26 +2,26 @@
 
 _Thing.addMethod(_UnknownProperty)
 
-_Thing.forAddAssigner("id", function _setId(newId_) {
+_Thing.addSetter("_setId", function id(newId_) {
   const existingId = this.id
-  var   newId
+  var   newId, priorIds
 
   if (newId_ === undefined) {
-    if (existingId !== undefined) { return existingId }
+    if (existingId != null) { return existingId }
     newId = this.oid
   }
   else if (newId_ === existingId) { return existingId }
   else { newId = newId_ }
 
-  if (existingId !== undefined) {
-    const priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
-    priorIds[priorIds.length] = existingId
+  if (existingId != null) {
+    priorIds = this[$PRIOR_IDS] || []
+    this[$PRIOR_IDS] = [...priorIds, existingId]
   }
   return newId
 })
 
 
-_Thing.forAddAssigner("name", "_setName")
+_Thing.addSetter("name", "_setName")
 
 _Thing.addMethod(function _init(spec_) {
   if (spec_) {

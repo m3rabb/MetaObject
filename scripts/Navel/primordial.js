@@ -18,9 +18,18 @@ _$Primordial.addMethod(function _super() {
 
 
 
-_$Primordial.addMethod(function is(something) {
-  return (this === something) || (this[$RIND] === something)
+_$Primordial.addMethod(function is(value) {
+  return (this === value) || (this[$RIND] === value)
 }, BASIC_VALUE_METHOD)
+
+
+_$Primordial.addMethod(function isPermeable() {
+  return (this[$PERMEABILITY] === Permeable)
+}, BASIC_VALUE_IMMEDIATE)
+
+_$Primordial.addMethod(function isImmutable() {
+  return this[IS_IMMUTABLE] ? true : false
+}, BASIC_VALUE_IMMEDIATE)
 
 
 
@@ -28,7 +37,7 @@ _$Primordial.addMethod(function is(something) {
 //
 //   $Primordial
 //      $SECRET = $inner
-//      NoSuchPropertyError
+//      _unknownProperty
 //
 //      $
 //      _super

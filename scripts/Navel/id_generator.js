@@ -17,13 +17,21 @@ function RandomInt(max_min_, max__) {
 }
 
 function NewUniqueId(
-  prefix    = "",
-  seedDate  = Date.now(),
-  seedValue = RandomInt(RANDOM_MAX)
+  prefix      = "",
+  seedDate    = Date.now(),
+  seedValue   = RandomInt(RANDOM_MAX),
+  longVersion = false
 ) {
   var dateId    = seedDate.toString(36)
   var randId    = seedValue.toString(36)
-  var dateZeros = ZERO_PADDING.slice(0, MAX_DATE_LENGTH - dateId.length)
-  var randZeros = ZERO_PADDING.slice(0, MAX_RAND_LENGTH - randId.length)
-  return `${prefix}${dateZeros}${dateId}_${randZeros}${randId}`
+
+  if (longVersion) {
+    var dateZeros = ZERO_PADDING.slice(0, MAX_DATE_LENGTH - dateId.length)
+    var randZeros = ZERO_PADDING.slice(0, MAX_RAND_LENGTH - randId.length)
+    return `${prefix}${dateZeros}${dateId}_${randZeros}${randId}`
+  }
+  else {
+    var value = (seedDate * seedValue).toString(36).slice(0, 10)
+    return `${prefix}${value.slice(0,5)}_${value.slice(5,10)}`
+  }
 }

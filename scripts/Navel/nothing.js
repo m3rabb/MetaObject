@@ -5,9 +5,8 @@ const Nothing = Type({
   define    : _UnknownProperty // { _unknownProperty : _UnknownProperty }
 })
 
-
 const $Nothing = InterMap.get(Nothing)
-const $Void    = new $Nothing._blanker()
+const $Void    = new $Nothing._blanker(Impermeable)
 const _Void    = $Void[$PULP]
 const Void     = $Void[$RIND]
 

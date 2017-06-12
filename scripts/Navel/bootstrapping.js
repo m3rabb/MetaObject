@@ -12,13 +12,14 @@
 
 // Should this be made immutable???
 const $BaseBlanker = {
-  __proto__   : null,
   $root$outer : {
     __proto__      : null,
+    constructor    : NewVacuousConstructor("$Something$outer"),
     [$IMMEDIATES]  : EMPTY_OBJECT,
   },
   $root$inner : {
     __proto__      : null,
+    constructor    : NewVacuousConstructor("$Something$inner"),
     [$IMMEDIATES]  : EMPTY_OBJECT,
     [$SET_LOADERS] : EMPTY_OBJECT,
     [$SUPERS]      : {
@@ -31,32 +32,33 @@ const $BaseBlanker = {
 
 const $PrimordialBlanker = NewBlanker($BaseBlanker)
 const   $InateBlanker    = NewBlanker($PrimordialBlanker)
-const     TypeBlanker    = NewBlanker($InateBlanker, null, _NewTypeInnerBlanker)
+const     TypeBlanker    = NewBlanker($InateBlanker, _NewTypeInnerBlanker)
 
 
 
 const Type$root$inner = TypeBlanker.$root$inner
 
-// Temporary bootstrapping #_init
-Type$root$inner._init = function _bootstrap(iid, blanker_) {
-  DefineProperty(this, "iid", InvisibleConfiguration)
-  this.iid         = iid
-  this._properties = SpawnFrom(null)
-  this._blanker    = blanker_ || NewBlanker($InateBlanker)
-  this.supertypes  = (this[$OUTER].supertypes = EMPTY_ARRAY)
-  this.ancestry    = (iid) ? ThingAncestry : EMPTY_ARRAY
-  this.subtypes    = new Set()
-  return this[$PULP]
+
+function BootstrapType(name, blanker_) {
+  const $type            = new TypeBlanker(Impermeable, [name])
+  const $outer           = $type[$OUTER]
+  const isImplementation = (name[0] === "$")
+
+  $type._properties = SpawnFrom(null)
+  $type._blanker    = blanker_ || NewBlanker($InateBlanker)
+  $type.supertypes  = ($outer.supertypes = EMPTY_ARRAY)
+  $type.ancestry    = isImplementation ? EMPTY_ARRAY : ThingAncestry
+  $type.subtypes    = new Set()
+  return $type[$PULP]
 }
 
 const ThingAncestry = []
 
-const _$Primordial =
-                new TypeBlanker(["$Primordial"])._init(NaN, $PrimordialBlanker)
-const _$Inate = new TypeBlanker(["$Inate"])     ._init(0  , $InateBlanker     )
-const _Thing  = new TypeBlanker(["Thing"] )     ._init(1  , null              )
-const _Type   = new TypeBlanker(["Type"]  )     ._init(2  , TypeBlanker       )
-const _Method = new TypeBlanker(["Method"])     ._init(3  , null              )
+const _$Primordial = BootstrapType("$Primordial", $PrimordialBlanker)
+const _$Inate      = BootstrapType("$Inate"     , $InateBlanker     )
+const _Thing       = BootstrapType("Thing"      , null              )
+const _Type        = BootstrapType("Type"       , TypeBlanker       )
+const _Method      = BootstrapType("Method"     , null              )
 
 const $Primordial = _$Primordial[$RIND]
 const $Inate      = _$Inate[$RIND]
@@ -76,6 +78,7 @@ const Method$root$inner      = _Method._blanker.$root$inner
 
 // Stubs for known properties
 $Primordial$root$inner[$MAIN_BARRIER]     = null
+$Primordial$root$inner[$PERMEABILITY]     = Impermeable
 // This secret is only known by inner objects
 $Primordial$root$inner[$SECRET]           = $INNER
 $Primordial$root$outer[$SECRET]           = null
@@ -100,10 +103,10 @@ $Inate$root$inner._propagateIntoSubtypes  = ALWAYS_SELF
 _SetSharedProperty.call(_$Primordial, KNOWN_PROPERTIES, null , true)
 _SetSharedProperty.call(_$Primordial, IS_IMMUTABLE    , false, true)
 _SetSharedProperty.call(_$Primordial, "id"            , null , true)
-_SetSharedProperty.call(_$Primordial, $RIND           , null , true)
+// _SetSharedProperty.call(_$Primordial, $RIND           , null , true)
 
 
-// Perhaps remove these later
+// Perhaps remove these later???
 _SetSharedProperty.call(_$Inate, "_postInit"              , null, true)
 _SetSharedProperty.call(_$Inate, "_initFrom_"             , null, true)
 _SetSharedProperty.call(_$Inate, "_setPropertiesImmutable", null, true)
@@ -134,13 +137,13 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
       MarkFunc(handler, SET_LOADER_FUNC) : handler
   }
   else {
-    this.handler = MarkFunc(handler, KNOWN_FUNC)
-    const outer  = mode.outer(selector, handler, isPublic)
-    const inner  = mode.inner(selector, handler, isPublic)
-    inner.outer  = outer    // For access via Permeable outer
-    outer.method = inner.method = this[$RIND]
-    this.outer   = SetImmutableFunc(outer, WRAPPER_FUNC)
-    this.inner   = SetImmutableFunc(inner, WRAPPER_FUNC)
+    this.handler          = MarkFunc(handler, KNOWN_FUNC)
+    const outer           = mode.outer(selector, handler, isPublic)
+    const inner           = mode.inner(selector, handler, isPublic)
+    inner[$OUTER_WRAPPER] = outer    // For access via Permeable outer
+    outer.method          = inner.method = this[$RIND]
+    this._outer           = SetImmutableFunc(outer, WRAPPER_FUNC)
+    this._inner           = SetImmutableFunc(inner, WRAPPER_FUNC)
   }
 }
 
@@ -148,16 +151,18 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
 
 Type$root$inner.new = {
   new : function (...args) {
-    const $instance = new this._blanker(args)
-    const _instance  = $instance[$PULP]
-    _instance._init(...args)
+    const $instance = new this._blanker(Impermeable, args)
+    const _instance = $instance[$PULP]
+
+    $instance._init.apply(_instance, args)
     if ($instance._postInit) {
-      const result = _instance._postInit()[$RIND]
+      const result = $instance._postInit.call(_instance)
       if (result !== undefined && result !== _instance) { return result }
     }
     return $instance[$RIND]
   }
 }.new
+
 
 Type$root$inner._setSharedProperty = _SetSharedProperty
 
@@ -343,7 +348,7 @@ _Type.addMethod(function _addSetter(name_setter, property_setter_, mandatory) {
       if ((propertyName = property_setter_.name)) {
         if (setter) { return this._assignerSetterError() }
         loader = property_setter_
-        setter = AsLoaderSetter(loader, setterName)
+        setter = AsBasicSetter(propertyName, setterName)
       }
       else { setter = property_setter_ }
       break
@@ -436,8 +441,8 @@ _Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
     }
   }
   else {
-    const superBlanker = isThing ? $InateBlanker : $PrimordialBlanker
-    this._blanker    = new NewBlanker(superBlanker)
+    const parentBlanker = isThing ? $InateBlanker : $PrimordialBlanker
+    this._blanker    = new NewBlanker(parentBlanker)
     this._properties = SpawnFrom(null)
     this.subtypes    = SetImmutable(new Set())
   }
@@ -460,8 +465,8 @@ _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
 
 
 
-_Type.forAddAssigner("name", function setName(name) {
-  const properName = AsCapitalized(name)
+_Type.addSetter("setName", function name(newName) {
+  const properName = AsCapitalized(newName)
   const priorName = this.name
   if (properName === priorName) { return priorName }
 
@@ -477,17 +482,11 @@ _Type.forAddAssigner("name", function setName(name) {
   }
 
   this._setDisplayNames(properName)
-  this._disguisedFunc.name = properName
+  this._func.name = properName
   return properName
 })
 
 
-
-_Type.addMethod(function _initCoreIdentity(name) {
-  this._iidCount = 0
-  this.name      = name
-  this.addSharedProperty("type", this[$RIND])
-})
 
 //  spec
 //    name
@@ -514,22 +513,25 @@ _Type.addMethod(function _init(spec_name, context_) {
   methods     = spec_name.methods || spec_name.instanceMethods
   definitions = spec_name.define
 
-  this.context  = context_ || spec_name.context || null
+  this.context   = context_ || spec_name.context || null
+  this._iidCount = 0
 
   this.setSupertypes(supertypes)
-  this._initCoreIdentity(name)
+  this.setName(name)
+  this.addSharedProperty("type", this[$RIND])
 
   declared    && this.addDeclarations(declared)
   shared      && this.addSharedProperties(shared)
   methods     && this.addMethods(methods)
   definitions && this.define(definitions)
 })
-// blanker.$root$outer.constructor = this._disguisedFunc
+// blanker.$root$outer.constructor = this._func
 // blanker.$root$inner.constructor = NewVacuousConstructor()
 // this._properties.constructor    = CONSTRUCTOR
 
 
 _Type.addDeclaration("_blanker")
+_Type.addDeclaration($OUTER_WRAPPER)
 
 
 _Type       ._init(       "Type"                          )
@@ -539,9 +541,9 @@ _Thing      ._init({name: "Thing"      , supertypes: null})
 _Method     ._init(       "Method"                        )
 
 
-_$Primordial._setDisplayNames("$$Outer", "$$Inner") // Helps with debugging!!!
-_$Inate     ._setDisplayNames( "$Outer",  "$Inner") // Helps with debugging!!!
-
+// Helps with debugging!!!
+_$Primordial._setDisplayNames("$Inate$Outer", "$Inate$Inner")
+_$Inate     ._setDisplayNames( "$Outer",  "$Inner")
 
 
 

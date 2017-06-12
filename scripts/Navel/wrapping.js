@@ -50,7 +50,7 @@ function AsOuterFact(property, Handler) {
   return {
     [name] : function (...args) {
       const $inner = InterMap.get(this)
-      var   $pulp, barrier, result, $target, $result
+      var   $pulp, barrier, result, $target, $result, outer
 
       if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
         if (barrier.$target) {
@@ -75,11 +75,18 @@ function AsOuterFact(property, Handler) {
         if (result === undefined || result === $pulp) { return $inner[$RIND] }
       }
 
-      // if (result === $inner[$RIND])                   { return result }
-      if (typeof result !== "object" || result === null) { return result }
-      if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-      return (($result = InterMap.get(result))) ?
-        $Copy($result, true)[$RIND] : CopyObject(result, true)
+      switch (typeof result) {
+        default         :                                  return result
+        case "function" :
+          outer = result[$OUTER_WRAPPER]
+          return (outer && InterMap.get(outer) === WRAPPER_FUNC) ?
+                                                          outer : result
+        case "object"   : if (result === null)           { return result }
+          // if (result === $inner[$RIND])               { return result }
+          if (result[IS_IMMUTABLE] || result.id != null) { return result }
+          return (($result = InterMap.get(result))) ?
+            $Copy($result, true)[$RIND] : CopyObject(result, true)
+      }
     }
   }[name]
 }
@@ -144,7 +151,7 @@ function AsOuterLazyLoader(Property, Handler) {
   return {
     [name] : function () {
       const $inner = InterMap.get(this)
-      var   $pulp, barrier, result, $target, $result
+      var   $pulp, barrier, result, $target, $result, outer
 
       if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
         if (barrier.$target) {
@@ -163,16 +170,27 @@ function AsOuterLazyLoader(Property, Handler) {
           return $target[$RIND]
         }
 
-        // if (result === $inner[$RIND])                   { return result }
-        if (typeof result !== "object" || result === null) { return result }
-        if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-        return (($result = InterMap.get(result))) ?
-          Copy($result, true)[$RIND] : CopyObject(result, true)
+        // The receiver is immutable so the calculated value cannot be
+        // stored and should simply be returned.
+        switch (typeof result) {
+          default         :                                  return result
+          case "function" :
+            outer = result[$OUTER_WRAPPER]
+            return (outer && InterMap.get(outer) === WRAPPER_FUNC) ?
+                                                            outer : result
+          case "object"   : if (result === null)           { return result }
+            // if (result === $inner[$RIND])               { return result }
+            if (result[IS_IMMUTABLE] || result.id != null) { return result }
+            return (($result = InterMap.get(result))) ?
+              $Copy($result, true)[$RIND] : CopyObject(result, true)
+        }
       }
 
       $pulp = $inner[$PULP]
       DefineProperty($inner, Property, InvisibleConfiguration)
-      return ($pulp[Property] = Handler.call($pulp)) // <<----------
+      result = Handler.call($pulp) // <<----------
+      $pulp[Property] = result
+      return $inner[$OUTER][Property]
     }
   }[name]
 }
@@ -182,11 +200,11 @@ function AsInnerFact(property, Handler) {
   const name = `${AsName(property)}_$inner$fact`
   return {
     [name] : function (...args) {
-      // this is $pulp
-      const result = Handler.apply(this, args) // <<----------
+      const $pulp = this
+      const result = Handler.apply($pulp, args) // <<----------
       var   $result
 
-      if (result === undefined || result === this)       { return result }
+      if (result === undefined || result === $pulp)      { return $pulp  }
       // if (result === $inner[$RIND])                   { return result }
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
@@ -200,9 +218,9 @@ function AsInnerValue(property, Handler) {
   const name = `${AsName(property)}_$inner$value`
   return {
     [name] : function (...args) {
-      // this is $pulp
-      const result = Handler.apply(this, args) // <<----------
-      return (result === undefined) ? this : result
+      const $pulp = this
+      const result = Handler.apply($pulp, args) // <<----------
+      return (result === undefined) ? $pulp : result
     }
   }[name]
 }
@@ -212,9 +230,12 @@ function AsInnerLazyLoader(Property, Handler) {
   const name = `${AsName(Property)}_$inner$lazy`
   return {
     [name] : function () {
-      // this is $pulp
-      DefineProperty(this[$INNER], Property, InvisibleConfiguration)
-      return (this[Property] = Handler.call(this)) // <<----------
+      const $pulp  = this
+      const $inner = $pulp[$INNER]
+
+      DefineProperty($inner, Property, InvisibleConfiguration)
+      $pulp[Property] = Handler.call($pulp) // <<----------
+      return $inner[Property]
     }
   }[name]
 }
@@ -230,7 +251,7 @@ function AsSuperFact(property, Handler) {
       const result = Handler.apply($pulp, args) // <<----------
       var   $result
 
-      if (result === undefined || result === $pulp)      { return result }
+      if (result === undefined || result === $pulp)      { return $pulp  }
       // if (result === $inner[$RIND])                   { return result }
       if (typeof result !== "object" || result === null) { return result }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result }
@@ -247,6 +268,7 @@ function AsSuperValue(property, Handler) {
       // this is $super. Need to use $pulp instead
       const $pulp  = this[$PULP]
       const result = Handler.apply($pulp, args) // <<----------
+
       return (result === undefined) ? $pulp : result
     }
   }[name]
@@ -272,7 +294,8 @@ function AsSuperLazyLoader(Property, Handler) {
       const $pulp  = $inner[$PULP]
 
       DefineProperty($inner, Property, InvisibleConfiguration)
-      return ($pulp[Property] = Handler.call($pulp)) // <<----------
+      $pulp[Property] = Handler.call($pulp) // <<----------
+      return $inner[Property]
     }
   }[name]
 }

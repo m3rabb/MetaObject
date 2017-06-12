@@ -52,23 +52,26 @@ Impermeable.get = function get($outer, property, $rind) {
   const value = $outer[property]
   if (value !== undefined) { return value }
 
-  const outerHandler = $outer[$IMMEDIATES][property]
-  if (outerHandler) { return outerHandler.call($rind) }
+  const methodOuterWrapper = $outer[$IMMEDIATES][property]
+  if (methodOuterWrapper) { return methodOuterWrapper.call($rind) }
 
   if (property[0] === "_") {
     return PrivateAccessFromOutsideError($rind, property)
   }
 
-  const $inner = InterMap.get($rind)
+  const $inner           = InterMap.get($rind)
+  const _unknownProperty = $inner._unknownProperty
   return $inner._unknownProperty ?
-    $inner[$PULP]._unknownProperty(property) :
-    _UnknownProperty.call($rind, property)
+    _unknownProperty.call($inner[$PULP], property) :
+    _UnknownProperty.call($rind        , property)
 }
 
+// REVISIT!!!
 Impermeable.has = function has($outer, property) {
   // const firstChar = (typeof property === "symbol") ?
   //   property.toString()[7] : property[0]
-  switch (property[0]) {
+
+    switch (property[0]) {
     case "_"       :
       return PrivateAccessFromOutsideError($inner[$RIND], property) || false
     // case undefined : if (!(property in VISIBLE_SYMBOLS)) { return false }
@@ -91,18 +94,20 @@ Permeable.get = function get($outer, property, $rind) {
 
   switch (typeof value) {
     default          : return value
-    case "function"  : return value.outer || value
+    case "function"  : return value[$OUTER_WRAPPER] || value
     case "undefined" : break
   }
 
   const $method = $inner[$IMMEDIATES][property]
-  if ($method) { return $method.outer.call($rind) }
+  if ($method) { return $method._outer.call($rind) }
 
+  const _unknownProperty = $inner._unknownProperty
   return $inner._unknownProperty ?
-    $inner[$PULP]._unknownProperty(property) :
-    _UnknownProperty.call($rind, property)
+    _unknownProperty.call($inner[$PULP], property) :
+    _UnknownProperty.call($rind        , property)
 }
 
+// REVISIT!!!
 Permeable.has = function has($outer, property) {
   const $inner = InterMap.get($outer[$RIND])
   return (property in $inner)
@@ -119,11 +124,11 @@ function TypeOuter($pulp, $outer, permeability) {
 const TypeOuter_prototype = SpawnFrom(Outer_prototype)
 TypeOuter.prototype = TypeOuter_prototype
 
-TypeOuter_prototype.get = function get(disguisedFunc, property, $rind) {
+TypeOuter_prototype.get = function get(func, property, $rind) {
   return this.permeability.get(this.$outer, property, $rind)
 }
 
-TypeOuter_prototype.has = function has(disguisedFunc, property) {
+TypeOuter_prototype.has = function has(func, property) {
   return this.permeability.has(this.$outer, property)
 }
 
@@ -153,7 +158,7 @@ Mutability.get = function get($inner, property, $pulp) {
   if (value !== undefined) { return value }
 
   const $method = $inner[$IMMEDIATES][property]
-  if ($method) { return $method.inner.call($pulp) }
+  if ($method) { return $method._inner.call($pulp) }
 
   return $inner._unknownProperty ?
     $pulp._unknownProperty(property) :
@@ -172,12 +177,12 @@ Mutability.set = function set($inner, property, value, $pulp) {
     else { value    = onSetLoader.call($pulp, value) } // handler
   }
 
-  if (value === $inner[property] && HasOwnProperty.call($inner, property)) {
+  const existing = $inner[property]
+  if (value === existing && HasOwnProperty.call($inner, property)) {
     return true
   }
 
-  const knownProperties = $inner[KNOWN_PROPERTIES]
-  if (knownProperties && !knownProperties.includes(property)) {
+  if (existing == null && $inner[KNOWN_PROPERTIES]) {
     delete $inner[KNOWN_PROPERTIES]
     delete $inner[$OUTER][KNOWN_PROPERTIES]
   }
@@ -227,11 +232,12 @@ ImmutableInner_prototype.set = function set($inner, property, value, $pulp) {
       // The loader might cause a write, invalidating the target $inner.
       value       = onSetLoader.call($pulp, value)
       $target     = $pulp[$INNER]         // Re-get the (possibly new) $inner
-      isImmutable = $target[IS_IMMUTABLE] // See if it's a new copy
+      isImmutable = $target[IS_IMMUTABLE] // See if loader caused a new copy
     }
   }
 
-  if (value === $target[property]) {
+  const existing = $target[property]
+  if (value === existing) {
     if (isImmutable || HasOwnProperty.call($target, property)) { return true }
   }
 
@@ -247,8 +253,7 @@ ImmutableInner_prototype.set = function set($inner, property, value, $pulp) {
   // If was going to assigning property to self, instead assign it to the copy
   if (value === $pulp || value === $inner[$RIND]) { value = $target[$RIND] }
 
-  const knownProperties = $target[KNOWN_PROPERTIES]
-  if (knownProperties && !knownProperties.includes(property)) {
+  if (existing == null && $target[KNOWN_PROPERTIES]) {
     delete $target[KNOWN_PROPERTIES]
     delete $target[$OUTER][KNOWN_PROPERTIES]
   }
@@ -258,7 +263,7 @@ ImmutableInner_prototype.set = function set($inner, property, value, $pulp) {
 
 
 ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp) {
-  var onSetLoader, $target
+  var onSetLoader, permeability, $target
 
   onSetLoader = $inner[$SET_LOADERS][property]
 
@@ -267,8 +272,16 @@ ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, proper
   }
 
   switch (property) {
-    case _DELETE_IMMUTABILITY   : $target = $Copy($inner, false); break
-    case _DELETE_ALL_PROPERTIES : $target = $inner[$BLANKER]()  ; break
+    case _DELETE_IMMUTABILITY   :
+      $target = $Copy($inner, false)
+      break
+
+    case _DELETE_ALL_PROPERTIES :
+      permeability = $inner[$PERMEABILITY]
+      $target = $inner[$BLANKER](permeability)
+      if (permeability === Permeable) { $target[$PERMEABILITY] = Permeable }
+      break
+
     default :
       if (!HasOwnProperty.call($inner, property)) { return true }
       $target = $Copy($inner, false, undefined, property)
@@ -295,7 +308,7 @@ ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, property
   if (value !== undefined) { return value }
 
   const $method = $target[$IMMEDIATES][property]
-  if ($method) { return $method.inner.call($target[$PULP]) }
+  if ($method) { return $method._inner.call($target[$PULP]) }
 
   return $target._unknownProperty ?
     $target[$PULP]._unknownProperty(property) :
@@ -323,20 +336,20 @@ function TypeInner($target) {
 const TypeInner_prototype = TypeInner.prototype = SpawnFrom(MutableInner_prototype)
 
 
-TypeInner_prototype.get = function get(disguisedFunc, property, $pulp) {
+TypeInner_prototype.get = function get(func, property, $pulp) {
   // Note: Could reimplement it here is following call is too slow.
   return Mutability.get(this.$target, property, $pulp)
 }
 
-TypeInner_prototype.set = function set(disguisedFunc, property, value, $pulp) {
+TypeInner_prototype.set = function set(func, property, value, $pulp) {
   return Mutability.set(this.$target, property, value, $pulp)
 }
 
-TypeInner_prototype.has = function has(disguisedFunc, property, $pulp) {
+TypeInner_prototype.has = function has(func, property, $pulp) {
   return (property in this.$target)
 }
 
-TypeInner_prototype.deleteProperty = function deleteProperty(disguisedFunc, property, $pulp) {
+TypeInner_prototype.deleteProperty = function deleteProperty(func, property, $pulp) {
   return Mutability.deleteProperty(this.$target, property, $pulp)
 }
 
@@ -408,9 +421,10 @@ Super_prototype.get = function get($inner, property, $super) {
         return supers[$IMMEDIATES][property].call($inner[$PULP])
 
       case NO_SUPER  :
+        const _unknownProperty = $inner._unknownProperty
         return $inner._unknownProperty ?
-          $inner[$PULP]._unknownProperty(property) :
-          _UnknownProperty.call($inner[$RIND], property)
+          _unknownProperty.call($inner[$PULP], property) :
+          _UnknownProperty.call($rind        , property)
 
       default :
         return value

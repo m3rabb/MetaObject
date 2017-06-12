@@ -89,7 +89,6 @@ PropertyLoader.addMethod(function _loadPair(name, value, mode) {
     case "SHARED"        : return this._type.addSharedProperty    (name, value)
 
     case "METHOD"        : return this._type.addMethod            (name, value)
-
     case "IMMEDIATE"     : return this._type.addImmediate         (name, value)
     case "LAZY"          : return this._type.addLazyProperty      (name, value)
     case "SETTER"        : return this._type.addSetter            (name, value)

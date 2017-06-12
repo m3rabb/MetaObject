@@ -15,13 +15,6 @@
 //
 
 
-_$Inate.addSharedProperty("isPermeable", false)
-
-
-
-_$Inate.addMethod(function isImmutable() {
-  return this[IS_IMMUTABLE] ? true : false
-}, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function isMutable() {
   return !this[IS_IMMUTABLE]
@@ -89,13 +82,17 @@ _$Inate.addMethod(function asMutable() {
 }, BASIC_VALUE_IMMEDIATE)
 
 
+
 function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   var next, property, value, traversed, $value, barrier
-  const source  = $source[$RIND]
-  const $inner  = new $source[$BLANKER]()
-  const $outer  = $inner[$OUTER]
-  const $pulp   = $inner[$PULP]
-  const target  = $inner[$RIND]
+  const source       = $source[$RIND]
+  const permeability = $source[$PERMEABILITY]
+  const $inner       = new $source[$BLANKER](permeability)
+  const $outer       = $inner[$OUTER]
+  const $pulp        = $inner[$PULP]
+  const target       = $inner[$RIND]
+
+  if (permeability === Permeable) { $inner[$PERMEABILITY] = Permeable }
 
   visited.set(source, target) // to manage cyclic objects
 
@@ -136,7 +133,12 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
     }
   }
 
-  if ($inner._postInit) { $pulp._postInit() }
+  if ($inner._postInit) {
+    const result = $inner._postInit.call($pulp)
+    if (result !== undefined && result !== $pulp) {
+      return asImmutable ? result.asImmutable : result
+    }
+  }
 
   if (asImmutable) {
     barrier               = new ImmutableInner($inner)
@@ -192,24 +194,22 @@ _$Inate.addMethod(function hasOwn(propertyName) {
 
 _$Inate.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
 
-
-
-
 // _$Inate.addMethod(function _hasOwn(propertyName) {
 //   const properties = this[$KNOWN_PROPERTIES] || ResetKnownProperties(this)
 //   return (properties[propertyName] !== undefined)
 // }, BASIC_VALUE_METHOD)
 
 
-_$Inate.addLazyProperty(function basicId() {
-  return `${this.uid}.${this.type.formalName}`
-})
+_$Inate.addMethod(function basicId() {
+  const suffix = this.isPermeable ? "_" : ""
+  return `${this.uid}.${this.type.formalName}${suffix}`
+}, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function iid() {
   const $inner = this[$INNER]
 
   if ($inner[IS_IMMUTABLE]) {
-    // Will set the iid even on an immutable object!!!
+    // Will set the $inner iid even on an immutable object!!!
     return $inner.iid || ($inner.iid = InterMap.get(this.type)[$PULP]._nextIID)
   }
 
@@ -219,15 +219,24 @@ _$Inate.addMethod(function iid() {
 }, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function oid() {
-  return `${this.iid}.${this.type.formalName}`
-  // `${type.name}<${NewUniqueId()}>`
+  const suffix = this.isPermeable ? "_" : ""
+  return `${this.iid}.${this.type.formalName}${suffix}`
 }, BASIC_VALUE_IMMEDIATE)
 
 _$Inate.addMethod(function uid() {
-  const uid = this._hasOwn("guid") ? this.guid : `<${NewUniqueId()}>`
-  DefineProperty(this[$INNER], "uid", InvisibleConfiguration)
-  return (this.uid = uid)
+  const $inner = this[$INNER]
+
+  if ($inner[IS_IMMUTABLE]) {
+    // Will set the $inner uid even on an immutable object!!!
+    return $inner.uid ||
+      ($inner.uid = this._hasOwn("guid") ? this.guid : NewUniqueId())
+  }
+
+  const uid = this._hasOwn("guid") ? this.guid : NewUniqueId()
+  DefineProperty($inner, "uid", InvisibleConfiguration)
+  return ($inner[$OUTER].uid = $inner.uid = uid)
 }, BASIC_VALUE_IMMEDIATE)
+
 
 // uri
 
@@ -289,6 +298,7 @@ _$Inate.addMethod(function addOwnDeclaration(propertyName) {
 
 
 
+_$Inate.addMethod("_basicUnknownProperty", _UnknownProperty)
 
 
 _$Inate.addMethod(function _signalError(message) {

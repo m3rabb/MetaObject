@@ -31,22 +31,24 @@ const INSTANCEOF         = Symbol.hasInstance
 // private symbols for implementation usage, $ means non-ya-bizness!!!
 // Once everything is working, consider removing the names from the symbols
 // to discourage tampering!!!
-const $INNER             = Symbol("$inner")
-const $PULP              = Symbol("$pulp")
-const $OUTER             = Symbol("$outer")
-const $RIND              = Symbol("$rind")  // Consider simply using $ !!!
+const $INNER             = Symbol("$INNER")
+const $PULP              = Symbol("$PULP")
+const $OUTER             = Symbol("$OUTER")
+const $RIND              = Symbol("$RIND")  // Consider simply using $ !!!
 
-const $MAIN_BARRIER      = Symbol("$mainBarrier")
-const $COPY              = Symbol("$copy")
+const $MAIN_BARRIER      = Symbol("$MAIN_BARRIER")
+const $COPY              = Symbol("$COPY")
 //const $IID               = Symbol("$instanceId")
-const $PRIOR_IDS         = Symbol("$priorIds")
-const $SECRET            = Symbol("$secret")
+const $PRIOR_IDS         = Symbol("$PRIOR_IDS")
+const $SECRET            = Symbol("$SECRET")
+const $PERMEABILITY      = Symbol("$PERMEABILITY")
 
-const $IMMEDIATES        = Symbol("$immediates")
-const $BLANKER           = Symbol("$blanker")
-const $SUPERS            = Symbol("$supers")
-const $SUPER             = Symbol("$super")
-const $SET_LOADERS       = Symbol("$setLoaders")
+const $IMMEDIATES        = Symbol("$IMMEDIATES")
+const $BLANKER           = Symbol("$BLANKER")
+const $SUPERS            = Symbol("$SUPERS")
+const $SET_LOADERS       = Symbol("$SET_LOADERS")
+
+const $OUTER_WRAPPER     = Symbol("$OUTER_WRAPPER")
 
 
 // Sentinels

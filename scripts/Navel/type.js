@@ -3,49 +3,51 @@ _Type.addImmediate(function _nextIID() {
 })
 
 _Type.addLazyProperty(function id() {
-  return `${this.name},${this.oid}`
+  return `${this.formalName},${this.basicId}`
 })
 
 
-_Type.addLazyProperty(function formalName() {
+_Type.addImmediate(function formalName() {
   const context = this.context
   const prefix = context ? context.id + "@" : ""
   return `${prefix}${this.name}`
 })
 
 
+_Type.addMethod(function new_(...args) {
+  const $inner = this[$INNER]
+  var instance, $instance, $outer, instance_
 
-_Type.addMethod(function asPermeable() {
-  const type$inner   = this[$INNER]
-  const type$outer   = type$inner[$OUTER]
-  const blanker      = type$inner._blanker
+  if ($inner.new === $inner._basicNew) {
+    $instance = new this._blanker(Permeable, args)
+    _instance = $instance[$PULP]
 
-  const type$inner_  = SpawnFrom(type$inner)
-  const type$outer_  = SpawnFrom(type$outer)
-  const typeName_    = type$inner.name + "_"
-  const func_        = NewVacuousConstructor(typeName_)
-  const permeability = type$inner.isPermeable ? Permeable : Impermeable
+    $instance[$PERMEABILITY] = Permeable
 
-  const type$pulp_ = _PreInitType(func_, type$inner_, type$outer_, permeability)
+    $instance._init.apply(_instance, args)
+    if ($instance._postInit) {
+      const result = $instance._postInit.call(_instance)
+      if (result !== undefined && result !== _instance) { return result }
+    }
+    return $instance[$RIND]
+  }
 
-  type$inner_._blanker = NewBlanker(blanker, Permeable)
+  if (this === _Type) {
+    return this._signalError("Redefining new on Type is forbidden!!")
+  }
+  instance  = this.new(...args)
+  $instance = InterMap.get(instance)
+  $outer    = $instance[$OUTER]
+  instance_ = new Proxy($outer, Permeable)
 
-  type$pulp_._initCoreIdentity(name)
-  type$pulp_.addSharedProperty("isPermeable", true)
+  $instance[$PERMEABILITY] = Permeable
+  $instance[$RIND]         = instance_
+  $outer[$RIND]            = instance_
 
-  DefineProperty(type$inner, "asPermeable", InvisibleConfiguration)
-  return (this.asPermeable = type$inner_[$RIND])
-}, BASIC_VALUE_IMMEDIATE)
+  InterMap.set(instance_, $instance)
+  return instance_
 
-
-_Type.addMethod(function asImpermeable() {
-  const $inner       = this[$INNER]
-  const permeability = $inner._blanker.permeability
-  const $primary     = (permeability === Impermeable) ? $inner : RootOf($inner)
-
-  DefineProperty(primary, "asImpermeable", InvisibleConfiguration)
-  return ($primary[$PULP].asImpermeable = $primary[$RIND])
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 
 
@@ -105,24 +107,24 @@ _Type.addMethod(function addDeclarations(propertyListing) {
   while (next--) { this._setSharedProperty(properties[next], null, true) }
 })
 
-
-_Type.addAlias("declare"     , "addDeclarations")
-_Type.addAlias("basicNew"    , "new")
-_Type.addAlias("removeMethod", "removeSharedProperty")
-// _Type.addAlias("_setImmutable", "_basicSetImmutable")
-
-
-_Type.addMethod(function _setImmutable() {
-  const new$pulp = this._basicSetImmutable()
-  InterMap.set(new$pulp, TYPE_PULP)
-  return new$pulp
-}, BASIC_SELF_METHOD)
+_Type.addAlias("_basicNew"    , "new"                 )
+_Type.addAlias("declare"      , "addDeclarations"     )
+_Type.addAlias("removeMethod" , "removeSharedProperty")
+_Type.addAlias("_setImmutable", "_basicSetImmutable"  )
 
 
 
 _Type.addMethod(function newAsFact(...args) {
   // Note: same as implementation in TypeOuter and TypeInner
   const  instance = this.$pulp.new(...args)
+  const _instance = InterMap.get(instance)[$PULP]
+  if (_instance.id == null) { _instance._setImmutable() }
+  return instance
+})
+
+_Type.addMethod(function newAsFact_(...args) {
+  // Note: same as implementation in TypeOuter and TypeInner
+  const  instance = this.$pulp.new_(...args)
   const _instance = InterMap.get(instance)[$PULP]
   if (_instance.id == null) { _instance._setImmutable() }
   return instance

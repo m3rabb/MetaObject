@@ -7,7 +7,7 @@ class NamedFunctionMaker {
   }
 
   make (name_vars, func_funcSource) {
-    let Closure = Object.create(this.externalVars)
+    const Closure = Object.create(this.externalVars)
 
     if (typeof name_vars === "string") {
       Closure.$$$$$ = name_vars
@@ -17,31 +17,31 @@ class NamedFunctionMaker {
       varNames.forEach(next => Closure[next] = name_vars[next])
     }
 
-    let source      = (typeof func_funcSource === "string") ?
+    const source      = (typeof func_funcSource === "string") ?
       func_funcSource : func_funcSource.toString()
-    let funcBody    = source.match(FUNC_MATCHER)[1]
-    let identifiers = funcBody.match(IDENTIFIER_MATCHER)
-    let externals   = {}
+    const funcBody    = source.match(FUNC_MATCHER)[1]
+    const identifiers = funcBody.match(IDENTIFIER_MATCHER)
+    const externals   = {}
 
     identifiers.forEach(word => {
       if (EXTERNAL_MATCHER.test(word)) { externals[word] = word }
     })
 
-    let varNames = Object.keys(externals).sort()
-    let newName  = Closure.$$$$$
+    const varNames = Object.keys(externals).sort()
+    var   newName  = Closure.$$$$$
 
     if (typeof newName === "symbol") {
       newName = newName.toString().match(/\((.*)\)/)[1]
     }
 
-    let newSource = source.replace(/\$\$\$\$\$/g, newName)
-    let makerBody =
+    const newSource = source.replace(/\$\$\$\$\$/g, newName)
+    const makerBody =
 `return function Maker(${varNames}) {
   return ${newSource}
 }`
-    let values    = varNames.map(name => Closure[name])
-    let maker     = new Function(makerBody)()
-    
+    const values    = varNames.map(name => Closure[name])
+    const maker     = new Function(makerBody)()
+
     return maker(...values)
   }
 }
