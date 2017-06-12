@@ -15,6 +15,11 @@ _Type.addImmediate(function formalName() {
 })
 
 
+_Type.addMethod(function toString() {
+  return this.formalName
+}, VALUE_METHOD)
+
+
 _Type.addMethod(function new_(...args) {
   const $inner = this[$INNER]
   var instance, $instance, _postInit, $outer, instance_
@@ -56,6 +61,33 @@ _Type.addMethod(function new_(...args) {
 
 
 
+_Type.addMethod(function methodAncestryListing(selector) {
+  const ancestry = this.methodAncestry(selector)
+  return ancestry.map(type => type.name).join(" ")
+}, VALUE_METHOD)
+
+_Type.addMethod(function methodsListing() {
+  return this.methods.map(method => method.selector).join(" ")
+}, VALUE_IMMEDIATE)
+
+_Type.addMethod(function definedMethodsListing() {
+  return this.definedMethods.map(method => method.selector).join(" ")
+}, VALUE_IMMEDIATE)
+
+
+
+_Type.addMethod(function definesMethod(selector) {
+  const value = this._properties[selector]
+  return (value && value.type === Method)
+}, VALUE_METHOD)
+
+
+_Type.addMethod(function methodAncestry(selector) {
+  return SetImmutable(
+    this.ancestry.filter(type => type.definesMethod(selector)))
+}, VALUE_METHOD)
+
+
 
 _Type.addMethod(function methodAt(selector) {
   const $root$inner = this._blanker.$root$inner
@@ -64,9 +96,39 @@ _Type.addMethod(function methodAt(selector) {
   if ($method) { return ($method.mode === SET_LOADER) ? null : $method[$RIND] }
 
   const value = $root$inner[selector]
-  return (typeof value === "function" && InterMap.get(value)) ?
+  return (typeof value === "function" && InterMap.get(value) === WRAPPER_FUNC) ?
     (value.method || null) : null
 })
+
+
+_Type.addImmediate(function methods() {
+  const $root$inner = this._blanker.$root$inner
+  const methods     = []
+
+  for (var property in $root$inner) {
+    var value  = $root$inner[property]
+    var method =
+      (typeof value === "function" && InterMap.get(value) === WRAPPER_FUNC) ?
+        (value.method || null) : null
+    if (method) { methods.push(method) }
+  }
+  methods.sort((a, b) => AsName(a.selector).localeCompare(AsName(b.selector)))
+  return SetImmutable(methods)
+})
+
+_Type.addImmediate(function definedMethods() {
+  const properties = this._properties
+  const methods    = []
+
+  for (var property in properties) {
+    var value = properties[property]
+    if (value && value.type === Method) { methods.push(value) }
+  }
+  methods.sort((a, b) => AsName(a.selector).localeCompare(AsName(b.selector)))
+  return SetImmutable(methods)
+})
+
+
 
 
 _Type.addMethod(function addSupertype(type) {
