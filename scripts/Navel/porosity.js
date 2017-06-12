@@ -271,8 +271,12 @@ Immutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
 
     case _DELETE_ALL_PROPERTIES :
       permeability = $inner[$PERMEABILITY]
-      $target = $inner[$BLANKER](permeability)
-      if (permeability === Permeable) { $target[$PERMEABILITY] = Permeable }
+      $target      = $inner[$BLANKER](permeability)
+
+      if (permeability === Permeable) {
+        $target[$OUTER].$INNER = $target
+        $target[$PERMEABILITY] = Permeable
+      }
       break
 
     default :

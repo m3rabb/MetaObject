@@ -92,7 +92,10 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   const $pulp        = $inner[$PULP]
   const target       = $inner[$RIND]
 
-  if (permeability === Permeable) { $inner[$PERMEABILITY] = Permeable }
+  if (permeability === Permeable) {
+    $outer.$INNER         = $inner
+    $inner[$PERMEABILITY] = Permeable
+  }
 
   visited.set(source, target) // to manage cyclic objects
 
@@ -174,7 +177,15 @@ _$Inate.addMethod(function beImmutable() {
 
 
 _$Inate.addMethod(function _newBlank() {
-  return new this[$BLANKER]()[$RIND]
+  const $inner       = this[$INNER]
+  const permeability = $inner[$PERMEABILITY]
+  const $instance    = new $inner[$BLANKER](permeability)
+
+  if (permeability === Permeable) {
+    $instance[$OUTER].$INNER = $instance
+    $instance[$PERMEABILITY] = Permeable
+  }
+  return $instance[$RIND]
 }, BASIC_VALUE_METHOD)
 
 
@@ -205,36 +216,34 @@ _$Inate.addMethod(function basicId() {
   return `${this.uid}.${this.type.formalName}${suffix}`
 }, BASIC_VALUE_IMMEDIATE)
 
-_$Inate.addMethod(function iid() {
-  const $inner = this[$INNER]
-
-  if ($inner[IS_IMMUTABLE]) {
-    // Will set the $inner iid even on an immutable object!!!
-    return $inner.iid || ($inner.iid = InterMap.get(this.type)[$PULP]._nextIID)
-  }
-
-  const iid = InterMap.get(this.type)[$PULP]._nextIID
-  DefineProperty($inner, "iid", InvisibleConfiguration)
-  return ($inner[$OUTER].iid = $inner.iid = iid)
-}, BASIC_VALUE_IMMEDIATE)
-
 _$Inate.addMethod(function oid() {
   const suffix = this.isPermeable ? "_" : ""
   return `${this.iid}.${this.type.formalName}${suffix}`
 }, BASIC_VALUE_IMMEDIATE)
 
-_$Inate.addMethod(function uid() {
+
+
+_$Inate.addMethod(function _getLazyId(name, setter) {
   const $inner = this[$INNER]
 
   if ($inner[IS_IMMUTABLE]) {
     // Will set the $inner uid even on an immutable object!!!
-    return $inner.uid ||
-      ($inner.uid = this._hasOwn("guid") ? this.guid : NewUniqueId())
+    return $inner[name] || ($inner[name] = setter())
   }
 
-  const uid = this._hasOwn("guid") ? this.guid : NewUniqueId()
-  DefineProperty($inner, "uid", InvisibleConfiguration)
-  return ($inner[$OUTER].uid = $inner.uid = uid)
+  const value = setter()
+  DefineProperty($inner, name, InvisibleConfiguration)
+  return ($inner[$OUTER][name] = $inner[name] = value)
+}, BASIC_VALUE_METHOD)
+
+_$Inate.addMethod(function uid() {
+  return this._getLazyId(
+    "uid", () => this._hasOwn("guid") ? this.guid : NewUniqueId())
+}, BASIC_VALUE_IMMEDIATE)
+
+_$Inate.addMethod(function iid() {
+  return this._getLazyId(
+    "iid", () => InterMap.get(this.type)[$PULP]._nextIID)
 }, BASIC_VALUE_IMMEDIATE)
 
 

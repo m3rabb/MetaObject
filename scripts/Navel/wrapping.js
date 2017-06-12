@@ -12,7 +12,7 @@ function AsTameFunc(Func) {
 
 
 function AsBasicSetter(PropertyName, setterName) {
-  const name = `${AsName(setterName)}_$basicSet$${PropertyName}`
+  const name = `${AsName(setterName)}_$set_${PropertyName}`
   return {
     [name] : function (value) { this[PropertyName] = value }
   }[name]

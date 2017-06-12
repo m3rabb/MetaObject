@@ -22,6 +22,7 @@ _Type.addMethod(function new_(...args) {
     $instance = new this._blanker(Permeable, args)
     _instance = $instance[$PULP]
 
+    $instance[$OUTER].$INNER = $instance
     $instance[$PERMEABILITY] = Permeable
 
     $instance._init.apply(_instance, args)
@@ -42,6 +43,7 @@ _Type.addMethod(function new_(...args) {
 
   $instance[$PERMEABILITY] = Permeable
   $instance[$RIND]         = instance_
+  $outer.$INNER            = $instance
   $outer[$RIND]            = instance_
 
   InterMap.set(instance_, $instance)

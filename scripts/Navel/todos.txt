@@ -295,30 +295,4 @@ this[$PRIOR_IDS] = [...priorIds, existingId]
   remove all const declarations within small block, ifs etc
 
 ==
-
-replace all such:
-
-return $inner._unknownProperty ?
-  $inner[$PULP]._unknownProperty(property) :
-  _UnknownProperty.call($rind, property)
-
-
-with:
-
-const _unknownProperty = $inner._unknownProperty
-return _unknownProperty ?
-  _unknownProperty.call($inner[$PULP], property) :
-  _UnknownProperty.call($rind, property)
-
-==
 Add permanent methods distinction/protections
-
-==
-
-Consider simplifying these following lines:
-if (permeability === Permeable) { $target[$PERMEABILITY] = Permeable }
-if (permeability === Permeable) { $inner[$PERMEABILITY] = Permeable }
-
-to simply:
-$target[$PERMEABILITY] = Permeable
-$inner[$PERMEABILITY] = Permeable
