@@ -12,7 +12,7 @@ function AsTameFunc(Func) {
 
 
 function AsBasicSetter(PropertyName, setterName) {
-  const name = `${AsName(setterName)}_$set$${PropertyName}`
+  const name = `${AsName(setterName)}_$basicSet$${PropertyName}`
   return {
     [name] : function (value) { this[PropertyName] = value }
   }[name]
@@ -50,22 +50,34 @@ function AsOuterFact(property, Handler) {
   return {
     [name] : function (...args) {
       const $inner = InterMap.get(this)
-      var   $pulp, barrier, result, $target, $result, outer
+      var   barrier, useNewBarrier, hasNewTarget, $pulp, result, $target
+      var   outer, $result
 
       if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
-        if (barrier.$target) {
+        if ((useNewBarrier = barrier.$target)) {
+          // Existing barrier is already in use, must generate another barrier and
+          // $pulp, and then discard them.
           barrier = new ImmutableInner()
           $pulp   = new Proxy($inner, barrier)
-        } else {
+        }
+        else {
+          // Use the existing barrier, and then reset it.
           $pulp = $inner[$PULP]
         }
+
         barrier.$target = $inner
         result          = Handler.apply($pulp, args) // <<----------
         $target         = barrier.$target
-        barrier.$target = null
+
+        if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
+          barrier.$target = null
+          delete barrier.get
+          delete barrier.set
+          delete barrier.deleteProperty
+        }
 
         if (result === undefined || result === $pulp) {
-          if ($target !== $inner) { $target[$PULP]._setImmutable() }
+          if (hasNewTarget) { $target._setImmutable.call($target[$PULP]) }
           return $target[$RIND]
         }
       }
@@ -96,22 +108,33 @@ function AsOuterValue(property, Handler) {
   return {
     [name] : function (...args) {
       const $inner = InterMap.get(this)
-      var   $pulp, barrier, result, $target
+      var   barrier, useNewBarrier, hasNewTarget, $pulp, result, $target
 
       if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
-        if (barrier.$target) {
+        if ((useNewBarrier = barrier.$target)) {
+          // Existing barrier is already in use, must generate another barrier and
+          // $pulp, and then discard them.
           barrier = new ImmutableInner()
           $pulp   = new Proxy($inner, barrier)
-        } else {
+        }
+        else {
+          // Use the existing barrier, and then reset it.
           $pulp = $inner[$PULP]
         }
+
         barrier.$target = $inner
         result          = Handler.apply($pulp, args) // <<----------
         $target         = barrier.$target
-        barrier.$target = null
+
+        if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
+          barrier.$target = null
+          delete barrier.get
+          delete barrier.set
+          delete barrier.deleteProperty
+        }
 
         if (result === undefined || result === $pulp) {
-          if ($target !== $inner) { $target[$PULP]._setImmutable() }
+          if (hasNewTarget) { $target._setImmutable.call($target[$PULP]) }
           return $target[$RIND]
         }
       }
@@ -154,19 +177,30 @@ function AsOuterLazyLoader(Property, Handler) {
       var   $pulp, barrier, result, $target, $result, outer
 
       if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
-        if (barrier.$target) {
+        if ((useNewBarrier = barrier.$target)) {
+          // Existing barrier is already in use, must generate another barrier and
+          // $pulp, and then discard them.
           barrier = new ImmutableInner()
           $pulp   = new Proxy($inner, barrier)
-        } else {
+        }
+        else {
+          // Use the existing barrier, and then reset it.
           $pulp = $inner[$PULP]
         }
+
         barrier.$target = $inner
         result          = Handler.apply($pulp, args) // <<----------
         $target         = barrier.$target
-        barrier.$target = null
+
+        if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
+          barrier.$target = null
+          delete barrier.get
+          delete barrier.set
+          delete barrier.deleteProperty
+        }
 
         if (result === undefined || result === $pulp) {
-          if ($target !== $inner) { $target[$PULP]._setImmutable() }
+          if (hasNewTarget) { $target._setImmutable.call($target[$PULP]) }
           return $target[$RIND]
         }
 

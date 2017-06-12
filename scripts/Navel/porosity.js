@@ -208,12 +208,13 @@ Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
 // references the original pulp proxy.
 function ImmutableInner() {}
 
-const ImmutableInner_prototype = SpawnFrom(EMPTY_OBJECT)
-ImmutableInner.prototype = ImmutableInner_prototype
+const Immutability = SpawnFrom(EMPTY_OBJECT)
 
-ImmutableInner_prototype.get = Mutability.get
+ImmutableInner.prototype = Immutability
 
-ImmutableInner_prototype.set = function set($inner, property, value, $pulp) {
+Immutability.get = Mutability.get
+
+Immutability.set = function set($inner, property, value, $pulp) {
   const onSetLoader = $inner[$SET_LOADERS][property]
   var   $target     = $inner
   var   isImmutable = true
@@ -254,7 +255,7 @@ ImmutableInner_prototype.set = function set($inner, property, value, $pulp) {
 }
 
 
-ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp) {
+Immutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
   var onSetLoader, permeability, $target
 
   onSetLoader = $inner[$SET_LOADERS][property]
@@ -290,7 +291,7 @@ ImmutableInner_prototype.deleteProperty = function deleteProperty($inner, proper
   return true
 }
 
-ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, property, $pulp) {
+Immutability.retargetedGet = function retargetedGet($inner, property, $pulp) {
   // Note: Could have simply done the following line, but gets need to be fast,
   // so reimplemented it here.
   // return Mutability.get(this.$target, property, $target[$PULP])
@@ -305,12 +306,12 @@ ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, property
   return $target._unknownProperty.call($target[$PULP], property)
 }
 
-ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, property, value, $pulp) {
+Immutability.retargetedSet = function retargetedSet($inner, property, value, $pulp) {
   const $target = this.$target
   return Mutability.set($target, property, value, $target[$PULP])
 }
 
-ImmutableInner_prototype.retargetedDelete = function retargetedDelete($inner, property, $pulp) {
+Immutability.retargetedDelete = function retargetedDelete($inner, property, $pulp) {
   const $target = this.$target
   return Mutability.deleteProperty($target, property, $target[$PULP])
 }

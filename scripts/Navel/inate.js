@@ -141,7 +141,7 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   }
 
   if (asImmutable) {
-    barrier               = new ImmutableInner($inner)
+    barrier               = new ImmutableInner()
     $inner[$PULP]         = new Proxy($inner, barrier)
     $inner[$MAIN_BARRIER] = barrier
     $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true

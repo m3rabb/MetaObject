@@ -664,7 +664,7 @@ const ALWAYS_SELF      = MarkFunc( function () { return this })
 const _BasicSetImmutable = function _basicSetImmutable() {
   const $inner  = this[$INNER]
   const $outer  = $inner[$OUTER]
-  const barrier = new ImmutableInner($inner)
+  const barrier = new ImmutableInner()
 
   $inner[$MAIN_BARRIER] = barrier
   $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true

@@ -75,7 +75,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
     }
   }
 
-  barrier               = new ImmutableInner($inner)
+  barrier               = new ImmutableInner()
   $inner[$MAIN_BARRIER] = barrier
   $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
   Frost($outer)
