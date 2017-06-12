@@ -89,18 +89,6 @@ _Type.addMethod(function methodAncestry(selector) {
 
 
 
-_Type.addMethod(function methodAt(selector) {
-  const $root$inner = this._blanker.$root$inner
-  const $method     = $root$inner[$IMMEDIATES][selector]
-
-  if ($method) { return ($method.mode === SET_LOADER) ? null : $method[$RIND] }
-
-  const value = $root$inner[selector]
-  return (typeof value === "function" && InterMap.get(value) === WRAPPER_FUNC) ?
-    (value.method || null) : null
-})
-
-
 _Type.addImmediate(function methods() {
   const $root$inner = this._blanker.$root$inner
   const methods     = []
@@ -128,6 +116,17 @@ _Type.addImmediate(function definedMethods() {
   return SetImmutable(methods)
 })
 
+
+_Type.addMethod(function methodAt(selector) {
+  const $root$inner = this._blanker.$root$inner
+  const $method     = $root$inner[$IMMEDIATES][selector]
+
+  if ($method) { return ($method.mode === SET_LOADER) ? null : $method[$RIND] }
+
+  const value = $root$inner[selector]
+  return (typeof value === "function" && InterMap.get(value) === WRAPPER_FUNC) ?
+    (value.method || null) : null
+})
 
 
 
