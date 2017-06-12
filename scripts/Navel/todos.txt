@@ -150,7 +150,7 @@ Bat.Bat_
 
 ++
 
-$Inate becomes Basic
+$Innate becomes Basic
 
 ++
 Consider disallowing assignment of undefined, enabling us to avoid using "in" and BaseInnerBehavior
@@ -239,7 +239,7 @@ Add markdown to jsdoc - http://usejsdoc.org/plugins-markdown.html
   object
     Something --> thingy
       Nothing
-      $Inate
+      $Innate
        Thing
     jsobject
      Object

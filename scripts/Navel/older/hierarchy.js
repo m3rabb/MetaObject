@@ -1,5 +1,5 @@
 // base
-// inate
+// innate
 // type
 // instance
 

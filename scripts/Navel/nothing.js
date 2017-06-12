@@ -15,7 +15,7 @@ _Void.isVoid = true
 _BasicSetImmutable.call($Void)
 
 
-_$Inate.addSharedProperty("isVoid", false)
+_$Innate.addSharedProperty("isVoid", false)
 
 
 //     Nothing
