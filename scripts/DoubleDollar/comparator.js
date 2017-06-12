@@ -508,6 +508,8 @@ function isA(type) {
   return this[tester] || false
 }
 
+isIdentical is about behavior!!! So, consider making isIdentical use
+value vs structure for immutables.
 
 
 same - ??? for mutable same identity (only) for immutbale value equality
