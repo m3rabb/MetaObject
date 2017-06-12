@@ -59,11 +59,8 @@ Impermeable.get = function get($outer, property, $rind) {
     return PrivateAccessFromOutsideError($rind, property)
   }
 
-  const $inner           = InterMap.get($rind)
-  const _unknownProperty = $inner._unknownProperty
-  return $inner._unknownProperty ?
-    _unknownProperty.call($inner[$PULP], property) :
-    _UnknownProperty.call($rind        , property)
+  const $inner = InterMap.get($rind)
+  return $inner._unknownProperty.call($inner[$PULP], property)
 }
 
 // REVISIT!!!
@@ -101,10 +98,7 @@ Permeable.get = function get($outer, property, $rind) {
   const $method = $inner[$IMMEDIATES][property]
   if ($method) { return $method._outer.call($rind) }
 
-  const _unknownProperty = $inner._unknownProperty
-  return $inner._unknownProperty ?
-    _unknownProperty.call($inner[$PULP], property) :
-    _UnknownProperty.call($rind        , property)
+  return $inner._unknownProperty.call($inner[$PULP], property)
 }
 
 // REVISIT!!!
@@ -160,9 +154,7 @@ Mutability.get = function get($inner, property, $pulp) {
   const $method = $inner[$IMMEDIATES][property]
   if ($method) { return $method._inner.call($pulp) }
 
-  return $inner._unknownProperty ?
-    $pulp._unknownProperty(property) :
-    _UnknownProperty.call($inner[$RIND], property)
+  return $inner._unknownProperty.call($inner[$PULP], property)
 }
 
 
@@ -310,9 +302,7 @@ ImmutableInner_prototype.retargetedGet = function retargetedGet($inner, property
   const $method = $target[$IMMEDIATES][property]
   if ($method) { return $method._inner.call($target[$PULP]) }
 
-  return $target._unknownProperty ?
-    $target[$PULP]._unknownProperty(property) :
-    _UnknownProperty.call($target[$RIND], property)
+  return $target._unknownProperty.call($target[$PULP], property)
 }
 
 ImmutableInner_prototype.retargetedSet = function retargetedSet($inner, property, value, $pulp) {
@@ -421,10 +411,7 @@ Super_prototype.get = function get($inner, property, $super) {
         return supers[$IMMEDIATES][property].call($inner[$PULP])
 
       case NO_SUPER  :
-        const _unknownProperty = $inner._unknownProperty
-        return $inner._unknownProperty ?
-          _unknownProperty.call($inner[$PULP], property) :
-          _UnknownProperty.call($rind        , property)
+        return $inner._unknownProperty.call($inner[$PULP], property)
 
       default :
         return value

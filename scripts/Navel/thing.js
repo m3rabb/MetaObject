@@ -1,6 +1,5 @@
 
 
-_Thing.addMethod(_UnknownProperty)
 
 _Thing.addSetter("_setId", function id(newId_) {
   const existingId = this.id

@@ -18,6 +18,12 @@ _$Primordial.addMethod(function _super() {
 
 
 
+_$Primordial.addMethod(function _unknownProperty(property) {
+  return SignalError(this, `Receiver ${this.id} doesn't have a property: ${AsName(property)}!!`)
+})
+
+
+
 _$Primordial.addMethod(function is(value) {
   return (this === value) || (this[$RIND] === value)
 }, BASIC_VALUE_METHOD)
@@ -44,7 +50,10 @@ _$Primordial.addMethod(function isImmutable() {
 //
 //      id = null
 //      IS_IMMUTABLE = null
+//      $PERMEABILITY
 //      is
+//      isPermeable
+//      isImmutable
 //      type
 //
 //     $Inate|$Thing

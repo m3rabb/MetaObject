@@ -297,13 +297,18 @@ _$Inate.addMethod(function addOwnDeclaration(propertyName) {
 // })
 
 
+_$Inate.addMethod(function _unknownProperty(property) {
+  return this._signalError(`Receiver ${this.id} doesn't have a property: ${AsName(property)}!!`)
+})
 
-_$Inate.addMethod("_basicUnknownProperty", _UnknownProperty)
+_$Inate.addMethod("_basicUnknownProperty", $Inate$root$inner._unknownProperty)
+
 
 
 _$Inate.addMethod(function _signalError(message) {
   return SignalError(this, message)
 })
+
 
 _$Inate.addMethod(function _invalidPulpError() {
   this._signalError("Using old mutable inner, after be|setImmutable has made a new inner proxy!!")
@@ -352,29 +357,14 @@ _$Inate.addMethod(function _detectedInnerError(value) {
 
 
 
-// is(matchingThing)
-//
-// isA(type)
-
-
 
 // AddMethod(_Primordial_root, function hasMethod(selector) {
 //   return this[__type].methodAt(selector) != null
 // })
 //
-// AddMethod(_Primordial_root, "equals", _Primordial_root.is)
 //
 //
-// AddMethod(_Primordial_root, function _unknownProperty(selector, value_) {
-//   const verb = arguments.length > 1 ? "set" : "get"
-//   const message = `External attempt to ${verb} nonexistent property #${selector}!`
-//   return this._signalError(message)
-// })
 //
-// AddMethod(_Primordial_root, function _noSuchMethod(selector, args) {
-//   const message = `Other objects implement #${selector}, but the receiver does not!`
-//   return this._signalError(message)
-// })
 //
 // AddMethod(_Primordial_root, function execWithAll(selector, args) {
 //   return Reflect_apply(this[selector], this, args)

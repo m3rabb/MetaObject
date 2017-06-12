@@ -675,10 +675,6 @@ const _BasicSetImmutable = function _basicSetImmutable() {
 //   delete this._captureOverwrite
 
 
-const _UnknownProperty = function _unknownProperty(property) {
-  return SignalError(this, `Receiver ${this.id} doesn't have a property: ${AsName(property)}!!`)
-}
-
 
 const _SetSharedProperty = function _setSharedProperty(property, value, isOwn) {
   const properties  = this._properties

@@ -2,7 +2,6 @@
 const Nothing = Type({
   name      : "Nothing",
   supertype : null,
-  define    : _UnknownProperty // { _unknownProperty : _UnknownProperty }
 })
 
 const $Nothing = InterMap.get(Nothing)
