@@ -1,7 +1,7 @@
 
 PropertyLoader = Type("PropertyLoader")
 
-const modeNames = `DECLARE SHARED ALIAS STANDARD METHOD LAZY
+const modeNames = `DECLARE SHARED ALIAS STANDARD METHOD LAZY RETROACTIVE
                    FOR_ASSIGN FOR_SETTER FOR_MANDATORY SETTER MANDATORY`
 
 PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
@@ -86,16 +86,17 @@ PropertyLoader.addMethod(function _loadFromSpec(item, mode) {
 PropertyLoader.addMethod(function _loadPair(name, value, mode) {
   switch (mode) {
     case "ALIAS"         : return this._saveAlias(name, value)
-    case "SHARED"        : return this._type.addSharedProperty    (name, value)
+    case "SHARED"        : return this._type.addSharedProperty     (name, value)
 
-    case "METHOD"        : return this._type.addMethod            (name, value)
-    case "LAZY"          : return this._type.addLazyProperty      (name, value)
-    case "SETTER"        : return this._type.addSetter            (name, value)
-    case "MANDATORY"     : return this._type.addMandatorySetter   (name, value)
+    case "METHOD"        : return this._type.addMethod             (name, value)
+    case "LAZY"          : return this._type.addLazyProperty       (name, value)
+    case "RETROACTIVE"   : return this._type.addRetroactiveProperty(name, value)
+    case "SETTER"        : return this._type.addSetter             (name, value)
+    case "MANDATORY"     : return this._type.addMandatorySetter    (name, value)
 
-    case "FOR_ASSIGN"    : return this._type.forAddAssigner       (name, value)
-    case "FOR_SETTER"    : return this._type.forAddSetter         (name, value)
-    case "FOR_MANDATORY" : return this._type.forAddMandatorySetter(name, value)
+    case "FOR_ASSIGN"    : return this._type.forAddAssigner        (name, value)
+    case "FOR_SETTER"    : return this._type.forAddSetter          (name, value)
+    case "FOR_MANDATORY" : return this._type.forAddMandatorySetter (name, value)
 
     case "STANDARD"      :
       return this._signalError(
@@ -107,14 +108,15 @@ PropertyLoader.addMethod(function _loadPair(name, value, mode) {
 
 PropertyLoader.addMethod(function _loadFunc(func, mode) {
   switch (mode) {
-    case "STANDARD"      : return this._type.addMethod         (func)
-    case "METHOD"        : return this._type.addMethod         (func)
+    case "STANDARD"      : return this._type.addMethod             (func)
+    case "METHOD"        : return this._type.addMethod             (func)
 
-    case "LAZY"          : return this._type.addLazyProperty   (func)
-    case "SETTER"        : return this._type.addSetter         (func)
-    case "MANDATORY"     : return this._type.addMandatorySetter(func)
+    case "LAZY"          : return this._type.addLazyProperty       (func)
+    case "RETROACTIVE"   : return this._type.addRetroactiveProperty(func)
+    case "SETTER"        : return this._type.addSetter             (func)
+    case "MANDATORY"     : return this._type.addMandatorySetter    (func)
 
-    case "FOR_ASSIGN"    : return this._type.forAddAssigner    (func)
+    case "FOR_ASSIGN"    : return this._type.forAddAssigner        (func)
 
     default : return this._signalError(`Invalid method func mode: ${mode}!!`)
   }

@@ -7,20 +7,24 @@ _Type.addMethod(function addAlias(aliasName, name_method) {
   this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
 })
 
-_Type.addMethod(function addLazyProperty(...namedFunc_selector__handler) {
-  this.addMethod(...namedFunc_selector__handler, LAZY_INSTALLER)
+_Type.addMethod(function addLazyProperty(loader_property, loader_, mode__) {
+  // Will set the $inner property even on an immutable object!!!
+  const [property, loader, mode = STANDARD_METHOD] =
+    (typeof loader_property === "function") ?
+      [loader_property.name, loader_property, loader_] :
+      [loader_property     , loader_        , mode__ ]
+
+  this.addMethod(property, AsLazyProperty(property, loader), mode)
 })
 
-
-_Type.addMethod(function _addValueMethod(...namedFunc_name__handler) {
+_Type.addMethod(function addMethodAnsweringMutable(...namedFunc_name__handler) {
   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
 })
-
 
 _Type.addMethod(function _nextIID() {
   // This works on an immutable type without creating a new copy.
   return ++this[$INNER]._iidCount
-})
+}, BASIC_VALUE_METHOD)
 
 _Type.addLazyProperty(function id() {
   return `${this.formalName},${this.basicId}`
@@ -36,7 +40,7 @@ _Type.addMethod(function formalName() {
 
 _Type.addMethod(function toString() {
   return this.formalName
-}, VALUE_METHOD)
+})
 
 
 _Type.addMethod(function new_(...args) {
@@ -83,28 +87,28 @@ _Type.addMethod(function new_(...args) {
 _Type.addMethod(function methodAncestryListing(selector) {
   const ancestry = this.methodAncestry(selector)
   return ancestry.map(type => type.name).join(" ")
-}, VALUE_METHOD)
+})
 
 _Type.addMethod(function methodsListing() {
   return this.methods.map(method => method.selector).join(" ")
-}, VALUE_METHOD)
+})
 
 _Type.addMethod(function definedMethodsListing() {
   return this.definedMethods.map(method => method.selector).join(" ")
-}, VALUE_METHOD)
+})
 
 
 
 _Type.addMethod(function definesMethod(selector) {
   const value = this._properties[selector]
   return (value && value.type === Method)
-}, VALUE_METHOD)
+}, BASIC_VALUE_METHOD)
 
 
 _Type.addMethod(function methodAncestry(selector) {
   return SetImmutable(
     this.ancestry.filter(type => type.definesMethod(selector)))
-}, VALUE_METHOD)
+})
 
 
 
@@ -175,9 +179,9 @@ _Type.addMethod(function addDeclarations(propertyListing) {
   while (next--) { this._setSharedProperty(properties[next], null, true) }
 })
 
-_Type.addAlias("_basicNew"    , "new"                 )
-_Type.addAlias("declare"      , "addDeclarations"     )
-_Type.addAlias("removeMethod" , "removeSharedProperty")
+_Type.addAlias("_basicNew"                , "new"                 )
+_Type.addAlias("declare"                  , "addDeclarations"     )
+_Type.addAlias("removeMethod"             , "removeSharedProperty")
 
 
 
@@ -188,7 +192,7 @@ _Type.addMethod(function newAsFact(...args) {
   const _instance = $instance[$PULP]
   if (_instance.id == null) { $instance._setImmutable.call(_instance) }
   return instance
-})
+}, BASIC_VALUE_METHOD)
 
 _Type.addMethod(function newAsFact_(...args) {
   // Note: same as implementation in TypeOuter and TypeInner
@@ -197,7 +201,7 @@ _Type.addMethod(function newAsFact_(...args) {
   const _instance = $instance[$PULP]
   if (_instance.id == null) { $instance._setImmutable.call(_instance) }
   return instance
-})
+}, BASIC_VALUE_METHOD)
 
 
 

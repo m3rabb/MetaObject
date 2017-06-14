@@ -82,7 +82,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   Frost($outer)
   return ($inner[$PULP] = new Proxy($inner, barrier))
 
-}, BASIC_SELF_METHOD)
+})
 
 
 

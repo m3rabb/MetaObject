@@ -1,11 +1,11 @@
 
 
-_$Primordial._addDurableProperty(function $() {
+_$Primordial.addRetroactiveProperty(function $() {
   return this[$RIND]
 }, BASIC_VALUE_METHOD)
 
 
-_$Primordial._addDurableProperty(function _super() {
+_$Primordial.addRetroactiveProperty(function _super() {
   return new Proxy(this[$INNER], SuperBehavior)
 }, BASIC_VALUE_METHOD)
 

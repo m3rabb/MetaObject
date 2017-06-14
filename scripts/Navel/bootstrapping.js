@@ -187,8 +187,6 @@ _Method.addMethod(Method$root$inner._init)
 _Method.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 
-// _$Innate.addMethod("_hasOwn", $Innate$root$inner._hasOwn, BASIC_VALUE_METHOD)
-
 _$Innate.addMethod(function _basicSet(property, value) {
   const selector = PropertyToSymbol[property] || property
   this[selector] = value
@@ -200,14 +198,15 @@ _Type.addMethod("new", Type$root$inner.new, BASIC_VALUE_METHOD)
 _Type.addMethod(Type$root$inner._setSharedProperty)
 
 
-_Type.addMethod(function _addDurableProperty(property_loader, loader_, mode__) {
+
+_Type.addMethod(function addRetroactiveProperty(loader_property, loader_, mode__) {
   // Will set the $inner property even on an immutable object!!!
   const [property, loader, mode = STANDARD_METHOD] =
-    (typeof property_loader === "function") ?
-      [property_loader.name, property_loader, loader_] :
-      [property_loader     , loader_        , mode__ ]
+    (typeof loader_property === "function") ?
+      [loader_property.name, loader_property, loader_] :
+      [loader_property     , loader_        , mode__ ]
 
-  this.addMethod(property, AsDurableProperty(property, loader), mode)
+  this.addMethod(property, AsRetroactiveProperty(property, loader), mode)
 })
 
 
@@ -429,7 +428,7 @@ _Type.addMethod(function forAddMandatorySetter(propertyName, setter_) {
 
 _Type.addMethod(function inheritsFrom(type) {
   return (type !== this[$RIND] && this.ancestry.includes(type))
-}, BASIC_VALUE_METHOD)
+})
 
 
 

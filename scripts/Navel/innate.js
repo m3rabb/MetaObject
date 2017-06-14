@@ -175,13 +175,13 @@ _$Innate.addMethod(function setImmutable(visited_inPlace_, visited_) {
   const [inPlace, visited] = (typeof visited_inPlace_ === "boolean") ?
     [visited_inPlace_, visited_] : [undefined, visited_inPlace_]
   return this._setImmutable(inPlace, visited)
-}, BASIC_SELF_METHOD)
+})
 
 
 // Warning!!! Consider complications of
 _$Innate.addMethod(function beImmutable() {
   return this[IS_IMMUTABLE] ? this : this._setImmutable()
-}, BASIC_SELF_METHOD)
+})
 
 
 
@@ -223,20 +223,20 @@ _$Innate.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
 _$Innate.addMethod(function basicId() {
   const suffix = this.isPermeable ? "_" : ""
   return `${this.uid}.${this.type.formalName}${suffix}`
-}, BASIC_VALUE_METHOD)
+})
 
 _$Innate.addMethod(function oid() {
   const suffix = this.isPermeable ? "_" : ""
   return `${this.iid}.${this.type.formalName}${suffix}`
-}, BASIC_VALUE_METHOD)
+})
 
 
-_$Innate._addDurableProperty(function uid() {
+_$Innate.addRetroactiveProperty(function uid() {
   return this._hasOwn("guid") ? this.guid : NewUniqueId()
 }, BASIC_VALUE_METHOD)
 
 
-_$Innate._addDurableProperty(function iid() {
+_$Innate.addRetroactiveProperty(function iid() {
   return InterMap.get(this.type)[$PULP]._nextIID
 }, BASIC_VALUE_METHOD)
 
@@ -270,16 +270,12 @@ _$Innate.addMethod(function addOwnMethod(method_namedFunc__selector, func__, mod
   SetMethod($inner, method)
   methods[selector] = method
   delete supers[selector]
-})
+}, BASIC_SELF_METHOD)
 
-
-_$Innate.addMethod(function addOwnImmediate(...namedFunc_name__handler) {
-  return this.addOwnMethod(...namedFunc_name__handler, IMMEDIATE)
-})
 
 _$Innate.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
   return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
-})
+}, BASIC_SELF_METHOD)
 
 // _$Innate.addMethod(function _addOwnValueMethod(...namedFunc_name__handler) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_METHOD)
@@ -291,7 +287,7 @@ _$Innate.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
 
 _$Innate.addMethod(function addOwnDeclaration(propertyName) {
   this[propertyName] = null
-})
+}, BASIC_SELF_METHOD)
 
 // _$Innate.addMethod(function addOwnAssigner(loader_property, loader_) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
@@ -304,7 +300,7 @@ _$Innate.addMethod(function addOwnDeclaration(propertyName) {
 
 _$Primordial.addMethod(Symbol.toPrimitive, function (hint) {
   return this.toString()
-}, VALUE_METHOD)
+})
 
 
 

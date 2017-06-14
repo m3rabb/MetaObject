@@ -18,7 +18,7 @@ function AsBasicSetter(PropertyName, setterName) {
   }[name]
 }
 
-function AsDurableProperty(Property, Loader) {
+function AsRetroactiveProperty(Property, Loader) {
   const name = `${AsName(Property)}_$durable`
   return {
     [name] : function () {
@@ -77,8 +77,6 @@ function AsLazyProperty(Property, Loader) {
 //              AsOuterBasicSelf          PassThru       AsSuperBasic
 // Basic        self                      _self          _self       ()
 //
-//
-// Lazy         AsOuterLazyLoader    AsInnerLazyLoader   AsSuperLazyLoader
 //
 //
 // Method
@@ -211,65 +209,6 @@ function AsOuterBasicSelf(property, Handler) {
   }[name]
 }
 
-function AsOuterLazyLoader(Property, Handler) {
-  const name = `${AsName(Property)}_$outer$lazy`
-  return {
-    [name] : function () {
-      const $inner = InterMap.get(this)
-      var   $pulp, barrier, result, $target, $result, outer
-
-      if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
-        if ((useNewBarrier = barrier.$target)) {
-          // Existing barrier is already in use, must generate another barrier and
-          // $pulp, and then discard them.
-          barrier = new ImmutableInner()
-          $pulp   = new Proxy($inner, barrier)
-        }
-        else {
-          // Use the existing barrier, and then reset it.
-          $pulp = $inner[$PULP]
-        }
-
-        barrier.$target = $inner
-        result          = Handler.apply($pulp, args) // <<----------
-        $target         = barrier.$target
-
-        if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
-          barrier.$target = null
-          delete barrier.get
-          delete barrier.set
-          delete barrier.deleteProperty
-        }
-
-        if (result === undefined || result === $pulp) {
-          if (hasNewTarget) { $target._setImmutable.call($target[$PULP]) }
-          return $target[$RIND]
-        }
-
-        // The receiver is immutable so the calculated value cannot be
-        // stored and should simply be returned.
-        switch (typeof result) {
-          default         :                                  return result
-          case "function" :
-            outer = result[$OUTER_WRAPPER]
-            return (outer && InterMap.get(outer) === WRAPPER_FUNC) ?
-                                                            outer : result
-          case "object"   : if (result === null)           { return result }
-            // if (result === $inner[$RIND])               { return result }
-            if (result[IS_IMMUTABLE] || result.id != null) { return result }
-            return (($result = InterMap.get(result))) ?
-              $Copy($result, true)[$RIND] : CopyObject(result, true)
-        }
-      }
-
-      $pulp = $inner[$PULP]
-      DefineProperty($inner, Property, InvisibleConfiguration)
-      result = Handler.call($pulp) // <<----------
-      $pulp[Property] = result
-      return $inner[$OUTER][Property]
-    }
-  }[name]
-}
 
 
 function AsInnerFact(property, Handler) {
@@ -297,21 +236,6 @@ function AsInnerValue(property, Handler) {
       const $pulp = this
       const result = Handler.apply($pulp, args) // <<----------
       return (result === undefined) ? $pulp : result
-    }
-  }[name]
-}
-
-
-function AsInnerLazyLoader(Property, Handler) {
-  const name = `${AsName(Property)}_$inner$lazy`
-  return {
-    [name] : function () {
-      const $pulp  = this
-      const $inner = $pulp[$INNER]
-
-      DefineProperty($inner, Property, InvisibleConfiguration)
-      $pulp[Property] = Handler.call($pulp) // <<----------
-      return $inner[Property]
     }
   }[name]
 }
@@ -361,21 +285,6 @@ function AsSuperBasic(property, Handler) {
 }
 
 
-function AsSuperLazyLoader(Property, Handler) {
-  const name = `${AsName(Property)}_$super$lazy`
-  return {
-    [name] : function () {
-      // this is $super. Need to use $pulp instead
-      const $inner = this[$INNER]
-      const $pulp  = $inner[$PULP]
-
-      DefineProperty($inner, Property, InvisibleConfiguration)
-      $pulp[Property] = Handler.call($pulp) // <<----------
-      return $inner[Property]
-    }
-  }[name]
-}
-
 
 function PassThru(property, handler) {
   return handler
@@ -411,6 +320,8 @@ const VALUE_METHOD = {
   super       : AsSuperValue,
 }
 
+// BASIC_VALUE_METHOD and BASIC_SELF_METHOD methods must are methods that call
+// no other methods, except other basic methods.
 const BASIC_VALUE_METHOD = {
   id          : "BASIC_VALUE_METHOD",
   outer       : AsOuterBasicValue,
@@ -425,12 +336,6 @@ const BASIC_SELF_METHOD = {
   super       : AsSuperBasic,
 }
 
-const LAZY_INSTALLER = {
-  id          : "LAZY_INSTALLER",
-  outer       : AsOuterLazyLoader,
-  inner       : AsInnerLazyLoader,
-  super       : AsSuperLazyLoader,
-}
 
 const STANDARD_METHOD = {
   id          : "STANDARD_METHOD",
@@ -455,19 +360,3 @@ const SET_LOADER = {
 // const ANSWERS_MUTABLE   = VALUE_METHOD
 // const ANSWERS_IMMUTABLE = VALUE_METHOD
 // const ANSWERS_FACT      = VALUE_METHOD
-
-const MUTABLE__PASSTHRU_ANSWER = BASIC_VALUE_METHOD
-const IDEMPOT__MUTABLE_ANSWER  = BASIC_VALUE_METHOD
-const IDEMPOT__SELF_ANSWER     = BASIC_VALUE_METHOD
-const IDEMPOT__STRING_ANSWER   = BASIC_VALUE_METHOD
-
-// const BASIC_ANSWERS_BOOLEAN   = BASIC_VALUE_METHOD
-// const BASIC_ANSWERS_NUMBER    = BASIC_VALUE_METHOD
-// const BASIC_ANSWERS_STRING    = BASIC_VALUE_METHOD
-// const BASIC_ANSWERS_FUNC      = BASIC_VALUE_METHOD
-//
-// const BASIC_ANSWERS_SELF      = BASIC_SELF_METHOD
-//
-// const BASIC_ANSWERS_MUTABLE   = BASIC_VALUE_METHOD
-// const BASIC_ANSWERS_IMMUTABLE = BASIC_VALUE_METHOD
-// const BASIC_ANSWERS_FACT      = BASIC_VALUE_METHOD

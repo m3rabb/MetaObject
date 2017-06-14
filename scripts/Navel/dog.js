@@ -19,9 +19,11 @@ const Dog = Type({
       yowl : "howl"
     },
 
-    function speak() {
+    { RETROACTIVE : function speak() {
       return `My name is ${this.name}!`
-    },
+    } },
+
+    "LAZY",
 
     function howl() {
       return "AooooohhH!!!"
