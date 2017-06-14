@@ -45,8 +45,8 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
     _setPropertiesImmutable.call($pulp, inPlace, visited)
   }
   else {
-    const properties = $inner[KNOWN_PROPERTIES] ||
-      SetKnownProperties($inner, true) // Set outer too
+    const properties = $inner[$KNOWN_PROPERTIES] ||
+      SetKnownProperties($inner, $KNOWN_PROPERTIES)
 
     next = properties.length
 

@@ -361,6 +361,11 @@ HandleInheritancePoisoning
 Why the following is a gotcha!
 The empty array is copied into the property but the value loaded into
 the priorIds is the original array. OUCH!!!
-Whay assignemnt is bad 
+Why assignment is bad
 
 priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
+
+
+====
+
+The semantics of set are broken!!!

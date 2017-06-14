@@ -19,16 +19,15 @@ const Dog = Type({
       yowl : "howl"
     },
 
-    {
-      IMMEDIATE : [
-        function speak() {
-          return `My name is ${this.name}!`
-        },
+    function speak() {
+      return `My name is ${this.name}!`
+    },
 
-        function howl() {
-          return "AooooohhH!!!"
-        }
-      ],
+    function howl() {
+      return "AooooohhH!!!"
+    },
+
+    {
       SETTER : "setBreed",
     },
 

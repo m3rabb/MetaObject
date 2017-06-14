@@ -24,8 +24,8 @@ const Apply               = Reflect.apply
 // private
 
 // symbols for publicly knowable properties
-const IS_IMMUTABLE       = Symbol("isImmutable")
-const KNOWN_PROPERTIES   = Symbol("knownProperties")
+const IS_IMMUTABLE       = Symbol("IS_IMMUTABLE")
+const KNOWN_PROPERTIES   = Symbol("KNOWN_PROPERTIES")
 const INSTANCEOF         = Symbol.hasInstance
 
 // private symbols for implementation usage, $ means non-ya-bizness!!!
@@ -42,11 +42,13 @@ const $COPY              = Symbol("$COPY")
 const $PRIOR_IDS         = Symbol("$PRIOR_IDS")
 const $SECRET            = Symbol("$SECRET")
 const $PERMEABILITY      = Symbol("$PERMEABILITY")
+const $KNOWN_PROPERTIES  = Symbol("$KNOWN_PROPERTIES")
 
-const $IMMEDIATES        = Symbol("$IMMEDIATES")
+const $ROOT              = Symbol("$ROOT")
 const $BLANKER           = Symbol("$BLANKER")
-const $SUPERS            = Symbol("$SUPERS")
 const $SET_LOADERS       = Symbol("$SET_LOADERS")
+const $IMMEDIATES        = Symbol("$IMMEDIATES")
+const $SUPERS            = Symbol("$SUPERS")
 
 const $OUTER_WRAPPER     = Symbol("$OUTER_WRAPPER")
 

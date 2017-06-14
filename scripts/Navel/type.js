@@ -1,4 +1,23 @@
-_Type.addImmediate(function _nextIID() {
+_Type.addMethod(function addAlias(aliasName, name_method) {
+  const sourceMethod = name_method.isMethod ?
+    name_method : this.methodAt(name_method)
+  if (sourceMethod == null) {
+    return this._unknownMethodToAliasError(name_method)
+  }
+  this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
+})
+
+_Type.addMethod(function addLazyProperty(...namedFunc_selector__handler) {
+  this.addMethod(...namedFunc_selector__handler, LAZY_INSTALLER)
+})
+
+
+_Type.addMethod(function _addValueMethod(...namedFunc_name__handler) {
+  this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
+})
+
+
+_Type.addMethod(function _nextIID() {
   // This works on an immutable type without creating a new copy.
   return ++this[$INNER]._iidCount
 })
@@ -8,7 +27,7 @@ _Type.addLazyProperty(function id() {
 })
 
 
-_Type.addImmediate(function formalName() {
+_Type.addMethod(function formalName() {
   const context = this.context
   const prefix = context ? context.id + "@" : ""
   return `${prefix}${this.name}`
@@ -68,11 +87,11 @@ _Type.addMethod(function methodAncestryListing(selector) {
 
 _Type.addMethod(function methodsListing() {
   return this.methods.map(method => method.selector).join(" ")
-}, VALUE_IMMEDIATE)
+}, VALUE_METHOD)
 
 _Type.addMethod(function definedMethodsListing() {
   return this.definedMethods.map(method => method.selector).join(" ")
-}, VALUE_IMMEDIATE)
+}, VALUE_METHOD)
 
 
 
@@ -89,7 +108,7 @@ _Type.addMethod(function methodAncestry(selector) {
 
 
 
-_Type.addImmediate(function methods() {
+_Type.addMethod(function methods() {
   const $root$inner = this._blanker.$root$inner
   const methods     = []
 
@@ -104,7 +123,7 @@ _Type.addImmediate(function methods() {
   return SetImmutable(methods)
 })
 
-_Type.addImmediate(function definedMethods() {
+_Type.addMethod(function definedMethods() {
   const properties = this._properties
   const methods    = []
 
@@ -136,23 +155,6 @@ _Type.addMethod(function addSupertype(type) {
 })
 
 
-_Type.addMethod(function addAlias(aliasName, name_method) {
-  const sourceMethod = name_method.isMethod ?
-    name_method : this.methodAt(name_method)
-  if (sourceMethod == null) {
-    return this._unknownMethodToAliasError(name_method)
-  }
-  this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
-})
-
-
-_Type.addMethod(function _addValueMethod(...namedFunc_name__handler) {
-  this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
-})
-
-_Type.addMethod(function _addValueImmediate(...namedFunc_name__handler) {
-  this.addMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
-})
 
 
 _Type.addMethod(function define(spec) {

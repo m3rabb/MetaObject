@@ -30,6 +30,10 @@
 // rind --> core
 
 
+function FuncParamsListing(func) {
+  return func.toString().match(/\(([^)]*)\)/)[1]
+}
+
 /**
  * Converts a name into a membership selector.
  * @private
@@ -136,26 +140,26 @@ function SetMethod($inner, method) {
     // In a set-loader method, its handler is the loader function.
     $inner[$SET_LOADERS][selector] = $method.handler
   }
-  else if (mode.isImmediate) {
+  else if ($method.isImmediate) {
     // Note: the $outer stores the outer handler, but the $inner stores the
     // entire $method to enable permeable objects to have an easy way to access
     // the outer of private methods.
     //
     // Formerly used delete, but deleting uncovered inherited value from
-    // _$Inate & _$Primordial, so setting it undefined covers inherited value
+    // _$Innate & _$Primordial, so setting it undefined covers inherited value
     // Doing this specifically to deal with inherited null id value which breaks
     // defining immediate/lazy id values by the type instances.
     $inner[selector] = undefined
     $inner[$IMMEDIATES][selector] = $method
     if ($method.isPublic) {
       $outer[selector] = undefined
-      $outer[$IMMEDIATES][selector] = $method._outer
+      $outer[$IMMEDIATES][selector] = $method._$outer
     }
   }
   else {
     // Store the inner (and outer) wrapper in the property chain.
-    $inner[selector] = $method._inner
-    if ($method.isPublic) { $outer[selector] = $method._outer }
+    $inner[selector] = $method._$inner
+    if ($method.isPublic) { $outer[selector] = $method._$outer }
   }
 }
 
@@ -182,7 +186,7 @@ function SetMethod($inner, method) {
 function InSetProperty($inner, property, value, _instigator) {
   const isPublic = (property[0] !== "_")
   const $outer   = $inner[$OUTER]
-  var   methodOuterWrapper
+  var   $method_$outer
 
   switch (typeof value) {
     case "undefined" :
@@ -216,8 +220,8 @@ function InSetProperty($inner, property, value, _instigator) {
 
         case WRAPPER_FUNC :
           if (isPublic) {
-            $outer[property] = (methodOuterWrapper = value[$OUTER_WRAPPER]) ?
-              methodOuterWrapper : value
+            $outer[property] = ($method_$outer = value[$OUTER_WRAPPER]) ?
+              $method_$outer : value
           }
           break
 
@@ -238,8 +242,7 @@ function InSetProperty($inner, property, value, _instigator) {
       break
   }
 
-  $inner[property] = value
-  return _instigator
+  return ($inner[property] = value)
 }
 
 
@@ -382,6 +385,7 @@ function NewBlanker(rootBlanker, maker_) {
   Blanker.$root$outer       = $root$outer
   OuterBlanker.prototype    = $root$outer
 
+  $root$inner[$ROOT]        = $root$inner
   $root$inner[$OUTER]       = $root$outer
   $root$inner[$SUPERS]      = supers
   $root$inner[$SET_LOADERS] = SpawnFrom(root$root$inner[$SET_LOADERS])
@@ -584,11 +588,10 @@ function BuildAncestryOf(type, supertypes) {
  * When true, it stores the list on outside as well as the inside of the target.
  * @return      {Array.<name>}  The list of visible properties.
  */
-function SetKnownProperties($target, setOuter_) {
+function SetKnownProperties($target, propertiesSelector) {
   const properties = VisibleProperties($target)
   properties[IS_IMMUTABLE] = true
-  if (setOuter_) { $target[$OUTER][KNOWN_PROPERTIES] = properties }
-  return ($target[KNOWN_PROPERTIES] = Frost(properties))
+  return ($target[propertiesSelector] = Frost(properties))
 }
 
 
@@ -659,7 +662,7 @@ const ALWAYS_SELF      = MarkFunc( function () { return this })
 
 
 
-const _BasicSetImmutable = function _basicSetImmutable() {
+const _BasicSetImmutable = function _basicSetImmutable(inPlace_, visited__) {
   const $inner  = this[$INNER]
   const $outer  = $inner[$OUTER]
   const barrier = new ImmutableInner()

@@ -103,9 +103,9 @@ $Innate$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
 
 
-_SetSharedProperty.call(_$Primordial, KNOWN_PROPERTIES, null , true)
-_SetSharedProperty.call(_$Primordial, IS_IMMUTABLE    , false, true)
-_SetSharedProperty.call(_$Primordial, "id"            , null , true)
+_SetSharedProperty.call(_$Primordial, $KNOWN_PROPERTIES, null , true)
+_SetSharedProperty.call(_$Primordial, IS_IMMUTABLE     , false, true)
+_SetSharedProperty.call(_$Primordial, "id"             , null , true)
 // _SetSharedProperty.call(_$Primordial, $RIND           , null , true)
 
 
@@ -130,10 +130,10 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
 
   if (!selector) { return this._invalidSelectorError(selector) }
 
-  this.isPublic = isPublic
-  this.selector = selector
-  this.mode     = mode
-  // this.super --> is a lazy property
+  this.selector    = selector
+  this.mode        = mode
+  this.isPublic    = isPublic
+  // this._$super --> is a lazy property
 
   if (mode === SET_LOADER) {
     this.handler = (typeof handler === "function") ?
@@ -144,8 +144,9 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
     const inner           = mode.inner(selector, handler, isPublic)
     inner[$OUTER_WRAPPER] = outer    // For access via Permeable outer
     outer.method          = (inner.method = this[$RIND])
-    this._outer           = SetImmutableFunc(outer, WRAPPER_FUNC)
-    this._inner           = SetImmutableFunc(inner, WRAPPER_FUNC)
+    this.isImmediate      = !(handler.length || FuncParamsListing(handler))
+    this._$outer          = SetImmutableFunc(outer, WRAPPER_FUNC)
+    this._$inner          = SetImmutableFunc(inner, WRAPPER_FUNC)
     this.handler          = MarkFunc(handler, KNOWN_FUNC)
   }
 }
@@ -199,13 +200,16 @@ _Type.addMethod("new", Type$root$inner.new, BASIC_VALUE_METHOD)
 _Type.addMethod(Type$root$inner._setSharedProperty)
 
 
-_Type.addMethod(function addImmediate(...namedFunc_selector__handler) {
-  this.addMethod(...namedFunc_selector__handler, STANDARD_IMMEDIATE)
+_Type.addMethod(function _addDurableProperty(property_loader, loader_, mode__) {
+  // Will set the $inner property even on an immutable object!!!
+  const [property, loader, mode = STANDARD_METHOD] =
+    (typeof property_loader === "function") ?
+      [property_loader.name, property_loader, loader_] :
+      [property_loader     , loader_        , mode__ ]
+
+  this.addMethod(property, AsDurableProperty(property, loader), mode)
 })
 
-_Type.addMethod(function addLazyProperty(...namedFunc_selector__handler) {
-  this.addMethod(...namedFunc_selector__handler, LAZY_INSTALLER)
-})
 
 _Type.addMethod(function addSharedProperty(property, value) {
   this._setSharedProperty(property, value, true)
@@ -351,7 +355,7 @@ _Type.addMethod(function _addSetter(name_setter, property_setter_, mandatory) {
     case "string"   : propertyName = property_setter_ ; break
     case "function" :
       if ((propertyName = property_setter_.name)) {
-        if (setter) { return this._assignerSetterError() }
+        if (setter) { return this._assignerSetterError }
         loader = property_setter_
         setter = AsBasicSetter(propertyName, setterName)
       }
@@ -454,8 +458,8 @@ _Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
 
   this.ancestry = nextAncestry
   this._basicSet("supertypes", SetImmutable(nextSupertypes))
-  this._setAsSubtypeOfSupertypes()
-  this._reinheritProperties()
+  this._setAsSubtypeOfSupertypes
+  this._reinheritProperties
 })
 
 
@@ -560,7 +564,7 @@ Frost($BaseBlanker.$root$inner)
 
 _$Innate.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
-_Type.addMethod(function _setImmutable() {
+_Type.addMethod(function _setImmutable(inPlace_, visited__) {
   const $inner       = this[$INNER]
   const blanker      = $inner._blanker
   const $root$outer  = blanker.$root$outer

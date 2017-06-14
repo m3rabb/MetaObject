@@ -18,6 +18,48 @@ function AsBasicSetter(PropertyName, setterName) {
   }[name]
 }
 
+function AsDurableProperty(Property, Loader) {
+  const name = `${AsName(Property)}_$durable`
+  return {
+    [name] : function () {
+      const $inner     = this[$INNER]
+      const value      = $inner[Property]
+      const value$root = $inner[$ROOT][Property]
+
+      if ($inner[IS_IMMUTABLE]) {
+        // Object is already immutable
+        if (value !== value$root) { return value }
+        if (value === undefined)  { /* never been set */ }
+        else if (HasOwnProperty.call($inner, Property)) {
+          // Fortunately, this (expensive) case is unlikely.to persist.
+          return value
+        }
+        // Below, because $outer is frosted, InSetProperty will onl set $inner
+      }
+
+      DefineProperty($inner, Property, InvisibleConfiguration)
+      return InSetProperty($inner, Property, Loader.call(this), this)
+    }
+  }[name]
+}
+
+function AsLazyProperty(Property, Loader) {
+  const name = `${AsName(Property)}_$lazy`
+  return {
+    [name] : function () {
+      const $inner = this[$INNER]
+
+      if ($inner[IS_IMMUTABLE]) {
+        // Object is already immutable, so method defaults to being a
+        // regular getter method.
+        return Loader.call(this)
+      }
+
+      DefineProperty($inner, Property, InvisibleConfiguration)
+      return InSetProperty($inner, Property, Loader.call(this), this)
+    }
+  }[name]
+}
 
 
 
@@ -357,7 +399,6 @@ function AsSuperStandard(property, handler, isPublic) {
 
 const FACT_METHOD = {
   id          : "FACT_METHOD",
-  isImmediate : false,
   outer       : AsOuterFact,
   inner       : AsInnerFact,
   super       : AsSuperFact,
@@ -365,7 +406,6 @@ const FACT_METHOD = {
 
 const VALUE_METHOD = {
   id          : "VALUE_METHOD",
-  isImmediate : false,
   outer       : AsOuterValue,
   inner       : AsInnerValue,
   super       : AsSuperValue,
@@ -373,7 +413,6 @@ const VALUE_METHOD = {
 
 const BASIC_VALUE_METHOD = {
   id          : "BASIC_VALUE_METHOD",
-  isImmediate : false,
   outer       : AsOuterBasicValue,
   inner       : PassThru,
   super       : AsSuperBasic,
@@ -381,82 +420,54 @@ const BASIC_VALUE_METHOD = {
 
 const BASIC_SELF_METHOD = {
   id          : "BASIC_SELF_METHOD",
-  isImmediate : false,
   outer       : AsOuterBasicSelf,
   inner       : PassThru,
   super       : AsSuperBasic,
 }
 
-
-const FACT_IMMEDIATE = {
-  id          : "FACT_IMMEDIATE",
-  isImmediate : true,
-  outer       : AsOuterFact,
-  inner       : AsInnerFact,
-  super       : AsInnerFact,
-}
-
-const VALUE_IMMEDIATE = {
-  id          : "VALUE_IMMEDIATE",
-  isImmediate : true,
-  outer       : AsOuterValue,
-  inner       : AsInnerValue,
-  super       : AsInnerValue,
-}
-
-const BASIC_VALUE_IMMEDIATE = {
-  id          : "BASIC_VALUE_IMMEDIATE",
-  isImmediate : true,
-  outer       : AsOuterBasicValue,
-  inner       : PassThru,
-  super       : PassThru,
-}
-
-const BASIC_SELF_IMMEDIATE = {
-  id          : "BASIC_SELF_IMMEDIATE",
-  isImmediate : true,
-  outer       : AsOuterBasicSelf,
-  inner       : PassThru,
-  super       : PassThru,
-}
-
-
-
 const LAZY_INSTALLER = {
   id          : "LAZY_INSTALLER",
-  isImmediate : true,
   outer       : AsOuterLazyLoader,
   inner       : AsInnerLazyLoader,
   super       : AsSuperLazyLoader,
 }
 
-// const BASIC_LAZY_INSTALLER = {
-//   id          : "BASIC_LAZY_INSTALLER",
-//   isImmediate : true,
-//   outer       : AsOuterBasicLazyLoader,
-//   inner       : {true: AsInnerLazyLoader, false: AsInnerLazyLoader},
-//   super       : {true: AsSuperLazyLoader, false: AsSuperLazyLoader},
-// }
-
-
-
 const STANDARD_METHOD = {
   id          : "STANDARD_METHOD",
-  isImmediate : false,
   outer       : AsOuterStandard,
   inner       : AsInnerStandard,
   super       : AsSuperStandard,
 }
 
-const STANDARD_IMMEDIATE = {
-  id          : "STANDARD_IMMEDIATE",
-  isImmediate : true,
-  outer       : AsOuterStandard,
-  inner       : AsInnerStandard,
-  super       : AsInnerStandard,
-}
-
 const SET_LOADER = {
   id          : "SET_LOADER",
-  isImmediate : false,
 }
+
+// const ANSWERS_PRIMITIVE = VALUE_METHOD
+// const ANSWERS_NULL      = VALUE_METHOD
+// const ANSWERS_BOOLEAN   = VALUE_METHOD
+// const ANSWERS_NUMBER    = VALUE_METHOD
+// const ANSWERS_STRING    = VALUE_METHOD
+// const ANSWERS_FUNC      = VALUE_METHOD
+//
+// const ANSWERS_SELF      = VALUE_METHOD
+//
+// const ANSWERS_MUTABLE   = VALUE_METHOD
+// const ANSWERS_IMMUTABLE = VALUE_METHOD
+// const ANSWERS_FACT      = VALUE_METHOD
+
+const MUTABLE__PASSTHRU_ANSWER = BASIC_VALUE_METHOD
+const IDEMPOT__MUTABLE_ANSWER  = BASIC_VALUE_METHOD
+const IDEMPOT__SELF_ANSWER     = BASIC_VALUE_METHOD
+const IDEMPOT__STRING_ANSWER   = BASIC_VALUE_METHOD
+
+// const BASIC_ANSWERS_BOOLEAN   = BASIC_VALUE_METHOD
+// const BASIC_ANSWERS_NUMBER    = BASIC_VALUE_METHOD
+// const BASIC_ANSWERS_STRING    = BASIC_VALUE_METHOD
+// const BASIC_ANSWERS_FUNC      = BASIC_VALUE_METHOD
+//
+// const BASIC_ANSWERS_SELF      = BASIC_SELF_METHOD
+//
+// const BASIC_ANSWERS_MUTABLE   = BASIC_VALUE_METHOD
+// const BASIC_ANSWERS_IMMUTABLE = BASIC_VALUE_METHOD
+// const BASIC_ANSWERS_FACT      = BASIC_VALUE_METHOD

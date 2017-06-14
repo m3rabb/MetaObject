@@ -1,20 +1,13 @@
-_$Primordial.addMethod(function $() {
-  const $inner = this[$INNER]
-  const $rind  = $inner[$RIND]
-
-  DefineProperty($inner, "$", InvisibleConfiguration)
-  if (!$inner[IS_IMMUTABLE]) { $inner[$OUTER].$ = $rind }
-  return ($inner.$ = $rind)
-}, BASIC_VALUE_IMMEDIATE)
 
 
-_$Primordial.addMethod(function _super() {
-  const $inner = this[$INNER]
-  const $super = new Proxy($inner, SuperBehavior)
+_$Primordial._addDurableProperty(function $() {
+  return this[$RIND]
+}, BASIC_VALUE_METHOD)
 
-  DefineProperty($inner, "_super", InvisibleConfiguration)
-  return ($inner._super = $super)
-}, BASIC_VALUE_IMMEDIATE)
+
+_$Primordial._addDurableProperty(function _super() {
+  return new Proxy(this[$INNER], SuperBehavior)
+}, BASIC_VALUE_METHOD)
 
 
 
@@ -31,11 +24,11 @@ _$Primordial.addMethod(function is(value) {
 
 _$Primordial.addMethod(function isPermeable() {
   return (this[$PERMEABILITY] === Permeable)
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 _$Primordial.addMethod(function isImmutable() {
   return this[IS_IMMUTABLE] ? true : false
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 
 // _$Primordial._setImmutable()

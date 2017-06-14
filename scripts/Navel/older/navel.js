@@ -33,7 +33,7 @@ const Base$root                  = SpawnFrom(null)
 
 const   Base$outer$root          = new Proxy(Base$root, DefaultOuterBehavior)
 // let     Nothing$outer$root
-let         Something$outer$root  // Inate Intrinsic
+let         Something$outer$root  // Innate Intrinsic
 
 const   Base$core$root           = new Proxy(Base$root, DefaultCoreBehavior)
 // let    Nothing$core$root

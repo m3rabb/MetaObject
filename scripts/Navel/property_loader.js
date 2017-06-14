@@ -1,7 +1,7 @@
 
 PropertyLoader = Type("PropertyLoader")
 
-const modeNames = `DECLARE SHARED ALIAS STANDARD METHOD IMMEDIATE LAZY
+const modeNames = `DECLARE SHARED ALIAS STANDARD METHOD LAZY
                    FOR_ASSIGN FOR_SETTER FOR_MANDATORY SETTER MANDATORY`
 
 PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
@@ -34,7 +34,7 @@ PropertyLoader.addMethod(function isMode(string) {
 
 PropertyLoader.addMethod(function load(item, mode = "STANDARD") {
   this._load(item, mode)
-  this._resolveAliases()
+  this._resolveAliases
   return this._type
 })
 
@@ -89,7 +89,6 @@ PropertyLoader.addMethod(function _loadPair(name, value, mode) {
     case "SHARED"        : return this._type.addSharedProperty    (name, value)
 
     case "METHOD"        : return this._type.addMethod            (name, value)
-    case "IMMEDIATE"     : return this._type.addImmediate         (name, value)
     case "LAZY"          : return this._type.addLazyProperty      (name, value)
     case "SETTER"        : return this._type.addSetter            (name, value)
     case "MANDATORY"     : return this._type.addMandatorySetter   (name, value)
@@ -111,7 +110,6 @@ PropertyLoader.addMethod(function _loadFunc(func, mode) {
     case "STANDARD"      : return this._type.addMethod         (func)
     case "METHOD"        : return this._type.addMethod         (func)
 
-    case "IMMEDIATE"     : return this._type.addImmediate      (func)
     case "LAZY"          : return this._type.addLazyProperty   (func)
     case "SETTER"        : return this._type.addSetter         (func)
     case "MANDATORY"     : return this._type.addMandatorySetter(func)

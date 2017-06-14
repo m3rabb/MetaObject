@@ -14,15 +14,23 @@
 // USER CAN/SHOULD NEVER REDEFINE INATE METHODS
 //
 
+const KnownProperties = function knownProperties() {
+  return this[$KNOWN_PROPERTIES]
+}
+
+_$Innate.addMethod(KnownProperties, BASIC_VALUE_METHOD)
+
+_$Innate.addMethod(KNOWN_PROPERTIES, KnownProperties, BASIC_VALUE_METHOD)
+
 
 
 _$Innate.addMethod(function isMutable() {
   return !this[IS_IMMUTABLE]
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 _$Innate.addMethod(function isFact() {
   return this[IS_IMMUTABLE] ? true : (this.id != null)
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 
 _$Innate.addMethod(function isA(type) {
@@ -63,26 +71,26 @@ _$Innate.addMethod(function mutableCopyExcept(property) {
 _$Innate.addMethod(function asCopy() {
   const $inner = this[$INNER]
   return ($inner[IS_IMMUTABLE] ? $inner : $Copy($inner, false))[$RIND]
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 _$Innate.addMethod(function asMutableCopy() {
   return $Copy(this[$INNER], false)[$RIND]
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 _$Innate.addMethod(function asFact() {
   return this[IS_IMMUTABLE] || (this.id != null) ?
     this : $Copy(this[$INNER], true)[$RIND]
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 _$Innate.addMethod(function asImmutable() {
   const $inner = this[$INNER]
   return ($inner[IS_IMMUTABLE] ? $inner : $Copy($inner, true))[$RIND]
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 _$Innate.addMethod(function asMutable() {
   const $inner = this[$INNER]
   return ($inner[IS_IMMUTABLE] ? $Copy($inner, false) : $inner)[$RIND]
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 
 
@@ -107,13 +115,10 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
    _initFrom_.call($pulp, $source[$PULP], asImmutable, visited, exceptProperty_)
   }
   else {
-    const setOuterToo = !$source[IS_IMMUTABLE]
-    const properties = $source[KNOWN_PROPERTIES] ||
-      SetKnownProperties($source, setOuterToo)
+    const properties = $source[$KNOWN_PROPERTIES] ||
+      SetKnownProperties($source, $KNOWN_PROPERTIES)
 
-    if (!$inner[KNOWN_PROPERTIES]) {
-      $outer[KNOWN_PROPERTIES] = $inner[KNOWN_PROPERTIES] = properties
-    }
+    if (!$inner[$KNOWN_PROPERTIES]) { $inner[$KNOWN_PROPERTIES] = properties }
     next = properties.length
 
     while (next--) {
@@ -172,10 +177,11 @@ _$Innate.addMethod(function setImmutable(visited_inPlace_, visited_) {
   return this._setImmutable(inPlace, visited)
 }, BASIC_SELF_METHOD)
 
+
 // Warning!!! Consider complications of
 _$Innate.addMethod(function beImmutable() {
   return this[IS_IMMUTABLE] ? this : this._setImmutable()
-}, BASIC_SELF_IMMEDIATE)
+}, BASIC_SELF_METHOD)
 
 
 
@@ -217,37 +223,24 @@ _$Innate.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
 _$Innate.addMethod(function basicId() {
   const suffix = this.isPermeable ? "_" : ""
   return `${this.uid}.${this.type.formalName}${suffix}`
-}, BASIC_VALUE_IMMEDIATE)
+}, BASIC_VALUE_METHOD)
 
 _$Innate.addMethod(function oid() {
   const suffix = this.isPermeable ? "_" : ""
   return `${this.iid}.${this.type.formalName}${suffix}`
-}, BASIC_VALUE_IMMEDIATE)
-
-
-
-_$Innate.addMethod(function _getLazyId(name, setter) {
-  const $inner = this[$INNER]
-
-  if ($inner[IS_IMMUTABLE]) {
-    // Will set the $inner uid even on an immutable object!!!
-    return $inner[name] || ($inner[name] = setter())
-  }
-
-  const value = setter()
-  DefineProperty($inner, name, InvisibleConfiguration)
-  return ($inner[$OUTER][name] = $inner[name] = value)
 }, BASIC_VALUE_METHOD)
 
-_$Innate.addMethod(function uid() {
-  return this._getLazyId(
-    "uid", () => this._hasOwn("guid") ? this.guid : NewUniqueId())
-}, BASIC_VALUE_IMMEDIATE)
 
-_$Innate.addMethod(function iid() {
-  return this._getLazyId(
-    "iid", () => InterMap.get(this.type)[$PULP]._nextIID)
-}, BASIC_VALUE_IMMEDIATE)
+_$Innate._addDurableProperty(function uid() {
+  return this._hasOwn("guid") ? this.guid : NewUniqueId()
+}, BASIC_VALUE_METHOD)
+
+
+_$Innate._addDurableProperty(function iid() {
+  return InterMap.get(this.type)[$PULP]._nextIID
+}, BASIC_VALUE_METHOD)
+
+
 
 
 // uri
@@ -355,7 +348,7 @@ _$Innate.addMethod(function _detectedInnerError(value) {
 //   if ($inner[IS_IMMUTABLE]) { delete this[_DELETE_IMMUTABILITY] }
 //   DefineProperty($inner, "_captureChanges", InvisibleConfiguration)
 //   return ($inner._captureChanges = this)
-// }, BASIC_SELF_IMMEDIATE)
+// }, BASIC_SELF_METHOD)
 //
 //
 // _$Innate.addImmediate(function _captureOverwrite() {
@@ -363,7 +356,7 @@ _$Innate.addMethod(function _detectedInnerError(value) {
 //   if ($inner[IS_IMMUTABLE]) { delete this[_DELETE_ALL_PROPERTIES] }
 //   DefineProperty($inner, "_captureOverwrite", InvisibleConfiguration)
 //   return ($inner._captureOverwrite = this)
-// }, BASIC_SELF_IMMEDIATE)
+// }, BASIC_SELF_METHOD)
 
 // Must we delete the _captureChanges and _captureOverwrite when copying or
 // otherwise done using them???

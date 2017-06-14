@@ -41,7 +41,8 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
     case Object :
       visited.set(source, (target = target || {})) // Handles cyclic objects
 
-      properties = source[KNOWN_PROPERTIES] || SetKnownProperties(source)
+      properties = source[KNOWN_PROPERTIES] ||
+        SetKnownProperties(source, KNOWN_PROPERTIES)
       if (!target[KNOWN_PROPERTIES]) { target[KNOWN_PROPERTIES] = properties }
       next = properties.length
 
@@ -123,7 +124,8 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
     case WeakSet : return target
 
     default :
-      properties = target[KNOWN_PROPERTIES] || SetKnownProperties(target)
+      properties = target[KNOWN_PROPERTIES] ||
+        SetKnownProperties(target, KNOWN_PROPERTIES)
       next       = properties.length
 
       while (next--) {
