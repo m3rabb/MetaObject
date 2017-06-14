@@ -2,7 +2,7 @@ Show prior straightforward versions
 
 ===
 
-_$Innate.addMethod(function _getLazyId(name, setter) {
+_$Intrinsic.addMethod(function _getLazyId(name, setter) {
   const $inner = this[$INNER]
 
   if ($inner[IS_IMMUTABLE]) {
@@ -15,12 +15,12 @@ _$Innate.addMethod(function _getLazyId(name, setter) {
   return ($inner[$OUTER][name] = $inner[name] = value)
 }, BASIC_VALUE_METHOD)
 
-_$Innate.addMethod(function uid() {
+_$Intrinsic.addMethod(function uid() {
   return this._getLazyId(
     "uid", () => this._hasOwn("guid") ? this.guid : NewUniqueId())
 }, BASIC_VALUE_IMMEDIATE)
 
-_$Innate.addMethod(function iid() {
+_$Intrinsic.addMethod(function iid() {
   return this._getLazyId(
     "iid", () => InterMap.get(this.type)[$PULP]._nextIID)
 }, BASIC_VALUE_IMMEDIATE)
@@ -44,7 +44,7 @@ function AsDurableProperty(PropertyName, Loader) {
   }[name]
 }
 
-_$Innate.addDurableProperty(function uid() {
+_$Intrinsic.addDurableProperty(function uid() {
   return this._hasOwn("guid") ? this.guid : NewUniqueId())
 }, BASIC_VALUE_METHOD)
 

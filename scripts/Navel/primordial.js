@@ -50,7 +50,7 @@ _$Primordial.addMethod(function isImmutable() {
 //      isImmutable
 //      type
 //
-//     $Innate|$Thing
+//     $Intrinsic|$Thing
 //         oid
 //         iid
 //         uid

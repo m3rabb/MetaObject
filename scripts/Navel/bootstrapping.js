@@ -32,9 +32,9 @@ const $BaseBlanker = {
 
 
 
-const $PrimordialBlanker = NewBlanker($BaseBlanker)
-const   $InnateBlanker   = NewBlanker($PrimordialBlanker)
-const     TypeBlanker    = NewBlanker($InnateBlanker, _NewTypeInnerBlanker)
+const $PrimordialBlanker  = NewBlanker($BaseBlanker)
+const   $IntrinsicBlanker = NewBlanker($PrimordialBlanker)
+const     TypeBlanker     = NewBlanker($IntrinsicBlanker, _NewTypeInnerBlanker)
 
 
 
@@ -48,7 +48,7 @@ function BootstrapType(name, blanker_) {
   const isImplementation = (name[0] === "$")
 
   $type._properties = SpawnFrom(null)
-  $type._blanker    = blanker_ || NewBlanker($InnateBlanker)
+  $type._blanker    = blanker_ || NewBlanker($IntrinsicBlanker)
   $type.supertypes  = ($outer.supertypes = EMPTY_ARRAY)
   $type.ancestry    = isImplementation ? EMPTY_ARRAY : ThingAncestry
   $type.subtypes    = new Set()
@@ -58,13 +58,13 @@ function BootstrapType(name, blanker_) {
 const ThingAncestry = []
 
 const _$Primordial = BootstrapType("$Primordial", $PrimordialBlanker)
-const _$Innate     = BootstrapType("$Innate"    , $InnateBlanker    )
+const _$Intrinsic  = BootstrapType("$Intrinsic" , $IntrinsicBlanker )
 const _Thing       = BootstrapType("Thing"      , null              )
 const _Type        = BootstrapType("Type"       , TypeBlanker       )
 const _Method      = BootstrapType("Method"     , null              )
 
 const $Primordial = _$Primordial[$RIND]
-const $Innate     = _$Innate[$RIND]
+const $Intrinsic  = _$Intrinsic[$RIND]
 const Thing       = _Thing [$RIND]
 const Type        = _Type  [$RIND]
 const Method      = _Method[$RIND]
@@ -73,9 +73,9 @@ ThingAncestry[0] = Thing
 
 const $Primordial$root$inner = $PrimordialBlanker.$root$inner
 const $Primordial$root$outer = $PrimordialBlanker.$root$outer
-const $Innate$root$inner     = $InnateBlanker.$root$inner
-const $Innate$root$outer     = $InnateBlanker.$root$outer
-const $Innate_properties     = _$Innate._properties
+const $Intrinsic$root$inner  = $IntrinsicBlanker.$root$inner
+const $Intrinsic$root$outer  = $IntrinsicBlanker.$root$outer
+const $Intrinsic_properties  = _$Intrinsic._properties
 const Method$root$inner      = _Method._blanker.$root$inner
 
 
@@ -87,19 +87,18 @@ $Primordial$root$inner[$SECRET]           = $INNER
 $Primordial$root$outer[$SECRET]           = null
 
 
-$Innate$root$inner.isOuter                = false
-$Innate$root$outer.isOuter                = true
-$Innate$root$inner.isInner                = true
-$Innate$root$outer.isInner                = false
+$Intrinsic$root$inner.isOuter                = false
+$Intrinsic$root$outer.isOuter                = true
+$Intrinsic$root$inner.isInner                = true
+$Intrinsic$root$outer.isInner                = false
 
-$Innate_properties.isOuter                = PROPERTY
-$Innate_properties.isInner                = PROPERTY
+$Intrinsic_properties.isOuter                = PROPERTY
+$Intrinsic_properties.isInner                = PROPERTY
 
 
+$Primordial$root$outer.type                  = null
 
-$Primordial$root$outer.type               = null
-
-$Innate$root$inner._propagateIntoSubtypes = ALWAYS_SELF
+$Intrinsic$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
 
 
@@ -110,9 +109,9 @@ _SetSharedProperty.call(_$Primordial, "id"             , null , true)
 
 
 // Perhaps remove these later???
-_SetSharedProperty.call(_$Innate, "_postInit"              , null, true)
-_SetSharedProperty.call(_$Innate, "_initFrom_"             , null, true)
-_SetSharedProperty.call(_$Innate, "_setPropertiesImmutable", null, true)
+_SetSharedProperty.call(_$Intrinsic, "_postInit"              , null, true)
+_SetSharedProperty.call(_$Intrinsic, "_initFrom_"             , null, true)
+_SetSharedProperty.call(_$Intrinsic, "_setPropertiesImmutable", null, true)
 
 
 
@@ -187,7 +186,7 @@ _Method.addMethod(Method$root$inner._init)
 _Method.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 
-_$Innate.addMethod(function _basicSet(property, value) {
+_$Intrinsic.addMethod(function _basicSet(property, value) {
   const selector = PropertyToSymbol[property] || property
   this[selector] = value
 }, BASIC_SELF_METHOD)
@@ -449,7 +448,7 @@ _Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
     }
   }
   else {
-    const parentBlanker = isThing ? $InnateBlanker : $PrimordialBlanker
+    const parentBlanker = isThing ? $IntrinsicBlanker : $PrimordialBlanker
     this._blanker    = new NewBlanker(parentBlanker)
     this._properties = SpawnFrom(null)
     this.subtypes    = SetImmutable(new Set())
@@ -484,7 +483,7 @@ _Type.addSetter("setName", function name(newName) {
     }
     const newMembershipSelector = AsMembershipSelector(properName)
 
-    _$Innate.addSharedProperty(newMembershipSelector, false)
+    _$Intrinsic.addSharedProperty(newMembershipSelector, false)
     this.addSharedProperty(newMembershipSelector, true)
     this.membershipSelector = newMembershipSelector
   }
@@ -544,14 +543,14 @@ _Type.addDeclaration($OUTER_WRAPPER)
 
 _Type       ._init(       "Type"                          )
 _$Primordial._init({name: "$Primordial", supertypes: null})
-_$Innate    ._init({name: "$Innate"    , supertypes: null})
+_$Intrinsic ._init({name: "$Intrinsic" , supertypes: null})
 _Thing      ._init({name: "Thing"      , supertypes: null})
 _Method     ._init(       "Method"                        )
 
 
 // Helps with debugging!!!
-_$Primordial._setDisplayNames("$Innate$Outer", "$Innate$Inner")
-_$Innate    ._setDisplayNames( "$Outer",  "$Inner")
+_$Primordial._setDisplayNames("$Intrinsic$Outer", "$Intrinsic$Inner")
+_$Intrinsic    ._setDisplayNames( "$Outer",  "$Inner")
 
 
 // Note: If this was called before the previous declarations,
@@ -561,7 +560,7 @@ Frost($BaseBlanker.$root$outer)
 Frost($BaseBlanker.$root$inner)
 
 
-_$Innate.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+_$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 _Type.addMethod(function _setImmutable(inPlace_, visited__) {
   const $inner       = this[$INNER]
