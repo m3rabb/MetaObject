@@ -414,7 +414,7 @@ _$Intrinsic.addMethod(function _detectedInnerError(value) {
 
 
 
-// “Innate” means “born with” and should be applied only to living things.  
+// “Innate” means “born with” and should be applied only to living things.
 // “Inherent” means “essential” or “intrinsic” and is best applied to objects or ideas.
 //
 // http://people.physics.illinois.edu/Celia/MsP/Innate-Inherent.pdf

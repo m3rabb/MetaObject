@@ -266,7 +266,7 @@ Immutability.set = function set($inner, property, value, $pulp) {
 
   // If was going to assigning property to self, instead assign it to the copy
   if (value === $pulp || value === $inner[$RIND]) { value = $target[$RIND] }
-  if (flushKnownProperties) { delete $inner[$KNOWN_PROPERTIES] }
+  if (flushKnownProperties) { delete $target[$KNOWN_PROPERTIES] }
   InSetProperty($target, property, value, $pulp)
   return true
 }
@@ -302,7 +302,7 @@ Immutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
         return true // Doesn't actually have the property. Inherited from root.
       }
       $target = $Copy($inner, false, undefined, property)
-      delete $inner[$KNOWN_PROPERTIES]
+      delete $target[$KNOWN_PROPERTIES]
       break
   }
 
