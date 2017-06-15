@@ -18,8 +18,13 @@ _$Primordial.addMethod(function _unknownProperty(property) {
 
 
 _$Primordial.addMethod(function is(value) {
-  return (this === value) || (this[$RIND] === value)
+  return (this[$RIND] === value)
 }, BASIC_VALUE_METHOD)
+
+// _$Primordial.addMethod(function is(value) {
+//   return (this === value) || (this[$RIND] === value)
+// }, BASIC_VALUE_METHOD)
+
 
 
 _$Primordial.addMethod(function isPermeable() {
