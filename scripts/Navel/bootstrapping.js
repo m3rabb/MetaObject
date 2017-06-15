@@ -126,27 +126,33 @@ Method$root$inner._init = function _init(func_selector, func_, mode__) {
       [func_selector.name, func_selector, func_ ] :
       [func_selector     , func_        , mode__]
   const isPublic = (selector[0] !== "_")
+  const $inner   = InterMap.get(this[$RIND])
+  const $outer   = $inner[$OUTER]
 
   if (!selector) { return this._invalidSelectorError(selector) }
 
   this.selector    = selector
   this.mode        = mode
   this.isPublic    = isPublic
-  // this._$super --> is a lazy property
+  // this.super --> is a lazy property
 
   if (mode === SET_LOADER) {
-    this.handler = (typeof handler === "function") ?
+    $outer.handler = $inner.handler = (typeof handler === "function") ?
       MarkFunc(handler, SET_LOADER_FUNC) : handler
   }
   else {
-    const outer           = mode.outer(selector, handler, isPublic)
-    const inner           = mode.inner(selector, handler, isPublic)
+    const outer = mode.outer(selector, handler, isPublic)
+    const inner = mode.inner(selector, handler, isPublic)
+
     inner[$OUTER_WRAPPER] = outer    // For access via Permeable outer
-    outer.method          = (inner.method = this[$RIND])
     this.isImmediate      = !(handler.length || FuncParamsListing(handler))
-    this._$outer          = SetImmutableFunc(outer, WRAPPER_FUNC)
-    this._$inner          = SetImmutableFunc(inner, WRAPPER_FUNC)
-    this.handler          = MarkFunc(handler, KNOWN_FUNC)
+
+    outer.method   = inner.method   = this[$RIND]
+
+    // Need to subvert function assignment to enable raw functions to be stored.
+    $outer.outer   = $inner.outer   = SetImmutableFunc(outer, WRAPPER_FUNC)
+    $outer.inner   = $inner.inner   = SetImmutableFunc(inner, WRAPPER_FUNC)
+    $outer.handler = $inner.handler = MarkFunc        (handler, KNOWN_FUNC)
   }
 }
 
@@ -569,6 +575,8 @@ _Type.addMethod(function _setImmutable(inPlace_, visited__) {
   const $root$inner  = blanker.$root$inner
   const $root$supers = $root$inner[$SUPERS]
 
+  delete $inner._touch
+
   Frost($root$outer[$IMMEDIATES])
   Frost($root$supers[$IMMEDIATES])
   Frost($root$inner[$IMMEDIATES])
@@ -579,8 +587,6 @@ _Type.addMethod(function _setImmutable(inPlace_, visited__) {
 
   return $inner._basicSetImmutable()
 }, BASIC_SELF_METHOD)
-//   delete this._captureChanges
-//   delete this._captureOverwrite
 
 
 /*       1         2         3         4         5         6         7         8

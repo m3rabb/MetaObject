@@ -369,3 +369,17 @@ priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
 ====
 
 The semantics of set are broken!!!
+
+
+===
+
+The trade offs for handling the pulp reassignment paradox
+
+Wanted to avoid needing to have mutable object each have their own mutable
+porosity object.  Thought I would need to but then realized I could have the
+original mutable porosity object check to see if its object was immutable, and
+if so, forward sets and deletes to the immutable barrier.
+
+The upside to this approach is I realized that I could delay creating the immutable
+porosity object until absolutely necessary, only lazily creating it if and
+when a write occurred.

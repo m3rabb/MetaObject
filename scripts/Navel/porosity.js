@@ -51,9 +51,9 @@ Impermeable.get = function get($outer, property, $rind) {
   const value = $outer[property]
   if (value !== undefined) { return value }
 
-  const $inner         = InterMap.get($rind)
-  const $method_$outer = $outer[$IMMEDIATES][property]
-  if ($method_$outer) { return $method_$outer.call($rind) }
+  const $inner        = InterMap.get($rind)
+  const $method_outer = $outer[$IMMEDIATES][property]
+  if ($method_outer) { return $method_outer.call($rind) }
 
   return (property[0] === "_") ?
     PrivateAccessFromOutsideError($rind, property) :
@@ -93,7 +93,7 @@ Permeable.get = function get($outer, property, $rind) {
   }
 
   const $method = $inner[$IMMEDIATES][property]
-  if ($method) { return $method._$outer.call($rind) }
+  if ($method) { return $method.outer.call($rind) }
 
   return $inner._unknownProperty.call($inner[$PULP], property)
 }
@@ -150,14 +150,15 @@ Mutability.get = function get($inner, property, $pulp) {
   if (value !== undefined) { return value }
 
   const $method = $inner[$IMMEDIATES][property]
-  if ($method) { return $method._$inner.call($pulp) }
+  if ($method) { return $method.inner.call($pulp) }
 
   return $inner._unknownProperty.call($pulp, property)
 }
 
 
 Mutability.set = function set($inner, property, value, $pulp) {
-  if ($inner[IS_IMMUTABLE]) { return $pulp._invalidPulpError() }
+  const barrier = $inner[$MAIN_BARRIER]
+  if (barrier) { return barrier.set($inner, property, value, $inner[$PULP]) }
 
   const onSetLoader = $inner[$SET_LOADERS][property]
   const existing    = $inner[property]
@@ -169,12 +170,10 @@ Mutability.set = function set($inner, property, value, $pulp) {
   }
 
   if (existing === $inner[$ROOT][property]) {
-    // Existing value is either never been set, or the current value has been set
-    // to the same value as its root's value. The second case is less likely.
+    // Existing value has either never been set, or the current value has been
+    // set to the same value as its root's value. The second case is less likely.
 
-    // Note: The following has been deactivated. While valid, not worth the expense.
-    // if (existing === undefined) { /* Has never been set */ }
-    // else if (value === existing && HasOwnProperty($inner, property)) {return true}
+    if (value === existing && HasOwnProperty($inner, property)) {return true}
 
     // Skipped if property is a symbol, as symbol properties are not copied.
     if (property[0] !== "") { delete $inner[$KNOWN_PROPERTIES] }
@@ -191,6 +190,10 @@ Mutability.set = function set($inner, property, value, $pulp) {
 
 
 Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
+  const barrier = $inner[$MAIN_BARRIER]
+  if (barrier) {return barrier.deleteProperty($inner, property, $inner[$PULP])}
+
+
   const onSetLoader = $inner[$SET_LOADERS][property]
   const value$root  = $inner[$ROOT][property]
   const value       = $inner[property]
@@ -199,11 +202,15 @@ Mutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
     return onSetError.call($pulp) || true
   }
 
-  if (value !== value$root || HasOwnProperty.call($inner, property)) {
-    delete $inner[property]
-    delete $inner[$OUTER][property]
-    delete $inner[$KNOWN_PROPERTIES]
+  if (value === value$root) {
+    if (value === undefined || !HasOwnProperty.call($inner, property)) {
+      return true // Doesn't actually have the property. Inherited from root.
+    }
   }
+
+  delete $inner[property]
+  delete $inner[$OUTER][property]
+  delete $inner[$KNOWN_PROPERTIES]
   return true
 }
 
@@ -239,11 +246,10 @@ Immutability.set = function set($inner, property, value, $pulp) {
 
   const existing = $target[property]
   if (existing === $inner[$ROOT][property]) {
-    // Existing value is either never been set, or the current value has been set
-    // to the same value as its root's value. The second case is less likely.
+    // Existing value has either never been set, or the current value has been
+    // set to the same value as its root's value. The second case is less likely.
 
-    if (existing === undefined) { /* Has never been set */ }
-    else if (value === existing && HasOwnProperty($inner, property)) {return true}
+    if (value === existing && HasOwnProperty($inner, property)) {return true}
 
     // Skipped if property is a symbol, as symbol properties are not copied.
     var flushKnownProperties = (property[0] !== "")
@@ -298,9 +304,13 @@ Immutability.deleteProperty = function deleteProperty($inner, property, $pulp) {
 
     default :
       value$root = $inner[$ROOT][property]
-      if (value === value$root && !HasOwnProperty.call($inner, property)) {
-        return true // Doesn't actually have the property. Inherited from root.
+
+      if (value === value$root) {
+        if (value === undefined || !HasOwnProperty.call($inner, property)) {
+          return true // Doesn't actually have the property. Inherited from root.
+        }
       }
+
       $target = $Copy($inner, false, undefined, property)
       delete $target[$KNOWN_PROPERTIES]
       break
@@ -323,7 +333,7 @@ Immutability.retargetedGet = function retargetedGet($inner, property, $pulp) {
   if (value !== undefined) { return value }
 
   const $method = $target[$IMMEDIATES][property]
-  if ($method) { return $method._inner.call($target[$PULP]) }
+  if ($method) { return $method.inner.call($target[$PULP]) }
 
   return $target._unknownProperty.call($target[$PULP], property)
 }
@@ -399,10 +409,10 @@ function SetSuperPropertyFor($inner, property) {
     if (value !== undefined) {
       if (value && value.type === Method) {
         if (value.isImmediate) {
-          supers[$IMMEDIATES][property] = value._$super
+          supers[$IMMEDIATES][property] = value.super
           return (supers[property] = IMMEDIATE)
         }
-        return (supers[property] = value._$super)
+        return (supers[property] = value.super)
       }
       return (supers[property] = value)
     }

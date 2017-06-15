@@ -305,3 +305,10 @@ cannot be overridden by subtypes.  Might need to do it method by method.
 ==
 Consider using an AsLazyProperty maker instead of a dedicated set of lazy
 wrappers.
+
+
+==
+Consider merging Inner proxy, and always allocating an inner porosity in order
+to avoid the pulp reassignment paradox.
+
+Perhaps do IS_IMMUTABLE like we did $KNOWN_PROPERTIES

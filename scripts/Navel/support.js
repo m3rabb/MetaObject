@@ -153,13 +153,13 @@ function SetMethod($inner, method) {
     $inner[$IMMEDIATES][selector] = $method
     if ($method.isPublic) {
       $outer[selector] = undefined
-      $outer[$IMMEDIATES][selector] = $method._$outer
+      $outer[$IMMEDIATES][selector] = $method.outer
     }
   }
   else {
     // Store the inner (and outer) wrapper in the property chain.
-    $inner[selector] = $method._$inner
-    if ($method.isPublic) { $outer[selector] = $method._$outer }
+    $inner[selector] = $method.inner
+    if ($method.isPublic) { $outer[selector] = $method.outer }
   }
 }
 
@@ -186,7 +186,7 @@ function SetMethod($inner, method) {
 function InSetProperty($inner, property, value, _instigator) {
   const isPublic = (property[0] !== "_")
   const $outer   = $inner[$OUTER]
-  var   $method_$outer
+  var   $method_outer
 
   switch (typeof value) {
     case "undefined" :
@@ -220,8 +220,8 @@ function InSetProperty($inner, property, value, _instigator) {
 
         case WRAPPER_FUNC :
           if (isPublic) {
-            $outer[property] = ($method_$outer = value[$OUTER_WRAPPER]) ?
-              $method_$outer : value
+            $outer[property] = ($method_outer = value[$OUTER_WRAPPER]) ?
+              $method_outer : value
           }
           break
 
@@ -230,8 +230,12 @@ function InSetProperty($inner, property, value, _instigator) {
           value = AsTameFunc(value)
           // break omitted
 
-        default           :
-          // Value is either a known function, or a type's $rind.
+        case SAFE_FUNC       :
+        case KNOWN_FUNC      :
+        case TAMED_FUNC      :
+        case BLANKER_FUNC    :
+        case SET_LOADER_FUNC :
+        default              : // value is a type's $rind, etc
           if (isPublic) { $outer[property] = value }
           break
       }
@@ -244,6 +248,7 @@ function InSetProperty($inner, property, value, _instigator) {
 
   return ($inner[property] = value)
 }
+
 
 
  // Consider caching these!!!
@@ -662,18 +667,20 @@ const ALWAYS_SELF      = MarkFunc( function () { return this })
 
 
 
+// Warning!!! Consider complications of pulp reassignment paradox
+// This method should only be called on a mutable object!!!
 const _BasicSetImmutable = function _basicSetImmutable(inPlace_, visited__) {
   const $inner  = this[$INNER]
   const $outer  = $inner[$OUTER]
   const barrier = new ImmutableInner()
+
+  delete $inner._retarget
 
   $inner[$MAIN_BARRIER] = barrier
   $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
   Frost($outer)
   return ($inner[$PULP] = new Proxy($inner, barrier))
 }
-//   delete this._captureChanges
-//   delete this._captureOverwrite
 
 
 

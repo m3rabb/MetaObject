@@ -1,7 +1,9 @@
-_Method.addRetroactiveProperty(function _$super() {
-  const $inner   = this[$INNER]
-  const selector = $inner.isImmediate ? "inner" : "super"
-  return $inner.mode[selector]($inner.name, $inner.handler, $inner.isPublic)
+_Method.addRetroactiveProperty({
+  super : function () {
+    const $inner   = this[$INNER]
+    const selector = $inner.isImmediate ? "inner" : "super"
+    return $inner.mode[selector]($inner.name, $inner.handler, $inner.isPublic)
+  }.super
 })
 
 _Method.addLazyProperty(function isLazy() {

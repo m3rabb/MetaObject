@@ -169,6 +169,7 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
 // }, BASIC_VALUE_METHOD)
 
 
+// Reconsider his method. It might be too dangerous to use safely.
 // Warning!!! Consider complications of pulp reassignment paradox
 _$Intrinsic.addMethod(function setImmutable(visited_inPlace_, visited_) {
   if (this[IS_IMMUTABLE]) { return this }
@@ -178,7 +179,7 @@ _$Intrinsic.addMethod(function setImmutable(visited_inPlace_, visited_) {
 })
 
 
-// Warning!!! Consider complications of
+// Warning!!! Consider complications of pulp reassignment paradox
 _$Intrinsic.addMethod(function beImmutable() {
   return this[IS_IMMUTABLE] ? this : this._setImmutable()
 })
@@ -338,7 +339,27 @@ _$Intrinsic.addMethod(function _detectedInnerError(value) {
 })
 
 
-//
+// _beMutable _touch _captureChanges
+
+_$Intrinsic.addMethod(function _retarget() {
+  const $inner  = this[$INNER]
+  const barrier = $inner[$MAIN_BARRIER]
+
+  if (barrier) {
+    barrier.$target        = $Copy($inner, false)
+    barrier.set            = barrier.retargetedSet
+    barrier.get            = barrier.retargetedGet
+    barrier.deleteProperty = barrier.retargetedDelete
+    return $inner[$PULP]
+  }
+  else {
+    DefineProperty($inner, "_touch", InvisibleConfiguration)
+    return InSetProperty($inner, "_touch", this, this)
+  }
+}, BASIC_SELF_METHOD)
+
+// _overwrite // _touchAsBlank  // _retargetAsBlank // _captureOverwrite
+
 // _$Intrinsic.addImmediate(function _captureChanges() {
 //   const $inner = this[$INNER]
 //   if ($inner[IS_IMMUTABLE]) { delete this[_DELETE_IMMUTABILITY] }

@@ -122,9 +122,10 @@ function AsOuterFact(property, Handler) {
         }
       }
       else {
-        $pulp  = $inner[$PULP]
-        result = Handler.apply($pulp, args) // <<----------
-        if (result === undefined || result === $pulp) { return $inner[$RIND] }
+        result = Handler.apply($inner[$PULP], args) // <<----------
+        if (result === undefined)     { return $inner[$RIND] }
+        // Necessary to reaccess $pulp to avoid the pulp reassignment paradox.
+        if (result === $inner[$PULP]) { return $inner[$RIND] }
       }
 
       switch (typeof result) {
@@ -179,10 +180,15 @@ function AsOuterValue(property, Handler) {
         }
       }
       else {
-        $pulp  = $inner[$PULP]
-        result = Handler.apply($pulp, args) // <<----------
-        if (result === undefined || result === $pulp) { return $inner[$RIND] }
+        result = Handler.apply($inner[$PULP], args) // <<----------
+        if (result === undefined)     { return $inner[$RIND] }
+        // Necessary to reaccess $pulp to avoid the pulp reassignment paradox.
+        if (result === $inner[$PULP]) { return $inner[$RIND] }
       }
+
+
+      // Warning!!! Consider complications of pulp reassignment paradox
+
 
       return result
     }

@@ -7,7 +7,7 @@ _Thing.addSetter("_setId", function id(newId_) {
 
   if (newId_ === undefined) {
     if (existingId != null) { return existingId }
-    newId = this.oid
+    newId = this._retarget.oid
   }
   else if (newId_ === existingId) { return existingId }
   else { newId = newId_ }
@@ -32,12 +32,16 @@ _Thing.addMethod(function _init(spec_) {
 })
 
 
+// Warning!!! Consider complications of pulp reassignment paradox
+// This method should only be called on a mutable object!!!
 _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   var next, property, value, $value, barrier
   const $inner                  = this[$INNER]
   const $outer                  = $inner[$OUTER]
   const $rind                   = $inner[$RIND]
   const _setPropertiesImmutable = $inner._setPropertiesImmutable
+
+  delete $inner._retarget
 
   visited.set($rind, $rind)
 
