@@ -32,8 +32,8 @@ const $BaseBlanker = {
 
 
 
-const $PrimordialBlanker  = NewBlanker($BaseBlanker)
-const   $IntrinsicBlanker = NewBlanker($PrimordialBlanker)
+const $SomethingBlanker   = NewBlanker($BaseBlanker)
+const   $IntrinsicBlanker = NewBlanker($SomethingBlanker)
 const     TypeBlanker     = NewBlanker($IntrinsicBlanker, _NewTypeInnerBlanker)
 
 
@@ -57,44 +57,45 @@ function BootstrapType(name, blanker_) {
 
 const ThingAncestry = []
 
-const _$Primordial = BootstrapType("$Primordial", $PrimordialBlanker)
-const _$Intrinsic  = BootstrapType("$Intrinsic" , $IntrinsicBlanker )
-const _Thing       = BootstrapType("Thing"      , null              )
-const _Type        = BootstrapType("Type"       , TypeBlanker       )
-const _Method      = BootstrapType("Method"     , null              )
+const _$Something = BootstrapType("$Something", $SomethingBlanker )
+const _$Intrinsic = BootstrapType("$Intrinsic", $IntrinsicBlanker )
+const _Thing      = BootstrapType("Thing"     , null              )
+const _Type       = BootstrapType("Type"      , TypeBlanker       )
+const _Method     = BootstrapType("Method"    , null              )
 
-const $Primordial = _$Primordial[$RIND]
-const $Intrinsic  = _$Intrinsic[$RIND]
-const Thing       = _Thing [$RIND]
-const Type        = _Type  [$RIND]
-const Method      = _Method[$RIND]
+const $Something = _$Something[$RIND]
+const $Intrinsic = _$Intrinsic[$RIND]
+const Thing      = _Thing     [$RIND]
+const Type       = _Type      [$RIND]
+const Method     = _Method    [$RIND]
 
 ThingAncestry[0] = Thing
 
-const $Primordial$root$inner = $PrimordialBlanker.$root$inner
-const $Primordial$root$outer = $PrimordialBlanker.$root$outer
-const $Intrinsic$root$inner  = $IntrinsicBlanker.$root$inner
-const $Intrinsic$root$outer  = $IntrinsicBlanker.$root$outer
-const $Intrinsic_properties  = _$Intrinsic._properties
-const Method$root$inner      = _Method._blanker.$root$inner
+const $Something$root$inner = $SomethingBlanker.$root$inner
+const $Something$root$outer = $SomethingBlanker.$root$outer
+const $Intrinsic$root$inner = $IntrinsicBlanker.$root$inner
+const $Intrinsic$root$outer = $IntrinsicBlanker.$root$outer
+const $Intrinsic_properties = _$Intrinsic._properties
+const Method$root$inner     = _Method._blanker.$root$inner
 
 
 // Stubs for known properties
-$Primordial$root$inner[$BARRIER]             = null
+$Something$root$inner[$BARRIER]             = null
 // This secret is only known by inner objects
-$Primordial$root$inner[$SECRET]              = $INNER
-$Primordial$root$outer[$SECRET]              = null
+$Something$root$inner[$SECRET]              = $INNER
+$Something$root$outer[$SECRET]              = null
 
 
 
 
-$Primordial$root$outer.type                  = null
+$Something$root$outer.type                   = null
 $Intrinsic$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
 
 
-_SetSharedProperty.call(_$Primordial, IS_IMMUTABLE    , false, true)
-_SetSharedProperty.call(_$Primordial, "id"            , null , true)
+_SetSharedProperty.call(_$Something, "isSomething", true , true)
+_SetSharedProperty.call(_$Something, IS_IMMUTABLE , false, true)
+_SetSharedProperty.call(_$Something, "id"         , null , true)
 
 
 _SetSharedProperty.call(_$Intrinsic, DURABLES                 , null, true)
@@ -447,7 +448,7 @@ _Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
     }
   }
   else {
-    const parentBlanker = isThing ? $IntrinsicBlanker : $PrimordialBlanker
+    const parentBlanker = isThing ? $IntrinsicBlanker : $SomethingBlanker
     this._blanker    = new NewBlanker(parentBlanker)
     this._properties = SpawnFrom(null)
     this.subtypes    = SetImmutable(new Set())
@@ -539,16 +540,16 @@ _Type.addDeclaration("_blanker")
 _Type.addDeclaration($OUTER_WRAPPER)
 
 
-_Type       ._init(       "Type"                          )
-_$Primordial._init({name: "$Primordial", supertypes: null})
-_$Intrinsic ._init({name: "$Intrinsic" , supertypes: null})
-_Thing      ._init({name: "Thing"      , supertypes: null})
-_Method     ._init(       "Method"                        )
+_Type      ._init(       "Type"                           )
+_$Something._init({ name: "$Something", supertypes: null })
+_$Intrinsic._init({ name: "$Intrinsic", supertypes: null })
+_Thing     ._init({ name: "Thing"     , supertypes: null })
+_Method    ._init(       "Method"                         )
 
 
 // Helps with debugging!!!
-_$Primordial._setDisplayNames("$Intrinsic$Outer", "$Intrinsic$Inner")
-_$Intrinsic    ._setDisplayNames( "$Outer",  "$Inner")
+_$Something._setDisplayNames("$Intrinsic$Outer", "$Intrinsic$Inner")
+_$Intrinsic._setDisplayNames("$Outer"          , "$Inner"          )
 
 
 // Note: If this was called before the previous declarations,

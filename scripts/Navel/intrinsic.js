@@ -303,9 +303,9 @@ _$Intrinsic.addMethod(function addOwnDeclaration(propertyName) {
 // })
 
 
-_$Primordial.addMethod(Symbol.toPrimitive, function (hint) {
+_$Intrinsic.addMethod(Symbol.toPrimitive, function (hint) {
   return this.toString()
-})
+}, VALUE_METHOD)
 
 
 

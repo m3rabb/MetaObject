@@ -146,7 +146,7 @@ function SetMethod($inner, method) {
     // access the outer of private methods.
     //
     // Formerly used delete, but deleting uncovered inherited value from
-    // _$Intrinsic & _$Primordial, so setting it undefined covers inherited
+    // _$Intrinsic & _Something, so setting it undefined covers inherited
     // value. Doing this specifically to deal with inherited null id value
     // which breaks defining immediate/lazy id values by the type instances.
     $inner[selector]              = undefined
