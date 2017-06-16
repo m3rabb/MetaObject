@@ -22,6 +22,7 @@ function Outer() {}
 const Outer_prototype = Outer.prototype = SpawnFrom(DefaultBehavior)
 const Impermeable     = new Outer()
 
+Impermeable.id = "Impermeable"
 
 // Setting on things in not allowed because the setting semantics are broken.
 // For our model, the return value should always be the receiver, or a copy
@@ -81,6 +82,7 @@ function Outer_() {}
 const Outer__prototype = Outer_.prototype = SpawnFrom(Outer_prototype)
 const Permeable        = new Outer_()
 
+Permeable.id = "Permeable"
 
 Permeable.get = function get($outer, property, $rind) {
   const $inner = InterMap.get($rind)
@@ -205,7 +207,7 @@ Inner_prototype.set = function set($inner, property, value, $pulp) {
 
 
 Inner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp) {
-  var onSetLoader, permeability, $target, value, value$root
+  var onSetLoader, isPermeable, permeability, $target, value, value$root
 
   onSetLoader = $inner[$SET_LOADERS][property]
 
@@ -219,13 +221,11 @@ Inner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp
       break
 
     case $DELETE_ALL_PROPERTIES :  // Only called on immutable objects!!!
-      permeability = $inner[$PERMEABILITY]
-      $target      = $inner[$BLANKER](permeability)
+      isPermeable  = $inner[$OUTER].$INNER
+      permeability = isPermeable ? Permeable : Impermeable
+      $target      = new $inner[$BLANKER](permeability)
 
-      if (permeability === Permeable) {
-        $target[$OUTER].$INNER = $target
-        $target[$PERMEABILITY] = Permeable
-      }
+      if (isPermeable) { $target[$OUTER].$INNER = $target }
       break
 
     default :

@@ -108,17 +108,15 @@ _$Intrinsic.addMethod(function asMutable() {
 function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   var next, property, value, traversed, $value, barrier, properties
   const source       = $source[$RIND]
-  const permeability = $source[$PERMEABILITY]
+  const isPermeable  = $source[$OUTER].$INNER
+  const permeability = isPermeable ? Permeable : Impermeable
   const $inner       = new $source[$BLANKER](permeability)
   const $outer       = $inner[$OUTER]
   const $pulp        = $inner[$PULP]
   const target       = $inner[$RIND]
   const _initFrom_   = $inner._initFrom_
 
-  if (permeability === Permeable) {
-    $outer.$INNER         = $inner
-    $inner[$PERMEABILITY] = Permeable
-  }
+  if (isPermeable) { $outer.$INNER = $inner }
 
   visited.set(source, target) // to manage cyclic objects
 
@@ -191,13 +189,11 @@ _$Intrinsic.addMethod(function beImmutable() {
 
 _$Intrinsic.addMethod(function _newBlank() {
   const $inner       = this[$INNER]
-  const permeability = $inner[$PERMEABILITY]
+  const isPermeable  = $inner[$OUTER].$INNER
+  const permeability = isPermeable ? Permeable : Impermeable
   const $instance    = new $inner[$BLANKER](permeability)
 
-  if (permeability === Permeable) {
-    $instance[$OUTER].$INNER = $instance
-    $instance[$PERMEABILITY] = Permeable
-  }
+  if (isPermeable) { $instance[$OUTER].$INNER = $instance }
   return $instance[$RIND]
 }, BASIC_VALUE_METHOD)
 

@@ -41,7 +41,6 @@ const $COPY              = Symbol("$COPY")
 //const $IID               = Symbol("$instanceId")
 const $PRIOR_IDS         = Symbol("$PRIOR_IDS")
 const $SECRET            = Symbol("$SECRET")
-const $PERMEABILITY      = Symbol("$PERMEABILITY")
 
 const $ROOT              = Symbol("$ROOT")
 const $BLANKER           = Symbol("$BLANKER")

@@ -61,7 +61,6 @@ _Type.addMethod(function new_(...args) {
     _postInit = $instance._postInit
 
     $instance[$OUTER].$INNER = $instance
-    $instance[$PERMEABILITY] = Permeable
 
     $instance._init.apply(_instance, args)
 
@@ -80,10 +79,9 @@ _Type.addMethod(function new_(...args) {
   $outer    = $instance[$OUTER]
   instance_ = new Proxy($outer, Permeable)
 
-  $instance[$PERMEABILITY] = Permeable
-  $instance[$RIND]         = instance_
-  $outer.$INNER            = $instance
-  $outer[$RIND]            = instance_
+  $instance[$RIND] = instance_
+  $outer.$INNER    = $instance
+  $outer[$RIND]    = instance_
 
   InterMap.set(instance_, $instance)
   return instance_

@@ -28,7 +28,7 @@ _$Primordial.addMethod(function is(value) {
 
 
 _$Primordial.addMethod(function isPermeable() {
-  return (this[$PERMEABILITY] === Permeable)
+  return (this[$OUTER].$INNER ? true : false)
 }, BASIC_VALUE_METHOD)
 
 _$Primordial.addMethod(function isImmutable() {
@@ -49,7 +49,7 @@ _$Primordial.addMethod(function isImmutable() {
 //
 //      id = null
 //      IS_IMMUTABLE = null
-//      $PERMEABILITY
+//      $INNER
 //      is
 //      isPermeable
 //      isImmutable
