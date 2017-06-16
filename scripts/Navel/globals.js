@@ -36,7 +36,7 @@ const $PULP              = Symbol("$PULP")
 const $OUTER             = Symbol("$OUTER")
 const $RIND              = Symbol("$RIND")  // Consider simply using $ !!!
 
-const $MAIN_BARRIER      = Symbol("$MAIN_BARRIER")
+const $BARRIER           = Symbol("$BARRIER")
 const $COPY              = Symbol("$COPY")
 //const $IID               = Symbol("$instanceId")
 const $PRIOR_IDS         = Symbol("$PRIOR_IDS")
@@ -52,12 +52,15 @@ const $SUPERS            = Symbol("$SUPERS")
 
 const $OUTER_WRAPPER     = Symbol("$OUTER_WRAPPER")
 
+const $DELETE_IMMUTABILITY   = Symbol("$DELETE_IMMUTABILITY")
+const $DELETE_ALL_PROPERTIES = Symbol("$DELETE_ALL_PROPERTIES")
+
 
 // Sentinels
-const PROPERTY           = Symbol("PROPERTY")
-// const CONSTRUCTOR        = Symbol("CONSTRUCTOR")
-const NO_SUPER           = Symbol("NO_SUPER")
-const IMMEDIATE          = Symbol("IMMEDIATE")
+const PROPERTY               = Symbol("PROPERTY")
+// const CONSTRUCTOR         = Symbol("CONSTRUCTOR")
+const NO_SUPER               = Symbol("NO_SUPER")
+const IMMEDIATE              = Symbol("IMMEDIATE")
 
 
 

@@ -32,10 +32,9 @@ _Thing.addMethod(function _init(spec_) {
 })
 
 
-// Warning!!! Consider complications of pulp reassignment paradox
 // This method should only be called on a mutable object!!!
 _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
-  var next, property, value, $value, barrier
+  var next, property, value, nextValue
   const $inner                  = this[$INNER]
   const $outer                  = $inner[$OUTER]
   const $rind                   = $inner[$RIND]
@@ -46,7 +45,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   visited.set($rind, $rind)
 
   if (_setPropertiesImmutable) {
-    _setPropertiesImmutable.call($pulp, inPlace, visited)
+    _setPropertiesImmutable.call(this, inPlace, visited)
   }
   else {
     const properties = $inner[$KNOWN_PROPERTIES] ||
@@ -56,36 +55,16 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 
     while (next--) {
       property = properties[next]
-      if (property[0] !== "_")       { continue }
+      if (property[0] !== "_") { continue }
 
-      value = $inner[property]
-
-      if (typeof value !== "object") { continue }
-      if (value === null)            { continue }
-      if (value === $rind)           { continue }
-      if (value[IS_IMMUTABLE])       { continue }
-      if (value.id != null)          { continue }
-      if (visited.get(value))        { continue }
-
-      $value = InterMap.get(value)
-      if (inPlace) {
-        if ($value) { $value._setImmutable.call($value[$PULP], true, visited) }
-        else        { SetImmutableObject(value, true, visited)                }
-      }
-      else {
-        $inner[property] = ($value) ?
-          $Copy($value, true, visited)[$RIND] :
-          CopyObject(value, true, visited)
-      }
+      value     = $inner[property]
+      nextValue = SetImmutableValue(value, inPlace, visited, $rind)
+      if (nextValue !== value) { $inner[property] = nextValue }
     }
   }
 
-  barrier               = new ImmutableInner()
-  $inner[$MAIN_BARRIER] = barrier
   $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
   Frost($outer)
-  return ($inner[$PULP] = new Proxy($inner, barrier))
-
 })
 
 

@@ -80,11 +80,11 @@ const Method$root$inner      = _Method._blanker.$root$inner
 
 
 // Stubs for known properties
-$Primordial$root$inner[$MAIN_BARRIER]     = null
-$Primordial$root$inner[$PERMEABILITY]     = Impermeable
+$Primordial$root$inner[$BARRIER]             = null
+$Primordial$root$inner[$PERMEABILITY]        = Impermeable
 // This secret is only known by inner objects
-$Primordial$root$inner[$SECRET]           = $INNER
-$Primordial$root$outer[$SECRET]           = null
+$Primordial$root$inner[$SECRET]              = $INNER
+$Primordial$root$outer[$SECRET]              = null
 
 
 $Intrinsic$root$inner.isOuter                = false

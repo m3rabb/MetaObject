@@ -93,11 +93,13 @@ function AsOuterFact(property, Handler) {
       var   barrier, useNewBarrier, hasNewTarget, $pulp, result, $target
       var   outer, $result
 
-      if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
+      if ($inner[IS_IMMUTABLE]) {
+        barrier = $inner[$BARRIER]
+
         if ((useNewBarrier = barrier.$target)) {
           // Existing barrier is already in use, must generate another barrier and
           // $pulp, and then discard them.
-          barrier = new ImmutableInner()
+          barrier = new Inner()
           $pulp   = new Proxy($inner, barrier)
         }
         else {
@@ -108,9 +110,9 @@ function AsOuterFact(property, Handler) {
         barrier.$target = $inner
         result          = Handler.apply($pulp, args) // <<----------
         $target         = barrier.$target
+        barrier.$target = null
 
         if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
-          barrier.$target = null
           delete barrier.get
           delete barrier.set
           delete barrier.deleteProperty
@@ -122,10 +124,9 @@ function AsOuterFact(property, Handler) {
         }
       }
       else {
-        result = Handler.apply($inner[$PULP], args) // <<----------
-        if (result === undefined)     { return $inner[$RIND] }
-        // Necessary to reaccess $pulp to avoid the pulp reassignment paradox.
-        if (result === $inner[$PULP]) { return $inner[$RIND] }
+        $pulp = $inner[$PULP]
+        result = Handler.apply($pulp, args) // <<----------
+        if (result === undefined || result === $pulp) { return $inner[$RIND] }
       }
 
       switch (typeof result) {
@@ -151,11 +152,13 @@ function AsOuterValue(property, Handler) {
       const $inner = InterMap.get(this)
       var   barrier, useNewBarrier, hasNewTarget, $pulp, result, $target
 
-      if ((barrier = $inner[$MAIN_BARRIER])) { // means $inner[IS_IMMUTABLE]
+      if ($inner[IS_IMMUTABLE]) {
+        barrier = $inner[$BARRIER]
+
         if ((useNewBarrier = barrier.$target)) {
           // Existing barrier is already in use, must generate another barrier and
           // $pulp, and then discard them.
-          barrier = new ImmutableInner()
+          barrier = new Inner()
           $pulp   = new Proxy($inner, barrier)
         }
         else {
@@ -166,9 +169,9 @@ function AsOuterValue(property, Handler) {
         barrier.$target = $inner
         result          = Handler.apply($pulp, args) // <<----------
         $target         = barrier.$target
+        barrier.$target = null
 
         if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
-          barrier.$target = null
           delete barrier.get
           delete barrier.set
           delete barrier.deleteProperty
@@ -180,15 +183,10 @@ function AsOuterValue(property, Handler) {
         }
       }
       else {
-        result = Handler.apply($inner[$PULP], args) // <<----------
-        if (result === undefined)     { return $inner[$RIND] }
-        // Necessary to reaccess $pulp to avoid the pulp reassignment paradox.
-        if (result === $inner[$PULP]) { return $inner[$RIND] }
+        $pulp = $inner[$PULP]
+        result = Handler.apply($pulp, args) // <<----------
+        if (result === undefined || result === $pulp) { return $inner[$RIND] }
       }
-
-
-      // Warning!!! Consider complications of pulp reassignment paradox
-
 
       return result
     }

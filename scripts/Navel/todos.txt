@@ -195,7 +195,7 @@ Add object addOwnMethod
 ==
 Make copy method work for types
 
-==
+++
 Consider pulp reassignment paradox
 rename as beAsImmutable|setAsImmutable???
 
@@ -307,8 +307,13 @@ Consider using an AsLazyProperty maker instead of a dedicated set of lazy
 wrappers.
 
 
-==
+++
 Consider merging Inner proxy, and always allocating an inner porosity in order
 to avoid the pulp reassignment paradox.
 
+--
+ made ImmutableInner a lazy instantiated process from calling set on
+original MutableInner once object has become immutable.
+
+--
 Perhaps do IS_IMMUTABLE like we did $KNOWN_PROPERTIES

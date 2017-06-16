@@ -419,7 +419,7 @@ function NewBlanker(rootBlanker, maker_) {
  * @property    {$outer}         $RIND.target
  * @property    {Permeability}   $RIND.handler
  * @property    {symbol}       $SECRET
- * @property    {symbol}       $MAIN_BARRIER
+ * @property    {symbol}       $BARRIER
  * @property    {Proxy}        _super
  * @property    {Super}          _super.handler
  * @property    {$inner}         _super.target
@@ -436,14 +436,16 @@ function _NewInnerBlanker(CompanionOuterBlanker) {
   // display the type of instances using type name determined by the name of
   // its constructor function property.
   return function (permeability) {
-    const $outer = new CompanionOuterBlanker()
-    const $rind  = new Proxy($outer, permeability)
+    const $outer  = new CompanionOuterBlanker()
+    const $rind   = new Proxy($outer, permeability)
+    const barrier = new Inner()
 
-    this[$INNER]  = this
-    this[$PULP]   = new Proxy(this, Mutability)
-    this[$OUTER]  = $outer
-    this[$RIND]   = $rind
-    $outer[$RIND] = $rind
+    this[$BARRIER] = barrier
+    this[$INNER]   = this
+    this[$PULP]    = new Proxy(this, barrier)
+    this[$OUTER]   = $outer
+    this[$RIND]    = $rind
+    $outer[$RIND]  = $rind
     InterMap.set($rind, this)
   }
 }
@@ -468,7 +470,7 @@ function _NewInnerBlanker(CompanionOuterBlanker) {
  * @property    {Proxy}            $RIND.handler.$pulp
  * @property    {Permeability}     $RIND.handler.permeability
  * @property    {symbol}       $SECRET
- * @property    {symbol}       $MAIN_BARRIER
+ * @property    {symbol}       $BARRIER
  * @property    {Proxy}        _super
  * @property    {Super}          _super.handler
  * @property    {Type$inner}     _super.target
@@ -493,15 +495,17 @@ function _NewTypeInnerBlanker(CompanionOuterBlanker) {
     const $pulp      = new Proxy(func, mutability)
     mutability.$pulp = $pulp
     const porosity   = new TypeOuter($pulp, $outer, permeability)
+    const barrier    = new Inner()
     const $rind      = new Proxy(func, porosity)
     // const $rind           = new Proxy(NewAsFact, privacyPorosity)
 
-    this._func    = func
-    this[$INNER]  = this
-    this[$PULP]   = $pulp
-    this[$OUTER]  = $outer
-    this[$RIND]   = $rind
-    $outer[$RIND] = $rind
+    this._func     = func
+    this[$BARRIER] = barrier
+    this[$INNER]   = this
+    this[$PULP]    = $pulp
+    this[$OUTER]   = $outer
+    this[$RIND]    = $rind
+    $outer[$RIND]  = $rind
     InterMap.set($pulp, TYPE_PULP)
     InterMap.set($rind, this)
     // this[$PULP]  = new Proxy(NewAsFact, mutability)
@@ -667,20 +671,16 @@ const ALWAYS_SELF      = MarkFunc( function () { return this })
 
 
 
-// Warning!!! Consider complications of pulp reassignment paradox
 // This method should only be called on a mutable object!!!
 const _BasicSetImmutable = function _basicSetImmutable(inPlace_, visited__) {
-  const $inner  = this[$INNER]
-  const $outer  = $inner[$OUTER]
-  const barrier = new ImmutableInner()
+  const $inner = this[$INNER]
+  const $outer = $inner[$OUTER]
 
   delete $inner._retarget
-
-  $inner[$MAIN_BARRIER] = barrier
-  $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
+  $outer[IS_IMMUTABLE] = $inner[IS_IMMUTABLE] = true
   Frost($outer)
-  return ($inner[$PULP] = new Proxy($inner, barrier))
-}
+  return this
+} // BASIC_SELF_METHOD
 
 
 

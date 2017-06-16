@@ -124,22 +124,15 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
     while (next--) {
       property = properties[next]
       if (property === exceptProperty_) { continue }
-
       value = $source[property]
 
       if (property[0] !== "_") {       // public property
-        if (value === source)                    {  value = target   }
+        if (value === source) { value = target }
         $outer[property] = value
       }                                // private property
-      else if (typeof value !== "object")        {     /* NOP */     }
-      else if (value === null)                   {     /* NOP */     }
-      else if (value === source)                 {  value = target   }
-      else if (value[IS_IMMUTABLE])              {     /* NOP */     }
-      else if (value.id != null)                 {     /* NOP */     }
-      else if ((traversed = visited.get(value))) { value = traversed }
-      else {   value = ($value = InterMap.get(value)) ?
-                 $Copy    ($value, asImmutable, visited)[$RIND] :
-                 CopyObject(value, asImmutable, visited)             }
+      else {
+        value = NextValue(value, asImmutable, visited, source, target)
+      }
 
       $inner[property] = value
     }
@@ -153,10 +146,7 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   }
 
   if (asImmutable) {
-    barrier               = new ImmutableInner()
-    $inner[$PULP]         = new Proxy($inner, barrier)
-    $inner[$MAIN_BARRIER] = barrier
-    $outer[IS_IMMUTABLE]  = $inner[IS_IMMUTABLE] = true
+    $outer[IS_IMMUTABLE] = $inner[IS_IMMUTABLE] = true
     Frost($outer)
   }
 
@@ -169,8 +159,6 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
 // }, BASIC_VALUE_METHOD)
 
 
-// Reconsider his method. It might be too dangerous to use safely.
-// Warning!!! Consider complications of pulp reassignment paradox
 _$Intrinsic.addMethod(function setImmutable(visited_inPlace_, visited_) {
   if (this[IS_IMMUTABLE]) { return this }
   const [inPlace, visited] = (typeof visited_inPlace_ === "boolean") ?
@@ -179,7 +167,6 @@ _$Intrinsic.addMethod(function setImmutable(visited_inPlace_, visited_) {
 })
 
 
-// Warning!!! Consider complications of pulp reassignment paradox
 _$Intrinsic.addMethod(function beImmutable() {
   return this[IS_IMMUTABLE] ? this : this._setImmutable()
 })
@@ -341,22 +328,37 @@ _$Intrinsic.addMethod(function _detectedInnerError(value) {
 
 // _beMutable _touch _captureChanges
 
+// It's not enought to simple make this method access the receiver's barrier.
+// Th receiver only references its original barrier, and there may be more than
+// one proxy/barrier associated with the receiver, so we need to invoke the
+// proxy to force the proper change to occur thru it.
 _$Intrinsic.addMethod(function _retarget() {
-  const $inner  = this[$INNER]
-  const barrier = $inner[$MAIN_BARRIER]
+  const $inner = this[$INNER]
 
-  if (barrier) {
-    barrier.$target        = $Copy($inner, false)
-    barrier.set            = barrier.retargetedSet
-    barrier.get            = barrier.retargetedGet
-    barrier.deleteProperty = barrier.retargetedDelete
-    return $inner[$PULP]
+  if ($inner[IS_IMMUTABLE]) {
+    delete this[$DELETE_IMMUTABILITY]
+    return this
   }
-  else {
-    DefineProperty($inner, "_touch", InvisibleConfiguration)
-    return InSetProperty($inner, "_touch", this, this)
-  }
+
+  DefineProperty($inner, "_retarget", InvisibleConfiguration)
+  return InSetProperty($inner, "_retarget", this, this)
 }, BASIC_SELF_METHOD)
+
+
+// _$Intrinsic.addMethod(function _retargetAsBlank() {
+//   const $inner = this[$INNER]
+//
+//   if ($inner[IS_IMMUTABLE]) {
+//     delete this.[$DELETE_ALL_PROPERTIES]
+//     return this
+//   }
+//
+//   DefineProperty($inner, "_retarget", InvisibleConfiguration)
+//   return InSetProperty($inner, "_retarget", this, this)
+// }, BASIC_SELF_METHOD)
+
+
+
 
 // _overwrite // _touchAsBlank  // _retargetAsBlank // _captureOverwrite
 

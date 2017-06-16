@@ -49,8 +49,8 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
       while (next--) {
         property = properties[next]
         value    = source[property]
-        target[property] = (value === source) ?
-          target : NextValue(value, asImmutable, visited)
+        target[property] =
+          NextValue(value, asImmutable, visited, source, target)
       }
     break
 
@@ -60,8 +60,7 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
 
       while (next--) {
         value = source[next]
-        target[next] = (value === source) ?
-          target : NextValue(value, asImmutable, visited)
+        target[next] = NextValue(value, asImmutable, visited, source, target)
       }
     break
 
@@ -69,11 +68,8 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
       visited.set(source, (target = new Map())) // Handles cyclic objects
 
       source.forEach((value, key) => {
-        var nextKey = (key === source) ?
-          target : NextValue(key, asImmutable, visited)
-        var nextValue = (value === source) ?
-          target : NextValue(value, asImmutable, visited)
-
+        var nextKey = NextValue(key, asImmutable, visited, source, target)
+        var nextValue = NextValue(value, asImmutable, visited)
         target.set(nextKey, nextValue)
       })
     break
@@ -82,8 +78,7 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
       visited.set(source, (target = new Set())) // Handles cyclic objects
 
       source.forEach((value) => {
-        var nextValue = (value === source) ?
-          target : NextValue(value, asImmutable, visited)
+        var nextValue = NextValue(value, asImmutable, visited, source, target)
         target.add(nextValue)
       })
     break
@@ -97,9 +92,10 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
 }
 
 
-function NextValue(value, asImmutable, visited) {
+function NextValue(value, asImmutable, visited, source, target) {
   if (typeof value !== "object")        { return value     }
   if (value === null)                   { return value     }
+  if (value === source)                 { return target    }
   if (value[IS_IMMUTABLE])              { return value     }
   if (value.id != null)                 { return value     }
   if ((traversed = visited.get(value))) { return traversed }
@@ -131,7 +127,7 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
       while (next--) {
         property  = properties[next]
         value     = target[property]
-        nextValue = SetImmutableValue(value, inPlace, visited)
+        nextValue = SetImmutableValue(value, inPlace, visited, target)
         if (nextValue === value) { continue }
         target[property] = nextValue
       }
@@ -142,7 +138,7 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
 
       while (next--) {
         value     = target[next]
-        nextValue = SetImmutableValue(value, inPlace, visited)
+        nextValue = SetImmutableValue(value, inPlace, visited, target)
         if (nextValue === value) { continue }
         target[next] = nextValue
       }
@@ -153,8 +149,8 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
 
       for (key of keys) {
         value     = target.get(key)
-        nextKey   = SetImmutableValue(key  , inPlace, visited)
-        nextValue = SetImmutableValue(value, inPlace, visited)
+        nextKey   = SetImmutableValue(key  , inPlace, visited, target)
+        nextValue = SetImmutableValue(value, inPlace, visited, target)
 
         if (nextKey !== key) {
           target.delete(key)
@@ -168,7 +164,7 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
       values = target.values()
 
       for (value of values) {
-        nextValue = SetImmutableValue(value, inPlace, visited)
+        nextValue = SetImmutableValue(value, inPlace, visited, target)
 
         if (nextValue === value) { continue }
         target.delete(value)
@@ -183,9 +179,10 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
 
 
 
-function SetImmutableValue(value, inPlace, visited) {
+function SetImmutableValue(value, inPlace, visited, target) {
   if (typeof value !== "object") { return value }
   if (value === null)            { return value }
+  if (value === target)          { return value }
   if (value[IS_IMMUTABLE])       { return value }
   if (value.id != null)          { return value }
   if (visited.get(value))        { return value }
