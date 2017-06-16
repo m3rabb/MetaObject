@@ -240,3 +240,5 @@ Corbomite
 HotSauce
 
 enduring/perennial/durable
+
+idempot

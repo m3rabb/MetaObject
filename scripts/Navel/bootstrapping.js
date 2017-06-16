@@ -515,6 +515,7 @@ _Type.addMethod(function _init(spec_name, context_) {
   else if (supertypes === null || supertypes.isNothing) { supertypes = [] }
 
   declared    = spec_name.declare || spec_name.declared
+  durables    = spec_name.durable || spec_name.durables
   shared      = spec_name.shared  || spec_name.sharedProperties
   methods     = spec_name.methods || spec_name.instanceMethods
   definitions = spec_name.define
@@ -527,6 +528,7 @@ _Type.addMethod(function _init(spec_name, context_) {
   this.addSharedProperty("type", this[$RIND])
 
   declared    && this.addDeclarations(declared)
+  durables    && this.addDurableProperties(durables)
   shared      && this.addSharedProperties(shared)
   methods     && this.addMethods(methods)
   definitions && this.define(definitions)
