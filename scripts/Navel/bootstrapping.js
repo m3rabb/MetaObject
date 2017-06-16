@@ -87,31 +87,25 @@ $Primordial$root$inner[$SECRET]              = $INNER
 $Primordial$root$outer[$SECRET]              = null
 
 
-$Intrinsic$root$inner.isOuter                = false
-$Intrinsic$root$outer.isOuter                = true
-$Intrinsic$root$inner.isInner                = true
-$Intrinsic$root$outer.isInner                = false
-
-$Intrinsic_properties.isOuter                = PROPERTY
-$Intrinsic_properties.isInner                = PROPERTY
 
 
 $Primordial$root$outer.type                  = null
-
 $Intrinsic$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
 
 
-_SetSharedProperty.call(_$Primordial, $KNOWN_PROPERTIES, null , true)
-_SetSharedProperty.call(_$Primordial, IS_IMMUTABLE     , false, true)
-_SetSharedProperty.call(_$Primordial, "id"             , null , true)
-// _SetSharedProperty.call(_$Primordial, $RIND           , null , true)
+_SetSharedProperty.call(_$Primordial, IS_IMMUTABLE    , false, true)
+_SetSharedProperty.call(_$Primordial, "id"            , null , true)
 
 
+_SetSharedProperty.call(_$Intrinsic, DURABLES                 , null, true)
 // Perhaps remove these later???
 _SetSharedProperty.call(_$Intrinsic, "_postInit"              , null, true)
 _SetSharedProperty.call(_$Intrinsic, "_initFrom_"             , null, true)
 _SetSharedProperty.call(_$Intrinsic, "_setPropertiesImmutable", null, true)
+
+SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true )
+SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)
 
 
 
@@ -468,12 +462,11 @@ _Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
 
 
 _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
-  const innerName = innerName_ || ("_" + outerName)
-  const blanker   = this._blanker
+  const innerName     = innerName_ || ("_" + outerName)
+  const innerTypeName = NewVacuousConstructor(innerName)
+  const outerTypeName = NewVacuousConstructor(outerName)
 
-  blanker.$root$outer.constructor = NewVacuousConstructor(outerName)
-  blanker.$root$inner.constructor = NewVacuousConstructor(innerName)
-  this._properties.constructor    = PROPERTY
+  SetAsymmetricProperty(this, "constructor", innerTypeName, outerTypeName)
 })
 
 

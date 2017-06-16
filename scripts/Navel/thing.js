@@ -47,14 +47,20 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   if (_setPropertiesImmutable) {
     _setPropertiesImmutable.call(this, inPlace, visited)
   }
-  else {
-    const properties = $inner[$KNOWN_PROPERTIES] ||
-      SetKnownProperties($inner, $KNOWN_PROPERTIES)
-
+  else if ((properties = $inner[DURABLES])) {
     next = properties.length
 
     while (next--) {
       property = properties[next]
+      if (property[0] !== "_") { continue }
+
+      value     = $inner[property]
+      nextValue = SetImmutableValue(value, inPlace, visited, $rind)
+      if (nextValue !== value) { $inner[property] = nextValue }
+    }
+  }
+  else {
+    for (property in $inner) {
       if (property[0] !== "_") { continue }
 
       value     = $inner[property]

@@ -180,9 +180,6 @@ Inner_prototype.set = function set($inner, property, value, $pulp) {
     // set to the same value as its root's value. The second case is less likely.
 
     if (value === existing && HasOwnProperty($inner, property)) {return true}
-
-    // Skipped if property is a symbol, as symbol properties are not copied.
-    var flushKnownProperties = (property[0] !== "")
   }
   else {
     // Existing value is definitely one that's been set before.
@@ -202,7 +199,6 @@ Inner_prototype.set = function set($inner, property, value, $pulp) {
 
   // If was going to assigning property to self, instead assign it to the copy
   if (value === $pulp || value === $inner[$RIND]) { value = $target[$RIND] }
-  if (flushKnownProperties) { delete $target[$KNOWN_PROPERTIES] }
   InSetProperty($target, property, value, $pulp)
   return true
 }
@@ -241,23 +237,20 @@ Inner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp
           return true // Doesn't actually have the property. Inherited from root.
         }
       }
+      if (!$inner[IS_IMMUTABLE]) {
+        delete $inner[property]
+        delete $inner[$OUTER][property]
+        return true
+      }
 
-      // If immutable, copy is set below.
-      delete $target[$KNOWN_PROPERTIES]
+      $Copy($inner, false, undefined, property)
       break
   }
 
-  if ($inner[IS_IMMUTABLE]) {
-    this.$target        = $target || $Copy($inner, false, undefined, property)
-    this.set            = this.retargetedSet
-    this.get            = this.retargetedGet
-    this.deleteProperty = this.retargetedDelete
-  }
-  else {
-    delete $inner[property]
-    delete $inner[$OUTER][property]
-  }
-
+  this.$target        = $target || $Copy($inner, false, undefined, property)
+  this.set            = this.retargetedSet
+  this.get            = this.retargetedGet
+  this.deleteProperty = this.retargetedDelete
   return true
 }
 

@@ -142,17 +142,17 @@ function SetMethod($inner, method) {
   }
   else if ($method.isImmediate) {
     // Note: the $outer stores the outer handler, but the $inner stores the
-    // entire $method to enable permeable objects to have an easy way to access
-    // the outer of private methods.
+    // entire $method to enable permeable objects to have an easy way to
+    // access the outer of private methods.
     //
     // Formerly used delete, but deleting uncovered inherited value from
-    // _$Intrinsic & _$Primordial, so setting it undefined covers inherited value
-    // Doing this specifically to deal with inherited null id value which breaks
-    // defining immediate/lazy id values by the type instances.
-    $inner[selector] = undefined
+    // _$Intrinsic & _$Primordial, so setting it undefined covers inherited
+    // value. Doing this specifically to deal with inherited null id value
+    // which breaks defining immediate/lazy id values by the type instances.
+    $inner[selector]              = undefined
     $inner[$IMMEDIATES][selector] = $method
     if ($method.isPublic) {
-      $outer[selector] = undefined
+      $outer[selector]              = undefined
       $outer[$IMMEDIATES][selector] = $method.outer
     }
   }
@@ -597,10 +597,10 @@ function BuildAncestryOf(type, supertypes) {
  * When true, it stores the list on outside as well as the inside of the target.
  * @return      {Array.<name>}  The list of visible properties.
  */
-function SetKnownProperties($target, propertiesSelector) {
-  const properties = VisibleProperties($target)
+function SetDurableProperties(object) {
+  const properties = VisibleProperties(object)
   properties[IS_IMMUTABLE] = true
-  return ($target[propertiesSelector] = Frost(properties))
+  return (object[DURABLES] = Frost(properties))
 }
 
 
@@ -668,7 +668,18 @@ const ALWAYS_SELF      = MarkFunc( function () { return this })
 
 
 
+function SetAsymmetricProperty(_type, property, innerValue, outerValue) {
+  const blanker     = _type._blanker
+  const $root$outer = blanker.$root$outer
+  const $root$inner = blanker.$root$inner
 
+  DefineProperty($root$outer, property, InvisibleConfiguration)
+  DefineProperty($root$inner, property, InvisibleConfiguration)
+
+  $root$outer[property] = outerValue
+  $root$inner[property] = innerValue
+  _type._properties[property] = ASYMMETRIC_PROPERTY
+}
 
 
 // This method should only be called on a mutable object!!!
@@ -688,11 +699,17 @@ const _SetSharedProperty = function _setSharedProperty(property, value, isOwn) {
   const properties  = this._properties
   const existing    = properties[property]
   const $root$inner = this._blanker.$root$inner
+  const isPublic    = (property[0] !== "_")
 
   if (existing === value) { return this }
 
   if (value && value.type === Method) { SetMethod($root$inner, value) }
   else { InSetProperty($root$inner, property, value, this) }
+
+  DefineProperty($root$inner, property, InvisibleConfiguration)
+  if (isPublic) {
+    DefineProperty($root$inner[$OUTER], property, InvisibleConfiguration)
+  }
 
   if (isOwn) { properties[property] = value }
 
@@ -704,24 +721,6 @@ const _SetSharedProperty = function _setSharedProperty(property, value, isOwn) {
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
-
-
-// function ResetKnownProperties($pulp) {
-//   let $inner     = $pulp[$INNER]
-//   let properties = SpawnFrom(null)
-//   let names      = VisibleProperties($inner)
-//   let next       = selectors.length
-//
-//   while (next--) {
-//     let name         = names[next]
-//     properties[name] = name
-//   }
-//
-//   properties[IS_IMMUTABLE] = true
-//   return ($inner[$KNOWN_PROPERTIES] = Frost(properties))
-// }
-
-
 
 
 

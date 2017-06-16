@@ -30,7 +30,7 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
           // itself as a 'copy'.
         }
       }
-      else if (source.id === null || source[KNOWN_PROPERTIES]) {
+      else if (source.id === null || source[DURABLES]) {
         // Only copy ordinary custom object with expressed intention
       }
       else { return source } // Never copy ordinary custom objects
@@ -41,9 +41,8 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
     case Object :
       visited.set(source, (target = target || {})) // Handles cyclic objects
 
-      properties = source[KNOWN_PROPERTIES] ||
-        SetKnownProperties(source, KNOWN_PROPERTIES)
-      if (!target[KNOWN_PROPERTIES]) { target[KNOWN_PROPERTIES] = properties }
+      properties = source[DURABLES] || SetDurableProperties(source)
+      if (!target[DURABLES]) { target[DURABLES] = properties }
       next = properties.length
 
       while (next--) {
@@ -120,8 +119,7 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
     case WeakSet : return target
 
     default :
-      properties = target[KNOWN_PROPERTIES] ||
-        SetKnownProperties(target, KNOWN_PROPERTIES)
+      properties = target[DURABLES] || SetDurableProperties(target)
       next       = properties.length
 
       while (next--) {

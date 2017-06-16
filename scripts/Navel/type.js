@@ -17,7 +17,15 @@ _Type.addMethod(function addLazyProperty(loader_property, loader_, mode__) {
   this.addMethod(property, AsLazyProperty(property, loader), mode)
 })
 
-_Type.addMethod(function addMethodAnsweringMutable(...namedFunc_name__handler) {
+_Type.addMethod(function addFactMethod(...namedFunc_name__handler) {
+  this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
+})
+
+_Type.addMethod(function addImmutableValueMethod(...namedFunc_name__handler) {
+  this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
+})
+
+_Type.addMethod(function addMutableValueMethod(...namedFunc_name__handler) {
   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
 })
 

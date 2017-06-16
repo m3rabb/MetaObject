@@ -14,13 +14,24 @@
 // USER CAN/SHOULD NEVER REDEFINE INATE METHODS
 //
 
-const KnownProperties = function knownProperties() {
-  return this[$KNOWN_PROPERTIES]
-}
+_$Intrinsic.addMethod(function durableProperties() {
+  return this[DURABLES] || EMPTY_ARRAY
+}, BASIC_VALUE_METHOD)
 
-_$Intrinsic.addMethod(KnownProperties, BASIC_VALUE_METHOD)
+_$Intrinsic.addMethod(function setDurableProperties(properties) {
+  this[DURABLES] = properties
+}, BASIC_SELF_METHOD)
 
-_$Intrinsic.addMethod(KNOWN_PROPERTIES, KnownProperties, BASIC_VALUE_METHOD)
+_$Intrinsic.addMethod(function addDurableProperty(property) {
+  const properties = this[DURABLES] || []
+  if (!properties.includes(property)) {
+    this[DURABLES] = SetImmutable([...properties, property])
+  }
+}, BASIC_SELF_METHOD)
+
+_$Intrinsic.addMethod(function addDurableProperties(properties) {
+  properties.forEach(property => this.addDurableProperty(property))
+}, BASIC_SELF_METHOD)
 
 
 
@@ -95,7 +106,7 @@ _$Intrinsic.addMethod(function asMutable() {
 
 
 function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
-  var next, property, value, traversed, $value, barrier
+  var next, property, value, traversed, $value, barrier, properties
   const source       = $source[$RIND]
   const permeability = $source[$PERMEABILITY]
   const $inner       = new $source[$BLANKER](permeability)
@@ -114,11 +125,7 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   if (_initFrom_) {
    _initFrom_.call($pulp, $source[$PULP], asImmutable, visited, exceptProperty_)
   }
-  else {
-    const properties = $source[$KNOWN_PROPERTIES] ||
-      SetKnownProperties($source, $KNOWN_PROPERTIES)
-
-    if (!$inner[$KNOWN_PROPERTIES]) { $inner[$KNOWN_PROPERTIES] = properties }
+  else if ((properties = $source[DURABLES])) {
     next = properties.length
 
     while (next--) {
@@ -126,13 +133,22 @@ function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
       if (property === exceptProperty_) { continue }
       value = $source[property]
 
-      if (property[0] !== "_") {       // public property
-        if (value === source) { value = target }
-        $outer[property] = value
-      }                                // private property
-      else {
-        value = NextValue(value, asImmutable, visited, source, target)
-      }
+      if (property[0] !== "_") {  // public property
+        $outer[property] = (value === source) ? (value = target) : value
+      }                           // private property
+      else { value = NextValue(value, asImmutable, visited, source, target) }
+
+      $inner[property] = value
+    }
+  }
+  else {
+    for (property in $source) {
+      value = $source[property]
+
+      if (property[0] !== "_") {  // public property
+        $outer[property] = (value === source) ? (value = target) : value
+      }                           // private property
+      else { value = NextValue(value, asImmutable, visited, source, target) }
 
       $inner[property] = value
     }
@@ -203,7 +219,7 @@ _$Intrinsic.addMethod(function hasOwn(propertyName) {
 _$Intrinsic.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
 
 // _$Intrinsic.addMethod(function _hasOwn(propertyName) {
-//   const properties = this[$KNOWN_PROPERTIES] || ResetKnownProperties(this)
+//   const properties = this[DURABLES] || SetDurableProperties(this)
 //   return (properties[propertyName] !== undefined)
 // }, BASIC_VALUE_METHOD)
 
@@ -211,12 +227,12 @@ _$Intrinsic.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
 _$Intrinsic.addMethod(function basicId() {
   const suffix = this.isPermeable ? "_" : ""
   return `${this.uid}.${this.type.formalName}${suffix}`
-})
+}, VALUE_METHOD)
 
 _$Intrinsic.addMethod(function oid() {
   const suffix = this.isPermeable ? "_" : ""
   return `${this.iid}.${this.type.formalName}${suffix}`
-})
+}, VALUE_METHOD)
 
 
 _$Intrinsic.addRetroactiveProperty(function uid() {
@@ -227,6 +243,11 @@ _$Intrinsic.addRetroactiveProperty(function uid() {
 _$Intrinsic.addRetroactiveProperty(function iid() {
   return InterMap.get(this.type)[$PULP]._nextIID
 }, BASIC_VALUE_METHOD)
+
+
+_$Intrinsic.addMethod(function typeName() {
+  return this.type.name
+}, VALUE_METHOD)
 
 
 
