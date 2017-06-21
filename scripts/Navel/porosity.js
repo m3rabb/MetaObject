@@ -52,13 +52,16 @@ Impermeable.get = function get($outer, property, $rind) {
   const value = $outer[property]
   if (value !== undefined) { return value }
 
-  const $inner        = InterMap.get($rind)
   const $method_outer = $outer[$IMMEDIATES][property]
-  if ($method_outer) { return $method_outer.call($rind) }
+  if ($method_outer)   { return $method_outer.call($rind) }
+  if ($outer[$KNOWNS][property]) { return null }
 
-  return (property[0] === "_") ?
-    PrivateAccessFromOutsideError($rind, property) :
-    $inner._unknownProperty.call($inner[$PULP], property)
+  if (property[0] === "_") {
+    return PrivateAccessFromOutsideError($rind, property)
+  }
+
+  const $inner = InterMap.get($rind)
+  return $inner._unknownProperty.call($inner[$PULP], property)
 }
 
 // REVISIT!!!
@@ -66,9 +69,9 @@ Impermeable.has = function has($outer, property) {
   // const firstChar = (typeof property === "symbol") ?
   //   property.toString()[7] : property[0]
 
-    switch (property[0]) {
+  switch (property[0]) {
     case "_"       :
-      return PrivateAccessFromOutsideError($inner[$RIND], property) || false
+      return PrivateAccessFromOutsideError($outer[$RIND], property) || false
     // case undefined : if (!(property in VISIBLE_SYMBOLS)) { return false }
     case undefined :
       return false
@@ -96,6 +99,7 @@ Permeable.get = function get($outer, property, $rind) {
 
   const $method = $inner[$IMMEDIATES][property]
   if ($method) { return $method.outer.call($rind) }
+  if ($inner[$KNOWNS][property] !== undefined) { return null }
 
   return $inner._unknownProperty.call($inner[$PULP], property)
 }
@@ -152,6 +156,7 @@ Inner_prototype.get = function get($inner, property, $pulp) {
 
   const $method = $inner[$IMMEDIATES][property]
   if ($method) { return $method.inner.call($pulp) }
+  if ($inner[$KNOWNS][property] !== undefined) { return null }
 
   return $inner._unknownProperty.call($pulp, property)
 }
@@ -162,17 +167,17 @@ Inner_prototype.get = function get($inner, property, $pulp) {
 
 
 Inner_prototype.set = function set($inner, property, value, $pulp) {
-  const onSetLoader = $inner[$SET_LOADERS][property]
+  const assigner    = $inner[$ASSIGNERS][property]
   var   $target     = $inner
   var   isImmutable = $inner[IS_IMMUTABLE]
 
-  if (onSetLoader) {
-    if (typeof onSetLoader !== "function") { property = onSetLoader } // symbol
-    else {                                                            // handler
-      // The loader might cause a write, invalidating the target $inner.
-      value       = onSetLoader.call($pulp, value)
+  if (assigner) {
+    if (typeof assigner !== "function") { property = assigner } // symbol
+    else {                                                      // handler
+      // The assigner might cause a write, invalidating the target $inner.
+      value       = assigner.call($pulp, value)
       $target     = $pulp[$INNER]         // Re-get the (possibly new) $inner
-      isImmutable = $target[IS_IMMUTABLE] // See if loader caused a new copy
+      isImmutable = $target[IS_IMMUTABLE] // See if assigner caused a new copy
     }
   }
 
@@ -189,7 +194,7 @@ Inner_prototype.set = function set($inner, property, value, $pulp) {
     if (value === existing) { return true }
   }
 
-  // Need to double check this as the execution of the onSetLoader might trigger
+  // Need to double check this as the execution of the assigner might trigger
   // the barrier and cause the object to already be copied as writable!!!
   if (isImmutable) {
     $target             = $Copy($inner, false, undefined, property)
@@ -207,11 +212,11 @@ Inner_prototype.set = function set($inner, property, value, $pulp) {
 
 
 Inner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp) {
-  var onSetLoader, isPermeable, permeability, $target, value, value$root
+  var assigner, isPermeable, permeability, $target, value, value$root
 
-  onSetLoader = $inner[$SET_LOADERS][property]
+  assigner = $inner[$ASSIGNERS][property]
 
-  if (onSetLoader && onSetLoader.name === "$assignmentError") {
+  if (assigner && assigner.name === "$assignmentError") {
     return onSetError.call($pulp) || true
   }
 
@@ -265,6 +270,7 @@ Inner_prototype.retargetedGet = function retargetedGet($inner, property, $pulp) 
 
   const $method = $target[$IMMEDIATES][property]
   if ($method) { return $method.inner.call($target[$PULP]) }
+  if ($target[$KNOWNS][property] !== undefined) { return null }
 
   return $target._unknownProperty.call($target[$PULP], property)
 }
@@ -324,10 +330,10 @@ TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
 
 
 
-function SetSuperPropertyFor($inner, property) {
+function SuperPropertyFor($inner, property) {
   const ancestors = $inner.type.ancestry
   const supers    = $inner[$SUPERS]
-  var next, $type, nextProperties, value
+  var next, $type, nextProperties, value, isDeclared
 
   next = ancestors.length
   if (!$inner._hasOwn(property)) { next-- }
@@ -341,14 +347,22 @@ function SetSuperPropertyFor($inner, property) {
       if (value && value.type === Method) {
         if (value.isImmediate) {
           supers[$IMMEDIATES][property] = value.super
-          return (supers[property] = IMMEDIATE)
+          return IMMEDIATE
         }
-        return (supers[property] = value.super)
+        if ((value = value.super)) { return value }
+
+        // Here because value is a DECLARATION or ASSIGNER method
+        isDeclared = true
+        // value = $root$inner[property]
+        // if (value !== undefined) { return value }
       }
-      return (supers[property] = value)
+      else { return value }
+    }
+    else if ($type._blanker.$root$inner[$KNOWNS][property] !== undefined) {
+      isDeclared = true
     }
   }
-  return (supers[property] = NO_SUPER)
+  return isDeclared ? null : NO_SUPER
 }
 
 
@@ -364,7 +378,7 @@ Super_prototype.get = function get($inner, property, $super) {
   do {
     switch (value) {
       case undefined :
-        value = SetSuperPropertyFor($inner, property)
+        value = (supers[property] = SuperPropertyFor($inner, property))
         break
 
       case IMMEDIATE :

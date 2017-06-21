@@ -22,7 +22,7 @@ _Thing.addSetter("_setId", function id(newId_) {
 
 _Thing.addSetter("_setName", "name")
 
-_Thing.addMethod(function _init(spec_) {
+_Thing._addMethod(function _init(spec_) {
   if (spec_) {
     var id   = spec_.id
     var name = spec_.name
@@ -33,7 +33,7 @@ _Thing.addMethod(function _init(spec_) {
 
 
 // This method should only be called on a mutable object!!!
-_Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
+_Thing._addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   var next, property, value, nextValue
   const $inner                  = this[$INNER]
   const $outer                  = $inner[$OUTER]
@@ -80,7 +80,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 
 
 
-// _Thing.addMethod(function _setCopyId() {
+// _Thing._addMethod(function _setCopyId() {
 //    if it has a way to make a new id then set it,
 //    otherwise if mutable, no id, and if immutable set id to ""
 
@@ -89,24 +89,24 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 
 
 
-// _Thing.addMethod(function _postInit() {
+// _Thing._addMethod(function _postInit() {
 //   this.id = this.oid
 //   return this
 // })
 
-// _Thing.addMethod(function _setPropertiesImmutable(inPlace, visited) {
+// _Thing._addMethod(function _setPropertiesImmutable(inPlace, visited) {
 //   this.id = this.oid
 //   return this
 // })
 
-// _Thing.addMethod(function _initFrom_(_source, propertiesBeImmutable, visited, exceptProperty_) {
+// _Thing._addMethod(function _initFrom_(_source, propertiesBeImmutable, visited, exceptProperty_) {
 //   this.id = this.oid
 //   return this
 // })
 
 
 // Obsolete and unnecessary
-// Thing.addMethod(function _quietGet(property) {
+// Thing._addMethod(function _quietGet(property) {
 //   const descriptor = PropertyDescriptor(this, property)
 //   return descriptor.value
 // })

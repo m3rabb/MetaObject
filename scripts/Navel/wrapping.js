@@ -18,8 +18,8 @@ function AsBasicSetter(PropertyName, setterName) {
   }[name]
 }
 
-function AsRetroactiveProperty(Property, Loader) {
-  const name = `${AsName(Property)}_$durable`
+function AsRetroactiveProperty(Property, Assigner) {
+  const name = `${AsName(Property)}_$retro`
   return {
     [name] : function () {
       const $inner     = this[$INNER]
@@ -37,13 +37,13 @@ function AsRetroactiveProperty(Property, Loader) {
         // Below, because $outer is frosted, InSetProperty will onl set $inner
       }
 
-      DefineProperty($inner, Property, InvisibleConfiguration)
-      return InSetProperty($inner, Property, Loader.call(this), this)
+      DefineProperty($inner, Property, InvisibleConfig)
+      return InSetProperty($inner, Property, Assigner.call(this), this)
     }
   }[name]
 }
 
-function AsLazyProperty(Property, Loader) {
+function AsLazyProperty(Property, Assigner) {
   const name = `${AsName(Property)}_$lazy`
   return {
     [name] : function () {
@@ -52,11 +52,11 @@ function AsLazyProperty(Property, Loader) {
       if ($inner[IS_IMMUTABLE]) {
         // Object is already immutable, so method defaults to being a
         // regular getter method.
-        return Loader.call(this)
+        return Assigner.call(this)
       }
 
-      DefineProperty($inner, Property, InvisibleConfiguration)
-      return InSetProperty($inner, Property, Loader.call(this), this)
+      DefineProperty($inner, Property, InvisibleConfig)
+      return InSetProperty($inner, Property, Assigner.call(this), this)
     }
   }[name]
 }
@@ -193,6 +193,48 @@ function AsOuterValue(property, Handler) {
   }[name]
 }
 
+function AsOuterSelf(property, Handler) {
+  const name = `${AsName(property)}_$outer$self`
+  return {
+    [name] : function (...args) {
+      const $inner = InterMap.get(this)
+      var   barrier, useNewBarrier, hasNewTarget, $pulp, $target
+
+      if ($inner[IS_IMMUTABLE]) {
+        barrier = $inner[$BARRIER]
+
+        if ((useNewBarrier = barrier.$target)) {
+          // Existing barrier is already in use, must generate another barrier and
+          // $pulp, and then discard them.
+          barrier = new Inner()
+          $pulp   = new Proxy($inner, barrier)
+        }
+        else {
+          // Use the existing barrier, and then reset it.
+          $pulp = $inner[$PULP]
+        }
+
+        barrier.$target = $inner
+        Handler.apply($pulp, args) // <<----------
+        $target         = barrier.$target
+        barrier.$target = null
+
+        if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
+          delete barrier.get
+          delete barrier.set
+          delete barrier.deleteProperty
+        }
+
+        if (hasNewTarget) { $target._setImmutable.call($target[$PULP]) }
+        return $target[$RIND]
+      }
+
+      Handler.apply($inner[$PULP], args) // <<----------
+      return $inner[$RIND]
+    }
+  }[name]
+}
+
 function AsOuterBasicValue(property, Handler) {
   const name = `${AsName(property)}_$outer$basicValue`
   return {
@@ -244,6 +286,17 @@ function AsInnerValue(property, Handler) {
   }[name]
 }
 
+function AsInnerSelf(property, Handler) {
+  const name = `${AsName(property)}_$inner$self`
+  return {
+    [name] : function (...args) {
+      const $pulp = this
+      Handler.apply($pulp, args) // <<----------
+      return $pulp
+    }
+  }[name]
+}
+
 
 
 function AsSuperFact(property, Handler) {
@@ -278,6 +331,18 @@ function AsSuperValue(property, Handler) {
   }[name]
 }
 
+function AsSuperSelf(property, Handler) {
+  const name = `${AsName(property)}_$inner$value`
+  return {
+    [name] : function (...args) {
+      // this is $super. Need to use $pulp instead
+      const $pulp  = this[$PULP]
+      Handler.apply($pulp, args) // <<----------
+      return $pulp
+    }
+  }[name]
+}
+
 function AsSuperBasic(property, Handler) {
   const name = `${AsName(property)}_$super$basic`
   return {
@@ -306,51 +371,64 @@ function AsInnerStandard(property, handler, isPublic) {
 
 function AsSuperStandard(property, handler, isPublic) {
   return isPublic ?
-    AsSuperFact(property, handler) : AsSuperBasic(property, handler)
+    AsSuperFact(property, handler) : AsSuperValue(property, handler)
 }
 
 
-const FACT_METHOD = {
-  id          : "FACT_METHOD",
-  outer       : AsOuterFact,
-  inner       : AsInnerFact,
-  super       : AsSuperFact,
-}
 
 const VALUE_METHOD = {
-  id          : "VALUE_METHOD",
-  outer       : AsOuterValue,
-  inner       : AsInnerValue,
-  super       : AsSuperValue,
+  id    : "VALUE_METHOD",
+  outer : AsOuterValue,
+  inner : AsInnerValue,
+  super : AsSuperValue,
 }
 
 // BASIC_VALUE_METHOD and BASIC_SELF_METHOD methods must are methods that call
 // no other methods, except other basic methods.
 const BASIC_VALUE_METHOD = {
-  id          : "BASIC_VALUE_METHOD",
-  outer       : AsOuterBasicValue,
-  inner       : PassThru,
-  super       : AsSuperBasic,
+  id    : "BASIC_VALUE_METHOD",
+  outer : AsOuterBasicValue,
+  inner : PassThru,
+  super : AsSuperBasic,
 }
 
 const BASIC_SELF_METHOD = {
-  id          : "BASIC_SELF_METHOD",
-  outer       : AsOuterBasicSelf,
-  inner       : PassThru,
-  super       : AsSuperBasic,
+  id    : "BASIC_SELF_METHOD",
+  outer : AsOuterBasicSelf,
+  inner : PassThru,
+  super : AsSuperBasic,
 }
 
 
 const STANDARD_METHOD = {
-  id          : "STANDARD_METHOD",
-  outer       : AsOuterStandard,
-  inner       : AsInnerStandard,
-  super       : AsSuperStandard,
+  id    : "STANDARD_METHOD",
+  outer : AsOuterStandard,
+  inner : AsInnerStandard,
+  super : AsSuperStandard,
 }
 
-const SET_LOADER = {
-  id          : "SET_LOADER",
+const DECLARATION = {
+  id    : "DECLARATION",
 }
+
+const ASSIGNER = {
+  id    : "ASSIGNER",
+}
+
+const SETTER = {
+  id    : "SETTER",
+  outer : AsOuterSelf,
+  inner : AsInnerSelf,
+  super : AsSuperSelf,
+}
+
+const MANDATORY = {
+  __proto__ : SETTER,
+  id        : "MANDATORY",
+}
+
+
+
 
 // const ANSWERS_PRIMITIVE = VALUE_METHOD
 // const ANSWERS_NULL      = VALUE_METHOD

@@ -28,7 +28,7 @@ function NewBlanker(rootBlanker, permeability_, maker_) {
 
   $root$inner[$OUTER]       = $root$outer
   $root$inner[$SUPERS]      = supers
-  $root$inner[$SET_LOADERS] = SpawnFrom(root$root$inner[$SET_LOADERS])
+  $root$inner[$ASSIGNER] = SpawnFrom(root$root$inner[$ASSIGNER])
   $root$inner[$IMMEDIATES]  = SpawnFrom(root$root$inner[$IMMEDIATES])
   $root$outer[$IMMEDIATES]  = SpawnFrom(root$root$outer[$IMMEDIATES])
   $root$inner[$BLANKER]     = Blanker

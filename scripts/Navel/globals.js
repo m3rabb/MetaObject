@@ -44,8 +44,9 @@ const $SECRET            = Symbol("$SECRET")
 
 const $ROOT              = Symbol("$ROOT")
 const $BLANKER           = Symbol("$BLANKER")
-const $SET_LOADERS       = Symbol("$SET_LOADERS")
+const $ASSIGNERS         = Symbol("$ASSIGNERS")
 const $IMMEDIATES        = Symbol("$IMMEDIATES")
+const $KNOWNS            = Symbol("$KNOWNS")
 const $SUPERS            = Symbol("$SUPERS")
 
 const $OUTER_WRAPPER     = Symbol("$OUTER_WRAPPER")
@@ -66,13 +67,13 @@ const IMMEDIATE              = Symbol("IMMEDIATE")
 
 
 
-const VisibleConfiguration = {
+const VisibleConfig = {
   configurable : true,
   writable     : true,
   enumerable   : true,
 }
 
-const InvisibleConfiguration = {
+const InvisibleConfig = {
   configurable : true,
   writable     : true,
   enumerable   : false,

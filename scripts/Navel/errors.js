@@ -39,7 +39,7 @@ function SignalError(target, message) {
 
 
 function DirectAssignmentFromOutsideError(target) {
-  SignalError(target[$RIND], "Direct assignment is not allowed to the outside of an object, use a method instead!!")
+  SignalError(target[$RIND], "Direct assignment is not allowed from the outside of an object, use a method instead!!")
 }
 
 function PrivateAccessFromOutsideError(target, property) {

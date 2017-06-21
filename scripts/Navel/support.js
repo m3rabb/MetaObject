@@ -119,7 +119,7 @@ function AsMethod(method_func__selector, handler__, mode___) {
 /**
  * Installs a method in a target $root or object. If the method is public, it
  * installs it in the outer as well as the inner sides of the object, It also,
- * handles if the method immediate or is a set loader.
+ * handles if the method immediate or is an assigner.
  * @private
  * @param       {$inner} $inner - The target $inner
  * @param       {Method} method - The method to install
@@ -128,19 +128,39 @@ function SetMethod($inner, method) {
   const $outer   = $inner[$OUTER]
   const $method  = InterMap.get(method)
   const selector = $method.selector
-  const mode     = $method.mode
+  const property = $method.property
+  const isPublic = $method.isPublic
 
   // NEED to check if this is behaving properly when redefining a method from
-  // standard to immediate to set-loader.
-  delete $inner[$SET_LOADERS][selector]
+  // standard to immediate to assigner.
+  delete $inner[$ASSIGNERS][selector]
   delete $inner[$IMMEDIATES][selector]
   delete $outer[$IMMEDIATES][selector]
 
-  if (mode === SET_LOADER) {
-    // In a set-loader method, its handler is the loader function.
-    $inner[$SET_LOADERS][selector] = $method.handler
+  switch ($method.mode) {
+    case ASSIGNER    :
+      $inner[$ASSIGNERS][selector] = $method.handler
+      // break omitted
+
+    case DECLARATION :
+      $inner[$KNOWNS][selector]    = isPublic
+      return
+
+    case MANDATORY   :
+      $inner[$ASSIGNERS][$method._mappedSymbol] = property
+      $inner[$ASSIGNERS][property] = $method._assignmentError
+      // break omitted
+
+    case SETTER      :
+      $inner[$KNOWNS][property]    = isPublic
+      break
   }
-  else if ($method.isImmediate) {
+
+  // Sets property at selector = undefined
+  DefineProperty($inner, selector, InvisibleConfig)
+  if (isPublic) { DefineProperty($inner[$OUTER], selector, InvisibleConfig) }
+
+  if ($method.isImmediate) {
     // Note: the $outer stores the outer handler, but the $inner stores the
     // entire $method to enable permeable objects to have an easy way to
     // access the outer of private methods.
@@ -149,17 +169,13 @@ function SetMethod($inner, method) {
     // _$Intrinsic & _Something, so setting it undefined covers inherited
     // value. Doing this specifically to deal with inherited null id value
     // which breaks defining immediate/lazy id values by the type instances.
-    $inner[selector]              = undefined
     $inner[$IMMEDIATES][selector] = $method
-    if ($method.isPublic) {
-      $outer[selector]              = undefined
-      $outer[$IMMEDIATES][selector] = $method.outer
-    }
+    if (isPublic) { $outer[$IMMEDIATES][selector] = $method.outer }
   }
   else {
     // Store the inner (and outer) wrapper in the property chain.
     $inner[selector] = $method.inner
-    if ($method.isPublic) { $outer[selector] = $method.outer }
+    if (isPublic) { $outer[selector] = $method.outer }
   }
 }
 
@@ -230,11 +246,11 @@ function InSetProperty($inner, property, value, _instigator) {
           value = AsTameFunc(value)
           // break omitted
 
-        case SAFE_FUNC       :
-        case KNOWN_FUNC      :
-        case TAMED_FUNC      :
-        case BLANKER_FUNC    :
-        case SET_LOADER_FUNC :
+        case SAFE_FUNC     :
+        case KNOWN_FUNC    :
+        case TAMED_FUNC    :
+        case BLANKER_FUNC  :
+        case ASSIGNER_FUNC :
         default              : // value is a type's $rind, etc
           if (isPublic) { $outer[property] = value }
           break
@@ -248,6 +264,16 @@ function InSetProperty($inner, property, value, _instigator) {
 
   return ($inner[property] = value)
 }
+
+
+function InSetInvisibleProperty($inner, property, value, $pulp) {
+  InSetProperty($inner, property, value, $pulp)
+  DefineProperty($inner, property, InvisibleConfig)
+  if (property[0] !== "_") {
+    DefineProperty($inner[$OUTER], property, InvisibleConfig)
+  }
+}
+
 
 
 
@@ -294,7 +320,7 @@ function NewVacuousConstructor(name) {
   `
   const func = Function(funcBody)()
   Frost(func.prototype)
-  return DefineProperty(func, "name", InvisibleConfiguration)
+  return DefineProperty(func, "name", InvisibleConfig)
 }
 
 
@@ -311,7 +337,7 @@ function NewVacuousConstructor(name) {
  * @param       {$root}        rootBlanker.$root$inner
  * The ancestor for the blanker's $root of each instance's $inner.
  * @param       {$root}        rootBlanker.$root$inner.$IMMEDIATES
- * @param       {$root}        rootBlanker.$root$inner.$SET_LOADERS
+ * @param       {$root}        rootBlanker.$root$inner.$ASSIGNERS
  * @param       {$root}        rootBlanker.$root$inner.$SUPERS
  * @param       {$root}        rootBlanker.$root$outer
  * The ancestor for the blanker's $root of each instance's $outer.
@@ -355,8 +381,8 @@ function NewVacuousConstructor(name) {
  * Note: Unlike the $outer, the $inner $IMMEDIATES, hold the entire $method
  * So permeable instance will have an easy way to access the outer handler of
  * private immediates.
- * @property {stash} $root$inner.$SET_LOADERS
- * References the side-lookup for the instances' set-loader handlers.
+ * @property {stash} $root$inner.$ASSIGNERS
+ * References the side-lookup for the instances' assigner handlers.
  * @property {stash} $root$inner.$SUPERS
  * References the side-lookup for the instances' super properties.
  * @property {stash} $root$inner.$SUPERS.$IMMEDIATES
@@ -381,6 +407,7 @@ function NewBlanker(rootBlanker, maker_) {
   const OuterBlanker   = NewNamelessVacuousFunc()
   const Blanker        = blankerMaker(OuterBlanker)
                          // Should this simply inherit from null!!!???
+  const knowns         = SpawnFrom(root$root$inner[$KNOWNS])
   const supers         = SpawnFrom(root$supers)
   supers[$IMMEDIATES]  = SpawnFrom(root$supers[$IMMEDIATES])
 
@@ -392,8 +419,10 @@ function NewBlanker(rootBlanker, maker_) {
 
   $root$inner[$ROOT]        = $root$inner
   $root$inner[$OUTER]       = $root$outer
+  $root$inner[$KNOWNS]      = knowns
+  $root$outer[$KNOWNS]      = knowns
   $root$inner[$SUPERS]      = supers
-  $root$inner[$SET_LOADERS] = SpawnFrom(root$root$inner[$SET_LOADERS])
+  $root$inner[$ASSIGNERS]   = SpawnFrom(root$root$inner[$ASSIGNERS])
   $root$inner[$IMMEDIATES]  = SpawnFrom(root$root$inner[$IMMEDIATES])
   $root$outer[$IMMEDIATES]  = SpawnFrom(root$root$outer[$IMMEDIATES])
   $root$inner[$BLANKER]     = Blanker
@@ -650,14 +679,14 @@ function MarkFunc(func, marker = KNOWN_FUNC) {
 
 
 // Document these!!!
-const SAFE_FUNC    = Frost({ id : "SAFE_FUNC"      , [IS_IMMUTABLE] : true })
-const BLANKER_FUNC = Frost({ id : "BLANKER_FUNC"   , [IS_IMMUTABLE] : true })
-const TAMED_FUNC   = Frost({ id : "TAMED_FUNC"     , [IS_IMMUTABLE] : true })
-const WRAPPER_FUNC = Frost({ id : "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true })
+const SAFE_FUNC     = Frost({ id : "SAFE_FUNC"      , [IS_IMMUTABLE] : true })
+const BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC"   , [IS_IMMUTABLE] : true })
+const TAMED_FUNC    = Frost({ id : "TAMED_FUNC"     , [IS_IMMUTABLE] : true })
+const WRAPPER_FUNC  = Frost({ id : "WRAPPER_FUNC"   , [IS_IMMUTABLE] : true })
 
-const KNOWN_FUNC      = Frost({ id : "KNOWN_FUNC"      })
-const TYPE_PULP       = Frost({ id : "TYPE_PULP"       })
-const SET_LOADER_FUNC = Frost({ id : "SET_LOADER_FUNC" })
+const KNOWN_FUNC    = Frost({ id : "KNOWN_FUNC"    })
+const TYPE_PULP     = Frost({ id : "TYPE_PULP"     })
+const ASSIGNER_FUNC = Frost({ id : "ASSIGNER_FUNC" })
 
 
 // Simpleton function
@@ -673,8 +702,8 @@ function SetAsymmetricProperty(_type, property, innerValue, outerValue) {
   const $root$outer = blanker.$root$outer
   const $root$inner = blanker.$root$inner
 
-  DefineProperty($root$outer, property, InvisibleConfiguration)
-  DefineProperty($root$inner, property, InvisibleConfiguration)
+  DefineProperty($root$outer, property, InvisibleConfig)
+  DefineProperty($root$inner, property, InvisibleConfig)
 
   $root$outer[property] = outerValue
   $root$inner[property] = innerValue
@@ -704,12 +733,7 @@ const _SetSharedProperty = function _setSharedProperty(property, value, isOwn) {
   if (existing === value) { return this }
 
   if (value && value.type === Method) { SetMethod($root$inner, value) }
-  else { InSetProperty($root$inner, property, value, this) }
-
-  DefineProperty($root$inner, property, InvisibleConfiguration)
-  if (isPublic) {
-    DefineProperty($root$inner[$OUTER], property, InvisibleConfiguration)
-  }
+  else   { InSetInvisibleProperty($root$inner, property, value, this) }
 
   if (isOwn) { properties[property] = value }
 
