@@ -228,6 +228,7 @@ function InSetProperty($inner, property, value, _instigator) {
       break
 
     case "function" : // LOOK: will catch Type things!!!
+      if (!isPublic) { break }
     // Note: Checking for value.constructor is inadequate to prevent func spoofing
       switch (InterMap.get(value)) {
         case TYPE_PULP    :
@@ -235,10 +236,7 @@ function InSetProperty($inner, property, value, _instigator) {
           return _instigator._detectedInnerError(value)
 
         case WRAPPER_FUNC :
-          if (isPublic) {
-            $outer[property] = ($method_outer = value[$OUTER_WRAPPER]) ?
-              $method_outer : value
-          }
+          $outer[property] = value[$OUTER_WRAPPER] || value
           break
 
         case undefined    :
@@ -252,7 +250,7 @@ function InSetProperty($inner, property, value, _instigator) {
         case BLANKER_FUNC  :
         case ASSIGNER_FUNC :
         default              : // value is a type's $rind, etc
-          if (isPublic) { $outer[property] = value }
+          $outer[property] = value
           break
       }
       break

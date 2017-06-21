@@ -59,7 +59,7 @@ _Type._addMethod(function new_(...args) {
     _instance = $instance[$PULP]
     _postInit = $instance._postInit
 
-    $instance[$OUTER].$INNER = $instance
+    $instance[$OUTER].$INNER = $instance.$INNER = $instance
 
     $instance._init.apply(_instance, args)
 
@@ -79,7 +79,7 @@ _Type._addMethod(function new_(...args) {
   instance_ = new Proxy($outer, Permeable)
 
   $instance[$RIND] = instance_
-  $outer.$INNER    = $instance
+  $outer.$INNER    = $instance.$INNER = $instance
   $outer[$RIND]    = instance_
 
   InterMap.set(instance_, $instance)
@@ -179,7 +179,7 @@ _Type._addMethod(function addMethods(items) {
 })
 
 _Type._addMethod(function addDeclarations(propertyListing) {
-  const properties = propertyListing.split(/\s+/)
+  const properties = propertyListing.split(/\s*[ ,]\s*/)
   var   next       = properties.length
   while (next--) { this._setSharedProperty(properties[next], null, true) }
 })
@@ -187,7 +187,7 @@ _Type._addMethod(function addDeclarations(propertyListing) {
 _Type.addAlias("_basicNew"                , "new"                 )
 _Type.addAlias("declare"                  , "addDeclarations"     )
 _Type.addAlias("removeMethod"             , "removeSharedProperty")
-
+_Type.addAlias("defines"                  , "define")
 
 
 _Type._addMethod(function newAsFact(...args) {

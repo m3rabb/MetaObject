@@ -64,7 +64,7 @@ Impermeable.get = function get($outer, property, $rind) {
   return $inner._unknownProperty.call($inner[$PULP], property)
 }
 
-// REVISIT!!!
+
 Impermeable.has = function has($outer, property) {
   // const firstChar = (typeof property === "symbol") ?
   //   property.toString()[7] : property[0]
