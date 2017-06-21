@@ -522,7 +522,7 @@ _Type._addMethod(function _init(spec_name, context_) {
   durables    = spec_name.durable || spec_name.durables
   shared      = spec_name.shared  || spec_name.sharedProperties
   methods     = spec_name.methods || spec_name.instanceMethods
-  definitions = spec_name.define
+  definitions = spec_name.define  || spec_name.defines
 
   this.context   = context_ || spec_name.context || null
   this._iidCount = 0
