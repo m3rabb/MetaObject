@@ -110,16 +110,10 @@ _$Intrinsic._addMethod(function asMutable() {
 }, BASIC_VALUE_METHOD)
 
 
-// Want to share a permeable view on the source object!!!
-function PutPermeable(_$target) {
-  const target_ = new Proxy(_$target[$OUTER], Permeable)
-  InterMap.set(target_, _$target)
-  return (_$target[$PERMEABLE] = target_)
-}
 
 // Copy$_()
 function $Copy(_$source, asImmutable, visited = new WeakMap(), exceptProperty_) {
-  var source_, next, property, value, traversed, $value, barrier, properties
+  var _source, next, property, value, traversed, $value, barrier, properties
   const source       = _$source[$RIND]
   const isPermeable  = (_$source[$OUTER].$INNER)
   const permeability = isPermeable ? Permeable : Impermeable
@@ -134,8 +128,8 @@ function $Copy(_$source, asImmutable, visited = new WeakMap(), exceptProperty_) 
   visited.set(source, target) // to manage cyclic objects
 
   if (_initFrom_) {
-    source_ = _$source[$PERMEABLE] || PutPermeable(_$source)
-   _initFrom_.call(_target, source_, asImmutable, visited, exceptProperty_)
+    _source = _$source[$PULP]
+   _initFrom_.call(_target, _source, asImmutable, visited, exceptProperty_)
   }
   else if ((properties = _$source[DURABLES])) {
     next = properties.length
