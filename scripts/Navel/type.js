@@ -59,7 +59,7 @@ _Type._addMethod(function new_(...args) {
   // handler.name === "new_"
   if (newHandler === _BasicNew ||  // The new method is the original, has not been overridden
       newHandler === new_) {       // The new method has been set to this method
-    _$instance = new this._blanker(Permeable, args)
+    _$instance = new this._blanker(Permeable)
     $instance  = _$instance[$OUTER]
     _instance  = _$instance[$PULP]
     _postInit  = _$instance._postInit
@@ -113,12 +113,13 @@ function MakeNew_(existingCustomNew) {
 // })
 
 _Type._addMethod(function _initFrom_(type_) {
-  const properties = type_._properties
+  const _type = type_[$PULP]
+  const properties = _type._properties
   var   propertyName, property, nextProperty, ownMethods, method, nextMethod
 
   this._init({
-    name : type_.name,
-    supertypes : type_.supertypes,
+    name : _type.name,
+    supertypes : _type.supertypes,
   })
 
   for (propertyName in properties) {
@@ -127,7 +128,7 @@ _Type._addMethod(function _initFrom_(type_) {
     this._setSharedProperty(propertyName, property)
   }
 
-  if ((ownMethods = type_[$OWN_METHODS])) {
+  if ((ownMethods = _type[$OWN_METHODS])) {
     for (propertyName in ownMethods) {
       method     = ownMethods[propertyName]
       nextMethod = Copy(method)

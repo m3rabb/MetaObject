@@ -36,6 +36,7 @@ const $PULP              = Symbol("$PULP")
 const $OUTER             = Symbol("$OUTER")
 const $RIND              = Symbol("$RIND")  // Consider simply using $ !!!
 
+const $DISGUISE          = Symbol("$DISGUISE")
 const $BARRIER           = Symbol("$BARRIER")
 const $COPY              = Symbol("$COPY")
 //const $IID               = Symbol("$instanceId")

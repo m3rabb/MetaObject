@@ -315,6 +315,9 @@ function NewVacuousConstructor(name) {
   return DefineProperty(func, "name", InvisibleConfig)
 }
 
+const DefaultDisguiseFunc = NewVacuousConstructor("$disguise$")
+
+
 function ExtendMethodsInfrastructure(_$target, _$root, $root) {
   const supers = SpawnFrom(_$root[$SUPERS])
 
@@ -513,27 +516,25 @@ function NewDisguisedInner(CompanionOuterMaker) {
   // Note: The blanker function must be unnamed in order for the debugger to
   // display the type of instances using type name determined by the name of
   // its constructor function property.
-  return function (permeability, [name_spec]) {
-    var typeName = (typeof name_spec === "string") ? name_spec : name_spec.name
-    var func     = NewVacuousConstructor(typeName || "UNNAMED")
+  return function (permeability) {
     var $inner   = this
     var $outer   = new CompanionOuterMaker()
 
     const mutability = new DisguisedInnerBarrier($inner)
-    const $pulp      = new Proxy(func, mutability)
-    mutability._target = $pulp
-    const porosity   = new DisguisedOuterBarrier($pulp, $outer, permeability)
     // const barrier    = new InnerBarrier()
-    const $rind      = new Proxy(func, porosity)
+    const $pulp      = new Proxy(DefaultDisguiseFunc, mutability)
+    // mutability._target = $pulp
+    const porosity   = new DisguisedOuterBarrier($pulp, $outer, permeability)
+    const $rind      = new Proxy(DefaultDisguiseFunc, porosity)
     // const $rind           = new Proxy(NewAsFact, privacyPorosity)
 
-    $inner._func     = func
-    $inner[$BARRIER] = mutability // barrier
-    $inner[$INNER]   = $inner
-    $inner[$PULP]    = $pulp
-    $inner[$OUTER]   = $outer
-    $inner[$RIND]    = $rind
-    $outer[$RIND]    = $rind
+    $inner[$DISGUISE] = DefaultDisguiseFunc
+    $inner[$BARRIER]  = mutability // barrier
+    $inner[$INNER]    = $inner
+    $inner[$PULP]     = $pulp
+    $inner[$OUTER]    = $outer
+    $inner[$RIND]     = $rind
+    $outer[$RIND]     = $rind
     InterMap.set($pulp, DISGUISE_PULP)
     InterMap.set($rind, $inner)
     // this[$PULP]  = new Proxy(NewAsFact, mutability)
@@ -720,7 +721,7 @@ function SetAsymmetricProperty(_type, property, innerValue, outerValue) {
 }
 
 const _BasicNew = function _basicNew(...args) {
-  const _$instance = new this._blanker(Impermeable, args)
+  const _$instance = new this._blanker(Impermeable)
   const  _instance = _$instance[$PULP]
   const  _postInit = _$instance._postInit
 
@@ -782,7 +783,24 @@ const _SetSharedProperty = function _setSharedProperty(property, value, isInheri
 }
 
 
+const Disguise_postInit = function _postInit(_) {
+  const $inner       = this[$INNER]
+  const $outer       = $inner[$OUTER]
+  const mutability   = $inner[$BARRIER]
+  const permeability = $outer.$INNER ? Permeable : Impermeable
 
+  const func     = NewVacuousConstructor(this.name)
+  const $pulp    = new Proxy(func, mutability)
+  const porosity = new DisguisedOuterBarrier($pulp, $outer, permeability)
+  const $rind    = new Proxy(func, porosity)
+
+  $inner[$DISGUISE] = func
+  $inner[$PULP]     = $pulp
+  $inner[$RIND]     = $rind
+  $outer[$RIND]     = $rind
+  InterMap.set($pulp, DISGUISE_PULP)
+  InterMap.set($rind, $inner)
+}
 
 
 /*       1         2         3         4         5         6         7         8

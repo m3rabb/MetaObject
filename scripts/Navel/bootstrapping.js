@@ -44,7 +44,7 @@ const Type$root$inner = TypeBlanker.$root$inner
 
 
 function BootstrapType(name, blanker_) {
-  const $type            = new TypeBlanker(Impermeable, [name])
+  const $type            = new TypeBlanker(Impermeable)
   const $outer           = $type[$OUTER]
   const isImplementation = (name[0] === "$")
 
@@ -195,7 +195,7 @@ _$Intrinsic._addMethod(function _basicSet(property, value) {
 
 
 // Note: This method might need to be moved to _$Something!!!
-// 
+//
 // It's not enought to simple make this method access the receiver's barrier.
 // Th receiver only references its original barrier, and there may be more than
 // one proxy/barrier associated with the receiver, so we need to invoke the
@@ -496,7 +496,7 @@ _Type._addMethod(function _setDisplayNames(outerName, innerName_) {
 })
 
 
-
+// Make mandatory setter!!!
 _Type.addSetter("setName", function name(newName) {
   const properName = AsCapitalized(newName)
   const priorName = this.name
@@ -514,7 +514,7 @@ _Type.addSetter("setName", function name(newName) {
   }
 
   this._setDisplayNames(properName)
-  this._func.name = properName
+  this[$DISGUISE].name = properName
   return properName
 })
 
@@ -567,10 +567,12 @@ _Type._addMethod(function _init(spec_name, context_) {
     this.addOwnAlias("newAsFact", "newAsFact_")
   }
 })
-// blanker.$root$outer.constructor = this._func
+// blanker.$root$outer.constructor = this[$DISGUISE]
 // blanker.$root$inner.constructor = NewVacuousConstructor()
 // this._properties.constructor    = CONSTRUCTOR
 
+
+_Type._addMethod(Disguise_postInit)
 
 _Type.addDeclaration("_blanker")
 _Type.addDeclaration($OUTER_WRAPPER)
@@ -581,6 +583,12 @@ _$Something._init({ name: "$Something", supertypes: null })
 _$Intrinsic._init({ name: "$Intrinsic", supertypes: null })
 _Thing     ._init({ name: "Thing"     , supertypes: null })
 _Method    ._init(        "Method"                        )
+
+// _$Something._postInit()
+// _$Intrinsic._postInit()
+_Thing._postInit()
+_Type._postInit()
+_Method._postInit()
 
 
 // Helps with debugging!!!
