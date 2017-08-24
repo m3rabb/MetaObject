@@ -1,3 +1,57 @@
+function InAtPut(source, property, value) {
+  var isImmutable = source[IS_IMMUTABLE]
+  var target = isImmutable ? CopyObject(source) : source
+
+  switch (source.constructor) {
+    case WeakSet :
+    case Set :
+      return InvalidCopyType(source)
+
+    case WeakMap :
+      if (isImmutable) { return InvalidCopyType(source) }
+      // break omitted
+
+    case Map :
+      target.set(property, value)
+      break
+
+    default :
+      target[property] = value
+      break
+  }
+
+  if (source[IS_IMMUTABLE]) {
+    target[IS_IMMUTABLE] = true
+    Frost(target)
+  }
+  return target
+}
+
+function CopyAtPut(source, property, value) {
+  var target = CopyObject(source)
+
+  switch (source.constructor) {
+    case WeakMap :
+    case WeakSet :
+    case Set :
+      return InvalidCopyType(source)
+
+    case Map :
+      target.set(property, value)
+      break
+
+    default :
+      target[property] = value
+      break
+  }
+
+  if (source[IS_IMMUTABLE]) {
+    target[IS_IMMUTABLE] = true
+    Frost(target)
+  }
+  return target
+}
+
 const ReliableObjectCopy = function copy(visited_asImmutable_, visited_) {
   const [asImmutable, visited] = (typeof visited_asImmutable_ === "boolean") ?
     [visited_asImmutable_, visited_] : [undefined, visited_asImmutable_]
@@ -99,11 +153,25 @@ function NextValue(value, asImmutable, visited, source, target) {
   if (value.id != null)                 { return value     }
   if ((traversed = visited.get(value))) { return traversed }
 
-  const $value = InterMap.get(value)
+  const _$value = InterMap.get(value)
 
-  return ($value) ?
-    $Copy($value, asImmutable, visited)[$RIND] :
+  return (_$value) ?
+    $Copy(_$value, asImmutable, visited)[$RIND] :
     CopyObject(value, asImmutable, visited)
+}
+
+
+function Copy(value, asImmutable_) {
+  if (typeof value !== "object") { return value }
+  if (value === null)            { return value }
+  if (value[IS_IMMUTABLE])       { return value }
+  if (value.id != null)          { return value }
+
+  const _$value = InterMap.get(value)
+
+  return (_$value) ?
+    $Copy(_$value, asImmutable_)[$RIND] :
+    CopyObject(value, asImmutable_)
 }
 
 
@@ -185,15 +253,15 @@ function SetImmutableValue(value, inPlace, visited, target) {
   if (value.id != null)          { return value }
   if (visited.get(value))        { return value }
 
-  const $value = InterMap.get(value)
+  const _$value = InterMap.get(value)
   if (inPlace) {
-    if ($value) {
-      $value._setImmutable.call($value[$PULP], true, visited)
-      return $value[$RIND]
+    if (_$value) {
+      _$value._setImmutable.call(_$value[$PULP], true, visited)
+      return _$value[$RIND]
     }
     return SetImmutableObject(value, true, visited)
   }
-  return ($value) ?
-    $Copy($value, true, visited)[$RIND] :
+  return (_$value) ?
+    $Copy(_$value, true, visited)[$RIND] :
     CopyObject(value, true, visited)
 }

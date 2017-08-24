@@ -73,6 +73,10 @@ _Thing._addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   Frost($outer)
 })
 
+_Thing.addMethod(function toString(_) {
+  const name = this.name
+  return `${name}${name ? "," : ""}${this.basicId}`
+})
 
 
 // _Thing._setImmutable()
@@ -99,7 +103,7 @@ _Thing._addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
 //   return this
 // })
 
-// _Thing._addMethod(function _initFrom_(_source, propertiesBeImmutable, visited, exceptProperty_) {
+// _Thing._addMethod(function _initFrom_(permeableSource, propertiesBeImmutable, visited, exceptProperty_) {
 //   this.id = this.oid
 //   return this
 // })

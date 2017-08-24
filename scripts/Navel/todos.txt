@@ -317,3 +317,183 @@ original MutableInner once object has become immutable.
 
 --
 Perhaps do IS_IMMUTABLE like we did $KNOWN_PROPERTIES
+
+
+===
+
+Test Type as immutable and copying
+
+==
+
+
+
+test about permeable isInner vs isOuter vs $SECRET
+
+Make a test where an immutable object is about to set a new property value to
+itself, but first calls an assigner, that changes another property first.
+Make sure it behaves properly!!!
+
+Test other methods that call InSetProperty, for when they set a property to self
+
+Write a test that shows symbols arent copied
+
+Test about _unknownProperty when the property is a symbols
+
+Make Context be func object like Type
+
+In TypeOuter and TypeInner, pass in isPermeable instead of actually Permeability
+
+Test that barrier unchanged when setting to mutable, but once immutable, the
+same barrier is changed
+
+Test to show each object has its own barrier
+
+Test to show barrier is unchanged when setting mutable object
+
+Add jasmineToString property
+
+Make $PRoperties be invisible too for debugging
+Check whether methods should be visible or Invisible
+DefineProperty($inner, selector, InvisibleConfig)
+if (isPublic) { DefineProperty($inner[$OUTER], selector, InvisibleConfig) }
+
+
+===
+Transform
+
+instance$rind    instance     $rind-impermeable
+instance$rind    instance_    $rind-permeable
+instance$pulp    instance$    $pulp
+instance$inner   instance$_   $inner
+instance$outer   instance$$   $outer
+
+$dog  immutable
+ dog  unspecified
+_dog  mutable
+
+
+
+$INNER ==> $_
+
+Simplify to make .$INNER a retroactive property
+
+==
+consider handling permeability more simply, making 'this' a property from instantiation via new_
+
+==
+consider not making the the Type's blanker set the named func. Doing afterwards in the
+Type's new method or during _postInit
+
+
+
+==========
+
+
+
+// var ParenthesesMatcher   = /\(|\)/
+// var SelectorMatcher      = /[\w\$_!&]+/gi
+const VowelMatcher         = /^[aeiou]/i
+const ValidSelectorMatcher = /_*\$*[a-z][\w$]*/
+
+
+
+
+
+addDurableProperties
+  addDeclarations
+
+
+addDeclaration
+        _properties[propertyName] = KWO
+
+        $KNOWN
+
+
+
+
+standard
+FACT_METHOD, VALUE_METHOD, BASIC_VALUE_METHOD, BASIC_SELF_METHOD, STANDARD_METHOD
+
+        $root$inner[propertyName] = $method.inner
+        $root$outer[propertyName] = $method.outer
+        _properties[propertyName] = method
+
+immediate
+  this.addMethod(propertyName, assigner)
+
+  addRetroactiveProperty
+    STANDARD_METHOD, BASIC_VALUE_METHOD
+  addLazyProperty
+
+        $root$inner[propertyName] = undefined
+        $root$outer[propertyName] = undefined
+        $root$inner[$IMMEDIATES][propertyName] = $method
+        $root$outer[$IMMEDIATES][propertyName] = $method.outer
+        _properties[propertyName] = method
+
+
+
+assigner
+  this.addDeclaration(propertyName)
+  this.addMethod(propertyName, assigner, SET_LOADER)
+
+        $root$inner[propertyName] = null
+        $root$outer[propertyName] = null
+        $root$inner[$SET_LOADERS][propertyName] = assigner
+
+        _properties[propertyName] = method-set-loader...KNOWN
+        // propertyName SHOULD BE READABLE
+
+ASSIGNER
+
+
+setter
+  this.addDeclaration(propertyName)
+  this.addMethod(setterName, setter)
+
+
+        $root$inner[propertyName] = null
+        $root$outer[propertyName] = null
+        $root$inner[setterName] = $method-setter
+        $root$outer[setterName] = $method-setter.outer
+
+        _properties[propertyName] = null..KNOWN
+        _properties[setterName] = method
+        // propertyName SHOULD BE READABLE
+
+SETTER, propertyName
+
+
+mandatory
+this.addDeclaration(propertyName)
+this.addMethod(setterName, setter)
+this.addMethod(propertyName, errorOnSet  , SET_LOADER)
+this.addMethod(mappedSymbol, propertyName, SET_LOADER)
+
+        $root$inner[propertyName] = null
+        $root$outer[propertyName] = null
+        $root$inner[setterName] = $method-setter
+        $root$outer[setterName] = $method-setter.outer
+        $root$inner[$SET_LOADERS][propertyName] = errorOnSet
+        $root$inner[$SET_LOADERS][mappedSymbol] = propertyName
+
+        _properties[propertyName] = method-errorOnSet
+        _properties[setterName] = method-setter
+        _properties[mappedSymbol] = method-mapped
+        // propertyName SHOULD BE READABLE
+
+setter w assigner
+this.addDeclaration(propertyName)
+this.addMethod(setterName, setter)
+this.addMethod(propertyName, loader      , SET_LOADER)
+
+        $root$inner[propertyName] = null
+        $root$outer[propertyName] = null
+        $root$inner[setterName] = $method-setter
+        $root$outer[setterName] = $method-setter.outer
+
+        $root$inner[$SET_LOADERS][propertyName] = loader
+
+        _properties[propertyName] = method-loader
+        _properties[setterName] = method-setter
+        // propertyName SHOULD BE READABLE

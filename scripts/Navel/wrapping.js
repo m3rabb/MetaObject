@@ -11,10 +11,22 @@ function AsTameFunc(Func) {
 }
 
 
-function AsBasicSetter(PropertyName, setterName) {
-  const name = `${AsName(setterName)}_$set_${PropertyName}`
+function AsBasicSetter(propertyName, setterName, mode) {
+  const name = `${AsName(setterName)}_$set_${propertyName}`
+  const PropertyName = (mode === MANDATORY) ?
+     AsPropertySymbol(propertyName) : propertyName
   return {
     [name] : function (value) { this[PropertyName] = value }
+  }[name]
+}
+
+function AsMandatoryAssignmentSetter(propertyName, setterName, Assigner) {
+  const name = `${AsName(setterName)}_$set_${propertyName}`
+  const PropertyName = AsPropertySymbol(propertyName)
+  return {
+    [name] : function (value) {
+      this[PropertyName] = Assigner.call(this, value)
+    }
   }[name]
 }
 
@@ -22,23 +34,23 @@ function AsRetroactiveProperty(Property, Assigner) {
   const name = `${AsName(Property)}_$retro`
   return {
     [name] : function () {
-      const $inner     = this[$INNER]
-      const value      = $inner[Property]
-      const value$root = $inner[$ROOT][Property]
+      const _$receiver = this[$INNER]
+      const value      = _$receiver[Property]
+      const value$root = _$receiver[$ROOT][Property]
 
-      if ($inner[IS_IMMUTABLE]) {
+      if (_$receiver[IS_IMMUTABLE]) {
         // Object is already immutable
         if (value !== value$root) { return value }
         if (value === undefined)  { /* never been set */ }
-        else if (HasOwnProperty.call($inner, Property)) {
+        else if (HasOwnProperty.call(_$receiver, Property)) {
           // Fortunately, this (expensive) case is unlikely.to persist.
           return value
         }
-        // Below, because $outer is frosted, InSetProperty will onl set $inner
+        // Below, because $receiver is frosted, InSetProperty will only set _$receiver
       }
 
-      DefineProperty($inner, Property, InvisibleConfig)
-      return InSetProperty($inner, Property, Assigner.call(this), this)
+      DefineProperty(_$receiver, Property, InvisibleConfig)
+      return InSetProperty(_$receiver, Property, Assigner.call(this), this)
     }
   }[name]
 }
@@ -47,16 +59,16 @@ function AsLazyProperty(Property, Assigner) {
   const name = `${AsName(Property)}_$lazy`
   return {
     [name] : function () {
-      const $inner = this[$INNER]
+      const _$receiver = this[$INNER]
 
-      if ($inner[IS_IMMUTABLE]) {
+      if (_$receiver[IS_IMMUTABLE]) {
         // Object is already immutable, so method defaults to being a
         // regular getter method.
         return Assigner.call(this)
       }
 
-      DefineProperty($inner, Property, InvisibleConfig)
-      return InSetProperty($inner, Property, Assigner.call(this), this)
+      DefineProperty(_$receiver, Property, InvisibleConfig)
+      return InSetProperty(_$receiver, Property, Assigner.call(this), this)
     }
   }[name]
 }
@@ -89,57 +101,57 @@ function AsOuterFact(property, Handler) {
   const name = `${AsName(property)}_$outer$fact`
   return {
     [name] : function (...args) {
-      const $inner = InterMap.get(this)
-      var   barrier, useNewBarrier, hasNewTarget, $pulp, result, $target
-      var   outer, $result
+      const _$receiver = InterMap.get(this)
+      var   barrier, useNewBarrier, hasNewTarget, _receiver, result, _$target
+      var   outer, _$result
 
-      if ($inner[IS_IMMUTABLE]) {
-        barrier = $inner[$BARRIER]
+      if (_$receiver[IS_IMMUTABLE]) {
+        barrier = _$receiver[$BARRIER]
 
-        if ((useNewBarrier = barrier.$target)) {
+        if ((useNewBarrier = barrier._$target)) {
           // Existing barrier is already in use, must generate another barrier and
-          // $pulp, and then discard them.
-          barrier = new Inner()
-          $pulp   = new Proxy($inner, barrier)
+          // _receiver, and then discard them.
+          barrier   = new InnerBarrier()
+          _receiver = new Proxy(_$receiver, barrier)
         }
         else {
           // Use the existing barrier, and then reset it.
-          $pulp = $inner[$PULP]
+          _receiver = _$receiver[$PULP]
         }
 
-        barrier.$target = $inner
-        result          = Handler.apply($pulp, args) // <<----------
-        $target         = barrier.$target
-        barrier.$target = null
+        barrier._$target = _$receiver
+        result           = Handler.apply(_receiver, args) // <<----------
+        _$target         = barrier._$target
+        barrier._$target = null
 
-        if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
+        if ((hasNewTarget = (_$target !== _$receiver)) && !useNewBarrier) {
           delete barrier.get
           delete barrier.set
           delete barrier.deleteProperty
         }
 
-        if (result === undefined || result === $pulp) {
-          if (hasNewTarget) { $target._setImmutable.call($target[$PULP]) }
-          return $target[$RIND]
+        if (result === undefined || result === _receiver) {
+          if (hasNewTarget) { _$target._setImmutable.call(_$target[$PULP]) }
+          return _$target[$RIND]
         }
       }
       else {
-        $pulp = $inner[$PULP]
-        result = Handler.apply($pulp, args) // <<----------
-        if (result === undefined || result === $pulp) { return $inner[$RIND] }
+        _receiver = _$receiver[$PULP]
+        result    = Handler.apply(_receiver, args) // <<----------
+        if (result === undefined) { return _$receiver[$RIND] }
+        if (result === _receiver) { return _$receiver[$RIND] }
       }
 
       switch (typeof result) {
-        default         :                                  return result
+        default         :                                   return result
         case "function" :
           outer = result[$OUTER_WRAPPER]
-          return (outer && InterMap.get(outer) === WRAPPER_FUNC) ?
-                                                          outer : result
-        case "object"   : if (result === null)           { return result }
-          // if (result === $inner[$RIND])               { return result }
-          if (result[IS_IMMUTABLE] || result.id != null) { return result }
-          return (($result = InterMap.get(result))) ?
-            $Copy($result, true)[$RIND] : CopyObject(result, true)
+          return (outer && InterMap.get(outer) === OUTER_FUNC) ? outer : result
+        case "object"   : if (result === null)            { return result }
+          // if (result === _$receiver[$RIND])               { return result }
+          if (result[IS_IMMUTABLE] || result.id != null)  { return result }
+          return ((_$result = InterMap.get(result))) ?
+            $Copy(_$result, true)[$RIND] : CopyObject(result, true)
       }
     }
   }[name]
@@ -149,43 +161,44 @@ function AsOuterValue(property, Handler) {
   const name = `${AsName(property)}_$outer$value`
   return {
     [name] : function (...args) {
-      const $inner = InterMap.get(this)
-      var   barrier, useNewBarrier, hasNewTarget, $pulp, result, $target
+      const _$receiver = InterMap.get(this)
+      var   barrier, useNewBarrier, hasNewTarget, _receiver, result, _$target
 
-      if ($inner[IS_IMMUTABLE]) {
-        barrier = $inner[$BARRIER]
+      if (_$receiver[IS_IMMUTABLE]) {
+        barrier = _$receiver[$BARRIER]
 
-        if ((useNewBarrier = barrier.$target)) {
+        if ((useNewBarrier = barrier._$target)) {
           // Existing barrier is already in use, must generate another barrier and
-          // $pulp, and then discard them.
-          barrier = new Inner()
-          $pulp   = new Proxy($inner, barrier)
+          // _receiver, and then discard them.
+          barrier   = new InnerBarrier()
+          _receiver = new Proxy(_$receiver, barrier)
         }
         else {
           // Use the existing barrier, and then reset it.
-          $pulp = $inner[$PULP]
+          _receiver = _$receiver[$PULP]
         }
 
-        barrier.$target = $inner
-        result          = Handler.apply($pulp, args) // <<----------
-        $target         = barrier.$target
-        barrier.$target = null
+        barrier._$target = _$receiver
+        result           = Handler.apply(_receiver, args) // <<----------
+        _$target         = barrier._$target
+        barrier._$target = null
 
-        if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
+        if ((hasNewTarget = (_$target !== _$receiver)) && !useNewBarrier) {
           delete barrier.get
           delete barrier.set
           delete barrier.deleteProperty
         }
 
-        if (result === undefined || result === $pulp) {
-          if (hasNewTarget) { $target._setImmutable.call($target[$PULP]) }
-          return $target[$RIND]
+        if (result === undefined || result === _receiver) {
+          if (hasNewTarget) { _$target._setImmutable.call(_$target[$PULP]) }
+          return _$target[$RIND]
         }
       }
       else {
-        $pulp = $inner[$PULP]
-        result = Handler.apply($pulp, args) // <<----------
-        if (result === undefined || result === $pulp) { return $inner[$RIND] }
+        _receiver = _$receiver[$PULP]
+        result    = Handler.apply(_receiver, args) // <<----------
+        if (result === undefined) { return _$receiver[$RIND] }
+        if (result === _receiver) { return _$receiver[$RIND] }
       }
 
       return result
@@ -197,40 +210,40 @@ function AsOuterSelf(property, Handler) {
   const name = `${AsName(property)}_$outer$self`
   return {
     [name] : function (...args) {
-      const $inner = InterMap.get(this)
-      var   barrier, useNewBarrier, hasNewTarget, $pulp, $target
+      const _$receiver = InterMap.get(this)
+      var   barrier, useNewBarrier, hasNewTarget, _receiver, _$target
 
-      if ($inner[IS_IMMUTABLE]) {
-        barrier = $inner[$BARRIER]
+      if (_$receiver[IS_IMMUTABLE]) {
+        barrier = _$receiver[$BARRIER]
 
-        if ((useNewBarrier = barrier.$target)) {
+        if ((useNewBarrier = barrier._$target)) {
           // Existing barrier is already in use, must generate another barrier and
-          // $pulp, and then discard them.
-          barrier = new Inner()
-          $pulp   = new Proxy($inner, barrier)
+          // _receiver, and then discard them.
+          barrier   = new InnerBarrier()
+          _receiver = new Proxy(_$receiver, barrier)
         }
         else {
           // Use the existing barrier, and then reset it.
-          $pulp = $inner[$PULP]
+          _receiver = _$receiver[$PULP]
         }
 
-        barrier.$target = $inner
-        Handler.apply($pulp, args) // <<----------
-        $target         = barrier.$target
-        barrier.$target = null
+        barrier._$target = _$receiver
+        Handler.apply(_receiver, args) // <<----------
+        _$target         = barrier._$target
+        barrier._$target = null
 
-        if ((hasNewTarget = ($target !== $inner)) && !useNewBarrier) {
+        if ((hasNewTarget = (_$target !== _$receiver)) && !useNewBarrier) {
           delete barrier.get
           delete barrier.set
           delete barrier.deleteProperty
         }
 
-        if (hasNewTarget) { $target._setImmutable.call($target[$PULP]) }
-        return $target[$RIND]
+        if (hasNewTarget) { _$target._setImmutable.call(_$target[$PULP]) }
+        return _$target[$RIND]
       }
 
-      Handler.apply($inner[$PULP], args) // <<----------
-      return $inner[$RIND]
+      Handler.apply(_$receiver[$PULP], args) // <<----------
+      return _$receiver[$RIND]
     }
   }[name]
 }
@@ -248,9 +261,9 @@ function AsOuterBasicSelf(property, Handler) {
   const name = `${AsName(property)}_$outer$basicSelf`
   return {
     [name] : function (...args) {
-      const $inner = InterMap.get(this)
-      Handler.apply($inner[$PULP], args) // <<----------
-      return $inner[$RIND]
+      const _$receiver = InterMap.get(this)
+      Handler.apply(_$receiver[$PULP], args) // <<----------
+      return _$receiver[$RIND]
     }
   }[name]
 }
@@ -261,16 +274,16 @@ function AsInnerFact(property, Handler) {
   const name = `${AsName(property)}_$inner$fact`
   return {
     [name] : function (...args) {
-      const $pulp = this
-      const result = Handler.apply($pulp, args) // <<----------
-      var   $result
+      const _receiver = this
+      const result    = Handler.apply(_receiver, args) // <<----------
+      var   _$result
 
-      if (result === undefined || result === $pulp)      { return $pulp  }
-      // if (result === $inner[$RIND])                   { return result }
-      if (typeof result !== "object" || result === null) { return result }
-      if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-      return (($result = InterMap.get(result))) ?
-        $Copy($result, true) : CopyObject(result, true)
+      if (result === undefined || result === _receiver)  { return _receiver }
+      // if (result === _$receiver[$RIND])               { return result    }
+      if (typeof result !== "object" || result === null) { return result    }
+      if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
+      return ((_$result = InterMap.get(result))) ?
+        $Copy(_$result, true) : CopyObject(result, true)
     }
   }[name]
 }
@@ -279,9 +292,9 @@ function AsInnerValue(property, Handler) {
   const name = `${AsName(property)}_$inner$value`
   return {
     [name] : function (...args) {
-      const $pulp = this
-      const result = Handler.apply($pulp, args) // <<----------
-      return (result === undefined) ? $pulp : result
+      const _receiver = this
+      const result    = Handler.apply(_receiver, args) // <<----------
+      return (result === undefined) ? _receiver : result
     }
   }[name]
 }
@@ -290,9 +303,8 @@ function AsInnerSelf(property, Handler) {
   const name = `${AsName(property)}_$inner$self`
   return {
     [name] : function (...args) {
-      const $pulp = this
-      Handler.apply($pulp, args) // <<----------
-      return $pulp
+      Handler.apply(this, args) // <<----------
+      return this
     }
   }[name]
 }
@@ -303,17 +315,17 @@ function AsSuperFact(property, Handler) {
   const name = `${AsName(property)}_$super$fact`
   return {
     [name] : function (...args) {
-      // this is $super. Need to use $pulp instead
-      const $pulp  = this[$PULP]
-      const result = Handler.apply($pulp, args) // <<----------
-      var   $result
+      // this is $super. Need to use _receiver instead
+      const _receiver = this[$PULP]
+      const result    = Handler.apply(_receiver, args) // <<----------
+      var   _$result
 
-      if (result === undefined || result === $pulp)      { return $pulp  }
-      // if (result === $inner[$RIND])                   { return result }
-      if (typeof result !== "object" || result === null) { return result }
-      if (result[IS_IMMUTABLE] || result.id != null)     { return result }
-      return (($result = InterMap.get(result))) ?
-        $Copy($result, true) : CopyObject(result, true)
+      if (result === undefined || result === _receiver)  { return _receiver }
+      // if (result === _$receiver[$RIND])               { return result    }
+      if (typeof result !== "object" || result === null) { return result    }
+      if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
+      return ((_$result = InterMap.get(result))) ?
+        $Copy(_$result, true) : CopyObject(result, true)
     }
   }[name]
 }
@@ -322,11 +334,11 @@ function AsSuperValue(property, Handler) {
   const name = `${AsName(property)}_$inner$value`
   return {
     [name] : function (...args) {
-      // this is $super. Need to use $pulp instead
-      const $pulp  = this[$PULP]
-      const result = Handler.apply($pulp, args) // <<----------
+      // this is $super. Need to use _receiver instead
+      const _receiver = this[$PULP]
+      const result    = Handler.apply(_receiver, args) // <<----------
 
-      return (result === undefined) ? $pulp : result
+      return (result === undefined) ? _receiver : result
     }
   }[name]
 }
@@ -335,10 +347,10 @@ function AsSuperSelf(property, Handler) {
   const name = `${AsName(property)}_$inner$value`
   return {
     [name] : function (...args) {
-      // this is $super. Need to use $pulp instead
-      const $pulp  = this[$PULP]
-      Handler.apply($pulp, args) // <<----------
-      return $pulp
+      // this is $super. Need to use _receiver instead
+      const _receiver = this[$PULP]
+      Handler.apply(_receiver, args) // <<----------
+      return _receiver
     }
   }[name]
 }
@@ -347,7 +359,7 @@ function AsSuperBasic(property, Handler) {
   const name = `${AsName(property)}_$super$basic`
   return {
     [name] : function (...args) {
-      // this is $super. Need to use $pulp instead
+      // this is $super. Need to use _receiver instead
       return Handler.apply(this[$PULP], args) // <<----------
     }
   }[name]
@@ -383,7 +395,7 @@ const VALUE_METHOD = {
   super : AsSuperValue,
 }
 
-// BASIC_VALUE_METHOD and BASIC_SELF_METHOD methods must are methods that call
+// BASIC_VALUE_METHOD and BASIC_SELF_METHOD methods must be methods that call
 // no other methods, except other basic methods.
 const BASIC_VALUE_METHOD = {
   id    : "BASIC_VALUE_METHOD",

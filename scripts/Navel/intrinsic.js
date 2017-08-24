@@ -20,6 +20,7 @@ _$Intrinsic._addMethod(function durableProperties() {
 
 _$Intrinsic._addMethod(function setDurableProperties(properties) {
   this[DURABLES] = properties
+  return this
 }, BASIC_SELF_METHOD)
 
 _$Intrinsic._addMethod(function addDurableProperty(property) {
@@ -28,12 +29,14 @@ _$Intrinsic._addMethod(function addDurableProperty(property) {
     this[DURABLES] = SetImmutable([...properties, property])
     this.addDeclaration(property)
   }
+  return this
 }, BASIC_SELF_METHOD)
 
 
 
 _$Intrinsic._addMethod(function addDurableProperties(properties) {
   properties.forEach(property => this.addDurableProperty(property))
+  return this
 }, BASIC_SELF_METHOD)
 
 
@@ -107,67 +110,76 @@ _$Intrinsic._addMethod(function asMutable() {
 }, BASIC_VALUE_METHOD)
 
 
+// Want to share a permeable view on the source object!!!
+function PutPermeable(_$target) {
+  const target_ = new Proxy(_$target[$OUTER], Permeable)
+  InterMap.set(target_, _$target)
+  return (_$target[$PERMEABLE] = target_)
+}
 
-function $Copy($source, asImmutable, visited = new WeakMap(), exceptProperty_) {
-  var next, property, value, traversed, $value, barrier, properties
-  const source       = $source[$RIND]
-  const isPermeable  = $source[$OUTER].$INNER
+// Copy$_()
+function $Copy(_$source, asImmutable, visited = new WeakMap(), exceptProperty_) {
+  var source_, next, property, value, traversed, $value, barrier, properties
+  const source       = _$source[$RIND]
+  const isPermeable  = (_$source[$OUTER].$INNER)
   const permeability = isPermeable ? Permeable : Impermeable
-  const $inner       = new $source[$BLANKER](permeability)
-  const $outer       = $inner[$OUTER]
-  const $pulp        = $inner[$PULP]
-  const target       = $inner[$RIND]
-  const _initFrom_   = $inner._initFrom_
+  const _$target     = new _$source[$BLANKER](permeability)
+  const  $target     = _$target[$OUTER]
+  const  _target     = _$target[$PULP]
+  const   target     = _$target[$RIND]
+  const _initFrom_   = _$target._initFrom_
 
-  if (isPermeable) { $outer.$INNER = $inner }
+  if (isPermeable) { $target.$INNER = _$target }
 
   visited.set(source, target) // to manage cyclic objects
 
   if (_initFrom_) {
-   _initFrom_.call($pulp, $source[$PULP], asImmutable, visited, exceptProperty_)
+    source_ = _$source[$PERMEABLE] || PutPermeable(_$source)
+   _initFrom_.call(_target, source_, asImmutable, visited, exceptProperty_)
   }
-  else if ((properties = $source[DURABLES])) {
+  else if ((properties = _$source[DURABLES])) {
     next = properties.length
 
     while (next--) {
       property = properties[next]
       if (property === exceptProperty_) { continue }
-      value = $source[property]
+      value = _$source[property]
 
       if (property[0] !== "_") {  // public property
-        $outer[property] = (value === source) ? (value = target) : value
+        $target[property] = (value === source) ? (value = target) : value
       }                           // private property
       else { value = NextValue(value, asImmutable, visited, source, target) }
 
-      $inner[property] = value
+      _$target[property] = value
     }
   }
   else {
-    for (property in $source) {
-      value = $source[property]
+    for (property in _$source) {
+      if (property === exceptProperty_) { continue }
+      value = _$source[property]
 
       if (property[0] !== "_") {  // public property
-        $outer[property] = (value === source) ? (value = target) : value
+        $target[property] = (value === source) ? (value = target) : value
       }                           // private property
       else { value = NextValue(value, asImmutable, visited, source, target) }
 
-      $inner[property] = value
+      _$target[property] = value
     }
   }
 
-  if ($inner._postInit) {
-    const result = $inner._postInit.call($pulp)
-    if (result !== undefined && result !== $pulp) {
+  if (_$target._postInit) {
+    const result = _$target._postInit.call(_target)
+    if (result !== undefined && result !== _target) {
       return asImmutable ? result.asImmutable : result
     }
   }
 
   if (asImmutable) {
-    $outer[IS_IMMUTABLE] = $inner[IS_IMMUTABLE] = true
-    Frost($outer)
+    $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
+    Frost($target)
   }
 
-  return $inner
+  return _$target
 }
 
 
@@ -257,33 +269,50 @@ _$Intrinsic._addMethod(function typeName() {
 // Navel/30303/Type/367
 
 
-_$Intrinsic._addMethod(function addOwnMethod(method_namedFunc__selector, func__, mode___) {
+_$Intrinsic._addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
   const method   = AsMethod(method_namedFunc__name, func__, mode___)
-  const $inner   = this[$INNER]
-  const $outer   = $inner[$OUTER]
   const selector = method.selector
-  var methods, immediates, supers
+  var $inner, $outer, methods, immediates, supers
 
-  if ((methods = $inner[$OWN_METHODS])) {
-    supers = $inner[$SUPERS]
+  methods = this[$INNER][$OWN_METHODS]
+  if (methods && methods[selector] === method) { return this }
+
+  this._retarget
+  $inner  = this[$INNER]
+  methods = $inner[$OWN_METHODS]
+
+  if (methods) {
+    InClearProperty($inner, selector)
   }
   else {
-    methods              = ($inner[$OWN_METHODS] = SpawnFrom(null))
-    supers               = ($inner[$SUPERS]      = SpawnFrom($inner[$SUPERS]))
-    $outer[$IMMEDIATES]  = SpawnFrom($outer[$IMMEDIATES])
-    $inner[$IMMEDIATES]  = SpawnFrom($inner[$IMMEDIATES])
-    $inner[$ASSIGNERS]   = SpawnFrom($inner[$ASSIGNERS])
+    methods = ($inner[$OWN_METHODS] = SpawnFrom(null))
+    ExtendMethodsInfrastructure($inner, $inner, $inner[$OUTER]) // Check if this is right!!!
   }
 
   SetMethod($inner, method)
   methods[selector] = method
-  delete supers[selector]
+  return this
 }, BASIC_SELF_METHOD)
+
+
+
+_$Intrinsic._addMethod(function methodAt(selector) {
+  return MethodAt(this[$INNER], selector)
+})
 
 
 _$Intrinsic._addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
   return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
 }, BASIC_SELF_METHOD)
+
+_$Intrinsic._addMethod(function addOwnAlias(aliasName, name_method) {
+  const sourceMethod = name_method.isMethod ?
+    name_method : this.type.methodAt(name_method)
+  if (sourceMethod == null) {
+    return this._unknownMethodToAliasError(name_method)
+  }
+  this.addOwnMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
+})
 
 // _$Intrinsic._addMethod(function _addOwnValueMethod(...namedFunc_name__handler) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_METHOD)
@@ -295,6 +324,7 @@ _$Intrinsic._addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
 
 _$Intrinsic._addMethod(function addOwnDeclaration(propertyName) {
   this[propertyName] = null
+  return this
 }, BASIC_SELF_METHOD)
 
 // _$Intrinsic._addMethod(function addOwnAssigner(assigner_property, assigner_) {
@@ -313,7 +343,7 @@ _$Intrinsic._addMethod(Symbol.toPrimitive, function (hint) {
 
 
 _$Intrinsic._addMethod(function _unknownProperty(property) {
-  return this._signalError(`Receiver ${this.basicId} doesn't have a property: ${AsName(property)}!!`)
+  return this._signalError(`Receiver ${this.basicId} doesn't have a property '${AsName(property)}'!!`)
 })
 
 _$Intrinsic._addMethod("_basicUnknownProperty", $Intrinsic$root$inner._unknownProperty)
@@ -325,44 +355,27 @@ _$Intrinsic._addMethod(function _signalError(message) {
 })
 
 
-_$Intrinsic._addMethod(function _invalidPulpError() {
-  this._signalError("Using old mutable inner, after be|setImmutable has made a new inner proxy!!")
-})
 
-_$Intrinsic._addMethod(function _disallowedAssignmentError(property, setter) {
-  this._signalError(`Assignment or deletion of property '${property}' is not allowed, use '${setter}' method instead!!`)
-})
-
-_$Intrinsic._addMethod(function _unnamedFuncError(func) {
-  this._signalError(`${func} function must be named!!`)
-})
-
-_$Intrinsic._addMethod(function _assignmentOfUndefinedError() {
-  this._signalError("Assignment of undefined is forbidden, use null instead!")
-})
-
-_$Intrinsic._addMethod(function _detectedInnerError(value) {
-  this._signalError(`On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value.name}#${value.oid}!!`)
-})
 
 
 // _beMutable _touch _captureChanges
 
-// It's not enought to simple make this method access the receiver's barrier.
-// Th receiver only references its original barrier, and there may be more than
-// one proxy/barrier associated with the receiver, so we need to invoke the
-// proxy to force the proper change to occur thru it.
-_$Intrinsic._addMethod(function _retarget() {
-  const $inner = this[$INNER]
-
-  if ($inner[IS_IMMUTABLE]) {
-    delete this[$DELETE_IMMUTABILITY]
-    return this
-  }
-
-  DefineProperty($inner, "_retarget", InvisibleConfig)
-  return InSetProperty($inner, "_retarget", this, this)
-}, BASIC_SELF_METHOD)
+// // It's not enought to simple make this method access the receiver's barrier.
+// // Th receiver only references its original barrier, and there may be more than
+// // one proxy/barrier associated with the receiver, so we need to invoke the
+// // proxy to force the proper change to occur thru it.
+// _$Intrinsic._addMethod(function _retarget() {
+//   const $inner = this[$INNER]
+//
+//   if ($inner[IS_IMMUTABLE]) {
+//     delete this[$DELETE_IMMUTABILITY]
+//   }
+//   else {
+//     DefineProperty($inner, "_retarget", InvisibleConfig)
+//     InSetProperty($inner, "_retarget", this, this)
+//   }
+//   return this
+// }, BASIC_SELF_METHOD)
 
 
 // _$Intrinsic._addMethod(function _retargetAsBlank() {
@@ -370,11 +383,12 @@ _$Intrinsic._addMethod(function _retarget() {
 //
 //   if ($inner[IS_IMMUTABLE]) {
 //     delete this.[$DELETE_ALL_PROPERTIES]
-//     return this
 //   }
-//
-//   DefineProperty($inner, "_retarget", InvisibleConfig)
-//   return InSetProperty($inner, "_retarget", this, this)
+//   else {
+//    DefineProperty($inner, "_retarget", InvisibleConfig)
+//    InSetProperty($inner, "_retarget", this, this)
+//   }
+//   return this
 // }, BASIC_SELF_METHOD)
 
 

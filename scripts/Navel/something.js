@@ -5,7 +5,7 @@ _$Something._addMethod("$", AsRetroactiveProperty("$", function $() {
 
 
 _$Something._addMethod("_super", AsRetroactiveProperty("_super", function _super() {
-  return new Proxy(this[$INNER], SuperBehavior)
+  return new Proxy(this[$INNER], SuperBarrier)
 }), BASIC_VALUE_METHOD)
 
 
@@ -31,9 +31,7 @@ _$Something._addMethod(function is(value) {
 
 
 
-_$Something._addMethod(function isPermeable() {
-  return (this[$OUTER].$INNER ? true : false)
-}, BASIC_VALUE_METHOD)
+
 
 _$Something._addMethod(function isImmutable() {
   return this[IS_IMMUTABLE] ? true : false

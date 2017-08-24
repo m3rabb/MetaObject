@@ -28,14 +28,14 @@ const $BaseBlanker = {
       [$IMMEDIATES]   : EMPTY_OBJECT,
     },
   },
-  maker       : _NewInnerBlanker,
+  innerMaker       : NewInner,
 }
 
 
 
 const $SomethingBlanker   = NewBlanker($BaseBlanker)
 const   $IntrinsicBlanker = NewBlanker($SomethingBlanker)
-const     TypeBlanker     = NewBlanker($IntrinsicBlanker, _NewTypeInnerBlanker)
+const     TypeBlanker     = NewBlanker($IntrinsicBlanker, NewDisguisedInner)
 
 
 
@@ -48,11 +48,11 @@ function BootstrapType(name, blanker_) {
   const $outer           = $type[$OUTER]
   const isImplementation = (name[0] === "$")
 
-  $type._properties = SpawnFrom(null)
-  $type._blanker    = blanker_ || NewBlanker($IntrinsicBlanker)
-  $type.supertypes  = ($outer.supertypes = EMPTY_ARRAY)
-  $type.ancestry    = isImplementation ? EMPTY_ARRAY : ThingAncestry
-  $type.subtypes    = new Set()
+  $type._properties       = SpawnFrom(null)
+  $type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
+  $type.supertypes        = ($outer.supertypes = EMPTY_ARRAY)
+  $type.ancestry          = isImplementation ? EMPTY_ARRAY : ThingAncestry
+  $type._subordinateTypes = new Set()
   return $type[$PULP]
 }
 
@@ -90,20 +90,22 @@ $Something$root$outer[$SECRET]              = null
 
 
 $Something$root$outer.type                   = null
+$Intrinsic$root$inner._retarget              = null
 $Intrinsic$root$inner._propagateIntoSubtypes = ALWAYS_SELF
 
 
 
-_SetSharedProperty.call(_$Something, "isSomething", true , true)
-_SetSharedProperty.call(_$Something, IS_IMMUTABLE , false, true)
-_SetSharedProperty.call(_$Something, "id"         , null , true)
+
+_SetSharedProperty.call(_$Something, "isSomething", true  )
+_SetSharedProperty.call(_$Something, IS_IMMUTABLE , false )
+_SetSharedProperty.call(_$Something, "id"         , null  )
 
 
-_SetSharedProperty.call(_$Intrinsic, DURABLES                 , null, true)
+_SetSharedProperty.call(_$Intrinsic, DURABLES                 , null)
 // Perhaps remove these later???
-_SetSharedProperty.call(_$Intrinsic, "_postInit"              , null, true)
-_SetSharedProperty.call(_$Intrinsic, "_initFrom_"             , null, true)
-_SetSharedProperty.call(_$Intrinsic, "_setPropertiesImmutable", null, true)
+_SetSharedProperty.call(_$Intrinsic, "_postInit"              , null)
+_SetSharedProperty.call(_$Intrinsic, "_initFrom_"             , null)
+_SetSharedProperty.call(_$Intrinsic, "_setPropertiesImmutable", null)
 
 SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true )
 SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)
@@ -139,9 +141,8 @@ Method$root$inner._init = function _init(func_selector, func_, mode__, property_
       return
 
     case MANDATORY   :
-      $inner._assignmentError = NewAssignmentErrorHandler(property, selector)
-      $inner._mappedSymbol = PropertyToSymbol[property] ||
-        (PropertyToSymbol[property] = Symbol(`$${property}$`))
+      // $inner._assignmentError = NewAssignmentErrorHandler(property, selector)
+      $inner._mappedSymbol = AsPropertySymbol(property)
       // break omitted
 
     case SETTER      :
@@ -158,36 +159,21 @@ Method$root$inner._init = function _init(func_selector, func_, mode__, property_
   outer.method   = inner.method   = this[$RIND]
 
   // Need to subvert function assignment to enable raw functions to be stored.
-  $outer.outer   = $inner.outer   = SetImmutableFunc(outer, WRAPPER_FUNC)
-  $outer.inner   = $inner.inner   = SetImmutableFunc(inner, WRAPPER_FUNC)
-  $outer.handler = $inner.handler = MarkFunc        (handler, KNOWN_FUNC)
+  $outer.outer   = $inner.outer   = SetImmutableFunc(outer  , OUTER_FUNC)
+  $outer.inner   = $inner.inner   = SetImmutableFunc(inner  , INNER_FUNC)
+  $outer.handler = $inner.handler = MarkFunc        (handler, HANDLER_FUNC)
 }
 
 
 
-Type$root$inner.new = {
-  new : function (...args) {
-    const $instance = new this._blanker(Impermeable, args)
-    const _instance = $instance[$PULP]
-    const _postInit = $instance._postInit
-
-    $instance._init.apply(_instance, args)
-    if (_postInit) {
-      const result = _postInit.call(_instance)
-      if (result !== undefined && result !== _instance) { return result }
-    }
-    return $instance[$RIND]
-  }
-}.new
-
-
+Type$root$inner.new                = _BasicNew
 Type$root$inner._setSharedProperty = _SetSharedProperty
 
 
 
 const _AddMethod = function _addMethod(func_selector, func_, mode__, property___) {
   const method = Method(func_selector, func_, mode__, property___)
-  return this._setSharedProperty(method.selector, method, true)
+  return this._setSharedProperty(method.selector, method)
 }
 
 
@@ -195,26 +181,51 @@ _AddMethod.call(_Type, _AddMethod)
 
 
 
-_Method._addMethod(Method$root$inner._init)
-_Method._addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+_$Something._addMethod(function isPermeable() {
+  return (this[$OUTER].$INNER) ? true : false
+}, BASIC_VALUE_METHOD)
+
 
 
 _$Intrinsic._addMethod(function _basicSet(property, value) {
   const selector = PropertyToSymbol[property] || property
   this[selector] = value
+  return this
 }, BASIC_SELF_METHOD)
 
 
+// Note: This method might need to be moved to _$Something!!!
+// 
+// It's not enought to simple make this method access the receiver's barrier.
+// Th receiver only references its original barrier, and there may be more than
+// one proxy/barrier associated with the receiver, so we need to invoke the
+// proxy to force the proper change to occur thru it.
+_$Intrinsic._addMethod(function _retarget() {
+  const $inner = this[$INNER]
 
-_Type._addMethod("new", Type$root$inner.new, BASIC_VALUE_METHOD)
-_Type._addMethod(Type$root$inner._setSharedProperty)
+  if ($inner[IS_IMMUTABLE]) {
+    delete this[$DELETE_IMMUTABILITY]
+    return this
+  }
+
+  DefineProperty($inner, "_retarget", InvisibleConfig)
+  return ($inner._retarget = this)  // InSetProperty($inner, "_retarget", this, this)
+}, BASIC_SELF_METHOD)
+
+
+_Method._addMethod(Method$root$inner._init)
+_Method._addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+
+
+_Type._addMethod("new", _BasicNew, BASIC_VALUE_METHOD)
+_Type._addMethod(_SetSharedProperty)
 
 
 
 _Type._addMethod(function addMethod(method_namedFunc__selector, func__) {
   const method = (method_namedFunc__selector.isMethod) ?
     method_namedFunc__selector : Method(method_namedFunc__selector, func__)
-  return this._setSharedProperty(method.selector, method, true)
+  return this._setSharedProperty(method.selector, method)
 })
 
 _Type._addMethod(function addRetroactiveProperty(assigner_property, assigner_) {
@@ -228,7 +239,7 @@ _Type._addMethod(function addRetroactiveProperty(assigner_property, assigner_) {
 
 
 _Type._addMethod(function addSharedProperty(property, value) {
-  this._setSharedProperty(property, value, true)
+  this._setSharedProperty(property, value)
 })
 
 _Type._addMethod(function removeSharedProperty(property) {
@@ -256,9 +267,9 @@ _Type._addMethod(function _deleteSharedProperty(property) {
 })
 
 _Type._addMethod(function _propagateIntoSubtypes(property) {
-  this.subtypes.forEach(subtype => {
-    var $subtype = InterMap.get(subtype)
-    $subtype._inheritProperty.call($subtype[$PULP], property)
+  this._subordinateTypes.forEach(subtype => {
+    var _$subtype = InterMap.get(subtype)
+    _$subtype._inheritProperty.call(_$subtype[$PULP], property)
   })
 })
 
@@ -268,15 +279,15 @@ _Type._addMethod(function _inheritProperty(property) {
 
   const ancestry = this.ancestry
 
-  var next, $nextType, nextProperties, value
+  var next, _$nextType, nextProperties, value
   next = ancestry.length - 1
 
   while (next--) {
-    $nextType = InterMap.get(ancestry[next])
-    value     = $nextType._properties[property]
+    _$nextType = InterMap.get(ancestry[next])
+    value      = _$nextType._properties[property]
 
     if (value !== undefined) {
-      return this._setSharedProperty(property, value, false)
+      return this._setSharedProperty(property, value, true)
     }
   }
 })
@@ -291,20 +302,20 @@ _Type._addMethod(function _reinheritProperties() {
   const ancestry        = this.ancestry
   const $root$inner     = this._blanker.$root$inner
 
-  var nextProperties, next, property, $nextType
+  var nextProperties, next, property, _$nextType
   nextProperties = this._properties
   next           = ancestry.length - 1
 
   for (property in nextProperties) { validProperties[property] = true }
 
   while (next--) {
-    $nextType  = InterMap.get(ancestry[next])
-    nextProperties = $nextType._properties
+    _$nextType     = InterMap.get(ancestry[next])
+    nextProperties = _$nextType._properties
 
     for (property in nextProperties) {
       if (!validProperties[property]) {
         validProperties[property] = true
-        this._setSharedProperty(property, nextProperties[property], false)
+        this._setSharedProperty(property, nextProperties[property], true)
       }
     }
   }
@@ -324,14 +335,14 @@ _Type._addMethod(function _setAsSubtypeOfSupertypes() {
   const supertypes = this.supertypes
   const subtype = this[$RIND]
 
-  var next, $supertype, subtypes
+  var next, _$supertype, subtypes
   next = supertypes.length
 
   while (next--) {
-    $supertype = InterMap.get(supertypes[next])
-    subtypes = new Set($supertype.subtypes)
+    _$supertype = InterMap.get(supertypes[next])
+    subtypes    = new Set(_$supertype._subordinateTypes)
     subtypes.add(subtype)
-    $supertype[$PULP].subtypes = SetImmutable(subtypes)
+    _$supertype[$PULP]._subordinateTypes = SetImmutable(subtypes)
   }
 })
 
@@ -350,7 +361,7 @@ _Type._addMethod(function forAddAssigner(property_assigner, assigner_) {
     [property_assigner     , assigner_        ] :
     [property_assigner.name, property_assigner]
 
-  if (!propertyName) { return this._unnamedFuncError(assigner) }
+  if (!propertyName) { return UnnamedFuncError(this, assigner) }
 
   this._addMethod(propertyName, assigner, ASSIGNER)
 })
@@ -360,28 +371,38 @@ _Type._addMethod(function _assignerSetterError() {
 })
 
 _Type._addMethod(function _addSetter(name_setter, property_setter_, mode) {
-  var propertyName, assigner, errorOnSet, mappedSymbol
-  var [setterName, setter] = (typeof name_setter === "string") ?
-        [name_setter, null] : [name_setter.name, name_setter]
+  var propertyName, assigner, setterName, setter
+
+  ;[setterName, setter] = (typeof name_setter === "function") ?
+    [name_setter.name, name_setter] : [name_setter, null]
 
   switch (typeof property_setter_) {
     case "string"   : propertyName = property_setter_ ; break
 
     case "function" :
       if ((propertyName = property_setter_.name)) {
-        if (setter) { return this._assignerSetterError }
         assigner = property_setter_
-        setter   = AsBasicSetter(propertyName, setterName)
+        if (setter) { return this._assignerSetterError }
+        setter = (mode === MANDATORY) ?
+          AsMandatoryAssignmentSetter(propertyName, setterName, assigner) :
+          AsBasicSetter(propertyName, setterName, mode)
       }
       else { setter = property_setter_ }
       break
   }
 
-  if (!setterName)   { return this._unnamedFuncError(assigner)          }
-  if (!propertyName) { propertyName = AsPropertyFromSetter(setterName)  }
-  if (!setter)       { setter = AsBasicSetter(propertyName, setterName) }
+  if (!setterName)   { return UnnamedFuncError(this, assigner) }
+  if (!propertyName) {
+    propertyName = AsPropertyFromSetter(setterName) ||
+      this._signalError(`Improper setter '${setterName}'!!`)
+  }
+  if (!setter) { setter = AsBasicSetter(propertyName, setterName, mode) }
 
   this._addMethod(setterName, setter, mode, propertyName)
+
+  if (mode === MANDATORY) {
+    assigner = NewAssignmentErrorHandler(propertyName, setterName)
+  }
   if (assigner) { this._addMethod(propertyName, assigner, ASSIGNER) }
 })
 
@@ -390,39 +411,40 @@ _Type._addMethod(function _addSetter(name_setter, property_setter_, mode) {
 // addSetter(function setterName() {})
 // addSetter("setterName", "property")
 // addSetter("setterName", function () {})
-// addSetter("setterName", function propertyLoader() {})
+// addSetter("setterName", function propertyAssigner() {})
 
 _Type._addMethod(function addSetter(name_setter, property_setter_) {
   this._addSetter(name_setter, property_setter_, SETTER)
 })
 
 
-
 // forAddSetter("propertyName")
 // forAddSetter("propertyName", "setterName")
 
 _Type._addMethod(function forAddSetter(propertyName, setterName_) {
-  const setterName = setterName_ || AsSetterFromProperty(propertyName)
+  const setterName = setterName_ || AsSetterFromProperty(propertyName) ||
+    this._signalError(`Improper property name: ${propertyName}!!`)
   this._addSetter(setterName, propertyName, SETTER)
 })
 
 
-
 // addMandatorySetter("setterName")
-// addMandatorySetter(function setterName() {})
+// addMandatorySetter(function setterName() {}) // within must call _basicSet
 // addMandatorySetter("setterName", "property")
-// addMandatorySetter("setterName", function () {})
-
+// addMandatorySetter("setterName", function () {}) // within must call _basicSet
+// addMandatorySetter("setterName", function propertyAssigner() {})
+//
 _Type._addMethod(function addMandatorySetter(name_setter, property_setter_) {
   this._addSetter(name_setter, property_setter_, MANDATORY)
 })
 
 // forAddMandatorySetter("property")
 // forAddMandatorySetter("property", "setterName")
-// forAddMandatorySetter("property", function setterName() {})
+// forAddMandatorySetter("property", function setterName() {}) // within must call _basicSet
 
 _Type._addMethod(function forAddMandatorySetter(propertyName, setter_) {
-  const setter = setter_ || AsSetterFromProperty(propertyName)
+  const setter = setter_ || AsSetterFromProperty(propertyName) ||
+    this._signalError(`Improper property name: ${propertyName}!!`)
   this._addSetter(setter, propertyName, MANDATORY)
 })
 
@@ -452,10 +474,10 @@ _Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
     }
   }
   else {
-    const parentBlanker = isThing ? $IntrinsicBlanker : $SomethingBlanker
-    this._blanker    = new NewBlanker(parentBlanker)
-    this._properties = SpawnFrom(null)
-    this.subtypes    = SetImmutable(new Set())
+    const parentBlanker    = isThing ? $IntrinsicBlanker : $SomethingBlanker
+    this._blanker          = new NewBlanker(parentBlanker)
+    this._properties       = SpawnFrom(null)
+    this._subordinateTypes = SetImmutable(new Set())
   }
 
   this.ancestry = nextAncestry
@@ -532,10 +554,18 @@ _Type._addMethod(function _init(spec_name, context_) {
   this.addSharedProperty("type", this[$RIND])
 
   declared    && this.addDeclarations(declared)
-  durables    && this.addDurableProperties(durables)
+  durables    && this.addDurableProperties(durables) // This needs to be for the root!!!
   shared      && this.addSharedProperties(shared)
   methods     && this.addMethods(methods)
   definitions && this.define(definitions)
+
+  if (this.isPermeable) {
+    if (this.new !== _BasicNew) {
+      this.addOwnMethod(MakeNew_(this.new), BASIC_VALUE_METHOD)
+    }
+    this.addOwnAlias("new"      , "new_"      )
+    this.addOwnAlias("newAsFact", "newAsFact_")
+  }
 })
 // blanker.$root$outer.constructor = this._func
 // blanker.$root$inner.constructor = NewVacuousConstructor()
@@ -546,11 +576,11 @@ _Type.addDeclaration("_blanker")
 _Type.addDeclaration($OUTER_WRAPPER)
 
 
-_Type      ._init(       "Type"                           )
+_Type      ._init(        "Type"                          )
 _$Something._init({ name: "$Something", supertypes: null })
 _$Intrinsic._init({ name: "$Intrinsic", supertypes: null })
 _Thing     ._init({ name: "Thing"     , supertypes: null })
-_Method    ._init(       "Method"                         )
+_Method    ._init(        "Method"                        )
 
 
 // Helps with debugging!!!
@@ -567,6 +597,15 @@ Frost($BaseBlanker.$root$inner)
 
 _$Intrinsic._addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
+const PermeableNewErrorMethod = Method(function new_(...args) {
+  this._signalError("Method 'new_' cannot be called on immutable type objects!!")
+})
+
+const PermeableNewAsFactErrorMethod = Method(function newAsFact_(...args) {
+  this._signalError("Method 'newAsFact_' cannot be called on immutable type objects!!")
+})
+
+
 _Type._addMethod(function _setImmutable(inPlace_, visited__) {
   const $inner       = this[$INNER]
   const blanker      = $inner._blanker
@@ -574,18 +613,20 @@ _Type._addMethod(function _setImmutable(inPlace_, visited__) {
   const $root$inner  = blanker.$root$inner
   const $root$supers = $root$inner[$SUPERS]
 
-  delete $inner._touch
+  this.addOwnMethod(PermeableNewErrorMethod)
+  this.addOwnMethod(PermeableNewAsFactErrorMethod)
 
-  Frost($root$outer[$IMMEDIATES])
-  Frost($root$supers[$IMMEDIATES])
-  Frost($root$inner[$IMMEDIATES])
-  Frost($root$inner[$ASSIGNERS])
-  Frost($root$inner[$KNOWNS])
-  Frost($root$outer)
-  Frost($root$supers)
-  Frost($root$inner)
+  // Frost($root$outer[$IMMEDIATES])
+  // Frost($root$supers[$IMMEDIATES])
+  // Frost($root$inner[$IMMEDIATES])
+  // Frost($root$inner[$ASSIGNERS])
+  // Frost($root$inner[$KNOWNS])
+  // Frost($root$outer)
+  // Frost($root$supers)
+  // Frost($root$inner)
 
-  return $inner._basicSetImmutable()
+  $inner._basicSetImmutable()
+  return this
 }, BASIC_SELF_METHOD)
 
 

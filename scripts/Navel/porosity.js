@@ -4,25 +4,22 @@
 
 
 // UNTESTED
-const DefaultBehavior = {
+const DefaultBarrier = {
   __proto__      : null        ,
   getPrototypeOf : ALWAYS_NULL ,
   setPrototypeOf : ALWAYS_FALSE,
   defineProperty : ALWAYS_FALSE,
   deleteProperty : ALWAYS_FALSE,
-  isExtensible   : ALWAYS_FALSE,
+  // isExtensible   : ALWAYS_FALSE,
   // preventExtensions ???
 }
 
 
 
 
-function Outer() {}
+function OuterBarrier() {}
 
-const Outer_prototype = Outer.prototype = SpawnFrom(DefaultBehavior)
-const Impermeable     = new Outer()
-
-Impermeable.id = "Impermeable"
+const OuterBarrier_prototype = OuterBarrier.prototype = SpawnFrom(DefaultBarrier)
 
 // Setting on things in not allowed because the setting semantics are broken.
 // For our model, the return value should always be the receiver, or a copy
@@ -31,65 +28,69 @@ Impermeable.id = "Impermeable"
 // Further, note that the return value of a set always returns the value that
 // was tried to be set to, regardless of whether it was successful or not.
 
-Outer_prototype.set = function set($outer, property, value, $rind) {
-  return DirectAssignmentFromOutsideError($rind) || false
+OuterBarrier_prototype.set = function set($target, property, value, target) {
+  return DirectAssignmentFromOutsideError(target) || false
 }
 
 
-// getOwnPropertyDescriptor ($outer, property) {
+// getOwnPropertyDescriptor ($target, property) {
 //   switch (property[0]) {
-//     case "_"       : return $outer._externalPrivateRead(property) || undefined
+//     case "_"       : return $target._externalPrivateRead(property) || undefined
 //     // case undefined : if (!(property in VISIBLE_SYMBOLS)) { return false }
 //     case undefined : return undefined
 //   }
-//   return PropertyDescriptor($outer, property)
+//   return PropertyDescriptor($target, property)
 // },
 
-// ownKeys ($outer) { },
+// ownKeys ($target) { },
 
 
-Impermeable.get = function get($outer, property, $rind) {
-  const value = $outer[property]
+
+const Impermeable = new OuterBarrier()
+
+Impermeable.id = "Impermeable"
+
+Impermeable.get = function get($target, property, target) {
+  const value = $target[property]
   if (value !== undefined) { return value }
 
-  const $method_outer = $outer[$IMMEDIATES][property]
-  if ($method_outer)   { return $method_outer.call($rind) }
-  if ($outer[$KNOWNS][property]) { return null }
-
+  const _$method_outer = $target[$IMMEDIATES][property]
+  if (_$method_outer) { return _$method_outer.call(target) }
+  if ($target[$KNOWNS][property]) { return null }
   if (property[0] === "_") {
-    return PrivateAccessFromOutsideError($rind, property)
+    return PrivateAccessFromOutsideError(target, property)
   }
 
-  const $inner = InterMap.get($rind)
-  return $inner._unknownProperty.call($inner[$PULP], property)
+  const _$target = InterMap.get(target)
+  return _$target._unknownProperty.call(_$target[$PULP], property)
 }
 
-
-Impermeable.has = function has($outer, property) {
+Impermeable.has = function has($target, property) {
   // const firstChar = (typeof property === "symbol") ?
   //   property.toString()[7] : property[0]
 
   switch (property[0]) {
     case "_"       :
-      return PrivateAccessFromOutsideError($outer[$RIND], property) || false
+      return PrivateAccessFromOutsideError($target[$RIND], property) || false
     // case undefined : if (!(property in VISIBLE_SYMBOLS)) { return false }
     case undefined :
       return false
   }
-  return (property in $outer)
+  return (property in $target)
 }
 
 
-function Outer_() {}
-
-const Outer__prototype = Outer_.prototype = SpawnFrom(Outer_prototype)
-const Permeable        = new Outer_()
+const Permeable = new OuterBarrier()
 
 Permeable.id = "Permeable"
 
-Permeable.get = function get($outer, property, $rind) {
-  const $inner = InterMap.get($rind)
-  const value  = $inner[property]
+Permeable.get = function get($target, property, target) {
+  var value = $target[property]
+  if (value !== undefined) { return value }
+
+  const _$target = InterMap.get(target)
+
+  value = _$target[property]
 
   switch (typeof value) {
     case "undefined" : break
@@ -97,68 +98,37 @@ Permeable.get = function get($outer, property, $rind) {
     default          : return value
   }
 
-  const $method = $inner[$IMMEDIATES][property]
-  if ($method) { return $method.outer.call($rind) }
-  if ($inner[$KNOWNS][property] !== undefined) { return null }
+  const $method_inner = _$target[$IMMEDIATES][property]
+  if ($method_inner) { return $method_inner[$OUTER_WRAPPER].call(target) }
+  if (_$target[$KNOWNS][property] !== undefined) { return null }
 
-  return $inner._unknownProperty.call($inner[$PULP], property)
+  return _$target._unknownProperty.call(_$target[$PULP], property)
 }
 
 // REVISIT!!!
-Permeable.has = function has($outer, property) {
-  const $inner = InterMap.get($outer[$RIND])
-  return (property in $inner)
+Permeable.has = function has($target, property) {
+  const _$target = InterMap.get($target[$RIND])
+  return (property in _$target)
 }
-
-
-
-function TypeOuter($pulp, $outer, permeability) {
-  this.$pulp        = $pulp
-  this.$outer       = $outer
-  this.permeability = permeability
-}
-
-const TypeOuter_prototype = SpawnFrom(Outer_prototype)
-TypeOuter.prototype = TypeOuter_prototype
-
-TypeOuter_prototype.get = function get(func, property, $rind) {
-  return this.permeability.get(this.$outer, property, $rind)
-}
-
-TypeOuter_prototype.has = function has(func, property) {
-  return this.permeability.has(this.$outer, property)
-}
-
-TypeOuter_prototype.apply = function newAsFact(func, receiver, args) {
-  // return func.apply(this.$inner, args)
-  // return this.$pulp.newAsFact(...args)
-
-  // This is the same code as in newAsFact(...args)
-  const  instance = this.$pulp.new(...args)
-  const $instance = InterMap.get(instance)
-  const _instance = $instance[$PULP]
-  if (_instance.id == null) { $instance._setImmutable.call(_instance) }
-  return instance
-}
-
 
 
 
 
 // UNTESTED
-function Inner() {}
+function InnerBarrier() {}
 
-const Inner_prototype = Inner.prototype = SpawnFrom(DefaultBehavior)
+const InnerBarrier_prototype = SpawnFrom(DefaultBarrier)
+InnerBarrier.prototype = InnerBarrier_prototype
 
-Inner_prototype.get = function get($inner, property, $pulp) {
-  const value = $inner[property]
+InnerBarrier_prototype.get = function get(_$target, property, _target) {
+  const value = _$target[property]
   if (value !== undefined) { return value }
 
-  const $method = $inner[$IMMEDIATES][property]
-  if ($method) { return $method.inner.call($pulp) }
-  if ($inner[$KNOWNS][property] !== undefined) { return null }
+  const $method_inner = _$target[$IMMEDIATES][property]
+  if ($method_inner) { return $method_inner.call(_target) }
+  if (_$target[$KNOWNS][property] !== undefined) { return null }
 
-  return $inner._unknownProperty.call($pulp, property)
+  return _$target._unknownProperty.call(_target, property)
 }
 
 // has () {
@@ -166,181 +136,207 @@ Inner_prototype.get = function get($inner, property, $pulp) {
 // }
 
 
-Inner_prototype.set = function set($inner, property, value, $pulp) {
-  const assigner    = $inner[$ASSIGNERS][property]
-  var   $target     = $inner
-  var   isImmutable = $inner[IS_IMMUTABLE]
+InnerBarrier_prototype.set = function set(_$source, property, value, _source) {
+  const assigner    = _$source[$ASSIGNERS][property]
+  var   _$target    = _$source
+  var   isImmutable = _$source[IS_IMMUTABLE]
 
   if (assigner) {
     if (typeof assigner !== "function") { property = assigner } // symbol
     else {                                                      // handler
       // The assigner might cause a write, invalidating the target $inner.
-      value       = assigner.call($pulp, value)
-      $target     = $pulp[$INNER]         // Re-get the (possibly new) $inner
-      isImmutable = $target[IS_IMMUTABLE] // See if assigner caused a new copy
+      value       = assigner.call(_source, value)
+      _$target    = _source[$INNER]         // Re-get the (possibly new) $inner
+      isImmutable = _$target[IS_IMMUTABLE] // See if assigner caused a new copy
     }
   }
 
-  const existing = $target[property]
-  if (existing === $inner[$ROOT][property]) {
+  const existing = _$target[property]
+  if (existing === _$target[$ROOT][property]) {
     // Existing value has either never been set, or the current value has been
     // set to the same value as its root's value. The second case is less likely.
 
-    if (value === existing && HasOwnProperty($inner, property)) {return true}
-  }
-  else {
-    // Existing value is definitely one that's been set before.
-    // If new value equals existing, then easy out.
-    if (value === existing) { return true }
-  }
+    if (value === existing) {
+      if (value === undefined) {
+        return AssignmentOfUndefinedError(_source, property)
+      }
+      if (HasOwnProperty.call(_$target, property))  { return true }
+      if (isImmutable && _$source.type.isImmutable) { return true }
+    }
+  }  // Existing value is definitely one that's been set before.
+     // If new value equals existing, then easy out.
+  else if (value === existing) { return true }
 
   // Need to double check this as the execution of the assigner might trigger
   // the barrier and cause the object to already be copied as writable!!!
   if (isImmutable) {
-    $target             = $Copy($inner, false, undefined, property)
-    this.$target        = $target
-    this.set            = this.retargetedSet
+    _$target            = $Copy(_$source, false, undefined, property)
+    this._$target       = _$target
     this.get            = this.retargetedGet
+    this.set            = this.retargetedSet
     this.deleteProperty = this.retargetedDelete
   }
 
-  // If was going to assigning property to self, instead assign it to the copy
-  if (value === $pulp || value === $inner[$RIND]) { value = $target[$RIND] }
-  InSetProperty($target, property, value, $pulp)
+  if (_$target !== _$source) {
+    // If was going to assigning property to self, instead assign it to the copy
+    if (value === _source || value === _$source[$RIND]) {
+      value = _$target[$RIND]
+    }
+  }
+  InSetProperty(_$target, property, value, _source)
   return true
 }
 
 
-Inner_prototype.deleteProperty = function deleteProperty($inner, property, $pulp) {
-  var assigner, isPermeable, permeability, $target, value, value$root
+InnerBarrier_prototype.deleteProperty = function deleteProperty(_$source, property) {
+  var assigner, isPermeable, permeability, _$target, value, value$root
 
-  assigner = $inner[$ASSIGNERS][property]
+  assigner = _$source[$ASSIGNERS][property]
 
   if (assigner && assigner.name === "$assignmentError") {
-    return onSetError.call($pulp) || true
+    return DisallowedDeleteError(_$source, property) || true
   }
 
   switch (property) {
     case $DELETE_IMMUTABILITY   :  // Only called on immutable objects!!!
-      $target = $Copy($inner, false)
+      _$target = $Copy(_$source, false)
       break
 
     case $DELETE_ALL_PROPERTIES :  // Only called on immutable objects!!!
-      isPermeable  = $inner[$OUTER].$INNER
-      permeability = isPermeable ? Permeable : Impermeable
-      $target      = new $inner[$BLANKER](permeability)
-
-      if (isPermeable) { $target[$OUTER].$INNER = $target }
+      _$target = new _$source._newBlank()
       break
 
     default :
-      value$root = $inner[$ROOT][property]
-      value      = $inner[property]
+      value$root = _$source[$ROOT][property]
+      value      = _$source[property]
 
       if (value === value$root) {
-        if (value === undefined || !HasOwnProperty.call($inner, property)) {
+        if (value === undefined || !HasOwnProperty.call(_$source, property)) {
           return true // Doesn't actually have the property. Inherited from root.
         }
       }
-      if (!$inner[IS_IMMUTABLE]) {
-        delete $inner[property]
-        delete $inner[$OUTER][property]
-        return true
-      }
-
-      $Copy($inner, false, undefined, property)
-      break
   }
 
-  this.$target        = $target || $Copy($inner, false, undefined, property)
-  this.set            = this.retargetedSet
-  this.get            = this.retargetedGet
-  this.deleteProperty = this.retargetedDelete
+  if (_$source[IS_IMMUTABLE]) {
+    this._$target       = _$target || $Copy(_$source, false, undefined, property)
+    this.set            = this.retargetedSet
+    this.get            = this.retargetedGet
+    this.deleteProperty = this.retargetedDelete
+  }
+  else {
+    delete _$source[property]
+    delete _$source[$OUTER][property]
+  }
+
   return true
 }
 
-Inner_prototype.retargetedGet = function retargetedGet($inner, property, $pulp) {
+InnerBarrier_prototype.retargetedGet = function retargetedGet(_$source, property, _source) {
   // Note: Could have simply done the following line, but gets need to be fast,
   // so reimplemented it here.
-  // return Inner_prototype.get(this.$target, property, $target[$PULP])
+  // const _$target = this._$target
+  // return InnerBarrier_prototype.get(_$target, property, _$target[$PULP])
 
-  const $target = this.$target
-  const value = $target[property]
+  const _$target = this._$target
+  const value = _$target[property]
   if (value !== undefined) { return value }
 
-  const $method = $target[$IMMEDIATES][property]
-  if ($method) { return $method.inner.call($target[$PULP]) }
-  if ($target[$KNOWNS][property] !== undefined) { return null }
+  const $method_inner = _$target[$IMMEDIATES][property]
+  if ($method_inner) { return $method_inner.call(_$target[$PULP]) }
+  if (_$target[$KNOWNS][property] !== undefined) { return null }
 
-  return $target._unknownProperty.call($target[$PULP], property)
+  return _$target._unknownProperty.call(_$target[$PULP], property)
 }
 
-Inner_prototype.retargetedSet = function retargetedSet($inner, property, value, $pulp) {
-  const $target = this.$target
-  return Inner_prototype.set($target, property, value, $target[$PULP])
+InnerBarrier_prototype.retargetedSet = function retargetedSet(_$source, property, value, _source) {
+  const _$target = this._$target
+  return InnerBarrier_prototype.set(_$target, property, value, _$target[$PULP])
 }
 
-Inner_prototype.retargetedDelete = function retargetedDelete($inner, property, $pulp) {
-  const $target = this.$target
-  return Inner_prototype.deleteProperty($target, property, $target[$PULP])
+InnerBarrier_prototype.retargetedDelete = function retargetedDelete(_$source, property, _source) {
+  const _$target = this._$target
+  return InnerBarrier_prototype.deleteProperty(_$target, property, _$target[$PULP])
 }
 
 
 
-// CHECK THAT BARRIER WORK ON TYPE PROXIES, IMMUTABLE AS WELL AS MUTABLE!!!
-function TypeInner($target) {
-  this.$target = $target
-  // this.$pulp  = $pulp // this is the proxy, which is now set from the outside
-}
-
-const TypeInner_prototype = TypeInner.prototype = SpawnFrom(Inner_prototype)
-
-
-TypeInner_prototype.get = function get(func, property, $pulp) {
-  // Note: Could reimplement it here is following call is too slow.
-  return Inner_prototype.get(this.$target, property, $pulp)
-}
-
-TypeInner_prototype.set = function set(func, property, value, $pulp) {
-  return Inner_prototype.set(this.$target, property, value, $pulp)
-}
-
-TypeInner_prototype.has = function has(func, property, $pulp) {
-  return (property in this.$target)
-}
-
-TypeInner_prototype.deleteProperty = function deleteProperty(func, property, $pulp) {
-  return Inner_prototype.deleteProperty(this.$target, property, $pulp)
-}
-
-TypeInner_prototype.apply = function newAsFact(func, receiver, args) {
-  // return func.apply(this.$target, args)
-  // return this.$pulp.newAsFact(...args)
+function Type_apply(func, receiver, args) {
+  // return func.apply(this.$inner, args)
+  // return this._target.newAsFact(...args)
 
   // This is the same code as in newAsFact(...args)
-  const  instance = this.$pulp.new(...args)
-  const $instance = InterMap.get(instance)
-  const _instance = $instance[$PULP]
-  if (_instance.id == null) { $instance._setImmutable.call(_instance) }
+  const   instance = this._target.new(...args)
+  const _$instance = InterMap.get(instance)
+  const _instance  = _$instance[$PULP]
+  if (_instance.id == null) { _$instance._setImmutable.call(_instance) }
   return instance
 }
 
 
-// TypeInner.prototype = SpawnFrom(DefaultBehavior)
+function DisguisedOuterBarrier(_target, $target, permeability) {
+  this._target      = _target
+  this.$target      = $target
+  this.permeability = permeability
+}
+
+const DisguisedOuterBarrier_prototype = SpawnFrom(OuterBarrier_prototype)
+DisguisedOuterBarrier.prototype = DisguisedOuterBarrier_prototype
+
+DisguisedOuterBarrier_prototype.get = function get(func, property, target) {
+  return this.permeability.get(this.$target, property, target)
+}
+
+DisguisedOuterBarrier_prototype.has = function has(func, property) {
+  return this.permeability.has(this.$target, property)
+}
+
+DisguisedOuterBarrier_prototype.apply = Type_apply
 
 
 
-function SuperPropertyFor($inner, property) {
-  const ancestors = $inner.type.ancestry
-  const supers    = $inner[$SUPERS]
-  var next, $type, nextProperties, value, isDeclared
+// CHECK THAT BARRIER WORK ON TYPE PROXIES, IMMUTABLE AS WELL AS MUTABLE!!!
+function DisguisedInnerBarrier(_$target) {
+  this._$target = _$target
+  // this._target  = _target // this is the proxy, which is now set from the outside
+}
+
+const DisguisedInnerBarrier_prototype = SpawnFrom(InnerBarrier_prototype)
+DisguisedInnerBarrier.prototype = DisguisedInnerBarrier_prototype
+
+DisguisedInnerBarrier_prototype.get = function get(func, property, _target) {
+  // Note: Could reimplement it here is following call is too slow.
+  return InnerBarrier_prototype.get(this._$target, property, _target)
+}
+
+DisguisedInnerBarrier_prototype.set = function set(func, property, value, _target) {
+  return InnerBarrier_prototype.set(this._$target, property, value, _target)
+}
+
+DisguisedInnerBarrier_prototype.has = function has(func, property) {
+  return (property in this._$target)
+}
+
+DisguisedInnerBarrier_prototype.deleteProperty = function deleteProperty(func, property) {
+  return InnerBarrier_prototype.deleteProperty(this._$target, property)
+}
+
+DisguisedInnerBarrier_prototype.apply = Type_apply
+
+
+
+
+
+function SuperPropertyFor(_$target, property) {
+  const ancestors = _$target.type.ancestry
+  const supers    = _$target[$SUPERS]
+  var next, _$type, nextProperties, value, isDeclared
 
   next = ancestors.length
-  if (!$inner._hasOwn(property)) { next-- }
+  if (!_$target._hasOwn(property)) { next-- }
 
   while (next--) {
-    $type          = InterMap.get(ancestors[next])
-    nextProperties = $type._properties
+    _$type         = InterMap.get(ancestors[next])
+    nextProperties = _$type._properties
     value          = nextProperties[property]
 
     if (value !== undefined) {
@@ -358,7 +354,7 @@ function SuperPropertyFor($inner, property) {
       }
       else { return value }
     }
-    else if ($type._blanker.$root$inner[$KNOWNS][property] !== undefined) {
+    else if (_$type._blanker.$root$inner[$KNOWNS][property] !== undefined) {
       isDeclared = true
     }
   }
@@ -366,26 +362,26 @@ function SuperPropertyFor($inner, property) {
 }
 
 
-function Super() {}
+function SuperBarrier() {}
 
-const Super_prototype = SpawnFrom(DefaultBehavior)
-Super.prototype = Super_prototype
+const SuperBarrier_prototype = SpawnFrom(DefaultBarrier)
+SuperBarrier.prototype = SuperBarrier_prototype
 
-Super_prototype.get = function get($inner, property, $super) {
-  const supers = $inner[$SUPERS]
-  var   value = supers[property]
+SuperBarrier_prototype.get = function get(_$target, property, _super) {
+  const supers = _$target[$SUPERS]
+  var   value  = supers[property]
 
   do {
     switch (value) {
       case undefined :
-        value = (supers[property] = SuperPropertyFor($inner, property))
+        value = (supers[property] = SuperPropertyFor(_$target, property))
         break
 
       case IMMEDIATE :
-        return supers[$IMMEDIATES][property].call($inner[$PULP])
+        return supers[$IMMEDIATES][property].call(_$target[$PULP])
 
       case NO_SUPER  :
-        return $inner._unknownProperty.call($inner[$PULP], property)
+        return $inner._unknownProperty.call(_$target[$PULP], property)
 
       default :
         return value
@@ -394,8 +390,8 @@ Super_prototype.get = function get($inner, property, $super) {
 }
 
 
-// const OwnSuperBehavior = {
-//   __proto__ : SuperBehavior,
+// const OwnSuperBarrier = {
+//   __proto__ : SuperBarrier,
 //
 //   get ($inner, property, target) {
 //     // const supers = $inner[SUPERS]

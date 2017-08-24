@@ -48,6 +48,7 @@ const $ASSIGNERS         = Symbol("$ASSIGNERS")
 const $IMMEDIATES        = Symbol("$IMMEDIATES")
 const $KNOWNS            = Symbol("$KNOWNS")
 const $SUPERS            = Symbol("$SUPERS")
+const $OWN_METHODS       = Symbol("$OWN_METHODS")
 
 const $OUTER_WRAPPER     = Symbol("$OUTER_WRAPPER")
 

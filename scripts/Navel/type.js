@@ -40,7 +40,7 @@ _Type.addLazyProperty(function id() {
 
 _Type._addMethod(function formalName() {
   const context = this.context
-  const prefix = context ? context.id + "@" : ""
+  const prefix  = context ? context.id + "@" : ""
   return `${prefix}${this.name}`
 })
 
@@ -51,41 +51,90 @@ _Type._addMethod(function toString(_) {
 
 
 _Type._addMethod(function new_(...args) {
-  const $inner = this[$INNER]
-  var instance, $instance, _postInit, $outer, instance_
+  const $inner     = this[$INNER]
+  const newHandler = $inner.new
+  var $instance, _instance, _$instance, instance, instance_, _postInit
 
-  if ($inner.new === $inner._basicNew) {
-    $instance = new this._blanker(Permeable, args)
-    _instance = $instance[$PULP]
-    _postInit = $instance._postInit
+  // NOTE: add something to the handler for basicNew and new_ to differentiate it
+  // handler.name === "new_"
+  if (newHandler === _BasicNew ||  // The new method is the original, has not been overridden
+      newHandler === new_) {       // The new method has been set to this method
+    _$instance = new this._blanker(Permeable, args)
+    $instance  = _$instance[$OUTER]
+    _instance  = _$instance[$PULP]
+    _postInit  = _$instance._postInit
 
-    $instance[$OUTER].$INNER = $instance.$INNER = $instance
+    $instance.$INNER = _$instance
 
-    $instance._init.apply(_instance, args)
+    _$instance._init.apply(_instance, args)
 
     if (_postInit) {
       const result = _postInit.call(_instance)
       if (result !== undefined && result !== _instance) { return result }
     }
-    return $instance[$RIND]
+    return _$instance[$RIND]
   }
 
   if (this === _Type) {
     return this._signalError("Redefining new on Type is forbidden!!")
   }
-  instance  = this.new(...args)
-  $instance = InterMap.get(instance)
-  $outer    = $instance[$OUTER]
-  instance_ = new Proxy($outer, Permeable)
+  instance   = this.new(...args)
+  _$instance = InterMap.get(instance)
+  instance_  = new Proxy(_$instance[$OUTER], Permeable)
+  InterMap.set(instance_, _instance)
 
-  $instance[$RIND] = instance_
-  $outer.$INNER    = $instance.$INNER = $instance
-  $outer[$RIND]    = instance_
-
-  InterMap.set(instance_, $instance)
-  return instance_
-
+  $instance.$INNER = _instance
+  return ($instance[$RIND] = _$instance[$RIND] = instance_)
 }, BASIC_VALUE_METHOD)
+
+
+function MakeNew_(existingCustomNew) {
+  return function new_(...args) {
+    const instance   = existingCustomNew.apply(this, args)
+    const _$instance = InterMap.get(instance)
+    const $instance  = _$instance[$OUTER]
+    const instance_  = new Proxy($instance, Permeable)
+
+    $instance.$INNER = _$instance
+    $instance[$RIND] = _$instance[$RIND] = instance_
+    InterMap.set(instance_, _$instance)
+    return instance_
+  }
+}
+
+// _Type._addMethod(function _postInit(_) {
+//   if (this.isPermeable) {
+//     if (this.new !== _BasicNew) {
+//       this.addOwnMethod(MakeNew_(this.new), BASIC_VALUE_METHOD)
+//     }
+//     this.addOwnAlias("new"      , "new_"      )
+//     this.addOwnAlias("newAsFact", "newAsFact_")
+//   }
+// })
+
+_Type._addMethod(function _initFrom_(type_) {
+  const properties = type_._properties
+  var   propertyName, property, nextProperty, ownMethods, method, nextMethod
+
+  this._init({
+    name : type_.name,
+    supertypes : type_.supertypes,
+  })
+
+  for (propertyName in properties) {
+    property     = properties[propertyName]
+    nextProperty = Copy(property)
+    this._setSharedProperty(propertyName, property)
+  }
+
+  if ((ownMethods = type_[$OWN_METHODS])) {
+    for (propertyName in ownMethods) {
+      method     = ownMethods[propertyName]
+      nextMethod = Copy(method)
+      this.addOwnMethod(nextMethod)
+    }
+  }
+})
 
 
 
@@ -124,7 +173,7 @@ _Type._addMethod(function methods() {
   for (var property in $root$inner) {
     var value  = $root$inner[property]
     var method =
-      (typeof value === "function" && InterMap.get(value) === WRAPPER_FUNC) ?
+      (typeof value === "function" && InterMap.get(value) === INNER_FUNC) ?
         (value.method || null) : null
     if (method) { methods.push(method) }
   }
@@ -145,15 +194,10 @@ _Type._addMethod(function definedMethods() {
 })
 
 
+
+
 _Type._addMethod(function methodAt(selector) {
-  const $root$inner = this._blanker.$root$inner
-  const $method     = $root$inner[$IMMEDIATES][selector]
-
-  if ($method) { return ($method.inner) ? $method[$RIND] : null }
-
-  const value = $root$inner[selector]
-  return (typeof value === "function" && InterMap.get(value) === WRAPPER_FUNC) ?
-    (value.method || null) : null
+  return MethodAt(this._blanker.$root$inner, selector)
 })
 
 
@@ -179,33 +223,54 @@ _Type._addMethod(function addMethods(items) {
 })
 
 _Type._addMethod(function addDeclarations(propertyListing) {
-  const properties = propertyListing.split(/\s*[ ,]\s*/)
+  const properties = IsArray(propertyListing) ?
+    propertyListing : propertyListing.split(/\s*[ ,]\s*/)
   var   next       = properties.length
-  while (next--) { this._setSharedProperty(properties[next], null, true) }
+  while (next--) { this._setSharedProperty(properties[next], null) }
 })
 
-_Type.addAlias("_basicNew"                , "new"                 )
-_Type.addAlias("declare"                  , "addDeclarations"     )
-_Type.addAlias("removeMethod"             , "removeSharedProperty")
-_Type.addAlias("defines"                  , "define")
+_Type._addMethod(function addDurableProperty(property) {
+  const properties = this[DURABLES] || []
+  if (!properties.includes(property)) {
+    this[DURABLES] = SetImmutable([...properties, property])
+    this.addDeclaration(property)
+  }
+  return this
+}, BASIC_SELF_METHOD)
+
+
+
+_Type._addMethod(function addDurables(propertyListing) {
+  const properties = IsArray(propertyListing) ?
+    propertyListing : propertyListing.split(/\s*[ ,]\s*/)
+  var   next       = properties.length
+  while (next--) { this._setSharedProperty(properties[next], null) }
+})
+
+
+_Type.addAlias("_basicNew"    , "new"                 )
+_Type.addAlias("declare"      , "addDeclarations"     )
+_Type.addAlias("durables"     , "addDurables"         )
+_Type.addAlias("removeMethod" , "removeSharedProperty")
+_Type.addAlias("defines"      , "define"              )
 
 
 _Type._addMethod(function newAsFact(...args) {
   // Note: same as implementation in TypeOuter and TypeInner
-  const  instance = this.$pulp.new(...args)
-  const $instance = InterMap.get(instance)
-  const _instance = $instance[$PULP]
-  if (_instance.id == null) { $instance._setImmutable.call(_instance) }
+  const instance  = this.new(...args)
+  const _instance = InterMap.get(instance)
+  const instance_ = _instance[$PULP]
+  if (instance_.id == null) { _instance._setImmutable.call(instance_) }
   return instance
 }, BASIC_VALUE_METHOD)
 
 _Type._addMethod(function newAsFact_(...args) {
   // Note: same as implementation in TypeOuter and TypeInner
-  const  instance = this.$pulp.new_(...args)
-  const $instance = InterMap.get(instance)
-  const _instance = $instance[$PULP]
-  if (_instance.id == null) { $instance._setImmutable.call(_instance) }
-  return instance
+  const instance_  = this.new_(...args)
+  const _$instance = InterMap.get(instance_)
+  const _instance  = _$instance[$PULP]
+  if (_instance.id == null) { _$instance._setImmutable.call(_instance) }
+  return instance_
 }, BASIC_VALUE_METHOD)
 
 
@@ -218,6 +283,7 @@ _Type._addMethod(function newAsFact_(...args) {
 _Type._addMethod(function _unknownMethodToAliasError(property) {
   this._signalError(`Can't find method '${property}' to alias!!`)
 })
+
 
 
 // Type._addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])

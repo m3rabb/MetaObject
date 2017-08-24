@@ -57,3 +57,27 @@ function AttemptedChangeOfAncestryOfPermeableTypeError(target) {
 function DuplicateSupertypeError(target) {
   SignalError(target[$RIND], "Duplicate supertypes are not allowed!!")
 }
+
+function DisallowedDeleteError(target, property) {
+  SignalError(target[$RIND], `Delete of property '${property}' is not allowed!!`)
+}
+
+function DisallowedAssignmentError(target, property, setter) {
+  SignalError(target[$RIND], `Assignment of property '${property}' is not allowed, use '${setter}' method instead!!`)
+}
+
+function UnnamedFuncError(target, func) {
+  SignalError(target[$RIND], `${func} function must be named!!`)
+}
+
+function AssignmentOfUndefinedError(target, property) {
+  SignalError(target[$RIND], `Assignment of undefined to property '${property}' is forbidden use null instead!!`)
+}
+
+function DetectedInnerError(target, value) {
+  SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value.name}#${value.oid}!!`)
+}
+
+function InvalidCopyType(target) {
+  SignalError(target, `Cannot use InAtPut with ${target.constructor.name}!!`)
+}
