@@ -287,7 +287,7 @@ _Type._addMethod(function _inheritProperty(property) {
     value      = _$nextType._properties[property]
 
     if (value !== undefined) {
-      return this._setSharedProperty(property, value, true)
+      return this._setSharedProperty(property, value, false)
     }
   }
 })
@@ -315,7 +315,7 @@ _Type._addMethod(function _reinheritProperties() {
     for (property in nextProperties) {
       if (!validProperties[property]) {
         validProperties[property] = true
-        this._setSharedProperty(property, nextProperties[property], true)
+        this._setSharedProperty(property, nextProperties[property], false)
       }
     }
   }
