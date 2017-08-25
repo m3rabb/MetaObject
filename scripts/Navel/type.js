@@ -53,67 +53,34 @@ _Type._addMethod(function toString(_) {
 _Type._addMethod(function new_(...args) {
   const $inner     = this[$INNER]
   const newHandler = $inner.new
-  var $instance, _instance, _$instance, instance, instance_, _postInit
+  const instance   = (newHandler === _BasicNew || new_ === newHandler) ?
+    this._basicNew(...args) : this.new(...args)
+  const _$instance = InterMap.get(instance)
+  const $instance  = _$instance[$OUTER]
 
-  // NOTE: add something to the handler for basicNew and new_ to differentiate it
-  // handler.name === "new_"
-  if (newHandler === _BasicNew ||  // The new method is the original, has not been overridden
-      newHandler === new_) {       // The new method has been set to this method
-    _$instance = new this._blanker(Permeable)
-    $instance  = _$instance[$OUTER]
-    _instance  = _$instance[$PULP]
-    _postInit  = _$instance._postInit
+  DefineProperty($instance, "this", InvisibleConfig)
+  $instance.this = _$instance[$PULP]
 
-    $instance.$INNER = _$instance
-
-    _$instance._init.apply(_instance, args)
-
-    if (_postInit) {
-      const result = _postInit.call(_instance)
-      if (result !== undefined && result !== _instance) { return result }
-    }
-    return _$instance[$RIND]
-  }
-
-  if (this === _Type) {
-    return this._signalError("Redefining new on Type is forbidden!!")
-  }
-  instance   = this.new(...args)
-  _$instance = InterMap.get(instance)
-  instance_  = new Proxy(_$instance[$OUTER], Permeable)
-  InterMap.set(instance_, _instance)
-
-  $instance.$INNER = _instance
-  return ($instance[$RIND] = _$instance[$RIND] = instance_)
+  return instance
 }, BASIC_VALUE_METHOD)
 
 
-function MakeNew_(existingCustomNew) {
-  return function new_(...args) {
-    const instance   = existingCustomNew.apply(this, args)
-    const _$instance = InterMap.get(instance)
-    const $instance  = _$instance[$OUTER]
-    const instance_  = new Proxy($instance, Permeable)
-
-    $instance.$INNER = _$instance
-    $instance[$RIND] = _$instance[$RIND] = instance_
-    InterMap.set(instance_, _$instance)
-    return instance_
-  }
-}
-
-// _Type._addMethod(function _postInit(_) {
-//   if (this.isPermeable) {
-//     if (this.new !== _BasicNew) {
-//       this.addOwnMethod(MakeNew_(this.new), BASIC_VALUE_METHOD)
-//     }
-//     this.addOwnAlias("new"      , "new_"      )
-//     this.addOwnAlias("newAsFact", "newAsFact_")
+// function MakeNew_(existingCustomNew) {
+//   return function new_(...args) {
+//     const instance   = existingCustomNew.apply(this, args)
+//     const _$instance = InterMap.get(instance)
+//     const $instance  = _$instance[$OUTER]
+//     const instance_  = new Proxy($instance, Permeable)
+//
+//     $instance.this = _$instance
+//     $instance[$RIND] = _$instance[$RIND] = instance_
+//     InterMap.set(instance_, _$instance)
+//     return instance_
 //   }
-// })
+// }
 
-_Type._addMethod(function _initFrom_(type_) {
-  const _type = type_[$PULP]
+
+_Type._addMethod(function _initFrom_(_type) {
   const properties = _type._properties
   var   propertyName, property, nextProperty, ownMethods, method, nextMethod
 
@@ -137,6 +104,11 @@ _Type._addMethod(function _initFrom_(type_) {
   }
 })
 
+
+
+_Type._addMethod(function inheritsFrom(type) {
+  return (type !== this[$RIND] && this.ancestry.includes(type))
+})
 
 
 _Type._addMethod(function methodAncestryListing(selector) {
@@ -223,12 +195,15 @@ _Type._addMethod(function addMethods(items) {
   PropertyLoader.new(this.$).load(items, "METHOD")
 })
 
-_Type._addMethod(function addDeclarations(propertyListing) {
-  const properties = IsArray(propertyListing) ?
-    propertyListing : propertyListing.split(/\s*[ ,]\s*/)
-  var   next       = properties.length
-  while (next--) { this._setSharedProperty(properties[next], null) }
+_Type._addMethod(function addDeclarations(items) {
+  PropertyLoader.new(this.$).load(items, "DECLARATION")
 })
+
+_Type._addMethod(function addDurableProperties(items) {
+  PropertyLoader.new(this.$).load(items, "DURABLES")
+})
+
+
 
 _Type._addMethod(function addDurableProperty(property) {
   const properties = this[DURABLES] || []
@@ -241,19 +216,11 @@ _Type._addMethod(function addDurableProperty(property) {
 
 
 
-_Type._addMethod(function addDurables(propertyListing) {
-  const properties = IsArray(propertyListing) ?
-    propertyListing : propertyListing.split(/\s*[ ,]\s*/)
-  var   next       = properties.length
-  while (next--) { this._setSharedProperty(properties[next], null) }
-})
-
-
 _Type.addAlias("_basicNew"    , "new"                 )
-_Type.addAlias("declare"      , "addDeclarations"     )
-_Type.addAlias("durables"     , "addDurables"         )
+_Type.addAlias("declare"      , "addDeclaration"      )
 _Type.addAlias("removeMethod" , "removeSharedProperty")
 _Type.addAlias("defines"      , "define"              )
+_Type.addAlias("addDurables"  , "addDurableProperties")
 
 
 _Type._addMethod(function newAsFact(...args) {
@@ -293,3 +260,11 @@ _Type._addMethod(function _unknownMethodToAliasError(property) {
 
 
 // _Type._setImmutable()
+
+// _basicNew_
+_Type.addOwnMethod(function new_(...args) {
+  const instance = this._super.new_(...args)
+  instance.addOwnAlias("new"      , "new_"      )
+  instance.addOwnAlias("newAsFact", "newAsFact_")
+  return instance
+})

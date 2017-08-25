@@ -206,6 +206,8 @@ function SetMethod(_$target, method) {
 function InSetProperty(_$target, property, value, _target) {
   if (property[0] !== "_") {   // Public property
     const $target = _$target[$OUTER]
+    var   _$value
+
     switch (typeof value) {
       case "undefined" :
         // Storing undefined is prohibited!
@@ -221,8 +223,8 @@ function InSetProperty(_$target, property, value, _target) {
         else if (value[IS_IMMUTABLE])            {        /* NOP */        }
         else if (value.id != null)               {        /* NOP */        }
         else if (value === _$target[$RIND])      {        /* NOP */        }
-        else {   value = (value$_ = InterMap.get(value)) ?
-                   $Copy(value$_, true)[$RIND] : CopyObject(value, true) }
+        else {   value = (_$value = InterMap.get(value)) ?
+                   $Copy(_$value, true)[$RIND] : CopyObject(value, true) }
 
         $target[property] = value
         break
@@ -259,7 +261,7 @@ function InSetProperty(_$target, property, value, _target) {
         break
     }
   }
-  else if (value && value[$SECRET] === $INNER && value !== _target) {
+  else if (value && value[$SECRET] === $INNER && value[$PULP] !== _target) {
     // Safety check: detect failure to use 'this.$' elsewhere.
     return DetectedInnerError(_target, value)
   }
@@ -464,10 +466,10 @@ function NewInner(CompanionOuterMaker) {
   // Note: The blanker function must be unnamed in order for the debugger to
   // display the type of instances using type name determined by the name of
   // its constructor function property.
-  return function (permeability) {
+  return function () {
     const $inner  = this
     const $outer  = new CompanionOuterMaker()
-    const $rind   = new Proxy($outer, permeability)
+    const $rind   = new Proxy($outer, Impermeable)
     const barrier = new InnerBarrier()
 
     $inner[$BARRIER] = barrier
@@ -516,7 +518,7 @@ function NewDisguisedInner(CompanionOuterMaker) {
   // Note: The blanker function must be unnamed in order for the debugger to
   // display the type of instances using type name determined by the name of
   // its constructor function property.
-  return function (permeability) {
+  return function () {
     var $inner   = this
     var $outer   = new CompanionOuterMaker()
 
@@ -524,7 +526,7 @@ function NewDisguisedInner(CompanionOuterMaker) {
     // const barrier    = new InnerBarrier()
     const $pulp      = new Proxy(DefaultDisguiseFunc, mutability)
     // mutability._target = $pulp
-    const porosity   = new DisguisedOuterBarrier($pulp, $outer, permeability)
+    const porosity   = new DisguisedOuterBarrier($pulp, $outer)
     const $rind      = new Proxy(DefaultDisguiseFunc, porosity)
     // const $rind           = new Proxy(NewAsFact, privacyPorosity)
 
@@ -678,11 +680,13 @@ function MarkFunc(func, marker) {
 
 
 // Document these!!!
-const SAFE_FUNC     = Frost({ id : "SAFE_FUNC"      , [IS_IMMUTABLE] : true })
-const BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC"   , [IS_IMMUTABLE] : true })
-const TAMED_FUNC    = Frost({ id : "TAMED_FUNC"     , [IS_IMMUTABLE] : true })
-const OUTER_FUNC    = Frost({ id : "OUTER_FUNC"     , [IS_IMMUTABLE] : true })
-const INNER_FUNC    = Frost({ id : "INNER_FUNC"     , [IS_IMMUTABLE] : true })
+const SAFE_FUNC     = Frost({ id : "SAFE_FUNC"   , [IS_IMMUTABLE] : true })
+const BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC", [IS_IMMUTABLE] : true })
+const TAMED_FUNC    = Frost({ id : "TAMED_FUNC"  , [IS_IMMUTABLE] : true })
+const OUTER_FUNC    = Frost({ id : "OUTER_FUNC"  , [IS_IMMUTABLE] : true })
+const INNER_FUNC    = Frost({ id : "INNER_FUNC"  , [IS_IMMUTABLE] : true })
+
+
 
 const DISGUISE_PULP = Frost({ id : "DISGUISE_PULP" })
 const ASSIGNER_FUNC = Frost({ id : "ASSIGNER_FUNC" })
@@ -721,7 +725,7 @@ function SetAsymmetricProperty(_type, property, innerValue, outerValue) {
 }
 
 const _BasicNew = function _basicNew(...args) {
-  const _$instance = new this._blanker(Impermeable)
+  const _$instance = new this._blanker()
   const  _instance = _$instance[$PULP]
   const  _postInit = _$instance._postInit
 
@@ -759,7 +763,7 @@ function InClearProperty(_$target, property) {
 }
 
 
-const _SetSharedProperty = function _setSharedProperty(property, value, isInherited_) {
+const _SetSharedProperty = function _setSharedProperty(property, value, isOwn = true) {
   if (this._properties[property] === value) { return this }
 
   this._retarget
@@ -767,7 +771,6 @@ const _SetSharedProperty = function _setSharedProperty(property, value, isInheri
   const isPublic   = (property[0] !== "_")
   const properties = this._properties
   const _$root     = this._blanker.$root$inner
-  const isOwn      = !isInherited_
 
   InClearProperty(_$root, property)
 
@@ -778,7 +781,12 @@ const _SetSharedProperty = function _setSharedProperty(property, value, isInheri
   DefineProperty(_$root, property, InvisibleConfig)
   if (isPublic) { DefineProperty(_$root[$OUTER], property, InvisibleConfig) }
 
-  if (isOwn) { properties[property] = value }
+  if (isOwn) {
+    if (isOwn === INVISIBLE) {
+      DefineProperty(properties, property, InvisibleConfig)
+    }
+    properties[property] = value
+  }
   return this._propagateIntoSubtypes(property)
 }
 
@@ -787,11 +795,10 @@ const Disguise_postInit = function _postInit(_) {
   const $inner       = this[$INNER]
   const $outer       = $inner[$OUTER]
   const mutability   = $inner[$BARRIER]
-  const permeability = $outer.$INNER ? Permeable : Impermeable
 
   const func     = NewVacuousConstructor(this.name)
   const $pulp    = new Proxy(func, mutability)
-  const porosity = new DisguisedOuterBarrier($pulp, $outer, permeability)
+  const porosity = new DisguisedOuterBarrier($pulp, $outer)
   const $rind    = new Proxy(func, porosity)
 
   $inner[$DISGUISE] = func
@@ -800,6 +807,7 @@ const Disguise_postInit = function _postInit(_) {
   $outer[$RIND]     = $rind
   InterMap.set($pulp, DISGUISE_PULP)
   InterMap.set($rind, $inner)
+  return $rind
 }
 
 

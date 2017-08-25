@@ -380,10 +380,17 @@ Simplify to make .$INNER a retroactive property
 ==
 consider handling permeability more simply, making 'this' a property from instantiation via new_
 
+- check: inner[$OUTER_WRAPPER] = outer    // For access via Permeable outer
+
+
+
 ++
 consider not making the the Type's blanker set the named func. Doing afterwards in the
 Type's new method or during _postInit
 
+==
+Consider getting rid of these:
+  if (isPublic) { DefineProperty(_$root[$OUTER], property, InvisibleConfig) }
 
 
 ==========

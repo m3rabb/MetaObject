@@ -5,7 +5,7 @@ const Nothing = Type({
 })
 
 const Nothing$ = InterMap.get(Nothing)
-const Void$    = new Nothing$._blanker(Impermeable)
+const Void$    = new Nothing$._blanker()
 const Void_    = Void$[$PULP]
 const Void     = Void$[$RIND]
 

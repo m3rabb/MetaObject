@@ -23,7 +23,7 @@ describe("#_retarget", function () {
   describe("When the receiver is mutable", function () {
     beforeEach(function () {
       this.cat_     = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-      this._cat     = this.cat_[$PULP]
+      this._cat     = this.cat_.this[$PULP]
       this.$barrier = this._cat[$BARRIER]
     })
 
@@ -46,7 +46,7 @@ describe("#_retarget", function () {
   describe("When the receiver is immutable", function () {
     beforeEach(function () {
       this.cat_          = this.Cat_("Rufus", "Siamese-tabby", 18)
-      this._cat          = this.cat_[$PULP]
+      this._cat          = this.cat_.this[$PULP]
       this.$barrier      = this._cat[$BARRIER]
       this.$barrier$root = RootOf(this.$barrier)
 

@@ -24,44 +24,44 @@ describe("Inner get", function() {
   })
 
   beforeEach(function () {
-    this.cat = this.Cat.new_("Nutmeg", "Torty", 1.5).$INNER[$PULP]
+    this._cat = this.Cat.new_("Nutmeg", "Torty", 1.5).this
   })
 
   describe("When accessing an existing property", function() {
     describe("public property", function () {
       it("Answers the property value", function () {
-        expect( this.cat.name ).toBe( "Nutmeg" )
+        expect( this._cat.name ).toBe( "Nutmeg" )
       })
     })
 
     describe("private property", function () {
       it("Answers the property value", function () {
-        expect( this.cat._age ).toBe( 1.5 )
+        expect( this._cat._age ).toBe( 1.5 )
       })
     })
 
     describe("symbol property", function () {
       it("Answers the property value", function () {
-        expect( this.cat[BREED] ).toBe( "Torty" )
+        expect( this._cat[BREED] ).toBe( "Torty" )
       })
     })
 
     describe("public immediate method", function () {
       it("Executes the method", function () {
-        expect( this.cat.age ).toBe( 1.5 )
+        expect( this._cat.age ).toBe( 1.5 )
       })
     })
 
     describe("private immediate method", function () {
       it("Executes the method", function () {
-        this.cat._inc
-        expect( this.cat.age ).toBe( 2.5 )
+        this._cat._inc
+        expect( this._cat.age ).toBe( 2.5 )
       })
     })
 
     describe("public method", function () {
       it("Answers the outer method handler", function () {
-        expect( this.cat.setAge.method.outer.name ).toBe( "setAge_$outer$fact" )
+        expect( this._cat.setAge.method.outer.name ).toBe( "setAge_$outer$fact" )
       })
     })
   })
@@ -69,19 +69,19 @@ describe("Inner get", function() {
   describe("When accessing a nonexistent", function() {
     describe("public property", function () {
       it("Calls ._unknownProperty", function () {
-        expect( this.cat.xyz ).toBe( "<xyz>" )
+        expect( this._cat.xyz ).toBe( "<xyz>" )
       })
     })
 
     describe("private property", function () {
       it("Calls ._unknownProperty", function () {
-        expect( this.cat._xyz ).toBe( "<_xyz>" )
+        expect( this._cat._xyz ).toBe( "<_xyz>" )
       })
     })
 
     describe("symbol property", function () {
       it("Calls ._unknownProperty", function () {
-        expect( this.cat[XYZ] ).toBe( "<XYZ>" )
+        expect( this._cat[XYZ] ).toBe( "<XYZ>" )
       })
     })
   })

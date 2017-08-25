@@ -22,8 +22,8 @@ describe("Type setting methods", function () {
     beforeEach(function () {
       this.Cat_   = Type.new_(this.CatSpec)
       this.cat_   = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-      this._cat   = this.cat_.$INNER[$PULP]
-      this._$root = this.Cat_.$INNER._blanker.$root$inner
+      this._cat   = this.cat_.this
+      this._$root = this.Cat_.this._blanker.$root$inner
     })
 
     describe("Before the method is added", function () {
@@ -132,8 +132,8 @@ describe("Type setting methods", function () {
     beforeEach(function () {
       this.Cat_   = Type.new_(this.CatSpec)
       this.cat_   = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-      this._cat   = this.cat_.$INNER[$PULP]
-      this._$root = this.Cat_.$INNER._blanker.$root$inner
+      this._cat   = this.cat_.this
+      this._$root = this.Cat_.this._blanker.$root$inner
     })
 
     describe("Before the method is added", function () {
@@ -292,14 +292,14 @@ describe("Type setting methods", function () {
       describe("When the setter is called", function () {
         it("The property is set", function () {
           this._cat.setXyz("happy")
-          expect( this.cat_._qrs ).toBe( "happy" )
+          expect( this._cat._qrs ).toBe( "happy" )
         })
       })
 
       describe("When the property is assigned", function () {
         it("The property is set", function () {
           this._cat._qrs = "happy"
-          expect( this.cat_._qrs ).toBe( "happy" )
+          expect( this._cat._qrs ).toBe( "happy" )
         })
       })
 
@@ -406,14 +406,14 @@ describe("Type setting methods", function () {
       describe("When the setter is called", function () {
         it("The property is set", function () {
           this._cat.setMood("happy")
-          expect( this.cat_._mood ).toBe( "very happy" )
+          expect( this._cat._mood ).toBe( "very happy" )
         })
       })
 
       describe("When the property is assigned", function () {
         it("The property is set", function () {
           this._cat._mood = "happy"
-          expect( this.cat_._mood ).toBe( "very happy" )
+          expect( this._cat._mood ).toBe( "very happy" )
         })
       })
 
@@ -440,8 +440,8 @@ describe("Type setting methods", function () {
     beforeEach(function () {
       this.Cat_   = Type.new_(this.CatSpec)
       this.cat_   = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-      this._cat   = this.cat_.$INNER[$PULP]
-      this._$root = this.Cat_.$INNER._blanker.$root$inner
+      this._cat   = this.cat_.this
+      this._$root = this.Cat_.this._blanker.$root$inner
     })
 
     describe("Before the method is added", function () {
@@ -537,14 +537,14 @@ describe("Type setting methods", function () {
       describe("When the setter is called", function () {
         it("The property is set", function () {
           this._cat.setXyz("happy")
-          expect( this.cat_._qrs ).toBe( "happy" )
+          expect( this._cat._qrs ).toBe( "happy" )
         })
       })
 
       describe("When the property is assigned", function () {
         it("The property is set", function () {
           this._cat._qrs = "happy"
-          expect( this.cat_._qrs ).toBe( "happy" )
+          expect( this._cat._qrs ).toBe( "happy" )
         })
       })
 
@@ -570,8 +570,8 @@ describe("Type setting methods", function () {
     beforeEach(function () {
       this.Cat_   = Type.new_(this.CatSpec)
       this.cat_   = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-      this._cat   = this.cat_.$INNER[$PULP]
-      this._$root = this.Cat_.$INNER._blanker.$root$inner
+      this._cat   = this.cat_.this
+      this._$root = this.Cat_.this._blanker.$root$inner
     })
 
     describe("Before the method is added", function () {
@@ -729,7 +729,7 @@ describe("Type setting methods", function () {
       describe("When the setter is called", function () {
         it("The property is set", function () {
           this._cat.setXyz("happy")
-          expect( this.cat_._qrs ).toBe( "happy" )
+          expect( this._cat._qrs ).toBe( "happy" )
         })
       })
 
@@ -841,7 +841,7 @@ describe("Type setting methods", function () {
       describe("When the setter is called", function () {
         it("The property is set", function () {
           this._cat.setMood("happy")
-          expect( this.cat_._mood ).toBe( "very happy" )
+          expect( this._cat._mood ).toBe( "very happy" )
         })
       })
 

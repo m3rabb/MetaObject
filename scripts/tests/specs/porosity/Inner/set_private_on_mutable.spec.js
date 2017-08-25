@@ -44,9 +44,9 @@ describe("Setting a private property on the inner of mutable object", function()
 
   beforeEach(function () {
     this.$rind    = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-    this.$inner   = this.$rind.$INNER
+    this.$pulp    = this.$rind.this
+    this.$inner   = this.$pulp[$INNER]
     this.$outer   = this.$inner[$OUTER]
-    this.$pulp    = this.$inner[$PULP]
   })
 
   it("Before setting it's barrier, has no properties", function () {
@@ -373,7 +373,7 @@ describe("Setting a private property on the inner of mutable object", function()
     describe("When the value is mutable and has an id", function() {
       beforeEach(function () {
         this.value = this.Cat_.new("Rufus", "Tabby", 18)
-        this.value._setId()
+        this.value.this._setId()
         this.$pulp._xyz = this.value
       })
 
@@ -491,14 +491,14 @@ describe("Setting a private property on the inner of mutable object", function()
 
     describe("When the value is another object's inner", function() {
       it("Throws an detected inner error", function () {
-        var value = Thing.new_().$INNER[$PULP]
+        var value = Thing.new_().this
         expect( () => {this.$pulp._xyz = value} ).toThrowError(/forgot to pass the 'this'/)
       })
     })
 
     describe("When the value is another type's inner", function() {
       it("Throws an detected inner error", function () {
-        var value = Type.new_("Cat").$INNER[$PULP]
+        var value = Type.new_("Cat").this
         expect( () => {this.$pulp._xyz = value} ).toThrowError(/forgot to pass the 'this'/)
       })
     })
@@ -670,9 +670,9 @@ describe("Setting a private property on the inner of mutable object", function()
       describe("When the receiver's type is immutable", function () {
         beforeEach(function () {
           this.$rind         = this.Dog_.new("Princess", "Shepard", 13)
-          this.$inner        = this.$rind.$INNER
+          this.$pulp         = this.$rind.this
+          this.$inner        = this.$pulp[$INNER]
           this.$outer        = this.$inner[$OUTER]
-          this.$pulp         = this.$inner[$PULP]
           this.$barrier      = this.$inner[$BARRIER]
           this.$barrier$root = RootOf(this.$barrier)
         })

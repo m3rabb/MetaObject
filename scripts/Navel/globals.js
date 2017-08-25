@@ -62,6 +62,7 @@ const ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
 // const CONSTRUCTOR         = Symbol("CONSTRUCTOR")
 const NO_SUPER               = Symbol("NO_SUPER")
 const IMMEDIATE              = Symbol("IMMEDIATE")
+const IMPLEMENTATION         = Symbol("IMPLEMENTATION")
 
 
 

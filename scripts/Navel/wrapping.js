@@ -50,6 +50,9 @@ function AsRetroactiveProperty(Property, Assigner) {
       }
 
       DefineProperty(_$receiver, Property, InvisibleConfig)
+      // if (Property[0] !== "_") {
+      //   DefineProperty(_$receiver[$OUTER], Property, InvisibleConfig)
+      // }
       return InSetProperty(_$receiver, Property, Assigner.call(this), this)
     }
   }[name]
@@ -61,13 +64,13 @@ function AsLazyProperty(Property, Assigner) {
     [name] : function () {
       const _$receiver = this[$INNER]
 
-      if (_$receiver[IS_IMMUTABLE]) {
-        // Object is already immutable, so method defaults to being a
-        // regular getter method.
-        return Assigner.call(this)
-      }
+      // Since receiver is immutable, execution defaults to being getter method.
+      if (_$receiver[IS_IMMUTABLE]) { return Assigner.call(this) }
 
       DefineProperty(_$receiver, Property, InvisibleConfig)
+      // if (Property[0] !== "_") {
+      //   DefineProperty(_$receiver[$OUTER], Property, InvisibleConfig)
+      // }
       return InSetProperty(_$receiver, Property, Assigner.call(this), this)
     }
   }[name]

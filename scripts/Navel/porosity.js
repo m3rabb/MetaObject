@@ -80,36 +80,36 @@ Impermeable.has = function has($target, property) {
 }
 
 
-const Permeable = new OuterBarrier()
-
-Permeable.id = "Permeable"
-
-Permeable.get = function get($target, property, target) {
-  var value = $target[property]
-  if (value !== undefined) { return value }
-
-  const _$target = InterMap.get(target)
-
-  value = _$target[property]
-
-  switch (typeof value) {
-    case "undefined" : break
-    case "function"  : return value[$OUTER_WRAPPER] || value
-    default          : return value
-  }
-
-  const $method_inner = _$target[$IMMEDIATES][property]
-  if ($method_inner) { return $method_inner[$OUTER_WRAPPER].call(target) }
-  if (_$target[$KNOWNS][property] !== undefined) { return null }
-
-  return _$target._unknownProperty.call(_$target[$PULP], property)
-}
-
-// REVISIT!!!
-Permeable.has = function has($target, property) {
-  const _$target = InterMap.get($target[$RIND])
-  return (property in _$target)
-}
+// const Permeable = new OuterBarrier()
+//
+// Permeable.id = "Permeable"
+//
+// Permeable.get = function get($target, property, target) {
+//   var value = $target[property]
+//   if (value !== undefined) { return value }
+//
+//   const _$target = InterMap.get(target)
+//
+//   value = _$target[property]
+//
+//   switch (typeof value) {
+//     case "undefined" : break
+//     case "function"  : return value[$OUTER_WRAPPER] || value
+//     default          : return value
+//   }
+//
+//   const $method_inner = _$target[$IMMEDIATES][property]
+//   if ($method_inner) { return $method_inner[$OUTER_WRAPPER].call(target) }
+//   if (_$target[$KNOWNS][property] !== undefined) { return null }
+//
+//   return _$target._unknownProperty.call(_$target[$PULP], property)
+// }
+//
+// // REVISIT!!!
+// Permeable.has = function has($target, property) {
+//   const _$target = InterMap.get($target[$RIND])
+//   return (property in _$target)
+// }
 
 
 
@@ -189,7 +189,7 @@ InnerBarrier_prototype.set = function set(_$source, property, value, _source) {
 
 
 InnerBarrier_prototype.deleteProperty = function deleteProperty(_$source, property) {
-  var assigner, isPermeable, permeability, _$target, value, value$root
+  var assigner, _$target, value, value$root
 
   assigner = _$source[$ASSIGNERS][property]
 
@@ -273,21 +273,20 @@ function Type_apply(func, receiver, args) {
 }
 
 
-function DisguisedOuterBarrier(_target, $target, permeability) {
+function DisguisedOuterBarrier(_target, $target) {
   this._target      = _target
   this.$target      = $target
-  this.permeability = permeability
 }
 
 const DisguisedOuterBarrier_prototype = SpawnFrom(OuterBarrier_prototype)
 DisguisedOuterBarrier.prototype = DisguisedOuterBarrier_prototype
 
 DisguisedOuterBarrier_prototype.get = function get(func, property, target) {
-  return this.permeability.get(this.$target, property, target)
+  return Impermeable.get(this.$target, property, target)
 }
 
 DisguisedOuterBarrier_prototype.has = function has(func, property) {
-  return this.permeability.has(this.$target, property)
+  return Impermeable.has(this.$target, property)
 }
 
 DisguisedOuterBarrier_prototype.apply = Type_apply

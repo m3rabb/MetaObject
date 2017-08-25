@@ -30,9 +30,9 @@ describe("Deleting a property on the inner of mutable object", function() {
 
   beforeEach(function () {
     this.$rind  = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-    this.$inner = this.$rind.$INNER
+    this.$pulp  = this.$rind.this
+    this.$inner = this.$pulp[$INNER]
     this.$outer = this.$inner[$OUTER]
-    this.$pulp  = this.$inner[$PULP]
   })
 
   describe("When the property exists", function() {

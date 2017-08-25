@@ -23,21 +23,21 @@ _$Intrinsic._addMethod(function setDurableProperties(properties) {
   return this
 }, BASIC_SELF_METHOD)
 
-_$Intrinsic._addMethod(function addDurableProperty(property) {
-  const properties = this[DURABLES] || []
-  if (!properties.includes(property)) {
-    this[DURABLES] = SetImmutable([...properties, property])
-    this.addDeclaration(property)
-  }
-  return this
-}, BASIC_SELF_METHOD)
-
-
-
-_$Intrinsic._addMethod(function addDurableProperties(properties) {
-  properties.forEach(property => this.addDurableProperty(property))
-  return this
-}, BASIC_SELF_METHOD)
+// _$Intrinsic._addMethod(function addDurableProperty(property) {
+//   const properties = this[DURABLES] || []
+//   if (!properties.includes(property)) {
+//     this[DURABLES] = SetImmutable([...properties, property])
+//     this.addDeclaration(property)
+//   }
+//   return this
+// }, BASIC_SELF_METHOD)
+//
+//
+//
+// _$Intrinsic._addMethod(function addDurableProperties(properties) {
+//   properties.forEach(property => this.addDurableProperty(property))
+//   return this
+// }, BASIC_SELF_METHOD)
 
 
 
@@ -115,17 +115,18 @@ _$Intrinsic._addMethod(function asMutable() {
 function $Copy(_$source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   var _source, next, property, value, traversed, $value, barrier, properties
   const source       = _$source[$RIND]
-  const isPermeable  = (_$source[$OUTER].$INNER)
-  const permeability = isPermeable ? Permeable : Impermeable
-  const _$target     = new _$source[$BLANKER](permeability)
+  const _$target     = new _$source[$BLANKER]()
   const  $target     = _$target[$OUTER]
   const  _target     = _$target[$PULP]
   const   target     = _$target[$RIND]
   const _initFrom_   = _$target._initFrom_
 
-  if (isPermeable) { $target.$INNER = _$target }
-
   visited.set(source, target) // to manage cyclic objects
+
+  if (_$source[$OUTER].this) {
+    DefineProperty($target, "this", InvisibleConfig)
+    $target.this = _target
+  }
 
   if (_initFrom_) {
     _source = _$source[$PULP]
@@ -197,13 +198,15 @@ _$Intrinsic._addMethod(function beImmutable() {
 
 
 _$Intrinsic._addMethod(function _newBlank() {
-  const $inner       = this[$INNER]
-  const isPermeable  = $inner[$OUTER].$INNER
-  const permeability = isPermeable ? Permeable : Impermeable
-  const $instance    = new $inner[$BLANKER](permeability)
+  const $inner     = this[$INNER]
+  const _$instance = new $inner[$BLANKER]()
+  const $instance  = new _$instance[$OUTER]
 
-  if (isPermeable) { $instance[$OUTER].$INNER = $instance }
-  return $instance[$RIND]
+  if ($inner[$OUTER].this) {
+    DefineProperty($instance, "this", InvisibleConfig)
+    $instance.this = _target
+  }
+  return _$instance[$RIND]
 }, BASIC_VALUE_METHOD)
 
 

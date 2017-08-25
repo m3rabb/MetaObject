@@ -44,7 +44,7 @@ const Type$root$inner = TypeBlanker.$root$inner
 
 
 function BootstrapType(name, blanker_) {
-  const $type            = new TypeBlanker(Impermeable)
+  const $type            = new TypeBlanker()
   const $outer           = $type[$OUTER]
   const isImplementation = (name[0] === "$")
 
@@ -182,7 +182,7 @@ _AddMethod.call(_Type, _AddMethod)
 
 
 _$Something._addMethod(function isPermeable() {
-  return (this[$OUTER].$INNER) ? true : false
+  return (this[$INNER].this) ? true : false
 }, BASIC_VALUE_METHOD)
 
 
@@ -451,22 +451,15 @@ _Type._addMethod(function forAddMandatorySetter(propertyName, setter_) {
 
 
 
-_Type._addMethod(function inheritsFrom(type) {
-  return (type !== this[$RIND] && this.ancestry.includes(type))
-})
-
-
-
 _Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
   if (nextSupertypes.length !== new Set(nextSupertypes).size) {
     return DuplicateSupertypeError(this)
   }
   const nextAncestry = BuildAncestryOf(this[$RIND], nextSupertypes)
   const isThing      = nextAncestry.includes(Thing)
-  const blanker      = this._blanker
 
-  if (blanker) {
-    if (blanker.permeability === Permeable) {
+  if (this._blanker) {
+    if (this.isPermeable) {
       return AttemptedChangeOfAncestryOfPermeableTypeError(this)
     }
     if (isThing !== this.ancestry.includes(Thing)) {
@@ -558,14 +551,6 @@ _Type._addMethod(function _init(spec_name, context_) {
   shared      && this.addSharedProperties(shared)
   methods     && this.addMethods(methods)
   definitions && this.define(definitions)
-
-  if (this.isPermeable) {
-    if (this.new !== _BasicNew) {
-      this.addOwnMethod(MakeNew_(this.new), BASIC_VALUE_METHOD)
-    }
-    this.addOwnAlias("new"      , "new_"      )
-    this.addOwnAlias("newAsFact", "newAsFact_")
-  }
 })
 // blanker.$root$outer.constructor = this[$DISGUISE]
 // blanker.$root$inner.constructor = NewVacuousConstructor()
@@ -578,17 +563,18 @@ _Type.addDeclaration("_blanker")
 _Type.addDeclaration($OUTER_WRAPPER)
 
 
-_Type      ._init(        "Type"                          )
-_$Something._init({ name: "$Something", supertypes: null })
-_$Intrinsic._init({ name: "$Intrinsic", supertypes: null })
-_Thing     ._init({ name: "Thing"     , supertypes: null })
-_Method    ._init(        "Method"                        )
 
-// _$Something._postInit()
+_Type      ._init(        "Type"                          )._postInit()
+_$Something._init({ name: "$Something", supertypes: null })._postInit()
+_$Intrinsic._init({ name: "$Intrinsic", supertypes: null })._postInit()
+_Thing     ._init({ name: "Thing"     , supertypes: null })._postInit()
+_Method    ._init(        "Method"                        )._postInit()
+
+// _$Something
 // _$Intrinsic._postInit()
-_Thing._postInit()
-_Type._postInit()
-_Method._postInit()
+// _Thing._postInit()
+// _Type._postInit()
+// _Method._postInit()
 
 
 // Helps with debugging!!!
