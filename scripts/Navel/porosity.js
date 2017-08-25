@@ -328,7 +328,7 @@ DisguisedInnerBarrier_prototype.apply = Type_apply
 function SuperPropertyFor(_$target, property) {
   const ancestors = _$target.type.ancestry
   const supers    = _$target[$SUPERS]
-  var next, _$type, nextProperties, value, isDeclared
+  var next, _$type, nextProperties, value, isDeclared, marker
 
   next = ancestors.length
   if (!_$target._hasOwn(property)) { next-- }
@@ -353,8 +353,10 @@ function SuperPropertyFor(_$target, property) {
       }
       else { return value }
     }
-    else if (_$type._blanker.$root$inner[$KNOWNS][property] !== undefined) {
-      isDeclared = true
+    else {
+      marker = _$type._blanker.$root$inner[$KNOWNS][property]
+           if (marker !=  null) { isDeclared = true     }
+      else if (marker === null) { return IMPLEMENTATION }
     }
   }
   return isDeclared ? null : NO_SUPER
@@ -364,6 +366,7 @@ function SuperPropertyFor(_$target, property) {
 function SuperBarrier() {}
 
 const SuperBarrier_prototype = SpawnFrom(DefaultBarrier)
+
 SuperBarrier.prototype = SuperBarrier_prototype
 
 SuperBarrier_prototype.get = function get(_$target, property, _super) {
@@ -376,10 +379,13 @@ SuperBarrier_prototype.get = function get(_$target, property, _super) {
         value = (supers[property] = SuperPropertyFor(_$target, property))
         break
 
+      case IMPLEMENTATION :
+        return _$target[property]
+
       case IMMEDIATE :
         return supers[$IMMEDIATES][property].call(_$target[$PULP])
 
-      case NO_SUPER  :
+      case NO_SUPER :
         return $inner._unknownProperty.call(_$target[$PULP], property)
 
       default :
@@ -387,6 +393,8 @@ SuperBarrier_prototype.get = function get(_$target, property, _super) {
     }
   } while (true)
 }
+
+const _Super = new SuperBarrier()
 
 
 // const OwnSuperBarrier = {

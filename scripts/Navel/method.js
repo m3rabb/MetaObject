@@ -7,8 +7,12 @@ _Method._addMethod("super", AsRetroactiveProperty("super", {
       case ASSIGNER    : return null
     }
 
-    return $inner.isImmediate ? $inner.inner :
+    if ($inner.isImmediate) { return $inner.inner }
+
+    const handler =
       $inner.mode.super($inner.selector, $inner.handler, $inner.isPublic)
+
+    return SetImmutableFunc(handler, SAFE_FUNC)
   }
 }.super), BASIC_VALUE_METHOD)
 

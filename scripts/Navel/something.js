@@ -4,9 +4,12 @@ _$Something._addMethod("$", AsRetroactiveProperty("$", function $() {
 }), BASIC_VALUE_METHOD)
 
 
-_$Something._addMethod("_super", AsRetroactiveProperty("_super", function _super() {
-  return new Proxy(this[$INNER], SuperBarrier)
-}), BASIC_VALUE_METHOD)
+
+_$Something._addMethod(function _super() { // RetroactiveProperty
+  const $inner = this[$INNER]
+  DefineProperty($inner, "_super", InvisibleConfig)
+  return ($inner._super = new Proxy($inner, _Super))
+}, BASIC_VALUE_METHOD)
 
 
 

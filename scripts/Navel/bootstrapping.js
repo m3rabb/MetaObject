@@ -86,6 +86,7 @@ $Something$root$inner[$BARRIER]             = null
 $Something$root$inner[$SECRET]              = $INNER
 $Something$root$outer[$SECRET]              = null
 
+$Something$root$inner[$KNOWNS][$PULP]       = null
 
 
 
