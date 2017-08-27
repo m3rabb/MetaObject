@@ -44,16 +44,16 @@ const Type$root$inner = TypeBlanker.$root$inner
 
 
 function BootstrapType(name, blanker_) {
-  const $type            = new TypeBlanker()
-  const $outer           = $type[$OUTER]
+  const _$type           = new TypeBlanker([name])
+  const $type           = _$type[$OUTER]
   const isImplementation = (name[0] === "$")
 
-  $type._properties       = SpawnFrom(null)
-  $type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
-  $type.supertypes        = ($outer.supertypes = EMPTY_ARRAY)
-  $type.ancestry          = isImplementation ? EMPTY_ARRAY : ThingAncestry
-  $type._subordinateTypes = new Set()
-  return $type[$PULP]
+  _$type._properties       = SpawnFrom(null)
+  _$type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
+  _$type._subordinateTypes = new Set()
+  _$type.supertypes        = ($type.supertypes = EMPTY_ARRAY)
+  _$type.ancestry          = isImplementation ? EMPTY_ARRAY : ThingAncestry
+  return _$type[$PULP]
 }
 
 const ThingAncestry = []
@@ -76,7 +76,6 @@ const $Something$root$inner = $SomethingBlanker.$root$inner
 const $Something$root$outer = $SomethingBlanker.$root$outer
 const $Intrinsic$root$inner = $IntrinsicBlanker.$root$inner
 const $Intrinsic$root$outer = $IntrinsicBlanker.$root$outer
-const $Intrinsic_properties = _$Intrinsic._properties
 const Method$root$inner     = _Method._blanker.$root$inner
 
 
@@ -129,33 +128,45 @@ Method$root$inner._init = function _init(func_selector, func_, mode__, property_
 
   if (!selector) { return this._invalidSelectorError(selector) }
 
-  this.selector = selector
-  this.mode     = mode
-  this.isPublic = isPublic
+  this.selector    = selector
+  this.mode        = mode
+  this.isImmediate = false
+  this.isPublic    = isPublic
   // this.super --> is a lazy property
 
   switch(mode) {
-    case DECLARATION : return
+    case DECLARATION :
+      this.name = `$declaration@${selector}`
+      return
 
     case ASSIGNER    :
+      this.name = `$assigner@${selector}`
       $outer.handler = $inner.handler = MarkFunc(handler, ASSIGNER_FUNC)
       return
 
     case MANDATORY   :
-      // $inner._assignmentError = NewAssignmentErrorHandler(property, selector)
-      $inner._mappedSymbol = AsPropertySymbol(property)
+      $inner.assignmentError = NewAssignmentErrorHandler(property, selector)
+      $inner.mappedSymbol    = AsPropertySymbol(property)
       // break omitted
 
     case SETTER      :
       this.property = property
       break
+
+    default          :
+      if (!(handler.length || FuncParamsListing(handler))) {
+        this.isImmediate = true
+        this.mode        = IMMEDIATE
+      }
+      break
   }
+
+  this.name = selector
 
   const outer = mode.outer(selector, handler, isPublic)
   const inner = mode.inner(selector, handler, isPublic)
 
   inner[$OUTER_WRAPPER] = outer    // For access via Permeable outer
-  this.isImmediate      = !(handler.length || FuncParamsListing(handler))
 
   outer.method   = inner.method   = this[$RIND]
 
@@ -214,8 +225,10 @@ _$Intrinsic._addMethod(function _retarget() {
 }, BASIC_SELF_METHOD)
 
 
+
 _Method._addMethod(Method$root$inner._init)
 _Method._addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+
 
 
 _Type._addMethod("new", _BasicNew, BASIC_VALUE_METHOD)
@@ -229,23 +242,22 @@ _Type._addMethod(function addMethod(method_namedFunc__selector, func__) {
   return this._setSharedProperty(method.selector, method)
 })
 
-_Type._addMethod(function addRetroactiveProperty(assigner_property, assigner_) {
-  // Will set the $inner property even on an immutable object!!!
-  const [property, assigner] = (typeof assigner_property === "function") ?
-      [assigner_property.name, assigner_property] :
-      [assigner_property     , assigner_        ]
+_Type._addMethod(function addRetroactiveProperty(assigner_selector, assigner_) {
+  // Will set the $inner selector even on an immutable object!!!
+  const [selector, assigner] = (typeof assigner_selector === "function") ?
+      [assigner_selector.name, assigner_selector] :
+      [assigner_selector     , assigner_        ]
 
-  this._addMethod(property, AsRetroactiveProperty(property, assigner))
+  this._addMethod(selector, AsRetroactiveProperty(selector, assigner))
 })
 
-
-_Type._addMethod(function addSharedProperty(property, value) {
-  this._setSharedProperty(property, value)
+_Type._addMethod(function addSharedProperty(selector, value) {
+  this._setSharedProperty(selector, value)
 })
 
-_Type._addMethod(function removeSharedProperty(property) {
-  if (this._properties[property] !== undefined) {
-    this._deleteSharedProperty(property)
+_Type._addMethod(function removeSharedProperty(selector) {
+  if (this._properties[selector] !== undefined) {
+    this._deleteSharedProperty(selector)
   }
 })
 
@@ -266,6 +278,7 @@ _Type._addMethod(function _deleteSharedProperty(property) {
 
   this._inheritProperty(property)
 })
+
 
 _Type._addMethod(function _propagateIntoSubtypes(property) {
   this._subordinateTypes.forEach(subtype => {
@@ -288,7 +301,7 @@ _Type._addMethod(function _inheritProperty(property) {
     value      = _$nextType._properties[property]
 
     if (value !== undefined) {
-      return this._setSharedProperty(property, value, false)
+      return this._setSharedProperty(property, value, INHERITED)
     }
   }
 })
@@ -316,7 +329,7 @@ _Type._addMethod(function _reinheritProperties() {
     for (property in nextProperties) {
       if (!validProperties[property]) {
         validProperties[property] = true
-        this._setSharedProperty(property, nextProperties[property], false)
+        this._setSharedProperty(property, nextProperties[property], INHERITED)
       }
     }
   }
@@ -331,9 +344,8 @@ _Type._addMethod(function _reinheritProperties() {
 })
 
 
-_Type._addMethod(function _setAsSubtypeOfSupertypes() {
+_Type._addMethod(function _setAsSubordinateOfSupertypes(supertypes) {
   // LOOK: add logic to invalidate connected types if supertypes changes!!!
-  const supertypes = this.supertypes
   const subtype = this[$RIND]
 
   var next, _$supertype, subtypes
@@ -341,9 +353,7 @@ _Type._addMethod(function _setAsSubtypeOfSupertypes() {
 
   while (next--) {
     _$supertype = InterMap.get(supertypes[next])
-    subtypes    = new Set(_$supertype._subordinateTypes)
-    subtypes.add(subtype)
-    _$supertype[$PULP]._subordinateTypes = SetImmutable(subtypes)
+    if ((subtypes = _$supertype._subordinateTypes)) { subtypes.add(subtype) }
   }
 })
 
@@ -378,15 +388,20 @@ _Type._addMethod(function _addSetter(name_setter, property_setter_, mode) {
     [name_setter.name, name_setter] : [name_setter, null]
 
   switch (typeof property_setter_) {
-    case "string"   : propertyName = property_setter_ ; break
+    case "string"   :
+      propertyName = property_setter_
+      break
 
     case "function" :
       if ((propertyName = property_setter_.name)) {
         assigner = property_setter_
-        if (setter) { return this._assignerSetterError }
-        setter = (mode === MANDATORY) ?
-          AsMandatoryAssignmentSetter(propertyName, setterName, assigner) :
-          AsBasicSetter(propertyName, setterName, mode)
+        if (mode === MANDATORY) {
+          setter = AsAssignmentSetter(propertyName, setterName, assigner)
+        }
+        else {
+          setter = AsBasicSetter(propertyName, setterName, mode)
+          this._addMethod(propertyName, assigner, ASSIGNER)
+        }
       }
       else { setter = property_setter_ }
       break
@@ -400,11 +415,6 @@ _Type._addMethod(function _addSetter(name_setter, property_setter_, mode) {
   if (!setter) { setter = AsBasicSetter(propertyName, setterName, mode) }
 
   this._addMethod(setterName, setter, mode, propertyName)
-
-  if (mode === MANDATORY) {
-    assigner = NewAssignmentErrorHandler(propertyName, setterName)
-  }
-  if (assigner) { this._addMethod(propertyName, assigner, ASSIGNER) }
 })
 
 
@@ -452,7 +462,7 @@ _Type._addMethod(function forAddMandatorySetter(propertyName, setter_) {
 
 
 
-_Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
+_Type.addMandatorySetter("setSupertypes", function supertypes(nextSupertypes) {
   if (nextSupertypes.length !== new Set(nextSupertypes).size) {
     return DuplicateSupertypeError(this)
   }
@@ -471,13 +481,13 @@ _Type.addMandatorySetter(function setSupertypes(nextSupertypes) {
     const parentBlanker    = isThing ? $IntrinsicBlanker : $SomethingBlanker
     this._blanker          = new NewBlanker(parentBlanker)
     this._properties       = SpawnFrom(null)
-    this._subordinateTypes = SetImmutable(new Set())
+    this._subordinateTypes = new Set()
   }
 
   this.ancestry = nextAncestry
-  this._basicSet("supertypes", SetImmutable(nextSupertypes))
-  this._setAsSubtypeOfSupertypes
+  this._setAsSubordinateOfSupertypes(nextSupertypes)
   this._reinheritProperties
+  return nextSupertypes
 })
 
 
@@ -545,7 +555,8 @@ _Type._addMethod(function _init(spec_name, context_) {
 
   this.setSupertypes(supertypes)
   this.setName(name)
-  this.addSharedProperty("type", this[$RIND])
+  // this.addSharedProperty("type", this[$RIND])
+  this._setSharedProperty("type", this[$RIND], INVISIBLE)
 
   declared    && this.addDeclarations(declared)
   durables    && this.addDurableProperties(durables) // This needs to be for the root!!!
@@ -558,24 +569,16 @@ _Type._addMethod(function _init(spec_name, context_) {
 // this._properties.constructor    = CONSTRUCTOR
 
 
-_Type._addMethod(Disguise_postInit)
-
 _Type.addDeclaration("_blanker")
 _Type.addDeclaration($OUTER_WRAPPER)
 
 
 
-_Type      ._init(        "Type"                          )._postInit()
-_$Something._init({ name: "$Something", supertypes: null })._postInit()
-_$Intrinsic._init({ name: "$Intrinsic", supertypes: null })._postInit()
-_Thing     ._init({ name: "Thing"     , supertypes: null })._postInit()
-_Method    ._init(        "Method"                        )._postInit()
-
-// _$Something
-// _$Intrinsic._postInit()
-// _Thing._postInit()
-// _Type._postInit()
-// _Method._postInit()
+_Type      ._init(        "Type"                          )
+_$Something._init({ name: "$Something", supertypes: null })
+_$Intrinsic._init({ name: "$Intrinsic", supertypes: null })
+_Thing     ._init({ name: "Thing"     , supertypes: null })
+_Method    ._init(        "Method"                        )
 
 
 // Helps with debugging!!!
@@ -607,6 +610,8 @@ _Type._addMethod(function _setImmutable(inPlace_, visited__) {
   const $root$outer  = blanker.$root$outer
   const $root$inner  = blanker.$root$inner
   const $root$supers = $root$inner[$SUPERS]
+
+  delete $inner._subordinateTypes
 
   this.addOwnMethod(PermeableNewErrorMethod)
   this.addOwnMethod(PermeableNewAsFactErrorMethod)

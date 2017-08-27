@@ -392,6 +392,17 @@ Type's new method or during _postInit
 Consider getting rid of these:
   if (isPublic) { DefineProperty(_$root[$OUTER], property, InvisibleConfig) }
 
+==
+  change property to selector in most places
+  property
+    selector name|symbol
+    value
+
+==
+Change $KNOWNS to $DECLARATIONS
+
+==
+Create an option for unknownProperty to return undefined
 
 ==========
 

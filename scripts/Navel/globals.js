@@ -64,6 +64,10 @@ const NO_SUPER               = Symbol("NO_SUPER")
 const IMMEDIATE              = Symbol("IMMEDIATE")
 const IMPLEMENTATION         = Symbol("IMPLEMENTATION")
 
+const VISIBLE                = Symbol("VISIBLE")
+const INVISIBLE              = Symbol("INVISIBLE")
+const INHERITED              = Symbol("INHERITED")
+
 
 
 // const KNOWN_GETTER       = {[IS_IMMUTABLE] : true, [GETTER] : true}

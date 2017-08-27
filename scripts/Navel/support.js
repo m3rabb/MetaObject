@@ -93,7 +93,7 @@ function AsSetterFromProperty(propertyName) {
 
 function AsPropertySymbol(propertyName) {
   return PropertyToSymbol[propertyName] ||
-    (PropertyToSymbol[propertyName] = Symbol(`$${propertyName}$`))
+    (PropertyToSymbol[propertyName] = Symbol(`<$${propertyName}$>`))
 }
 
 
@@ -139,43 +139,40 @@ function SetMethod(_$target, method) {
   const property = _$method.property
   const isPublic = _$method.isPublic
 
-  // NEED to check if this is behaving properly when redefining a method from
-  // standard to immediate to assigner.
-  delete _$target[$ASSIGNERS][selector]
-  delete _$target[$IMMEDIATES][selector]
-  delete  $target[$IMMEDIATES][selector]
-
   switch (_$method.mode) {
+    case IMMEDIATE   :
+      // Formerly used delete, but deleting uncovered inherited value from
+      // _$Intrinsic & _Something, so setting it undefined covers inherited
+      // value. Doing this specifically to deal with inherited null id value
+      // which breaks defining immediate/lazy id values by the type instances.
+      InClearProperty(_$target, selector)
+      _$target[selector] = undefined
+      _$target[$IMMEDIATES][selector] = _$method.inner
+      if (isPublic) { $target[$IMMEDIATES][selector] = _$method.outer }
+      return
+
     case ASSIGNER    :
       _$target[$ASSIGNERS][selector] = _$method.handler
       // break omitted
 
     case DECLARATION :
-      _$target[$KNOWNS][selector]    = isPublic
+      _$target[$KNOWNS][selector] = isPublic
       return
 
     case MANDATORY   :
-      _$target[$ASSIGNERS][_$method._mappedSymbol] = property
-      // _$target[$ASSIGNERS][property] = _$method._assignmentError
+      _$target[$ASSIGNERS][_$method.mappedSymbol] = property
+      _$target[$ASSIGNERS][property] = _$method.assignmentError
       // break omitted
 
     case SETTER      :
-      _$target[$KNOWNS][property]    = isPublic
-      break
-  }
+      _$target[$KNOWNS][property] = isPublic
+      // break omitted
 
-  if (_$method.isImmediate) {
-    // Formerly used delete, but deleting uncovered inherited value from
-    // _$Intrinsic & _Something, so setting it undefined covers inherited
-    // value. Doing this specifically to deal with inherited null id value
-    // which breaks defining immediate/lazy id values by the type instances.
-    _$target[$IMMEDIATES][selector] = _$method.inner
-    if (isPublic) { $target[$IMMEDIATES][selector] = _$method.outer }
-  }
-  else {
-    // Store the inner (and outer) wrapper in the property chain.
-    _$target[selector] = _$method.inner
-    if (isPublic) { $target[selector] = _$method.outer }
+    default          :
+      // Store the inner (and outer) wrapper in the property chain.
+      InClearProperty(_$target, selector)
+      _$target[selector] = _$method.inner
+      if (isPublic) { $target[selector] = _$method.outer }
   }
 }
 
@@ -320,15 +317,20 @@ function NewVacuousConstructor(name) {
 const DefaultDisguiseFunc = NewVacuousConstructor("$disguise$")
 
 
-function ExtendMethodsInfrastructure(_$target, _$root, $root) {
-  const supers = SpawnFrom(_$root[$SUPERS])
+function ExtendMethodsInfrastructure(_$target, _$root) {
+  const $root   = _$root[$OUTER]
+  const $target = _$target[$OUTER]
+  const knowns  = SpawnFrom(_$root[$KNOWNS])
+  const supers  = SpawnFrom(_$root[$SUPERS])
 
   supers[$IMMEDIATES] = SpawnFrom(supers[$IMMEDIATES])
 
-  _$target[$SUPERS]             = supers
-  _$target[$ASSIGNERS]          = SpawnFrom(_$root[$ASSIGNERS])
-  _$target[$IMMEDIATES]         = SpawnFrom(_$root[$IMMEDIATES])
-  _$target[$OUTER][$IMMEDIATES] = SpawnFrom( $root[$IMMEDIATES])
+  _$target[$SUPERS]     = supers
+  _$target[$ASSIGNERS]  = SpawnFrom(_$root[$ASSIGNERS])
+  _$target[$IMMEDIATES] = SpawnFrom(_$root[$IMMEDIATES])
+   $target[$IMMEDIATES] = SpawnFrom( $root[$IMMEDIATES])
+  _$target[$KNOWNS]     = knowns
+   $target[$KNOWNS]     = knowns
 }
 
 /**
@@ -413,7 +415,6 @@ function NewBlanker(rootBlanker, maker_) {
   const OuterMaker      = NewNamelessVacuousFunc()
   const Blanker         = blankerMaker(OuterMaker)
                          // Should this simply inherit from null!!!???
-  const knowns          = SpawnFrom(root$root$inner[$KNOWNS])
 
   OuterMaker.prototype = $root
   Blanker.$root$outer  = $root
@@ -423,11 +424,9 @@ function NewBlanker(rootBlanker, maker_) {
 
   _$root[$ROOT]     = _$root
   _$root[$OUTER]    = $root
-  _$root[$KNOWNS]   = knowns
-   $root[$KNOWNS]   = knowns
   _$root[$BLANKER]  = Blanker
 
-  ExtendMethodsInfrastructure(_$root, root$root$inner, root$root$outer)
+  ExtendMethodsInfrastructure(_$root, root$root$inner)
 
   InterMap.set(Blanker, BLANKER_FUNC)
   return Frost(Blanker)
@@ -518,25 +517,29 @@ function NewDisguisedInner(CompanionOuterMaker) {
   // Note: The blanker function must be unnamed in order for the debugger to
   // display the type of instances using type name determined by the name of
   // its constructor function property.
-  return function () {
-    var $inner   = this
-    var $outer   = new CompanionOuterMaker()
+  return function (arg_) {
+    const name = arg_ && arg_.name || arg_[0].name || arg_[0]
+    const func = name ? NewVacuousConstructor(name) : DefaultDisguiseFunc
+
+    var $inner = this
+    var $outer = new CompanionOuterMaker()
 
     const mutability = new DisguisedInnerBarrier($inner)
     // const barrier    = new InnerBarrier()
-    const $pulp      = new Proxy(DefaultDisguiseFunc, mutability)
+    const $pulp      = new Proxy(func, mutability)
     // mutability._target = $pulp
     const porosity   = new DisguisedOuterBarrier($pulp, $outer)
-    const $rind      = new Proxy(DefaultDisguiseFunc, porosity)
+    const $rind      = new Proxy(func, porosity)
     // const $rind           = new Proxy(NewAsFact, privacyPorosity)
 
-    $inner[$DISGUISE] = DefaultDisguiseFunc
+    $inner[$DISGUISE] = func
     $inner[$BARRIER]  = mutability // barrier
     $inner[$INNER]    = $inner
     $inner[$PULP]     = $pulp
     $inner[$OUTER]    = $outer
     $inner[$RIND]     = $rind
     $outer[$RIND]     = $rind
+
     InterMap.set($pulp, DISGUISE_PULP)
     InterMap.set($rind, $inner)
     // this[$PULP]  = new Proxy(NewAsFact, mutability)
@@ -613,7 +616,7 @@ function BuildAncestryOf(type, supertypes) {
     }
   }
   dupFreeAncestry.reverse().push(type)
-  return dupFreeAncestry
+  return SetImmutable(dupFreeAncestry)
 }
 
 
@@ -721,11 +724,11 @@ function SetAsymmetricProperty(_type, property, innerValue, outerValue) {
 
    $root[property] = outerValue
   _$root[property] = innerValue
-  _type._properties[property] = ASYMMETRIC_PROPERTY
+  // _type._properties[property] = ASYMMETRIC_PROPERTY
 }
 
 const _BasicNew = function _basicNew(...args) {
-  const _$instance = new this._blanker()
+  const _$instance = new this._blanker(args)
   const  _instance = _$instance[$PULP]
   const  _postInit = _$instance._postInit
 
@@ -751,64 +754,53 @@ const _BasicSetImmutable = function _basicSetImmutable(inPlace_, visited__) {
 
 
 
-function InClearProperty(_$target, property) {
-  delete _$target[property]
+function InClearProperty(_$target, selector) {
+  delete _$target[selector]
   const $target = _$target[$OUTER]
   const supers  = _$target[$SUPERS]
-  delete _$target[$ASSIGNERS][property]
-  delete _$target[$IMMEDIATES][property]
-  delete  $target[$IMMEDIATES][property]
-  delete supers[property]
-  delete supers[$IMMEDIATES][property]
+  delete _$target[$IMMEDIATES][selector]
+  delete  $target[$IMMEDIATES][selector]
+  delete supers[selector]
+  delete supers[$IMMEDIATES][selector]
 }
 
 
-const _SetSharedProperty = function _setSharedProperty(property, value, isOwn = true) {
-  if (this._properties[property] === value) { return this }
+
+const _SetSharedProperty = function _setSharedProperty(selector, value, mode = VISIBLE) {
+  const _$root     = this._blanker.$root$inner
+  const properties = this._properties
+  var   propertyName
+
+  if (this._properties[selector] === value) { return this }
 
   this._retarget
 
-  const isPublic   = (property[0] !== "_")
-  const properties = this._properties
-  const _$root     = this._blanker.$root$inner
 
-  InClearProperty(_$root, property)
-
-  if (value && value.type === Method) { SetMethod(_$root, value) }
-  else            { InSetProperty(_$root, property, value, this) }
-
-  // Sets property at selector to undefined if not already set
-  DefineProperty(_$root, property, InvisibleConfig)
-  if (isPublic) { DefineProperty(_$root[$OUTER], property, InvisibleConfig) }
-
-  if (isOwn) {
-    if (isOwn === INVISIBLE) {
-      DefineProperty(properties, property, InvisibleConfig)
-    }
-    properties[property] = value
+  if (value && value.type === Method) {
+    SetMethod(_$root, value)
+    propertyName = value.name
   }
-  return this._propagateIntoSubtypes(property)
+  else {
+    InClearProperty(_$root, selector)
+    InSetProperty(_$root, selector, value, this)
+    propertyName = selector
+  }
+
+  switch (mode) {
+    case INHERITED :
+      return
+    case PROPAGATE :
+      break
+    case INVISIBLE :
+      DefineProperty(properties, propertyName, InvisibleConfig)
+      // break omitted
+    case VISIBLE   :
+      properties[propertyName] = value
+      break
+  }
+  return this._propagateIntoSubtypes(selector)
 }
 
-
-const Disguise_postInit = function _postInit(_) {
-  const $inner       = this[$INNER]
-  const $outer       = $inner[$OUTER]
-  const mutability   = $inner[$BARRIER]
-
-  const func     = NewVacuousConstructor(this.name)
-  const $pulp    = new Proxy(func, mutability)
-  const porosity = new DisguisedOuterBarrier($pulp, $outer)
-  const $rind    = new Proxy(func, porosity)
-
-  $inner[$DISGUISE] = func
-  $inner[$PULP]     = $pulp
-  $inner[$RIND]     = $rind
-  $outer[$RIND]     = $rind
-  InterMap.set($pulp, DISGUISE_PULP)
-  InterMap.set($rind, $inner)
-  return $rind
-}
 
 
 /*       1         2         3         4         5         6         7         8

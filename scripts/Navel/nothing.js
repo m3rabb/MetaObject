@@ -4,18 +4,17 @@ const Nothing = Type({
   supertype : null,
 })
 
-const Nothing$ = InterMap.get(Nothing)
-const Void$    = new Nothing$._blanker()
-const Void_    = Void$[$PULP]
-const Void     = Void$[$RIND]
+const _$Nothing = InterMap.get(Nothing)
+const _$Void    = new _$Nothing._blanker()
+const _Void     = _$Void[$PULP]
+const Void      = _$Void[$RIND]
 
-Void_.id     = "Void,0.Nothing"
-Void_.isVoid = true
+_Void.id     = "Void,0.Nothing"
+_Void.isVoid = true
 
-_BasicSetImmutable.call(Void$)
+_BasicSetImmutable.call(_$Void)
 
-
-Nothing$._setImmutable()
+_$Nothing._setImmutable()
 
 
 //     Nothing

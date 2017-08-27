@@ -20,8 +20,8 @@ function AsBasicSetter(propertyName, setterName, mode) {
   }[name]
 }
 
-function AsMandatoryAssignmentSetter(propertyName, setterName, Assigner) {
-  const name = `${AsName(setterName)}_$set_${propertyName}`
+function AsAssignmentSetter(propertyName, setterName, Assigner) {
+  const name = `${AsName(setterName)}_$assignSet_${propertyName}`
   const PropertyName = AsPropertySymbol(propertyName)
   return {
     [name] : function (value) {
@@ -420,6 +420,11 @@ const STANDARD_METHOD = {
   outer : AsOuterStandard,
   inner : AsInnerStandard,
   super : AsSuperStandard,
+}
+
+const IMMEDIATE_METHOD = {
+  __proto__ : STANDARD_METHOD,
+  id        : "IMMEDIATE",
 }
 
 const DECLARATION = {

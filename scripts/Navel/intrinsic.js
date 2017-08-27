@@ -111,11 +111,11 @@ _$Intrinsic._addMethod(function asMutable() {
 
 
 
-// Copy$_()
+// Need to ensure ownMethods are copied a well!!!
 function $Copy(_$source, asImmutable, visited = new WeakMap(), exceptProperty_) {
   var _source, next, property, value, traversed, $value, barrier, properties
   const source       = _$source[$RIND]
-  const _$target     = new _$source[$BLANKER]()
+  const _$target     = new _$source[$BLANKER](_$source)
   const  $target     = _$target[$OUTER]
   const  _target     = _$target[$PULP]
   const   target     = _$target[$RIND]
@@ -283,7 +283,7 @@ _$Intrinsic._addMethod(function addOwnMethod(method_namedFunc__name, func__, mod
   }
   else {
     methods = ($inner[$OWN_METHODS] = SpawnFrom(null))
-    ExtendMethodsInfrastructure($inner, $inner, $inner[$OUTER]) // Check if this is right!!!
+    ExtendMethodsInfrastructure($inner, $inner) // Check if this is right!!!
   }
 
   SetMethod($inner, method)
