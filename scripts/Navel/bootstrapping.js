@@ -14,12 +14,12 @@
 const $BaseBlanker = {
   $root$outer : {
     __proto__      : null,
-    constructor    : NewVacuousConstructor("$Something$outer"),
+    constructor    : NewVacuousConstructor("$Something$outer"), // ???
     [$IMMEDIATES]  : EMPTY_OBJECT,
   },
   $root$inner : {
     __proto__      : null,
-    constructor    : NewVacuousConstructor("$Something$inner"),
+    constructor    : NewVacuousConstructor("$Something$inner"), // ???
     [$IMMEDIATES]  : EMPTY_OBJECT,
     [$ASSIGNERS]   : EMPTY_OBJECT,
     [$KNOWNS]      : EMPTY_OBJECT,
@@ -31,7 +31,7 @@ const $BaseBlanker = {
   innerMaker       : NewInner,
 }
 
-
+$BaseBlanker.$root$inner[$OUTER] = $BaseBlanker.$root$outer
 
 const $SomethingBlanker   = NewBlanker($BaseBlanker)
 const   $IntrinsicBlanker = NewBlanker($SomethingBlanker)
@@ -48,7 +48,7 @@ function BootstrapType(name, blanker_) {
   const $type           = _$type[$OUTER]
   const isImplementation = (name[0] === "$")
 
-  _$type._properties       = SpawnFrom(null)
+  _$type._definitions      = SpawnFrom(null)
   _$type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
   _$type._subordinateTypes = new Set()
   _$type.supertypes        = ($type.supertypes = EMPTY_ARRAY)
@@ -89,23 +89,54 @@ $Something$root$inner[$KNOWNS][$PULP]       = null
 
 
 
-$Something$root$outer.type                   = null
-$Intrinsic$root$inner._retarget              = null
-$Intrinsic$root$inner._propagateIntoSubtypes = ALWAYS_SELF
+$Something$root$outer.type                 = null
+$Intrinsic$root$inner._retarget            = null
+_Type._blanker.$root$inner._propagateDefinition = ALWAYS_SELF
 
 
 
+const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode) {
+  const _$root      = this._blanker.$root$inner
+  const definitions = this._definitions
 
-_SetSharedProperty.call(_$Something, "isSomething", true  )
-_SetSharedProperty.call(_$Something, IS_IMMUTABLE , false )
-_SetSharedProperty.call(_$Something, "id"         , null  )
+  if (definitions[tag] === value) { return this }
+  this._retarget
+
+  if (value && value.type === Method) {
+    SetMethod(_$root, value)
+  }
+  else {
+    const selector = tag
+    InClearProperty(_$root, selector)
+    DefineProperty(_$root, selector, InvisibleConfig)
+    InSetProperty(_$root, selector, value, this)
+  }
+
+  switch (mode) {
+    case REINHERIT :
+      return
+    case INHERIT :
+      break
+    case INVISIBLE :
+      DefineProperty(definitions, tag, InvisibleConfig)
+      // break omitted
+    case VISIBLE   :
+      definitions[tag] = value
+      break
+  }
+  return this._propagateDefinition(tag)
+}
 
 
-_SetSharedProperty.call(_$Intrinsic, DURABLES                 , null)
+_SetDefinitionAt.call(_$Something, "isSomething", true , VISIBLE)
+_SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false, VISIBLE)
+_SetDefinitionAt.call(_$Something, "id"         , null , VISIBLE)
+
+_SetDefinitionAt.call(_$Intrinsic, DURABLES                 , null , VISIBLE)
 // Perhaps remove these later???
-_SetSharedProperty.call(_$Intrinsic, "_postInit"              , null)
-_SetSharedProperty.call(_$Intrinsic, "_initFrom_"             , null)
-_SetSharedProperty.call(_$Intrinsic, "_setPropertiesImmutable", null)
+_SetDefinitionAt.call(_$Intrinsic, "_postInit"              , null , VISIBLE)
+_SetDefinitionAt.call(_$Intrinsic, "_initFrom_"             , null , VISIBLE)
+_SetDefinitionAt.call(_$Intrinsic, "_setPropertiesImmutable", null , VISIBLE)
 
 SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true )
 SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)
@@ -136,32 +167,33 @@ Method$root$inner._init = function _init(func_selector, func_, mode__, property_
 
   switch(mode) {
     case DECLARATION :
-      this.name = `$declaration@${selector}`
+      // this.name = `$declaration@${selector}`
       return
 
-    case ASSIGNER    :
-      this.name = `$assigner@${selector}`
+    case ASSIGNER :
+      // this.name = `$assigner@${selector}`
       $outer.handler = $inner.handler = MarkFunc(handler, ASSIGNER_FUNC)
       return
 
-    case MANDATORY   :
-      $inner.assignmentError = NewAssignmentErrorHandler(property, selector)
-      $inner.mappedSymbol    = AsPropertySymbol(property)
+    case MANDATORY_SETTER_METHOD :
+      $outer.assignmentError = $inner.assignmentError =
+        NewAssignmentErrorHandler(property, selector)
+      this.mappedSymbol = AsPropertySymbol(property)
       // break omitted
 
-    case SETTER      :
+    case SETTER_METHOD :
       this.property = property
       break
 
-    default          :
+    default :
       if (!(handler.length || FuncParamsListing(handler))) {
         this.isImmediate = true
-        this.mode        = IMMEDIATE
+        this.mode        = IMMEDIATE_METHOD
       }
       break
   }
 
-  this.name = selector
+  // this.name = selector
 
   const outer = mode.outer(selector, handler, isPublic)
   const inner = mode.inner(selector, handler, isPublic)
@@ -178,28 +210,27 @@ Method$root$inner._init = function _init(func_selector, func_, mode__, property_
 
 
 
-Type$root$inner.new                = _BasicNew
-Type$root$inner._setSharedProperty = _SetSharedProperty
+Type$root$inner.new              = _BasicNew
+Type$root$inner._setDefinitionAt = _SetDefinitionAt
 
 
 
-const _AddMethod = function _addMethod(func_selector, func_, mode__, property___) {
+const AddMethod = function addMethod(func_selector, func_, mode__, property___) {
   const method = Method(func_selector, func_, mode__, property___)
-  return this._setSharedProperty(method.selector, method)
+  return this._setDefinitionAt(method.selector, method, VISIBLE)
 }
 
-
-_AddMethod.call(_Type, _AddMethod)
-
+AddMethod.call(_Type, AddMethod)
 
 
-_$Something._addMethod(function isPermeable() {
+
+_$Something.addMethod(function isPermeable() {
   return (this[$INNER].this) ? true : false
 }, BASIC_VALUE_METHOD)
 
 
 
-_$Intrinsic._addMethod(function _basicSet(property, value) {
+_$Intrinsic.addMethod(function _basicSet(property, value) {
   const selector = PropertyToSymbol[property] || property
   this[selector] = value
   return this
@@ -212,7 +243,7 @@ _$Intrinsic._addMethod(function _basicSet(property, value) {
 // Th receiver only references its original barrier, and there may be more than
 // one proxy/barrier associated with the receiver, so we need to invoke the
 // proxy to force the proper change to occur thru it.
-_$Intrinsic._addMethod(function _retarget() {
+_$Intrinsic.addMethod(function _retarget() {
   const $inner = this[$INNER]
 
   if ($inner[IS_IMMUTABLE]) {
@@ -226,125 +257,288 @@ _$Intrinsic._addMethod(function _retarget() {
 
 
 
-_Method._addMethod(Method$root$inner._init)
-_Method._addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+_Method.addMethod(Method$root$inner._init)
+_Method.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 
 
-_Type._addMethod("new", _BasicNew, BASIC_VALUE_METHOD)
-_Type._addMethod(_SetSharedProperty)
+_Type.addMethod("new", _BasicNew, BASIC_VALUE_METHOD)
+_Type.addMethod(_SetDefinitionAt)
 
-
-
-_Type._addMethod(function addMethod(method_namedFunc__selector, func__) {
-  const method = (method_namedFunc__selector.isMethod) ?
-    method_namedFunc__selector : Method(method_namedFunc__selector, func__)
-  return this._setSharedProperty(method.selector, method)
+_Type.addMethod(function _propagateDefinition(tag) {
+  this._subordinateTypes.forEach(subtype => {
+    var _$subtype = InterMap.get(subtype)
+    _$subtype._inheritDefinitionAt.call(_$subtype[$PULP], tag)
+  })
 })
 
-_Type._addMethod(function addRetroactiveProperty(assigner_selector, assigner_) {
+
+
+// addAssigner(function property() {})
+// addAssigner("property", function () {})
+// forAddAssigner(function property() {})
+// forAddAssigner("property", function () {})
+
+_Type.addMethod(function addAssigner(property_assigner, assigner_) {
+  const [selector, assigner] = (assigner_) ?
+    [property_assigner     , assigner_        ] :
+    [property_assigner.name, property_assigner]
+
+  if (!selector) { return UnnamedFuncError(this, assigner) }
+
+  const definition = Method(selector, assigner, ASSIGNER)
+  const tag        = `$assigner@${AsName(selector)}`
+
+  this._setDefinitionAt(tag, definition, VISIBLE)
+})
+
+
+_Type.addMethod(function addDeclaration(selector) {
+  const definition = Method(selector, null, DECLARATION)
+  const tag        = `$declaration@${AsName(selector)}`
+
+  this._setDefinitionAt(tag, definition, VISIBLE)
+})
+
+
+_Type.addMethod(function addSharedProperty(selector, value) {
+  this._setDefinitionAt(selector, value, VISIBLE)
+})
+
+
+
+_Type.addMethod(function removeAssigner(selector) {
+  const tag = `$assigner@${AsName(selector)}`
+  if (this._definitions[tag] !== undefined) {
+    this._deleteDefinitionAt(tag)
+  }
+})
+
+_Type.addMethod(function removeDeclaration(selector) {
+  const tag = `$declaration@${AsName(selector)}`
+if (this._definitions[tag] !== undefined) {
+    this._deleteDefinitionAt(tag)
+  }
+})
+
+_Type.addMethod(function removeSharedProperty(selector) {
+  if (this._definitions[selector] !== undefined) {
+    this._deleteDefinitionAt(selector)
+  }
+})
+
+
+
+_Type.addMethod(function _deleteDefinitionAt(tag) {
+  const blanker          = this._blanker
+  const $root$inner      = blanker.$root$inner
+  const $root$outer      = blanker.$root$outer
+  const definitions      = this._definitions
+  const value            = definitions[tag]
+  const [mode, selector] = (value && value.type === Method) ?
+    [value.mode, value.selector] : [null, tag]
+
+  switch (mode) {
+    case IMMEDIATE_METHOD :
+      delete $root$inner[$IMMEDIATES][selector]
+      delete $root$outer[$IMMEDIATES][selector]
+      delete $root$inner[$SUPERS][$IMMEDIATES][selector]
+      break
+
+    case ASSIGNER :
+      delete $root$inner[$ASSIGNERS][selector]
+      if (!definitions[`$declaration@${AsName(selector)}`]) {
+        delete $root$inner[$KNOWNS][selector]
+      }
+      break
+
+    case DECLARATION :
+      delete $root$inner[$KNOWNS][value.selector]
+      break
+
+    case MANDATORY_SETTER_METHOD :
+      delete $root$inner[$ASSIGNERS][value.mappedSymbol]
+      delete $root$inner[$ASSIGNERS][value.property]
+      // break omitted
+
+    case SETTER_METHOD :
+      if (!definitions[`$declaration@${selector}`]) {
+        delete $root$inner[$KNOWNS][selector]
+      }
+      // break omitted
+
+    default :
+      delete $root$inner[selector]
+      delete $root$outer[selector]
+      delete $root$inner[$SUPERS][selector]
+      delete definitions[selector]
+      break
+  }
+
+  delete definitions[tag]
+  this._inheritDefinitionAt(tag)
+})
+
+
+_Type.addMethod(function _inheritDefinitionAt(tag) {
+  const definitions = this._definitions
+  if (definitions[tag] !== undefined) { return }
+
+  var ancestry, next, _$nextType, value
+
+  ancestry = this.ancestry
+  next     = ancestry.length - 1
+  while (next--) {
+    _$nextType = InterMap.get(ancestry[next])
+    value      = _$nextType._definitions[tag]
+
+    if (value !== undefined) {
+      return this._setDefinitionAt(tag, value, INHERIT)
+    }
+  }
+})
+
+
+
+_Type.addMethod(function _addSetter(name_setter, property_setter_, mode) {
+  var propertyName, assigner, setterName, setter
+
+  ;[setterName, setter] = (typeof name_setter === "function") ?
+    [name_setter.name, name_setter] : [name_setter, null]
+
+  switch (typeof property_setter_) {
+    case "string"   :
+      propertyName = property_setter_
+      break
+
+    case "function" :
+      if ((propertyName = property_setter_.name)) {
+        assigner = property_setter_
+        if (mode === MANDATORY_SETTER_METHOD) {
+          setter = AsAssignmentSetter(propertyName, setterName, assigner)
+        }
+        else {
+          setter = AsBasicSetter(propertyName, setterName, mode)
+          this.addMethod(propertyName, assigner, ASSIGNER)
+        }
+      }
+      else { setter = property_setter_ }
+      break
+  }
+
+  if (!setterName)   { return UnnamedFuncError(this, assigner) }
+  if (!propertyName) {
+    propertyName = AsPropertyFromSetter(setterName) ||
+      this._signalError(`Improper setter '${setterName}'!!`)
+  }
+  if (!setter) { setter = AsBasicSetter(propertyName, setterName, mode) }
+
+  this.addMethod(setterName, setter, mode, propertyName)
+})
+
+
+// addSetter("setterName")
+// addSetter(function setterName() {})
+// addSetter("setterName", "property")
+// addSetter("setterName", function () {})
+// addSetter("setterName", function propertyAssigner() {})
+
+_Type.addMethod(function addSetter(name_setter, property_setter_) {
+  this._addSetter(name_setter, property_setter_, SETTER_METHOD)
+})
+
+
+// forAddSetter("propertyName")
+// forAddSetter("propertyName", "setterName")
+
+_Type.addMethod(function forAddSetter(propertyName, setterName_) {
+  const setterName = setterName_ || AsSetterFromProperty(propertyName) ||
+    this._signalError(`Improper property name: ${propertyName}!!`)
+  this._addSetter(setterName, propertyName, SETTER_METHOD)
+})
+
+
+// addMandatorySetter("setterName")
+// addMandatorySetter(function setterName() {}) // within must call _basicSet
+// addMandatorySetter("setterName", "property")
+// addMandatorySetter("setterName", function () {}) // within must call _basicSet
+// addMandatorySetter("setterName", function propertyAssigner() {})
+//
+_Type.addMethod(function addMandatorySetter(name_setter, property_setter_) {
+  this._addSetter(name_setter, property_setter_, MANDATORY_SETTER_METHOD)
+})
+
+// forAddMandatorySetter("property")
+// forAddMandatorySetter("property", "setterName")
+// forAddMandatorySetter("property", function setterName() {}) // within must call _basicSet
+
+_Type.addMethod(function forAddMandatorySetter(propertyName, setter_) {
+  const setter = setter_ || AsSetterFromProperty(propertyName) ||
+    this._signalError(`Improper property name: ${propertyName}!!`)
+  this._addSetter(setter, propertyName, MANDATORY_SETTER_METHOD)
+})
+
+
+
+_Type.addMethod(function addRetroactiveProperty(assigner_selector, assigner_) {
   // Will set the $inner selector even on an immutable object!!!
   const [selector, assigner] = (typeof assigner_selector === "function") ?
       [assigner_selector.name, assigner_selector] :
       [assigner_selector     , assigner_        ]
 
-  this._addMethod(selector, AsRetroactiveProperty(selector, assigner))
+  this.addMethod(selector, AsRetroactiveProperty(selector, assigner))
 })
 
-_Type._addMethod(function addSharedProperty(selector, value) {
-  this._setSharedProperty(selector, value)
-})
 
-_Type._addMethod(function removeSharedProperty(selector) {
-  if (this._properties[selector] !== undefined) {
-    this._deleteSharedProperty(selector)
+
+
+
+_Type.addMethod(function _reinheritDefinitions(_) {
+  if (this.name != null) {
+    // Not a virgin type
+    const blanker     = this._blanker
+    const $root$inner = blanker.$root$inner
+    const $root$outer = blanker.$root$outer
+    const supers      = $root$inner[$SUPERS]
+
+    DeleteKnownsIn([$root$inner, $root$outer, supers])
+    DeleteKnownsIn(
+      [$root$inner[$IMMEDIATES], $root$outer[$IMMEDIATES], supers[$IMMEDIATES]])
+    DeleteKnownsIn([$root$inner[$KNOWNS]])
+    DeleteKnownsIn([$root$inner[$ASSIGNERS]])
   }
-})
-
-
-_Type._addMethod(function _deleteSharedProperty(property) {
-  const blanker     = this._blanker
-  const $root$inner = blanker.$root$inner
-  const $root$outer = blanker.$root$outer
-  const supers      = $root$inner[$SUPERS]
-
-  delete this._properties[property]
-  delete $root$inner[property]
-  delete $root$outer[property]
-  delete $root$inner[$IMMEDIATES][property]
-  delete $root$outer[$IMMEDIATES][property]
-  delete supers[property]
-  delete supers[$IMMEDIATES][property]
-
-  this._inheritProperty(property)
-})
-
-
-_Type._addMethod(function _propagateIntoSubtypes(property) {
-  this._subordinateTypes.forEach(subtype => {
-    var _$subtype = InterMap.get(subtype)
-    _$subtype._inheritProperty.call(_$subtype[$PULP], property)
-  })
-})
-
-_Type._addMethod(function _inheritProperty(property) {
-  const properties = this._properties
-  if (properties[property] !== undefined) { return }
 
   const ancestry = this.ancestry
+  const knowns   = SpawnFrom(null)
+  var   next, _$nextType, nextDefinitions, tag, value
 
-  var next, _$nextType, nextProperties, value
-  next = ancestry.length - 1
-
+  next = ancestry.length
   while (next--) {
-    _$nextType = InterMap.get(ancestry[next])
-    value      = _$nextType._properties[property]
+    _$nextType      = InterMap.get(ancestry[next])
+    nextDefinitions = _$nextType._definitions
 
-    if (value !== undefined) {
-      return this._setSharedProperty(property, value, INHERITED)
-    }
-  }
-})
-
-
-
-// It's too dangerous to wipeout a types properties and methods and then rebuild
-// them, since instance may need to use them, so instead we rebuild them layer
-// by layer from supertype to supertype, and then delete invalide properites last.
-_Type._addMethod(function _reinheritProperties() {
-  const validProperties = SpawnFrom(null)
-  const ancestry        = this.ancestry
-  const $root$inner     = this._blanker.$root$inner
-
-  var nextProperties, next, property, _$nextType
-  nextProperties = this._properties
-  next           = ancestry.length - 1
-
-  for (property in nextProperties) { validProperties[property] = true }
-
-  while (next--) {
-    _$nextType     = InterMap.get(ancestry[next])
-    nextProperties = _$nextType._properties
-
-    for (property in nextProperties) {
-      if (!validProperties[property]) {
-        validProperties[property] = true
-        this._setSharedProperty(property, nextProperties[property], INHERITED)
+    for (tag in nextDefinitions) {
+      if (!knowns[tag]) {
+        knowns[tag] = true
+        value       = nextDefinitions[tag]
+        this._setDefinitionAt(tag, value, REINHERIT)
       }
     }
   }
 
-  nextProperties = VisibleProperties($root$inner)
-  next           = nextProperties.length
-
-  while (next--) {
-    property = nextProperties[next]
-    if (!validProperties[property]) { this._deleteSharedProperty(property) }
-  }
+  this._propagateReinheritance
 })
 
 
-_Type._addMethod(function _setAsSubordinateOfSupertypes(supertypes) {
+_Type.addMethod(function _propagateReinheritance() {
+  this._subordinateTypes.forEach(subtype => {
+    var _$subtype = InterMap.get(subtype)
+    _$subtype._reinheritDefinitions.call(_$subtype[$PULP])
+  })
+})
+
+
+_Type.addMethod(function _setAsSubordinateOfSupertypes(supertypes) {
   // LOOK: add logic to invalidate connected types if supertypes changes!!!
   const subtype = this[$RIND]
 
@@ -359,110 +553,9 @@ _Type._addMethod(function _setAsSubordinateOfSupertypes(supertypes) {
 
 
 
-_Type._addMethod(function addDeclaration(propertyName) {
-  this._addMethod(propertyName, null, DECLARATION)
-})
-
-
-// forAddAssigner(function property() {})
-// forAddAssigner("property", function () {})
-
-_Type._addMethod(function forAddAssigner(property_assigner, assigner_) {
-  const [propertyName, assigner] = (assigner_) ?
-    [property_assigner     , assigner_        ] :
-    [property_assigner.name, property_assigner]
-
-  if (!propertyName) { return UnnamedFuncError(this, assigner) }
-
-  this._addMethod(propertyName, assigner, ASSIGNER)
-})
-
-_Type._addMethod(function _assignerSetterError() {
-  this._signalError("Cannot define setter and assigner functions for the same property!!")
-})
-
-_Type._addMethod(function _addSetter(name_setter, property_setter_, mode) {
-  var propertyName, assigner, setterName, setter
-
-  ;[setterName, setter] = (typeof name_setter === "function") ?
-    [name_setter.name, name_setter] : [name_setter, null]
-
-  switch (typeof property_setter_) {
-    case "string"   :
-      propertyName = property_setter_
-      break
-
-    case "function" :
-      if ((propertyName = property_setter_.name)) {
-        assigner = property_setter_
-        if (mode === MANDATORY) {
-          setter = AsAssignmentSetter(propertyName, setterName, assigner)
-        }
-        else {
-          setter = AsBasicSetter(propertyName, setterName, mode)
-          this._addMethod(propertyName, assigner, ASSIGNER)
-        }
-      }
-      else { setter = property_setter_ }
-      break
-  }
-
-  if (!setterName)   { return UnnamedFuncError(this, assigner) }
-  if (!propertyName) {
-    propertyName = AsPropertyFromSetter(setterName) ||
-      this._signalError(`Improper setter '${setterName}'!!`)
-  }
-  if (!setter) { setter = AsBasicSetter(propertyName, setterName, mode) }
-
-  this._addMethod(setterName, setter, mode, propertyName)
-})
-
-
-// addSetter("setterName")
-// addSetter(function setterName() {})
-// addSetter("setterName", "property")
-// addSetter("setterName", function () {})
-// addSetter("setterName", function propertyAssigner() {})
-
-_Type._addMethod(function addSetter(name_setter, property_setter_) {
-  this._addSetter(name_setter, property_setter_, SETTER)
-})
-
-
-// forAddSetter("propertyName")
-// forAddSetter("propertyName", "setterName")
-
-_Type._addMethod(function forAddSetter(propertyName, setterName_) {
-  const setterName = setterName_ || AsSetterFromProperty(propertyName) ||
-    this._signalError(`Improper property name: ${propertyName}!!`)
-  this._addSetter(setterName, propertyName, SETTER)
-})
-
-
-// addMandatorySetter("setterName")
-// addMandatorySetter(function setterName() {}) // within must call _basicSet
-// addMandatorySetter("setterName", "property")
-// addMandatorySetter("setterName", function () {}) // within must call _basicSet
-// addMandatorySetter("setterName", function propertyAssigner() {})
-//
-_Type._addMethod(function addMandatorySetter(name_setter, property_setter_) {
-  this._addSetter(name_setter, property_setter_, MANDATORY)
-})
-
-// forAddMandatorySetter("property")
-// forAddMandatorySetter("property", "setterName")
-// forAddMandatorySetter("property", function setterName() {}) // within must call _basicSet
-
-_Type._addMethod(function forAddMandatorySetter(propertyName, setter_) {
-  const setter = setter_ || AsSetterFromProperty(propertyName) ||
-    this._signalError(`Improper property name: ${propertyName}!!`)
-  this._addSetter(setter, propertyName, MANDATORY)
-})
-
-
-
-
 _Type.addMandatorySetter("setSupertypes", function supertypes(nextSupertypes) {
+  if (this.supertypes === nextSupertypes) { return nextSupertypes }
+
   if (nextSupertypes.length !== new Set(nextSupertypes).size) {
     return DuplicateSupertypeError(this)
   }
@@ -480,18 +573,18 @@ _Type.addMandatorySetter("setSupertypes", function supertypes(nextSupertypes) {
   else {
     const parentBlanker    = isThing ? $IntrinsicBlanker : $SomethingBlanker
     this._blanker          = new NewBlanker(parentBlanker)
-    this._properties       = SpawnFrom(null)
+    this._definitions      = SpawnFrom(null)
     this._subordinateTypes = new Set()
   }
 
   this.ancestry = nextAncestry
   this._setAsSubordinateOfSupertypes(nextSupertypes)
-  this._reinheritProperties
+  this._reinheritDefinitions()
   return nextSupertypes
 })
 
 
-_Type._addMethod(function _setDisplayNames(outerName, innerName_) {
+_Type.addMethod(function _setDisplayNames(outerName, innerName_) {
   const innerName     = innerName_ || ("_" + outerName)
   const innerTypeName = NewVacuousConstructor(innerName)
   const outerTypeName = NewVacuousConstructor(outerName)
@@ -500,8 +593,7 @@ _Type._addMethod(function _setDisplayNames(outerName, innerName_) {
 })
 
 
-// Make mandatory setter!!!
-_Type.addSetter("setName", function name(newName) {
+_Type.addMandatorySetter("setName", function name(newName) {
   const properName = AsCapitalized(newName)
   const priorName = this.name
   if (properName === priorName) { return priorName }
@@ -531,7 +623,7 @@ _Type.addSetter("setName", function name(newName) {
 //    methods|instanceMethods
 
 
-_Type._addMethod(function _init(spec_name, context_) {
+_Type.addMethod(function _init(spec_name, context_) {
   var name, supertypes, supertype, shared, methods, definitions
 
   name       = spec_name.name || spec_name
@@ -540,9 +632,11 @@ _Type._addMethod(function _init(spec_name, context_) {
   if (supertypes === undefined) {
     supertype  = spec_name.supertype
     supertypes = (supertype === undefined) ? [Thing] :
-      (supertype === null) ? [] : [supertype]
+      (supertype === null) ? EMPTY_ARRAY : [supertype]
   }
-  else if (supertypes === null || supertypes.isNothing) { supertypes = [] }
+  else if (supertypes === null || supertypes.isNothing) {
+    supertypes = EMPTY_ARRAY
+  }
 
   declared    = spec_name.declare || spec_name.declared
   durables    = spec_name.durable || spec_name.durables
@@ -556,7 +650,7 @@ _Type._addMethod(function _init(spec_name, context_) {
   this.setSupertypes(supertypes)
   this.setName(name)
   // this.addSharedProperty("type", this[$RIND])
-  this._setSharedProperty("type", this[$RIND], INVISIBLE)
+  this._setDefinitionAt("type", this[$RIND], INVISIBLE)
 
   declared    && this.addDeclarations(declared)
   durables    && this.addDurableProperties(durables) // This needs to be for the root!!!
@@ -564,9 +658,6 @@ _Type._addMethod(function _init(spec_name, context_) {
   methods     && this.addMethods(methods)
   definitions && this.define(definitions)
 })
-// blanker.$root$outer.constructor = this[$DISGUISE]
-// blanker.$root$inner.constructor = NewVacuousConstructor()
-// this._properties.constructor    = CONSTRUCTOR
 
 
 _Type.addDeclaration("_blanker")
@@ -593,7 +684,7 @@ Frost($BaseBlanker.$root$outer)
 Frost($BaseBlanker.$root$inner)
 
 
-_$Intrinsic._addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+_$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 const PermeableNewErrorMethod = Method(function new_(...args) {
   this._signalError("Method 'new_' cannot be called on immutable type objects!!")
@@ -604,13 +695,14 @@ const PermeableNewAsFactErrorMethod = Method(function newAsFact_(...args) {
 })
 
 
-_Type._addMethod(function _setImmutable(inPlace_, visited__) {
+_Type.addMethod(function _setImmutable(inPlace_, visited__) {
   const $inner       = this[$INNER]
   const blanker      = $inner._blanker
   const $root$outer  = blanker.$root$outer
   const $root$inner  = blanker.$root$inner
   const $root$supers = $root$inner[$SUPERS]
 
+  // $inner._subordinateTypes = SetImmutable([])
   delete $inner._subordinateTypes
 
   this.addOwnMethod(PermeableNewErrorMethod)

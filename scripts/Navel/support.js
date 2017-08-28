@@ -140,18 +140,22 @@ function SetMethod(_$target, method) {
   const isPublic = _$method.isPublic
 
   switch (_$method.mode) {
-    case IMMEDIATE   :
+    case IMMEDIATE_METHOD :
       // Formerly used delete, but deleting uncovered inherited value from
       // _$Intrinsic & _Something, so setting it undefined covers inherited
       // value. Doing this specifically to deal with inherited null id value
       // which breaks defining immediate/lazy id values by the type instances.
       InClearProperty(_$target, selector)
-      _$target[selector] = undefined
+      DefineProperty(_$target, selector, InvisibleConfig)
+      // _$target[selector] = undefined  // Handled by previous line!!!
       _$target[$IMMEDIATES][selector] = _$method.inner
-      if (isPublic) { $target[$IMMEDIATES][selector] = _$method.outer }
+      if (isPublic) {
+        $target[selector] = undefined
+        $target[$IMMEDIATES][selector] = _$method.outer
+      }
       return
 
-    case ASSIGNER    :
+    case ASSIGNER :
       _$target[$ASSIGNERS][selector] = _$method.handler
       // break omitted
 
@@ -159,18 +163,19 @@ function SetMethod(_$target, method) {
       _$target[$KNOWNS][selector] = isPublic
       return
 
-    case MANDATORY   :
+    case MANDATORY_SETTER_METHOD :
       _$target[$ASSIGNERS][_$method.mappedSymbol] = property
       _$target[$ASSIGNERS][property] = _$method.assignmentError
       // break omitted
 
-    case SETTER      :
+    case SETTER_METHOD :
       _$target[$KNOWNS][property] = isPublic
       // break omitted
 
-    default          :
+    default :
       // Store the inner (and outer) wrapper in the property chain.
       InClearProperty(_$target, selector)
+      DefineProperty(_$target, selector, InvisibleConfig)
       _$target[selector] = _$method.inner
       if (isPublic) { $target[selector] = _$method.outer }
   }
@@ -270,9 +275,10 @@ function InSetProperty(_$target, property, value, _target) {
 
  // Consider caching these!!!
  function NewAssignmentErrorHandler(Property, Setter) {
-   return function $assignmentError(value) {
+   function $assignmentError(value) {
      DisallowedAssignmentError(this, Property, Setter)
    }
+   return MarkFunc($assignmentError, ASSIGNER_FUNC)
  }
 
 
@@ -732,7 +738,7 @@ const _BasicNew = function _basicNew(...args) {
   const  _instance = _$instance[$PULP]
   const  _postInit = _$instance._postInit
 
-  _$instance._init.apply(_instance, args)
+  _$instance._init.apply(_instance, args) // <<----------
   if (_postInit) {
     const result = _postInit.call(_instance)
     if (result !== undefined && result !== _instance) { return result }
@@ -765,41 +771,28 @@ function InClearProperty(_$target, selector) {
 }
 
 
-
-const _SetSharedProperty = function _setSharedProperty(selector, value, mode = VISIBLE) {
-  const _$root     = this._blanker.$root$inner
-  const properties = this._properties
-  var   propertyName
-
-  if (this._properties[selector] === value) { return this }
-
-  this._retarget
-
-
-  if (value && value.type === Method) {
-    SetMethod(_$root, value)
-    propertyName = value.name
-  }
-  else {
-    InClearProperty(_$root, selector)
-    InSetProperty(_$root, selector, value, this)
-    propertyName = selector
-  }
-
-  switch (mode) {
-    case INHERITED :
-      return
-    case PROPAGATE :
-      break
-    case INVISIBLE :
-      DefineProperty(properties, propertyName, InvisibleConfig)
-      // break omitted
-    case VISIBLE   :
-      properties[propertyName] = value
-      break
-  }
-  return this._propagateIntoSubtypes(selector)
+function KnownSelectors(root) {
+  const symbols = AllSymbols(root).filter(sym => AsName(sym)[0] !== "$")
+  const names   = VisibleProperties(root)
+  return names.concat(symbols)
 }
+
+function DeleteKnownsIn(targets) {
+  var selectors, selectorIndex, selector, targetIndex
+
+  selectors     = KnownSelectors(targets[0])
+  selectorIndex = selectors.length
+
+  while (selectorIndex--) {
+    selector = selectors[selectorIndex]
+    targetIndex = targets.length
+
+    while (targetIndex--) {
+      delete targets[targetIndex][selector]
+    }
+  }
+}
+
 
 
 

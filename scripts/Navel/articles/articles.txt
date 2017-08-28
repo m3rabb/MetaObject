@@ -383,3 +383,21 @@ if so, forward sets and deletes to the immutable barrier.
 The upside to this approach is I realized that I could delay creating the immutable
 porosity object until absolutely necessary, only lazily creating it if and
 when a write occurred.
+
+================
+
+
+++
+Check KNOWN_PROPERTIES assignments for gotcha
+
+a) fails because assignment passes old array
+priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
+priorIds[priorIds.length] = existingId
+
+b) fails because array in now immutable
+priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [], this[$PRIOR_IDS])
+priorIds[priorIds.length] = existingId
+
+c) works!
+priorIds = this[$PRIOR_IDS] || []
+this[$PRIOR_IDS] = [...priorIds, existingId]

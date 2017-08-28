@@ -1,11 +1,11 @@
 
-_$Something._addMethod("$", AsRetroactiveProperty("$", function $() {
+_$Something.addMethod("$", AsRetroactiveProperty("$", function $() {
   return this[$RIND]
 }), BASIC_VALUE_METHOD)
 
 
 
-_$Something._addMethod(function _super() { // RetroactiveProperty
+_$Something.addMethod(function _super() { // RetroactiveProperty
   const $inner = this[$INNER]
   DefineProperty($inner, "_super", InvisibleConfig)
   return ($inner._super = new Proxy($inner, _Super))
@@ -13,18 +13,18 @@ _$Something._addMethod(function _super() { // RetroactiveProperty
 
 
 
-_$Something._addMethod(function _unknownProperty(property) {
+_$Something.addMethod(function _unknownProperty(property) {
   return SignalError(this, `Receiver ${this.id} doesn't have a property: ${AsName(property)}!!`)
 })
 
 
 
-_$Something._addMethod(Symbol.toPrimitive, function (hint) {
+_$Something.addMethod(Symbol.toPrimitive, function (hint) {
   return this.id
 }, VALUE_METHOD)
 
 
-_$Something._addMethod(function is(value) {
+_$Something.addMethod(function is(value) {
   return (this[$RIND] === value)
 }, BASIC_VALUE_METHOD)
 
@@ -36,7 +36,7 @@ _$Something._addMethod(function is(value) {
 
 
 
-_$Something._addMethod(function isImmutable() {
+_$Something.addMethod(function isImmutable() {
   return this[IS_IMMUTABLE] ? true : false
 }, BASIC_VALUE_METHOD)
 

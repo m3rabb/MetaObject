@@ -1,4 +1,4 @@
-_Method._addMethod("super", AsRetroactiveProperty("super", {
+_Method.addMethod("super", AsRetroactiveProperty("super", {
   super : function () {
     const $inner = this[$INNER]
 

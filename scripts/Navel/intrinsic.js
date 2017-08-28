@@ -14,16 +14,16 @@
 // USER CAN/SHOULD NEVER REDEFINE INATE METHODS
 //
 
-_$Intrinsic._addMethod(function durableProperties() {
+_$Intrinsic.addMethod(function durableProperties() {
   return this[DURABLES] || EMPTY_ARRAY
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function setDurableProperties(properties) {
+_$Intrinsic.addMethod(function setDurableProperties(properties) {
   this[DURABLES] = properties
   return this
 }, BASIC_SELF_METHOD)
 
-// _$Intrinsic._addMethod(function addDurableProperty(property) {
+// _$Intrinsic.addMethod(function addDurableProperty(property) {
 //   const properties = this[DURABLES] || []
 //   if (!properties.includes(property)) {
 //     this[DURABLES] = SetImmutable([...properties, property])
@@ -34,23 +34,23 @@ _$Intrinsic._addMethod(function setDurableProperties(properties) {
 //
 //
 //
-// _$Intrinsic._addMethod(function addDurableProperties(properties) {
+// _$Intrinsic.addMethod(function addDurableProperties(properties) {
 //   properties.forEach(property => this.addDurableProperty(property))
 //   return this
 // }, BASIC_SELF_METHOD)
 
 
 
-_$Intrinsic._addMethod(function isMutable() {
+_$Intrinsic.addMethod(function isMutable() {
   return !this[IS_IMMUTABLE]
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function isFact() {
+_$Intrinsic.addMethod(function isFact() {
   return this[IS_IMMUTABLE] ? true : (this.id != null)
 }, BASIC_VALUE_METHOD)
 
 
-_$Intrinsic._addMethod(function isA(type) {
+_$Intrinsic.addMethod(function isA(type) {
   return this[type.membershipSelector]
 }, BASIC_VALUE_METHOD)
 
@@ -59,7 +59,7 @@ _$Intrinsic.addSharedProperty("isVoid", false)
 
 
 
-_$Intrinsic._addMethod(function copy(visited_asImmutable_, visited_) {
+_$Intrinsic.addMethod(function copy(visited_asImmutable_, visited_) {
   const [asImmutable, visited] = (typeof visited_asImmutable_ === "boolean") ?
     [visited_asImmutable_, visited_] : [undefined, visited_asImmutable_]
   const $inner = this[$INNER]
@@ -67,16 +67,16 @@ _$Intrinsic._addMethod(function copy(visited_asImmutable_, visited_) {
     $inner : $Copy($inner, asImmutable, visited))[$RIND]
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function immutableCopy(visited_) {
+_$Intrinsic.addMethod(function immutableCopy(visited_) {
   const $inner = this[$INNER]
   return ($inner[IS_IMMUTABLE] ? $inner : $Copy($inner, true, visited_))[$RIND]
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function mutableCopy(visited_) {
+_$Intrinsic.addMethod(function mutableCopy(visited_) {
   return $Copy(this[$INNER], false, visited_)[$RIND]
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function mutableCopyExcept(property) {
+_$Intrinsic.addMethod(function mutableCopyExcept(property) {
   return $Copy(this[$INNER], false, undefined, property)[$RIND]
 }, BASIC_VALUE_METHOD)
 
@@ -85,26 +85,26 @@ _$Intrinsic._addMethod(function mutableCopyExcept(property) {
 // })
 
 
-_$Intrinsic._addMethod(function asCopy() {
+_$Intrinsic.addMethod(function asCopy() {
   const $inner = this[$INNER]
   return ($inner[IS_IMMUTABLE] ? $inner : $Copy($inner, false))[$RIND]
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function asMutableCopy() {
+_$Intrinsic.addMethod(function asMutableCopy() {
   return $Copy(this[$INNER], false)[$RIND]
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function asFact() {
+_$Intrinsic.addMethod(function asFact() {
   return this[IS_IMMUTABLE] || (this.id != null) ?
     this : $Copy(this[$INNER], true)[$RIND]
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function asImmutable() {
+_$Intrinsic.addMethod(function asImmutable() {
   const $inner = this[$INNER]
   return ($inner[IS_IMMUTABLE] ? $inner : $Copy($inner, true))[$RIND]
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function asMutable() {
+_$Intrinsic.addMethod(function asMutable() {
   const $inner = this[$INNER]
   return ($inner[IS_IMMUTABLE] ? $Copy($inner, false) : $inner)[$RIND]
 }, BASIC_VALUE_METHOD)
@@ -178,12 +178,12 @@ function $Copy(_$source, asImmutable, visited = new WeakMap(), exceptProperty_) 
 }
 
 
-// _$Intrinsic._addMethod(function _basicGet(property) {
+// _$Intrinsic.addMethod(function _basicGet(property) {
 //
 // }, BASIC_VALUE_METHOD)
 
 
-_$Intrinsic._addMethod(function setImmutable(visited_inPlace_, visited_) {
+_$Intrinsic.addMethod(function setImmutable(visited_inPlace_, visited_) {
   if (this[IS_IMMUTABLE]) { return this }
   const [inPlace, visited] = (typeof visited_inPlace_ === "boolean") ?
     [visited_inPlace_, visited_] : [undefined, visited_inPlace_]
@@ -191,13 +191,13 @@ _$Intrinsic._addMethod(function setImmutable(visited_inPlace_, visited_) {
 })
 
 
-_$Intrinsic._addMethod(function beImmutable() {
+_$Intrinsic.addMethod(function beImmutable() {
   return this[IS_IMMUTABLE] ? this : this._setImmutable()
 })
 
 
 
-_$Intrinsic._addMethod(function _newBlank() {
+_$Intrinsic.addMethod(function _newBlank() {
   const $inner     = this[$INNER]
   const _$instance = new $inner[$BLANKER]()
   const $instance  = new _$instance[$OUTER]
@@ -210,50 +210,50 @@ _$Intrinsic._addMethod(function _newBlank() {
 }, BASIC_VALUE_METHOD)
 
 
-_$Intrinsic._addMethod(function has(propertyName) {
+_$Intrinsic.addMethod(function has(propertyName) {
   return (propertyName in this[$OUTER])
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function _has(propertyName) {
+_$Intrinsic.addMethod(function _has(propertyName) {
   return (propertyName in this[$INNER])
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic._addMethod(function hasOwn(propertyName) {
+_$Intrinsic.addMethod(function hasOwn(propertyName) {
   if (propertyName[0] === "_") { return undefined }
   return this._hasOwn(propertyName)
 }, BASIC_VALUE_METHOD)
 
 
-_$Intrinsic._addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
+_$Intrinsic.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
 
-// _$Intrinsic._addMethod(function _hasOwn(propertyName) {
+// _$Intrinsic.addMethod(function _hasOwn(propertyName) {
 //   const properties = this[DURABLES] || SetDurableProperties(this)
 //   return (properties[propertyName] !== undefined)
 // }, BASIC_VALUE_METHOD)
 
 
-_$Intrinsic._addMethod(function basicId() {
+_$Intrinsic.addMethod(function basicId() {
   const suffix = this.isPermeable ? "_" : ""
   return `${this.uid}.${this.type.formalName}${suffix}`
 }, VALUE_METHOD)
 
-_$Intrinsic._addMethod(function oid() {
+_$Intrinsic.addMethod(function oid() {
   const suffix = this.isPermeable ? "_" : ""
   return `${this.iid}.${this.type.formalName}${suffix}`
 }, VALUE_METHOD)
 
 
-_$Intrinsic._addMethod("uid", AsRetroactiveProperty("uid", function uid() {
+_$Intrinsic.addMethod("uid", AsRetroactiveProperty("uid", function uid() {
   return this._hasOwn("guid") ? this.guid : NewUniqueId()
 }), BASIC_VALUE_METHOD)
 
 
-_$Intrinsic._addMethod("iid", AsRetroactiveProperty("iid", function iid() {
+_$Intrinsic.addMethod("iid", AsRetroactiveProperty("iid", function iid() {
   return InterMap.get(this.type)[$PULP]._nextIID
 }), BASIC_VALUE_METHOD)
 
 
-_$Intrinsic._addMethod(function typeName() {
+_$Intrinsic.addMethod(function typeName() {
   return this.type.name
 }, VALUE_METHOD)
 
@@ -266,7 +266,7 @@ _$Intrinsic._addMethod(function typeName() {
 // Navel/30303/Type/367
 
 
-_$Intrinsic._addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
+_$Intrinsic.addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
   const method   = AsMethod(method_namedFunc__name, func__, mode___)
   const selector = method.selector
   var $inner, $outer, methods, immediates, supers
@@ -293,16 +293,16 @@ _$Intrinsic._addMethod(function addOwnMethod(method_namedFunc__name, func__, mod
 
 
 
-_$Intrinsic._addMethod(function methodAt(selector) {
+_$Intrinsic.addMethod(function methodAt(selector) {
   return MethodAt(this[$INNER], selector)
 })
 
 
-_$Intrinsic._addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
+_$Intrinsic.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
   return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
 }, BASIC_SELF_METHOD)
 
-_$Intrinsic._addMethod(function addOwnAlias(aliasName, name_method) {
+_$Intrinsic.addMethod(function addOwnAlias(aliasName, name_method) {
   const sourceMethod = name_method.isMethod ?
     name_method : this.type.methodAt(name_method)
   if (sourceMethod == null) {
@@ -311,43 +311,43 @@ _$Intrinsic._addMethod(function addOwnAlias(aliasName, name_method) {
   this.addOwnMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
 })
 
-// _$Intrinsic._addMethod(function _addOwnValueMethod(...namedFunc_name__handler) {
+// _$Intrinsic.addMethod(function _addOwnValueMethod(...namedFunc_name__handler) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_METHOD)
 // })
 //
-// _$Intrinsic._addMethod(function _addOwnValueImmediate(...namedFunc_name__handler) {
+// _$Intrinsic.addMethod(function _addOwnValueImmediate(...namedFunc_name__handler) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
 // })
 
-_$Intrinsic._addMethod(function addOwnDeclaration(propertyName) {
+_$Intrinsic.addMethod(function addOwnDeclaration(propertyName) {
   this[propertyName] = null
   return this
 }, BASIC_SELF_METHOD)
 
-// _$Intrinsic._addMethod(function addOwnAssigner(assigner_property, assigner_) {
+// _$Intrinsic.addMethod(function addOwnAssigner(assigner_property, assigner_) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
 // })
 //
-// _$Intrinsic._addMethod(function addOwnMandatorySetter(setter_property, setter_) {
+// _$Intrinsic.addMethod(function addOwnMandatorySetter(setter_property, setter_) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
 // })
 
 
-_$Intrinsic._addMethod(Symbol.toPrimitive, function (hint) {
+_$Intrinsic.addMethod(Symbol.toPrimitive, function (hint) {
   return this.toString()
 }, VALUE_METHOD)
 
 
 
-_$Intrinsic._addMethod(function _unknownProperty(property) {
+_$Intrinsic.addMethod(function _unknownProperty(property) {
   return this._signalError(`Receiver ${this.basicId} doesn't have a property '${AsName(property)}'!!`)
 })
 
-_$Intrinsic._addMethod("_basicUnknownProperty", $Intrinsic$root$inner._unknownProperty)
+_$Intrinsic.addMethod("_basicUnknownProperty", $Intrinsic$root$inner._unknownProperty)
 
 
 
-_$Intrinsic._addMethod(function _signalError(message) {
+_$Intrinsic.addMethod(function _signalError(message) {
   return SignalError(this, message)
 })
 
@@ -361,7 +361,7 @@ _$Intrinsic._addMethod(function _signalError(message) {
 // // Th receiver only references its original barrier, and there may be more than
 // // one proxy/barrier associated with the receiver, so we need to invoke the
 // // proxy to force the proper change to occur thru it.
-// _$Intrinsic._addMethod(function _retarget() {
+// _$Intrinsic.addMethod(function _retarget() {
 //   const $inner = this[$INNER]
 //
 //   if ($inner[IS_IMMUTABLE]) {
@@ -375,7 +375,7 @@ _$Intrinsic._addMethod(function _signalError(message) {
 // }, BASIC_SELF_METHOD)
 
 
-// _$Intrinsic._addMethod(function _retargetAsBlank() {
+// _$Intrinsic.addMethod(function _retargetAsBlank() {
 //   const $inner = this[$INNER]
 //
 //   if ($inner[IS_IMMUTABLE]) {

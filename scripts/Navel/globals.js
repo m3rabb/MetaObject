@@ -66,8 +66,8 @@ const IMPLEMENTATION         = Symbol("IMPLEMENTATION")
 
 const VISIBLE                = Symbol("VISIBLE")
 const INVISIBLE              = Symbol("INVISIBLE")
-const INHERITED              = Symbol("INHERITED")
-
+const REINHERIT              = Symbol("REINHERIT")
+const INHERIT                = Symbol("INHERIT")
 
 
 // const KNOWN_GETTER       = {[IS_IMMUTABLE] : true, [GETTER] : true}

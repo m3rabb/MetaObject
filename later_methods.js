@@ -247,3 +247,31 @@ HotSauce
 enduring/perennial/durable
 
 idempot
+
+
+passive/active/permeability/diffusion/osmosis/hypotonic/hypertonic/isotonic
+
+active is setting
+passive is getting
+
+integument
+blubber/flubber
+
+enjoyment
+
+==
+*
+  primitive
+    string
+    symbol
+    number
+    null
+    undefined
+    boolean
+  object
+    Something --> thingy
+      Nothing
+      $Innate
+       Thing
+    jsobject
+     Object

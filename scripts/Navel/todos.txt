@@ -1,6 +1,5 @@
 - implement contexts/NameRecs
 - figure out how to implement copy for type
-- replace {__proto__}, using spawnFrom instead
 - change IsArray to   target.constructor === Object
 - type function construction
 - _super
@@ -11,27 +10,16 @@
 -- We should make all Krust created func immutable
 -- figure out how to make user specifiable func-things, and copy them
 
-- Go back to using parallel hierarchies for instances public/private. This is
-  now enable by the mutable write barrier. Whenever a function is added to an
-  instance, make sure to enkrust it on the public side
-
-  - Make enkrusted funcs - facts
 
 (typeof target)[1] === "b"
 
 - consider making isIdentical use value vs structure for immutables
 - switch back to using typeof instead of constructor
 
-+ make type only answer public methods
-
-+ make precalculated super methods
 
 - check how outer cache holds values that are created via getters from inner,
   such as with span in List
 
-+ Consider making a writerbarrier copy is made NOT copying the causal property
-
-+ NOT going to do this -> Add IID to obj before it becomes immutable
 
 - remove _elements from Lists
 
@@ -43,28 +31,11 @@ transport
 
 https://www.slideshare.net/lizza919/types-of-movement-across-the-cell-membrane
 
-passive/active/permeability/diffusion/osmosis/hypotonic/hypertonic/isotonic
-
-active is setting
-passive is getting
-
-integument
-blubber/flubber
 
 
-+ consider making things cache the selectors of all set properties.
-- consider using rind,pulp,seed architecture instead of krust,outer,inner,core
-- reconcile _Blank and _NewCore
 
-+ When a thing is immutable, the outer is immutable but the core is mutable to enable after the fact setting of the iid, and such.
 
 - Streams
-+ When making a copy of a id fact, don't copy the id!
-
-+ Consider including outsider immutability confimation recs within the InterMap
-  After careful thought, I don't think we need to ensure the vality of immutables
-  since an outside can simply set the id of an object to make it a fact which is
-  effectively the same as setting it as immutable.
 
 
 - consider switching to using explicit asMutable instead of immutability barrier in List
@@ -76,141 +47,15 @@ blubber/flubber
 
 - make comparators consider id in their comparisons of objects.
 
-+ consider dumping RIND and only using $ instead. NOPE
-
-== NOTE: The discussion below is moot. See below
-The challenge with JS immutability is that it forces all properties to be visible with hasOwn. I see three way to handle this:
-1) don't use JS immutability at all and handle it myself. The disadvantage is that its possible that the JS engine speeds up immutable objects and I would loose that improvement.  The advantage is that outers could use their own INNER ref that would avoid the call to InterMap.get and speed up public method calls.
-2) separate the outer object into two parts one that inherits from the other. When needed to be immutable, the child part would be made immutable, and the parent part would be left mutable and would contain the INNER ref.
-3) split the baby, and when mutable, have the outer have a ref to INNER, but when made immutable remove the INNER ref, and only use a $ ref within the outer.  The Base$outer$root would hold a default INNER ref set to null to prevent error in the BaseBehavior and help distinguish the immutable from mutable.
-4) never have an INNER ref within the outer, and only use the slower InterMap tunnel to access INNER.
-XX) I must use #4 because using INNER is a security risk, if a proxied villain hijacks one of the methods and calls it on itself and discovers the INNER selector, and then reuses it on a valid thing to steal its secrets.
-
-
-++
-keep track of "volatiles", getter properties that should be copied as getters,
-as opposed to as values. keep track of lazy values, that should be copied at all
-
-++
-only copyable properties should be visible
-
-==
-Add object level properties and methods
 
 
 
-++
-Make immutable copy on demand work from calls to this as well!!!
-++
-Consider making all public methods answer facts
-
-++
-Consider not allowing anything to be set to undefined as an implementation sentinel
-
-++
-ensure symbols arent "has-able" thru proxies
-
-change _subtypes and _supertypes to be subtypes and supertypes after implementing CopyObject
-
-++
-Check that getters called on $pulp actual have the $pulp as the receiver
-
-
-++
-See if there is a way for the ImmutableInner to store $inner instead of just $pulp
-to speed the access within
-
-
-==
-// get ($outer, selector, $rind) {
-//   let index
-//   return ($outer.atIndex && ((index = +selector) === index)) ?
-//     $outer.atIndex(index) : $outer[selector]
-// }
-
-
-++
-copy
-beImmutable
-super
-
-++
-
-function MakeInnerBlanker(PairedOuter) {
-  return function (permeability) {
-
-function MakeInnerBlanker(PairedOuter, Permeability) {
-  return function () {
-
-==
-enable this immediate method
-
-Bat.Bat_
-
-
-++
-
-$Innate becomes Basic
-
-++
-Consider disallowing assignment of undefined, enabling us to avoid using "in" and BaseInnerBehavior
-
-Mutability.get = function get($inner, selector, $pulp) {
-  const value = $inner[selector]
-  if (value !== undefined) { return value }
-
-  const method = $inner[$IMMEDIATES][selector]
-  if (method) { return method.inner.call($pulp) }
-
-  return $inner._noSuchProperty ?
-    $pulp._noSuchProperty(selector) : undefined
-}
-
-
-++
-Consider making methods that return undefined mean they're returning 'this'.
-The downside to this is private value methods would be slower as they could no
-longer be passthrus, and would need to be wrapped as well.
-
-==
-Consider going back to code below, where when self is stored as a propertyName
-within itself, it stores $pulp within its inner, vs $rind in the outerValue
-VS always storing the $rind.
-
-if (value === $pulp) {  // Perhaps will force assignments to always be target!!!
-  $inner[selector] = $pulp
-  value = $inner[$RIND]
-}
-else if (value === $inner[$RIND]) {
-  $inner[selector] = $pulp
-}
-
-
-++
-Add Nothing/Void
-
-==
-Add object addOwnMethod
 
 ==
 Make copy method work for types
 
-++
-Consider pulp reassignment paradox
-rename as beAsImmutable|setAsImmutable???
 
 
-==
-Consider if we need to be worried about outside assignment to the _initFrom_
-property.  FYI, I'm no longer worried about it.
-
-      // if (property === "_initFrom_") {
-      //   value = ((tag = InterMap.get(value)) && tag === "_initFrom_") ?
-      //     value : Wrap_initFrom_(value)
-      // }
-      // else {
-      //   value = (InterMap.get(value)) ? value : TameFunc(value)
-      // }
 
 
 ==
@@ -220,29 +65,10 @@ Test Permeability
 Add NameRec/Kname and Context
 
 
-==
-Fix usable of InSetProperty so that write barrier still works.
-Use deleteProperty instead of set to trigger barrier.
 
 ==
 Add markdown to jsdoc - http://usejsdoc.org/plugins-markdown.html
 
-==
-*
-  primitive
-    string
-    symbol
-    number
-    null
-    undefined
-    boolean
-  object
-    Something --> thingy
-      Nothing
-      $Innate
-       Thing
-    jsobject
-     Object
 
 
 /**
@@ -276,23 +102,7 @@ Ensure immutable and super porosity work on the type thingies
 Make _super work on instances own methods
 
 
-++
-Check KNOWN_PROPERTIES assignments for gotcha
 
-a) fails because assignment passes old array
-priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [])
-priorIds[priorIds.length] = existingId
-
-b) fails because array in now immutable
-priorIds = this[$PRIOR_IDS] || (this[$PRIOR_IDS] = [], this[$PRIOR_IDS])
-priorIds[priorIds.length] = existingId
-
-c) works!
-priorIds = this[$PRIOR_IDS] || []
-this[$PRIOR_IDS] = [...priorIds, existingId]
-
-+-
-  remove all const declarations within small block, ifs etc
 
 ==
 Add permanent methods distinction/protections
@@ -307,9 +117,6 @@ Consider using an AsLazyProperty maker instead of a dedicated set of lazy
 wrappers.
 
 
-++
-Consider merging Inner proxy, and always allocating an inner porosity in order
-to avoid the pulp reassignment paradox.
 
 --
  made ImmutableInner a lazy instantiated process from calling set on
@@ -358,35 +165,8 @@ DefineProperty($inner, selector, InvisibleConfig)
 if (isPublic) { DefineProperty($inner[$OUTER], selector, InvisibleConfig) }
 
 
-===
-Transform
-
-instance$rind    instance     $rind-impermeable
-instance$rind    instance_    $rind-permeable
-instance$pulp    instance$    $pulp
-instance$inner   instance$_   $inner
-instance$outer   instance$$   $outer
-
-$dog  immutable
- dog  unspecified
-_dog  mutable
 
 
-
-$INNER ==> $_
-
-Simplify to make .$INNER a retroactive property
-
-==
-consider handling permeability more simply, making 'this' a property from instantiation via new_
-
-- check: inner[$OUTER_WRAPPER] = outer    // For access via Permeable outer
-
-
-
-++
-consider not making the the Type's blanker set the named func. Doing afterwards in the
-Type's new method or during _postInit
 
 ==
 Consider getting rid of these:
@@ -403,6 +183,18 @@ Change $KNOWNS to $DECLARATIONS
 
 ==
 Create an option for unknownProperty to return undefined
+
+_properties to _definitions
+
+Change Method to Definition
+
+Check $OUTER_WRAPPER
+
+==
+Consider making sharedProperties be visible or invisible and using a
+lookaside array to hold properties to be copied!
+
+Think about how to manage $Intrinsic type NOT being copied!
 
 ==========
 

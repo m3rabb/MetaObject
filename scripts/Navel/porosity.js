@@ -325,36 +325,36 @@ DisguisedInnerBarrier_prototype.apply = Type_apply
 
 
 
-function SuperPropertyFor(_$target, property) {
+function SuperPropertyFor(_$target, selector) {
   const ancestors = _$target.type.ancestry
   const supers    = _$target[$SUPERS]
-  var next, _$type, nextProperties, value, isDeclared, marker
+  var next, _$nextType, nextDefinitions, value, isDeclared, marker
 
   next = ancestors.length
-  if (!_$target._hasOwn(property)) { next-- }
+  if (!_$target._hasOwn(selector)) { next-- }
 
   while (next--) {
-    _$type         = InterMap.get(ancestors[next])
-    nextProperties = _$type._properties
-    value          = nextProperties[property]
+    _$nextType      = InterMap.get(ancestors[next])
+    nextDefinitions = _$nextType._definitions
+    value           = nextDefinitions[selector]
 
     if (value !== undefined) {
       if (value && value.type === Method) {
         if (value.isImmediate) {
-          supers[$IMMEDIATES][property] = value.super
+          supers[$IMMEDIATES][selector] = value.super
           return IMMEDIATE
         }
         if ((value = value.super)) { return value }
 
         // Here because value is a DECLARATION or ASSIGNER method
         isDeclared = true
-        // value = $root$inner[property]
+        // value = $root$inner[selector]
         // if (value !== undefined) { return value }
       }
       else { return value }
     }
     else {
-      marker = _$type._blanker.$root$inner[$KNOWNS][property]
+      marker = _$nextType._blanker.$root$inner[$KNOWNS][selector]
            if (marker !=  null) { isDeclared = true     }
       else if (marker === null) { return IMPLEMENTATION }
     }
@@ -369,24 +369,24 @@ const SuperBarrier_prototype = SpawnFrom(DefaultBarrier)
 
 SuperBarrier.prototype = SuperBarrier_prototype
 
-SuperBarrier_prototype.get = function get(_$target, property, _super) {
+SuperBarrier_prototype.get = function get(_$target, selector, _super) {
   const supers = _$target[$SUPERS]
-  var   value  = supers[property]
+  var   value  = supers[selector]
 
   do {
     switch (value) {
       case undefined :
-        value = (supers[property] = SuperPropertyFor(_$target, property))
+        value = (supers[selector] = SuperPropertyFor(_$target, selector))
         break
 
       case IMPLEMENTATION :
-        return _$target[property]
+        return _$target[selector]
 
       case IMMEDIATE :
-        return supers[$IMMEDIATES][property].call(_$target[$PULP])
+        return supers[$IMMEDIATES][selector].call(_$target[$PULP])
 
       case NO_SUPER :
-        return $inner._unknownProperty.call(_$target[$PULP], property)
+        return $inner._unknownProperty.call(_$target[$PULP], selector)
 
       default :
         return value

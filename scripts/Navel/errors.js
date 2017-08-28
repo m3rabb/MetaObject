@@ -46,18 +46,6 @@ function PrivateAccessFromOutsideError(target, property) {
   SignalError(target[$RIND], `Access to private property '${property}' from outside of an object is forbidden!!`)
 }
 
-function ImproperChangeToAncestryError(target) {
-  SignalError(target[$RIND], "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
-}
-
-function AttemptedChangeOfAncestryOfPermeableTypeError(target) {
-  SignalError(target[$RIND], `Cannot change supertypes of permeable Type '${target.name}', change impermeable version instead!!`)
-}
-
-function DuplicateSupertypeError(target) {
-  SignalError(target[$RIND], "Duplicate supertypes are not allowed!!")
-}
-
 function DisallowedDeleteError(target, property) {
   SignalError(target[$RIND], `Delete of property '${property}' is not allowed!!`)
 }
@@ -80,4 +68,22 @@ function DetectedInnerError(target, value) {
 
 function InvalidCopyType(target) {
   SignalError(target, `Cannot use InAtPut with ${target.constructor.name}!!`)
+}
+
+
+
+function ImproperChangeToAncestryError(target) {
+  SignalError(target[$RIND], "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
+}
+
+function AttemptedChangeOfAncestryOfPermeableTypeError(target) {
+  SignalError(target[$RIND], `Cannot change supertypes of permeable Type '${target.name}', change impermeable version instead!!`)
+}
+
+function DuplicateSupertypeError(target) {
+  SignalError(target[$RIND], "Duplicate supertypes are not allowed!!")
+}
+
+function AssignerSetterError(target) {
+  SignalError(target[$RIND], "Cannot define setter and assigner functions for the same property!!")
 }

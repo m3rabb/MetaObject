@@ -13,7 +13,7 @@ function AsTameFunc(Func) {
 
 function AsBasicSetter(propertyName, setterName, mode) {
   const name = `${AsName(setterName)}_$set_${propertyName}`
-  const PropertyName = (mode === MANDATORY) ?
+  const PropertyName = (mode === MANDATORY_SETTER_METHOD) ?
      AsPropertySymbol(propertyName) : propertyName
   return {
     [name] : function (value) { this[PropertyName] = value }
@@ -424,7 +424,7 @@ const STANDARD_METHOD = {
 
 const IMMEDIATE_METHOD = {
   __proto__ : STANDARD_METHOD,
-  id        : "IMMEDIATE",
+  id        : "IMMEDIATE_METHOD",
 }
 
 const DECLARATION = {
@@ -435,16 +435,16 @@ const ASSIGNER = {
   id    : "ASSIGNER",
 }
 
-const SETTER = {
-  id    : "SETTER",
+const SETTER_METHOD = {
+  id    : "SETTER_METHOD",
   outer : AsOuterSelf,
   inner : AsInnerSelf,
   super : AsSuperSelf,
 }
 
-const MANDATORY = {
-  __proto__ : SETTER,
-  id        : "MANDATORY",
+const MANDATORY_SETTER_METHOD = {
+  __proto__ : SETTER_METHOD,
+  id        : "MANDATORY_SETTER_METHOD",
 }
 
 
