@@ -1,4 +1,4 @@
-_Method.addMethod("super", AsRetroactiveProperty("super", {
+_Definition.addMethod("super", AsRetroactiveProperty("super", {
   super : function () {
     const $inner = this[$INNER]
 
@@ -17,20 +17,20 @@ _Method.addMethod("super", AsRetroactiveProperty("super", {
 }.super), BASIC_VALUE_METHOD)
 
 
-_Method.addLazyProperty(function isLazy() {
+_Definition.addLazyProperty(function isLazy() {
   return (this.mode === LAZY_INSTALLER)
 })
 
 
-_Method.addMethod(function toString(_) {
+_Definition.addMethod(function toString(_) {
   var count = this.handler.length
   return `${this.selector}(${count})`
 }, BASIC_VALUE_METHOD)
 
 
-_Method.addDeclaration("isImmediate property") // inner outer
+_Definition.addDeclaration("isImmediate property") // inner outer
 
 
-_Method.addMethod(function _invalidSelectorError(selector) {
-  this._signalError(`Method must be set with a valid selector!! Not: '${selector}'`)
+_Definition.addMethod(function _invalidSelectorError(selector) {
+  this._signalError(`Definition must be set with a valid selector!! Not: '${selector}'`)
 })

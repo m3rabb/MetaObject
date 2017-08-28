@@ -266,28 +266,51 @@ _$Intrinsic.addMethod(function typeName() {
 // Navel/30303/Type/367
 
 
-_$Intrinsic.addMethod(function addOwnMethod(method_namedFunc__name, func__, mode___) {
-  const method   = AsMethod(method_namedFunc__name, func__, mode___)
-  const selector = method.selector
-  var $inner, $outer, methods, immediates, supers
+_$Intrinsic.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
+  return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
+}, BASIC_SELF_METHOD)
 
-  methods = this[$INNER][$OWN_METHODS]
-  if (methods && methods[selector] === method) { return this }
 
+_$Intrinsic.addMethod(function addOwnAlias(aliasSelector, selector_definition) {
+  const definition = selector_definition.isDefinition ?
+    selector_definition : this.methodAt(selector_definition)
+  if (definition == null) {
+    return this._unknownMethodToAliasError(selector_definition)
+  }
+  this.addOwnDefinition(aliasSelector, definition.handler, definition.mode)
+})
+
+
+_$Intrinsic.addMethod(function addOwnMethod(namedFunc_name, func_, mode__) {
+  const definition = Definition(namedFunc_name, func_, mode__)
+  this._addOwnDefinition(definition)
+})
+
+_$Intrinsic.addMethod(function addOwnDefinition(definition__namedFunc_selector, func_, mode__) {
+  const definition = (definition__namedFunc_selector.isDefinition) ?
+    definition__namedFunc_selector :
+    Definition(definition__namedFunc_selector, func_, mode__)
+  this._addOwnDefinition(definition)
+})
+
+_$Intrinsic.addMethod(function _addOwnDefinition(definition) {
+  const tag    = definition.tag
+  const $inner = this[$INNER]
+  var   definitions = $inner[$OWN_DEFINITIONS]
+
+  if (definitions && definitions[tag] === definition) { return this }
   this._retarget
-  $inner  = this[$INNER]
-  methods = $inner[$OWN_METHODS]
 
-  if (methods) {
-    InClearProperty($inner, selector)
+  if (definitions) {
+    CompletelyDeleteProperty($inner, definition.selector)
   }
   else {
-    methods = ($inner[$OWN_METHODS] = SpawnFrom(null))
-    ExtendMethodsInfrastructure($inner, $inner) // Check if this is right!!!
+    definitions = ($inner[$OWN_DEFINITIONS] = SpawnFrom(null))
+    MakeDefinitionsInfrastructure($inner, $inner) // Check if this is right!!!
   }
 
-  SetMethod($inner, method)
-  methods[selector] = method
+  SetDefinition($inner, definition)
+  definitions[tag] = definition
   return this
 }, BASIC_SELF_METHOD)
 
@@ -298,18 +321,7 @@ _$Intrinsic.addMethod(function methodAt(selector) {
 })
 
 
-_$Intrinsic.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
-  return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
-}, BASIC_SELF_METHOD)
 
-_$Intrinsic.addMethod(function addOwnAlias(aliasName, name_method) {
-  const sourceMethod = name_method.isMethod ?
-    name_method : this.type.methodAt(name_method)
-  if (sourceMethod == null) {
-    return this._unknownMethodToAliasError(name_method)
-  }
-  this.addOwnMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
-})
 
 // _$Intrinsic.addMethod(function _addOwnValueMethod(...namedFunc_name__handler) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_METHOD)

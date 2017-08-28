@@ -159,7 +159,7 @@ describe("Setting a private property on the inner of mutable object", function()
 
     describe("When the value is used as a handler for a method", function() {
       beforeEach(function () {
-        this.value      = this.Cat_.methodAt("age").handler
+        this.value      = this.Cat_.instanceMethodAt("age").handler
         this.$pulp._xyz = this.value
       })
 
@@ -206,7 +206,7 @@ describe("Setting a private property on the inner of mutable object", function()
 
     describe("When the value is an inner wrapper", function() {
       beforeEach(function () {
-        this.value      = this.Cat_.methodAt("age").inner
+        this.value      = this.Cat_.instanceMethodAt("age").inner
         this.$pulp._xyz = this.value
       })
 
@@ -229,7 +229,7 @@ describe("Setting a private property on the inner of mutable object", function()
 
     describe("When the value is an outer wrapper", function() {
       beforeEach(function () {
-        this.value      = this.Cat_.methodAt("age").outer
+        this.value      = this.Cat_.instanceMethodAt("age").outer
         this.$pulp._xyz = this.value
       })
 

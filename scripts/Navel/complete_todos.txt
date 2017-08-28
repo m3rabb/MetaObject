@@ -207,3 +207,13 @@ Simplify to make .$INNER a retroactive property
 consider handling permeability more simply, making 'this' a property from instantiation via new_
 
 - check: inner[$OUTER_WRAPPER] = outer    // For access via Permeable outer
+
+==
+_properties to _definitions
+
+
+Change Method to Definition
+Change $KNOWNS to $DECLARATIONS
+Change Type to use instanceMethodAt vs methodAt
+Change ExtendMethodsInfrastructure to MakeDefinitionsInfrastructure
+Fix _deleteDefinitionAt

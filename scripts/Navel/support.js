@@ -97,87 +97,87 @@ function AsPropertySymbol(propertyName) {
 }
 
 
-/**
- * Answers the parameter if it's already a method. Otherwise, it answers a new
- * Method created from the handler function, selector, and mode.
- * @private
- * @param       {(selector|function|Method)} selector|namedFunc|method
- * Selector | Named function | Passthru method
- * @param       {function|symbol}         handler|mode_|
- * Method handler | Method mode
- * @param       {symbol}           mode_
- * Method mode, defaults to STANDARD
- * @returns     {Method}
- *
- * @example
- * AsMethod(selector, handler)
- * AsMethod(selector, handler, mode)
- * @example
- * AsMethod(namedHandler)
- * AsMethod(namedHandler, mode)
- * @example
- * AsMethod(method)
- */
-function AsMethod(method_func__selector, handler__, mode___) {
-  return (method_func__selector.isMethod) ?
-    method_func__selector : Method(method_func__selector, handler__, mode___)
-}
+// /**
+//  * Answers the parameter if it's already a method. Otherwise, it answers a new
+//  * Definition created from the handler function, selector, and mode.
+//  * @private
+//  * @param       {(selector|function|Definition)} selector|namedFunc|method
+//  * Selector | Named function | Passthru method
+//  * @param       {function|symbol}         handler|mode_|
+//  * Method handler | Method mode
+//  * @param       {symbol}           mode_
+//  * Definition mode, defaults to STANDARD
+//  * @returns     {Definition}
+//  *
+//  * @example
+//  * AsMethod(selector, handler)
+//  * AsMethod(selector, handler, mode)
+//  * @example
+//  * AsMethod(namedHandler)
+//  * AsMethod(namedHandler, mode)
+//  * @example
+//  * AsMethod(method)
+//  */
+// function AsMethod(method_func__selector, handler__, mode___) {
+//   return (method_func__selector.isMethod) ?
+//     method_func__selector : Definition(method_func__selector, handler__, mode___)
+// }
 
 
 /**
- * Installs a method in a target $root or object. If the method is public, it
+ * Installs a definition in a target $root or object. If the definition is public, it
  * installs it in the outer as well as the inner sides of the object, It also,
- * handles if the method immediate or is an assigner.
+ * handles if the definition immediate or is an assigner.
  * @private
  * @param       {$inner} $inner - The target $inner
- * @param       {Method} method - The method to install
+ * @param       {Definition} definition - The definition to install
  */
-function SetMethod(_$target, method) {
-  const  $target = _$target[$OUTER]
-  const _$method = InterMap.get(method)
-  const selector = _$method.selector
-  const property = _$method.property
-  const isPublic = _$method.isPublic
+function SetDefinition(_$target, definition) {
+  const  $target     = _$target[$OUTER]
+  const _$definition = InterMap.get(definition)
+  const selector     = _$definition.selector
+  const property     = _$definition.property
+  const isPublic     = _$definition.isPublic
 
-  switch (_$method.mode) {
+  switch (_$definition.mode) {
     case IMMEDIATE_METHOD :
       // Formerly used delete, but deleting uncovered inherited value from
       // _$Intrinsic & _Something, so setting it undefined covers inherited
       // value. Doing this specifically to deal with inherited null id value
       // which breaks defining immediate/lazy id values by the type instances.
-      InClearProperty(_$target, selector)
+      CompletelyDeleteProperty(_$target, selector)
       DefineProperty(_$target, selector, InvisibleConfig)
       // _$target[selector] = undefined  // Handled by previous line!!!
-      _$target[$IMMEDIATES][selector] = _$method.inner
+      _$target[$IMMEDIATES][selector] = _$definition.inner
       if (isPublic) {
         $target[selector] = undefined
-        $target[$IMMEDIATES][selector] = _$method.outer
+        $target[$IMMEDIATES][selector] = _$definition.outer
       }
       return
 
     case ASSIGNER :
-      _$target[$ASSIGNERS][selector] = _$method.handler
+      _$target[$ASSIGNERS][selector] = _$definition.handler
       // break omitted
 
     case DECLARATION :
-      _$target[$KNOWNS][selector] = isPublic
+      _$target[$DECLARATIONS][selector] = isPublic
       return
 
     case MANDATORY_SETTER_METHOD :
-      _$target[$ASSIGNERS][_$method.mappedSymbol] = property
-      _$target[$ASSIGNERS][property] = _$method.assignmentError
+      _$target[$ASSIGNERS][_$definition.mappedSymbol] = property
+      _$target[$ASSIGNERS][property] = _$definition.assignmentError
       // break omitted
 
     case SETTER_METHOD :
-      _$target[$KNOWNS][property] = isPublic
+      _$target[$DECLARATIONS][property] = isPublic
       // break omitted
 
     default :
       // Store the inner (and outer) wrapper in the property chain.
-      InClearProperty(_$target, selector)
+      CompletelyDeleteProperty(_$target, selector)
       DefineProperty(_$target, selector, InvisibleConfig)
-      _$target[selector] = _$method.inner
-      if (isPublic) { $target[selector] = _$method.outer }
+      _$target[selector] = _$definition.inner
+      if (isPublic) { $target[selector] = _$definition.outer }
   }
 }
 
@@ -323,20 +323,20 @@ function NewVacuousConstructor(name) {
 const DefaultDisguiseFunc = NewVacuousConstructor("$disguise$")
 
 
-function ExtendMethodsInfrastructure(_$target, _$root) {
-  const $root   = _$root[$OUTER]
-  const $target = _$target[$OUTER]
-  const knowns  = SpawnFrom(_$root[$KNOWNS])
-  const supers  = SpawnFrom(_$root[$SUPERS])
+function MakeDefinitionsInfrastructure(_$target, _$root) {
+  const $root        = _$root[$OUTER]
+  const $target      = _$target[$OUTER]
+  const declarations = SpawnFrom(_$root[$DECLARATIONS])
+  const supers       = SpawnFrom(_$root[$SUPERS])
 
   supers[$IMMEDIATES] = SpawnFrom(supers[$IMMEDIATES])
 
-  _$target[$SUPERS]     = supers
-  _$target[$ASSIGNERS]  = SpawnFrom(_$root[$ASSIGNERS])
-  _$target[$IMMEDIATES] = SpawnFrom(_$root[$IMMEDIATES])
-   $target[$IMMEDIATES] = SpawnFrom( $root[$IMMEDIATES])
-  _$target[$KNOWNS]     = knowns
-   $target[$KNOWNS]     = knowns
+  _$target[$SUPERS]       = supers
+  _$target[$ASSIGNERS]    = SpawnFrom(_$root[$ASSIGNERS])
+  _$target[$IMMEDIATES]   = SpawnFrom(_$root[$IMMEDIATES])
+   $target[$IMMEDIATES]   = SpawnFrom( $root[$IMMEDIATES])
+  _$target[$DECLARATIONS] = declarations
+   $target[$DECLARATIONS] = declarations
 }
 
 /**
@@ -432,7 +432,7 @@ function NewBlanker(rootBlanker, maker_) {
   _$root[$OUTER]    = $root
   _$root[$BLANKER]  = Blanker
 
-  ExtendMethodsInfrastructure(_$root, root$root$inner)
+  MakeDefinitionsInfrastructure(_$root, root$root$inner)
 
   InterMap.set(Blanker, BLANKER_FUNC)
   return Frost(Blanker)
@@ -746,6 +746,20 @@ const _BasicNew = function _basicNew(...args) {
   return _$instance[$RIND]
 }
 
+const _BasicNew_ = function new_(...args) {
+  const $inner     = this[$INNER]
+  const newHandler = $inner.new
+  const instance   = (newHandler === _BasicNew || newHandler === _BasicNew_) ?
+    this._basicNew(...args) : this.new(...args)
+  const _$instance = InterMap.get(instance)
+  const $instance  = _$instance[$OUTER]
+
+  DefineProperty($instance, "this", InvisibleConfig)
+  $instance.this = _$instance[$PULP]
+
+  return instance
+}
+
 
 // This method should only be called on a mutable object!!!
 const _BasicSetImmutable = function _basicSetImmutable(inPlace_, visited__) {
@@ -760,7 +774,7 @@ const _BasicSetImmutable = function _basicSetImmutable(inPlace_, visited__) {
 
 
 
-function InClearProperty(_$target, selector) {
+function CompletelyDeleteProperty(_$target, selector) {
   delete _$target[selector]
   const $target = _$target[$OUTER]
   const supers  = _$target[$SUPERS]

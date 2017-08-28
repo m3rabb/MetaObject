@@ -1,11 +1,12 @@
-_Type.addMethod(function addAlias(aliasName, name_method) {
-  const sourceMethod = name_method.isMethod ?
-    name_method : this.methodAt(name_method)
-  if (sourceMethod == null) {
-    return this._unknownMethodToAliasError(name_method)
+_Type.addMethod(function addAlias(aliasName, selector_definition) {
+  const definition = selector_definition.isDefinition ?
+    selector_definition : this.instanceMethodAt(selector_definition)
+  if (definition == null) {
+    return this._unknownMethodToAliasError(selector_definition)
   }
-  this.addMethod(aliasName, sourceMethod.handler, sourceMethod.mode)
+  this.addDefinition(aliasName, definition.handler, definition.mode)
 })
+
 
 _Type.addMethod(function addLazyProperty(assigner_property, assigner_) {
   // Will set the $inner property even on an immutable object!!!
@@ -50,19 +51,7 @@ _Type.addMethod(function toString(_) {
 })
 
 
-_Type.addMethod(function new_(...args) {
-  const $inner     = this[$INNER]
-  const newHandler = $inner.new
-  const instance   = (newHandler === _BasicNew || new_ === newHandler) ?
-    this._basicNew(...args) : this.new(...args)
-  const _$instance = InterMap.get(instance)
-  const $instance  = _$instance[$OUTER]
-
-  DefineProperty($instance, "this", InvisibleConfig)
-  $instance.this = _$instance[$PULP]
-
-  return instance
-}, BASIC_VALUE_METHOD)
+_Type.addMethod(_BasicNew_, BASIC_VALUE_METHOD)
 
 
 // function MakeNew_(existingCustomNew) {
@@ -95,7 +84,7 @@ _Type.addMethod(function _initFrom_(_type) {
     this._setSharedProperty(propertyName, property)
   }
 
-  if ((ownMethods = _type[$OWN_METHODS])) {
+  if ((ownMethods = _type[$OWN_DEFINITIONS])) {
     for (propertyName in ownMethods) {
       method     = ownMethods[propertyName]
       nextMethod = Copy(method)
@@ -143,8 +132,8 @@ _Type.addMethod(function methods() {
   const $root$inner = this._blanker.$root$inner
   const methods     = []
 
-  for (var property in $root$inner) {
-    var value  = $root$inner[property]
+  for (var selector in $root$inner) {
+    var value  = $root$inner[selector]
     var method =
       (typeof value === "function" && InterMap.get(value) === INNER_FUNC) ?
         (value.method || null) : null
@@ -158,9 +147,9 @@ _Type.addMethod(function definedMethods() {
   const properties = this._properties
   const methods    = []
 
-  for (var property in properties) {
-    var value = properties[property]
-    if (value && value.type === Method) { methods.push(value) }
+  for (var selector in properties) {
+    var value = properties[selector]
+    if (value && value.type === Definition) { methods.push(value) }
   }
   methods.sort((a, b) => AsName(a.selector).localeCompare(AsName(b.selector)))
   return SetImmutable(methods)
@@ -169,9 +158,10 @@ _Type.addMethod(function definedMethods() {
 
 
 
-_Type.addMethod(function methodAt(selector) {
+_Type.addMethod(function instanceMethodAt(selector) {
   return MethodAt(this._blanker.$root$inner, selector)
 })
+
 
 
 
@@ -204,9 +194,10 @@ _Type.addMethod(function addDurableProperties(items) {
 })
 
 
-_Type.addMethod(function addDefinition(definition_namedFunc__selector, func__) {
-  const definition = (definition_namedFunc__selector.isMethod) ?
-    definition_namedFunc__selector : Method(definition_namedFunc__selector, func__)
+_Type.addMethod(function addDefinition(definition__namedFunc_selector, func_, mode__) {
+  const definition = (definition__namedFunc_selector.isDefinition) ?
+    definition__namedFunc_selector :
+    Definition(definition__namedFunc_selector, func_, mode__)
   return this._setDefinitionAt(definition.tag, definition)
 })
 

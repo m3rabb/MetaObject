@@ -40,7 +40,7 @@ describe("Type setting methods", function () {
       })
 
       it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$KNOWNS], "mood") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -68,7 +68,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the property is assigned", function () {
@@ -105,7 +105,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the property is assigned", function () {
@@ -148,7 +148,7 @@ describe("Type setting methods", function () {
       })
 
       it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$KNOWNS], "mood") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -176,7 +176,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -223,7 +223,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -254,7 +254,7 @@ describe("Type setting methods", function () {
         })
 
         it("Declares the property in the root", function () {
-          expect( this._$root[$KNOWNS].mood ).toBe( true )
+          expect( this._$root[$DECLARATIONS].mood ).toBe( true )
         })
 
         it("Answers null when the property is read", function () {
@@ -283,8 +283,8 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].setXyz ).toBe( undefined )
-        expect( this._$root[$KNOWNS]._qrs ).toBe( true )
+        expect( this._$root[$DECLARATIONS].setXyz ).toBe( undefined )
+        expect( this._$root[$DECLARATIONS]._qrs ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -331,7 +331,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -362,7 +362,7 @@ describe("Type setting methods", function () {
         })
 
         it("Declares the property in the root", function () {
-          expect( this._$root[$KNOWNS].mood ).toBe( true )
+          expect( this._$root[$DECLARATIONS].mood ).toBe( true )
         })
 
         it("Answers null when the property is read", function () {
@@ -396,7 +396,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS]._mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS]._mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -454,7 +454,7 @@ describe("Type setting methods", function () {
       })
 
       it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$KNOWNS], "mood") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -482,7 +482,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -526,8 +526,8 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].setXyz ).toBe( undefined )
-        expect( this._$root[$KNOWNS]._qrs ).toBe( true )
+        expect( this._$root[$DECLARATIONS].setXyz ).toBe( undefined )
+        expect( this._$root[$DECLARATIONS]._qrs ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -576,7 +576,7 @@ describe("Type setting methods", function () {
       })
 
       it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$KNOWNS], "mood") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -603,7 +603,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -649,7 +649,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -680,7 +680,7 @@ describe("Type setting methods", function () {
         })
 
         it("Declares the property in the root", function () {
-          expect( this._$root[$KNOWNS].mood ).toBe( true )
+          expect( this._$root[$DECLARATIONS].mood ).toBe( true )
         })
 
         it("Answers null when the property is read", function () {
@@ -708,7 +708,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS]._qrs ).toBe( true )
+        expect( this._$root[$DECLARATIONS]._qrs ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -753,7 +753,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -784,7 +784,7 @@ describe("Type setting methods", function () {
         })
 
         it("Declares the property in the root", function () {
-          expect( this._$root[$KNOWNS].mood ).toBe( true )
+          expect( this._$root[$DECLARATIONS].mood ).toBe( true )
         })
 
         it("Answers null when the property is read", function () {
@@ -816,8 +816,8 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( undefined )
-        expect( this._$root[$KNOWNS]._mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( undefined )
+        expect( this._$root[$DECLARATIONS]._mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -874,7 +874,7 @@ describe("Type setting methods", function () {
       })
 
       it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$KNOWNS], "mood") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -901,7 +901,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -944,7 +944,7 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS]._qrs ).toBe( true )
+        expect( this._$root[$DECLARATIONS]._qrs ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -991,8 +991,8 @@ describe("Type setting methods", function () {
       })
 
       it("Declares the property in the root", function () {
-        expect( this._$root[$KNOWNS].mood ).toBe( undefined )
-        expect( this._$root[$KNOWNS]._mood ).toBe( true )
+        expect( this._$root[$DECLARATIONS].mood ).toBe( undefined )
+        expect( this._$root[$DECLARATIONS]._mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {

@@ -47,7 +47,7 @@ PropertyLoader.addMethod(function _load(item, mode) {
     case Function : this._loadFunc     (item, mode) ; break
     case String   : this._loadFromName (item, mode) ; break
 
-    default : this._signalError("Methods must be in a list|spec|func!!")
+    default : this._signalError("Definitions must be in a list|spec|func!!")
   }
 })
 
@@ -119,7 +119,7 @@ PropertyLoader.addMethod(function _loadFunc(func, mode) {
 
     case "FOR_ASSIGN"    : return this._type.forAddAssigner        (func)
 
-    default : return this._signalError(`Invalid method func mode: ${mode}!!`)
+    default : return this._signalError(`Invalid definition mode: ${mode}!!`)
   }
 })
 

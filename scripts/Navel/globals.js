@@ -24,34 +24,34 @@ const Apply               = Reflect.apply
 // private
 
 // symbols for publicly knowable properties
-const IS_IMMUTABLE       = Symbol("IS_IMMUTABLE")
-const DURABLES           = Symbol("DURABLES")
-const INSTANCEOF         = Symbol.hasInstance
+const IS_IMMUTABLE           = Symbol("IS_IMMUTABLE")
+const DURABLES               = Symbol("DURABLES")
+const INSTANCEOF             = Symbol.hasInstance
 
 // private symbols for implementation usage, $ means non-ya-bizness!!!
 // Once everything is working, consider removing the names from the symbols
 // to discourage tampering!!!
-const $INNER             = Symbol("$INNER")
-const $PULP              = Symbol("$PULP")
-const $OUTER             = Symbol("$OUTER")
-const $RIND              = Symbol("$RIND")  // Consider simply using $ !!!
+const $INNER                 = Symbol("$INNER")
+const $PULP                  = Symbol("$PULP")
+const $OUTER                 = Symbol("$OUTER")
+const $RIND                  = Symbol("$RIND")  // Consider simply using $ !!!
 
-const $DISGUISE          = Symbol("$DISGUISE")
-const $BARRIER           = Symbol("$BARRIER")
-const $COPY              = Symbol("$COPY")
-//const $IID               = Symbol("$instanceId")
-const $PRIOR_IDS         = Symbol("$PRIOR_IDS")
-const $SECRET            = Symbol("$SECRET")
+const $DISGUISE              = Symbol("$DISGUISE")
+const $BARRIER               = Symbol("$BARRIER")
+const $COPY                  = Symbol("$COPY")
+//const $IID                   = Symbol("$instanceId")
+const $PRIOR_IDS             = Symbol("$PRIOR_IDS")
+const $SECRET                = Symbol("$SECRET")
 
-const $ROOT              = Symbol("$ROOT")
-const $BLANKER           = Symbol("$BLANKER")
-const $ASSIGNERS         = Symbol("$ASSIGNERS")
-const $IMMEDIATES        = Symbol("$IMMEDIATES")
-const $KNOWNS            = Symbol("$KNOWNS")
-const $SUPERS            = Symbol("$SUPERS")
-const $OWN_METHODS       = Symbol("$OWN_METHODS")
+const $ROOT                  = Symbol("$ROOT")
+const $BLANKER               = Symbol("$BLANKER")
+const $ASSIGNERS             = Symbol("$ASSIGNERS")
+const $IMMEDIATES            = Symbol("$IMMEDIATES")
+const $DECLARATIONS          = Symbol("$DECLARATIONS")
+const $SUPERS                = Symbol("$SUPERS")
+const $OWN_DEFINITIONS       = Symbol("$OWN_DEFINITIONS")
 
-const $OUTER_WRAPPER     = Symbol("$OUTER_WRAPPER")
+const $OUTER_WRAPPER         = Symbol("$OUTER_WRAPPER")
 
 const $DELETE_IMMUTABILITY   = Symbol("$DELETE_IMMUTABILITY")
 const $DELETE_ALL_PROPERTIES = Symbol("$DELETE_ALL_PROPERTIES")

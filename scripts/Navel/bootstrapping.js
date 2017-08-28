@@ -12,23 +12,23 @@
 
 // Should this be made immutable???
 const $BaseBlanker = {
+  innerMaker        : NewInner,
   $root$outer : {
-    __proto__      : null,
-    constructor    : NewVacuousConstructor("$Something$outer"), // ???
-    [$IMMEDIATES]  : EMPTY_OBJECT,
+    __proto__       : null,
+    constructor     : NewVacuousConstructor("$Something$outer"), // ???
+    [$IMMEDIATES]   : EMPTY_OBJECT,
   },
   $root$inner : {
-    __proto__      : null,
-    constructor    : NewVacuousConstructor("$Something$inner"), // ???
-    [$IMMEDIATES]  : EMPTY_OBJECT,
-    [$ASSIGNERS]   : EMPTY_OBJECT,
-    [$KNOWNS]      : EMPTY_OBJECT,
-    [$SUPERS]      : {
-      __proto__       : null,
-      [$IMMEDIATES]   : EMPTY_OBJECT,
+    __proto__       : null,
+    constructor     : NewVacuousConstructor("$Something$inner"), // ???
+    [$IMMEDIATES]   : EMPTY_OBJECT,
+    [$ASSIGNERS]    : EMPTY_OBJECT,
+    [$DECLARATIONS] : EMPTY_OBJECT,
+    [$SUPERS]       : {
+      __proto__        : null,
+      [$IMMEDIATES]    : EMPTY_OBJECT,
     },
   },
-  innerMaker       : NewInner,
 }
 
 $BaseBlanker.$root$inner[$OUTER] = $BaseBlanker.$root$outer
@@ -62,13 +62,13 @@ const _$Something = BootstrapType("$Something", $SomethingBlanker )
 const _$Intrinsic = BootstrapType("$Intrinsic", $IntrinsicBlanker )
 const _Thing      = BootstrapType("Thing"     , null              )
 const _Type       = BootstrapType("Type"      , TypeBlanker       )
-const _Method     = BootstrapType("Method"    , null              )
+const _Definition = BootstrapType("Definition", null              )
 
 const $Something = _$Something[$RIND]
 const $Intrinsic = _$Intrinsic[$RIND]
 const Thing      = _Thing     [$RIND]
 const Type       = _Type      [$RIND]
-const Method     = _Method    [$RIND]
+const Definition = _Definition[$RIND]
 
 ThingAncestry[0] = Thing
 
@@ -76,7 +76,7 @@ const $Something$root$inner = $SomethingBlanker.$root$inner
 const $Something$root$outer = $SomethingBlanker.$root$outer
 const $Intrinsic$root$inner = $IntrinsicBlanker.$root$inner
 const $Intrinsic$root$outer = $IntrinsicBlanker.$root$outer
-const Method$root$inner     = _Method._blanker.$root$inner
+const Definition$root$inner = _Definition._blanker.$root$inner
 
 
 // Stubs for known properties
@@ -85,7 +85,7 @@ $Something$root$inner[$BARRIER]             = null
 $Something$root$inner[$SECRET]              = $INNER
 $Something$root$outer[$SECRET]              = null
 
-$Something$root$inner[$KNOWNS][$PULP]       = null
+$Something$root$inner[$DECLARATIONS][$PULP] = null
 
 
 
@@ -102,12 +102,12 @@ const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode) {
   if (definitions[tag] === value) { return this }
   this._retarget
 
-  if (value && value.type === Method) {
-    SetMethod(_$root, value)
+  if (value && value.type === Definition) {
+    SetDefinition(_$root, value)
   }
   else {
     const selector = tag
-    InClearProperty(_$root, selector)
+    CompletelyDeleteProperty(_$root, selector)
     DefineProperty(_$root, selector, InvisibleConfig)
     InSetProperty(_$root, selector, value, this)
   }
@@ -144,11 +144,11 @@ SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)
 
 
 
-Method$root$inner[$OUTER].type  = Method
+Definition$root$inner[$OUTER].type  = Definition
 
-Method$root$inner._setImmutable = _BasicSetImmutable
+Definition$root$inner._setImmutable = _BasicSetImmutable
 
-Method$root$inner._init = function _init(func_selector, func_, mode__, property___) {
+Definition$root$inner._init = function _init(func_selector, func_, mode__, property___) {
   const [selector, handler, mode = STANDARD_METHOD, property] =
     (typeof func_selector === "function") ?
       [func_selector.name, func_selector, func_ , mode__     ] :
@@ -159,19 +159,24 @@ Method$root$inner._init = function _init(func_selector, func_, mode__, property_
 
   if (!selector) { return this._invalidSelectorError(selector) }
 
-  this.selector    = selector
-  this.mode        = mode
-  this.isImmediate = false
-  this.isPublic    = isPublic
+  this.selector      = selector
+  this.mode          = mode
+  this.isImmediate   = false
+  this.isAssigner    = false
+  this.isDeclaration = false
+  this.isMethod      = false
+  this.isPublic      = isPublic
   // this.super --> is a lazy property
 
   switch(mode) {
     case DECLARATION :
-      // this.name = `$declaration@${selector}`
+      this.isDeclaration = true
+      this.tag           = `$declaration@${AsName(selector)}`
       return
 
     case ASSIGNER :
-      // this.name = `$assigner@${selector}`
+      this.isAssigner = true
+      this.tag        = `$assigner@${AsName(selector)}`
       $outer.handler = $inner.handler = MarkFunc(handler, ASSIGNER_FUNC)
       return
 
@@ -193,7 +198,8 @@ Method$root$inner._init = function _init(func_selector, func_, mode__, property_
       break
   }
 
-  // this.name = selector
+  this.isMethod = true
+  this.tag      = selector
 
   const outer = mode.outer(selector, handler, isPublic)
   const inner = mode.inner(selector, handler, isPublic)
@@ -216,8 +222,8 @@ Type$root$inner._setDefinitionAt = _SetDefinitionAt
 
 
 const AddMethod = function addMethod(func_selector, func_, mode__, property___) {
-  const method = Method(func_selector, func_, mode__, property___)
-  return this._setDefinitionAt(method.selector, method, VISIBLE)
+  const definition = Definition(func_selector, func_, mode__, property___)
+  return this._setDefinitionAt(definition.tag, definition, VISIBLE)
 }
 
 AddMethod.call(_Type, AddMethod)
@@ -257,8 +263,8 @@ _$Intrinsic.addMethod(function _retarget() {
 
 
 
-_Method.addMethod(Method$root$inner._init)
-_Method.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+_Definition.addMethod(Definition$root$inner._init)
+_Definition.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
 
 
@@ -286,18 +292,15 @@ _Type.addMethod(function addAssigner(property_assigner, assigner_) {
 
   if (!selector) { return UnnamedFuncError(this, assigner) }
 
-  const definition = Method(selector, assigner, ASSIGNER)
-  const tag        = `$assigner@${AsName(selector)}`
-
-  this._setDefinitionAt(tag, definition, VISIBLE)
+  const definition = Definition(selector, assigner, ASSIGNER)
+  this._setDefinitionAt(definition.tag, definition, VISIBLE)
 })
 
 
 _Type.addMethod(function addDeclaration(selector) {
-  const definition = Method(selector, null, DECLARATION)
+  const definition = Definition(selector, null, DECLARATION)
   const tag        = `$declaration@${AsName(selector)}`
-
-  this._setDefinitionAt(tag, definition, VISIBLE)
+  this._setDefinitionAt(definition.tag, definition, VISIBLE)
 })
 
 
@@ -335,7 +338,7 @@ _Type.addMethod(function _deleteDefinitionAt(tag) {
   const $root$outer      = blanker.$root$outer
   const definitions      = this._definitions
   const value            = definitions[tag]
-  const [mode, selector] = (value && value.type === Method) ?
+  const [mode, selector] = (value && value.type === Definition) ?
     [value.mode, value.selector] : [null, tag]
 
   switch (mode) {
@@ -348,12 +351,12 @@ _Type.addMethod(function _deleteDefinitionAt(tag) {
     case ASSIGNER :
       delete $root$inner[$ASSIGNERS][selector]
       if (!definitions[`$declaration@${AsName(selector)}`]) {
-        delete $root$inner[$KNOWNS][selector]
+        delete $root$inner[$DECLARATIONS][selector]
       }
       break
 
     case DECLARATION :
-      delete $root$inner[$KNOWNS][value.selector]
+      delete $root$inner[$DECLARATIONS][value.selector]
       break
 
     case MANDATORY_SETTER_METHOD :
@@ -362,8 +365,8 @@ _Type.addMethod(function _deleteDefinitionAt(tag) {
       // break omitted
 
     case SETTER_METHOD :
-      if (!definitions[`$declaration@${selector}`]) {
-        delete $root$inner[$KNOWNS][selector]
+      if (!definitions[`$declaration@${AsName(selector)}`]) {
+        delete $root$inner[$DECLARATIONS][selector]
       }
       // break omitted
 
@@ -371,7 +374,6 @@ _Type.addMethod(function _deleteDefinitionAt(tag) {
       delete $root$inner[selector]
       delete $root$outer[selector]
       delete $root$inner[$SUPERS][selector]
-      delete definitions[selector]
       break
   }
 
@@ -504,7 +506,7 @@ _Type.addMethod(function _reinheritDefinitions(_) {
     DeleteKnownsIn([$root$inner, $root$outer, supers])
     DeleteKnownsIn(
       [$root$inner[$IMMEDIATES], $root$outer[$IMMEDIATES], supers[$IMMEDIATES]])
-    DeleteKnownsIn([$root$inner[$KNOWNS]])
+    DeleteKnownsIn([$root$inner[$DECLARATIONS]])
     DeleteKnownsIn([$root$inner[$ASSIGNERS]])
   }
 
@@ -669,7 +671,7 @@ _Type      ._init(        "Type"                          )
 _$Something._init({ name: "$Something", supertypes: null })
 _$Intrinsic._init({ name: "$Intrinsic", supertypes: null })
 _Thing     ._init({ name: "Thing"     , supertypes: null })
-_Method    ._init(        "Method"                        )
+_Definition._init(        "Definition"                    )
 
 
 // Helps with debugging!!!
@@ -686,11 +688,11 @@ Frost($BaseBlanker.$root$inner)
 
 _$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
 
-const PermeableNewErrorMethod = Method(function new_(...args) {
+const PermeableNewErrorMethod = Definition(function new_(...args) {
   this._signalError("Method 'new_' cannot be called on immutable type objects!!")
 })
 
-const PermeableNewAsFactErrorMethod = Method(function newAsFact_(...args) {
+const PermeableNewAsFactErrorMethod = Definition(function newAsFact_(...args) {
   this._signalError("Method 'newAsFact_' cannot be called on immutable type objects!!")
 })
 
@@ -705,14 +707,14 @@ _Type.addMethod(function _setImmutable(inPlace_, visited__) {
   // $inner._subordinateTypes = SetImmutable([])
   delete $inner._subordinateTypes
 
-  this.addOwnMethod(PermeableNewErrorMethod)
-  this.addOwnMethod(PermeableNewAsFactErrorMethod)
+  this.addOwnDefinition(PermeableNewErrorMethod)
+  this.addOwnDefinition(PermeableNewAsFactErrorMethod)
 
   // Frost($root$outer[$IMMEDIATES])
   // Frost($root$supers[$IMMEDIATES])
   // Frost($root$inner[$IMMEDIATES])
   // Frost($root$inner[$ASSIGNERS])
-  // Frost($root$inner[$KNOWNS])
+  // Frost($root$inner[$DECLARATIONS])
   // Frost($root$outer)
   // Frost($root$supers)
   // Frost($root$inner)

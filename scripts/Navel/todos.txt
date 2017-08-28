@@ -179,14 +179,14 @@ Consider getting rid of these:
     value
 
 ==
-Change $KNOWNS to $DECLARATIONS
+
 
 ==
 Create an option for unknownProperty to return undefined
 
-_properties to _definitions
 
-Change Method to Definition
+
+
 
 Check $OUTER_WRAPPER
 
@@ -195,6 +195,9 @@ Consider making sharedProperties be visible or invisible and using a
 lookaside array to hold properties to be copied!
 
 Think about how to manage $Intrinsic type NOT being copied!
+
+Once Contexts are complete, make it so that new_ & newAsFact_ are only added
+to permeable Types.
 
 ==========
 

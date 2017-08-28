@@ -56,7 +56,7 @@ Impermeable.get = function get($target, property, target) {
 
   const _$method_outer = $target[$IMMEDIATES][property]
   if (_$method_outer) { return _$method_outer.call(target) }
-  if ($target[$KNOWNS][property]) { return null }
+  if ($target[$DECLARATIONS][property]) { return null }
   if (property[0] === "_") {
     return PrivateAccessFromOutsideError(target, property)
   }
@@ -100,7 +100,7 @@ Impermeable.has = function has($target, property) {
 //
 //   const $method_inner = _$target[$IMMEDIATES][property]
 //   if ($method_inner) { return $method_inner[$OUTER_WRAPPER].call(target) }
-//   if (_$target[$KNOWNS][property] !== undefined) { return null }
+//   if (_$target[$DECLARATIONS][property] !== undefined) { return null }
 //
 //   return _$target._unknownProperty.call(_$target[$PULP], property)
 // }
@@ -126,7 +126,7 @@ InnerBarrier_prototype.get = function get(_$target, property, _target) {
 
   const $method_inner = _$target[$IMMEDIATES][property]
   if ($method_inner) { return $method_inner.call(_target) }
-  if (_$target[$KNOWNS][property] !== undefined) { return null }
+  if (_$target[$DECLARATIONS][property] !== undefined) { return null }
 
   return _$target._unknownProperty.call(_target, property)
 }
@@ -243,7 +243,7 @@ InnerBarrier_prototype.retargetedGet = function retargetedGet(_$source, property
 
   const $method_inner = _$target[$IMMEDIATES][property]
   if ($method_inner) { return $method_inner.call(_$target[$PULP]) }
-  if (_$target[$KNOWNS][property] !== undefined) { return null }
+  if (_$target[$DECLARATIONS][property] !== undefined) { return null }
 
   return _$target._unknownProperty.call(_$target[$PULP], property)
 }
@@ -339,7 +339,7 @@ function SuperPropertyFor(_$target, selector) {
     value           = nextDefinitions[selector]
 
     if (value !== undefined) {
-      if (value && value.type === Method) {
+      if (value && value.type === Definition) {
         if (value.isImmediate) {
           supers[$IMMEDIATES][selector] = value.super
           return IMMEDIATE
@@ -354,7 +354,7 @@ function SuperPropertyFor(_$target, selector) {
       else { return value }
     }
     else {
-      marker = _$nextType._blanker.$root$inner[$KNOWNS][selector]
+      marker = _$nextType._blanker.$root$inner[$DECLARATIONS][selector]
            if (marker !=  null) { isDeclared = true     }
       else if (marker === null) { return IMPLEMENTATION }
     }
