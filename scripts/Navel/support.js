@@ -97,6 +97,42 @@ function AsPropertySymbol(propertyName) {
 }
 
 
+// AsDefinition(definition)
+// AsDefinition(tag, definition)
+// AsDefinition(namedFunc, mode_)
+// AsDefinition(selector, func, mode_)
+
+function AsDefinition(...args) {
+  var def, tag
+  switch (args.length) {
+    case 1 :
+      ;[def] = args
+      if (def.isDefinition) { return def }
+      break
+
+    case 2 :
+      ;[tag, def] = args
+      if (def.isDefinition) {
+        return (tag === def.tag) ? def : Definition(tag, def.handler, def.mode)
+      }
+      // break omitted
+
+    case 3 :
+      return Definition(...args) // selector, value, mode
+  }
+  return SignalError("Improper arguments to make a Definition!!")
+}
+
+// function AsDefinition(arg, arg_, arg__) {
+//   if (arg.isDefinition) { return arg }
+//   if (arg_.isDefinition) {
+//     return (arg === arg_.tag) ? arg_ : Definition(arg, arg_.handler, arg_.mode)
+//   }
+//   return Definition(arg, arg_, arg__)
+// }
+//
+
+
 // /**
 //  * Answers the parameter if it's already a method. Otherwise, it answers a new
 //  * Definition created from the handler function, selector, and mode.

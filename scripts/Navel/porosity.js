@@ -355,8 +355,7 @@ function SuperPropertyFor(_$target, selector) {
     }
     else {
       marker = _$nextType._blanker.$root$inner[$DECLARATIONS][selector]
-           if (marker !=  null) { isDeclared = true     }
-      else if (marker === null) { return IMPLEMENTATION }
+      if (marker !== undefined) { isDeclared = true }
     }
   }
   return isDeclared ? null : NO_SUPER

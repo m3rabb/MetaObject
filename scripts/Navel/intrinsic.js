@@ -274,22 +274,25 @@ _$Intrinsic.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
 _$Intrinsic.addMethod(function addOwnAlias(aliasSelector, selector_definition) {
   const definition = selector_definition.isDefinition ?
     selector_definition : this.methodAt(selector_definition)
-  if (definition == null) {
-    return this._unknownMethodToAliasError(selector_definition)
-  }
-  this.addOwnDefinition(aliasSelector, definition.handler, definition.mode)
+  return (definition) ?
+    this.addOwnDefinition(aliasSelector, definition) :
+    this._unknownMethodToAliasError(selector_definition)
 })
 
 
 _$Intrinsic.addMethod(function addOwnMethod(namedFunc_name, func_, mode__) {
-  const definition = Definition(namedFunc_name, func_, mode__)
-  this._addOwnDefinition(definition)
+  const method = Definition(namedFunc_name, func_, mode__)
+  this._addOwnDefinition(method)
 })
 
-_$Intrinsic.addMethod(function addOwnDefinition(definition__namedFunc_selector, func_, mode__) {
-  const definition = (definition__namedFunc_selector.isDefinition) ?
-    definition__namedFunc_selector :
-    Definition(definition__namedFunc_selector, func_, mode__)
+
+// addOwnDefinition(definition)
+// addOwnDefinition(tag, definition)
+// addOwnDefinition(namedFunc, mode_)
+// addOwnDefinition(selector, func, mode_)
+
+_$Intrinsic.addMethod(function addOwnDefinition(...args) {
+  const definition = AsDefinition(...args)
   this._addOwnDefinition(definition)
 })
 

@@ -1,33 +1,89 @@
+// _Type.addMethod(function addFactMethod(...namedFunc_name__handler) {
+//   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
+// })
+//
+// _Type.addMethod(function addImmutableValueMethod(...namedFunc_name__handler) {
+//   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
+// })
+//
+// _Type.addMethod(function addMutableValueMethod(...namedFunc_name__handler) {
+//   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
+// })
+
+
+
+// addDefinition(definition)
+// addDefinition(tag, definition)
+// addDefinition(namedFunc, mode_)
+// addDefinition(selector, func, mode_)
+
+_Type.addMethod(function addDefinition(...args) {
+  const definition = AsDefinition(...args)
+  this._setDefinitionAt(definition.tag, definition)
+})
+
+
 _Type.addMethod(function addAlias(aliasName, selector_definition) {
   const definition = selector_definition.isDefinition ?
-    selector_definition : this.instanceMethodAt(selector_definition)
-  if (definition == null) {
-    return this._unknownMethodToAliasError(selector_definition)
+    selector_definition :
+    this.instanceMethodAt(selector_definition) ||
+    this._unknownMethodToAliasError(selector_definition)
+
+  this.addDefinition(aliasName, definition)
+})
+
+_Type.addMethod(function _unknownMethodToAliasError(selector) {
+  this._signalError(`Can't find method '${AsName(selector)}' to alias!!`)
+})
+
+
+_Type.addMethod(function addLazyProperty(assigner_selector, assigner_) {
+  // Will set the $inner AsName( even on) an immutable object!!!
+  const [selector, assigner] = (typeof assigner_selector === "function") ?
+    [assigner_selector.name, assigner_selector] :
+    [assigner_selector     , assigner_        ]
+
+  this.addMethod(selector, AsLazyProperty(selector, assigner))
+})
+
+
+_Type.addMethod(function addDurableProperty(selector) {
+  const properties = this[DURABLES] || []
+  if (!properties.includes(selector)) {
+    this[DURABLES] = SetImmutable([...properties, selector])
+    this.addDeclaration(selector)
   }
-  this.addDefinition(aliasName, definition.handler, definition.mode)
+  return this
+}, BASIC_SELF_METHOD)
+
+
+
+
+
+
+_Type.addMethod(function define(spec) {
+  PropertyLoader.new(this.$).load(spec, "STANDARD")
+})
+
+_Type.addMethod(function addSharedProperties(spec) {
+  PropertyLoader.new(this.$).load(spec, "SHARED")
+})
+
+_Type.addMethod(function addMethods(items) {
+  PropertyLoader.new(this.$).load(items, "METHOD")
+})
+
+_Type.addMethod(function addDeclarations(items) {
+  PropertyLoader.new(this.$).load(items, "DECLARATION")
+})
+
+_Type.addMethod(function addDurableProperties(items) {
+  PropertyLoader.new(this.$).load(items, "DURABLES")
 })
 
 
-_Type.addMethod(function addLazyProperty(assigner_property, assigner_) {
-  // Will set the $inner property even on an immutable object!!!
-  const [property, assigner] = (typeof assigner_property === "function") ?
-    [assigner_property.name, assigner_property] :
-    [assigner_property     , assigner_        ]
 
-  this.addMethod(property, AsLazyProperty(property, assigner))
-})
 
-_Type.addMethod(function addFactMethod(...namedFunc_name__handler) {
-  this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
-})
-
-_Type.addMethod(function addImmutableValueMethod(...namedFunc_name__handler) {
-  this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
-})
-
-_Type.addMethod(function addMutableValueMethod(...namedFunc_name__handler) {
-  this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
-})
 
 _Type.addMethod(function _nextIID() {
   // This works on an immutable type without creating a new copy.
@@ -50,48 +106,6 @@ _Type.addMethod(function toString(_) {
   return this.formalName
 })
 
-
-_Type.addMethod(_BasicNew_, BASIC_VALUE_METHOD)
-
-
-// function MakeNew_(existingCustomNew) {
-//   return function new_(...args) {
-//     const instance   = existingCustomNew.apply(this, args)
-//     const _$instance = InterMap.get(instance)
-//     const $instance  = _$instance[$OUTER]
-//     const instance_  = new Proxy($instance, Permeable)
-//
-//     $instance.this = _$instance
-//     $instance[$RIND] = _$instance[$RIND] = instance_
-//     InterMap.set(instance_, _$instance)
-//     return instance_
-//   }
-// }
-
-
-_Type.addMethod(function _initFrom_(_type) {
-  const properties = _type._properties
-  var   propertyName, property, nextProperty, ownMethods, method, nextMethod
-
-  this._init({
-    name : _type.name,
-    supertypes : _type.supertypes,
-  })
-
-  for (propertyName in properties) {
-    property     = properties[propertyName]
-    nextProperty = Copy(property)
-    this._setSharedProperty(propertyName, property)
-  }
-
-  if ((ownMethods = _type[$OWN_DEFINITIONS])) {
-    for (propertyName in ownMethods) {
-      method     = ownMethods[propertyName]
-      nextMethod = Copy(method)
-      this.addOwnMethod(nextMethod)
-    }
-  }
-})
 
 
 
@@ -128,7 +142,17 @@ _Type.addMethod(function methodAncestry(selector) {
 
 
 
-_Type.addMethod(function methods() {
+
+_Type.addMethod(function instanceMethodAt(selector) {
+  return MethodAt(this._blanker.$root$inner, selector)
+})
+
+_Type.addMethod(function definedMethodAt(selector) {
+  //
+})
+
+
+_Type.addMethod(function instanceMethods() {
   const $root$inner = this._blanker.$root$inner
   const methods     = []
 
@@ -157,10 +181,6 @@ _Type.addMethod(function definedMethods() {
 
 
 
-
-_Type.addMethod(function instanceMethodAt(selector) {
-  return MethodAt(this._blanker.$root$inner, selector)
-})
 
 
 
@@ -194,33 +214,21 @@ _Type.addMethod(function addDurableProperties(items) {
 })
 
 
-_Type.addMethod(function addDefinition(definition__namedFunc_selector, func_, mode__) {
-  const definition = (definition__namedFunc_selector.isDefinition) ?
-    definition__namedFunc_selector :
-    Definition(definition__namedFunc_selector, func_, mode__)
-  return this._setDefinitionAt(definition.tag, definition)
+
+
+
+
+
+
+_Type.addMethod(_BasicNew_, BASIC_VALUE_METHOD)
+
+// _basicNew_
+_Type.addOwnMethod(function new_(...args) {
+  const instance = this._super.new_(...args)
+  instance.addOwnAlias("new"      , "new_"      )
+  instance.addOwnAlias("newAsFact", "newAsFact_")
+  return instance
 })
-
-
-_Type.addMethod(function addDurableProperty(property) {
-  const properties = this[DURABLES] || []
-  if (!properties.includes(property)) {
-    this[DURABLES] = SetImmutable([...properties, property])
-    this.addDeclaration(property)
-  }
-  return this
-}, BASIC_SELF_METHOD)
-
-
-
-_Type.addAlias("_basicNew"        , "new"                 )
-_Type.addAlias("declare"          , "addDeclaration"      )
-_Type.addAlias("removeMethod"     , "removeSharedProperty")
-_Type.addAlias("defines"          , "define"              )
-_Type.addAlias("addDurables"      , "addDurableProperties")
-_Type.addAlias("forAddAssigner"   , "addAssigner"         )
-_Type.addAlias("forRemoveAssigner", "removeAssigner"      )
-
 
 
 _Type.addMethod(function newAsFact(...args) {
@@ -242,29 +250,65 @@ _Type.addMethod(function newAsFact_(...args) {
 }, BASIC_VALUE_METHOD)
 
 
+// function MakeNew_(existingCustomNew) {
+//   return function new_(...args) {
+//     const instance   = existingCustomNew.apply(this, args)
+//     const _$instance = InterMap.get(instance)
+//     const $instance  = _$instance[$OUTER]
+//     const instance_  = new Proxy($instance, Permeable)
+//
+//     $instance.this = _$instance
+//     $instance[$RIND] = _$instance[$RIND] = instance_
+//     InterMap.set(instance_, _$instance)
+//     return instance_
+//   }
+// }
 
 
+_Type.addMethod(function _initFrom_(_type) {
+  var   propertyName, property, nextProperty, ownMethods, method, nextMethod
 
+  this._init({
+    name : _type.name,
+    supertypes : _type.supertypes,
+  })
 
+  const definitions = _type._definitions
 
+  for (tag in definitions) {
+    value        = definitions[tag]
+    nextValue    = Copy(value)
+    this._setDefinitionAt(tag, nextValue, VISIBLE)
+  }
 
-_Type.addMethod(function _unknownMethodToAliasError(property) {
-  this._signalError(`Can't find method '${property}' to alias!!`)
+  if ((ownDefinitions = _type[$OWN_DEFINITIONS])) {
+    for (tag in ownDefinitions) {
+      value     = ownMethods[propertyName]
+      nextValue = Copy(value)
+      (nextValue.isDefinition) ?
+        this._addOwnDefinition(nextValue) :
+        this.addOwnDefinition(tag, nextValue)
+    }
+  }
 })
+
+
+_Type.addAlias("_basicNew"        , "new"                 )
+_Type.addAlias("declare"          , "addDeclaration"      )
+_Type.addAlias("removeMethod"     , "removeSharedProperty")
+_Type.addAlias("defines"          , "define"              )
+_Type.addAlias("addDurables"      , "addDurableProperties")
+_Type.addAlias("forAddAssigner"   , "addAssigner"         )
+_Type.addAlias("forRemoveAssigner", "removeAssigner"      )
+
+
+
+
+
+
 
 
 
 // Type.addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])
 
 // Type.moveMethodTo("", target)
-
-
-// _Type._setImmutable()
-
-// _basicNew_
-_Type.addOwnMethod(function new_(...args) {
-  const instance = this._super.new_(...args)
-  instance.addOwnAlias("new"      , "new_"      )
-  instance.addOwnAlias("newAsFact", "newAsFact_")
-  return instance
-})

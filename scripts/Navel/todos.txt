@@ -195,9 +195,23 @@ Consider making sharedProperties be visible or invisible and using a
 lookaside array to hold properties to be copied!
 
 Think about how to manage $Intrinsic type NOT being copied!
+Make $Intrinsic's $DECLARATIONS be the old mutable property to
+enable any object to response to membership methods
 
 Once Contexts are complete, make it so that new_ & newAsFact_ are only added
 to permeable Types.
+
+
+$DECLARATIONS    public   private
+  true -         true     true
+  null           null     null
+  false                   null
+  undefined
+
+
+  $PULP
+
+  undefined
 
 ==========
 

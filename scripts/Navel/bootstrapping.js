@@ -27,6 +27,7 @@ const $BaseBlanker = {
     [$SUPERS]       : {
       __proto__        : null,
       [$IMMEDIATES]    : EMPTY_OBJECT,
+      [$PULP]          : IMPLEMENTATION,
     },
   },
 }
@@ -85,8 +86,6 @@ $Something$root$inner[$BARRIER]             = null
 $Something$root$inner[$SECRET]              = $INNER
 $Something$root$outer[$SECRET]              = null
 
-$Something$root$inner[$DECLARATIONS][$PULP] = null
-
 
 
 $Something$root$outer.type                 = null
@@ -95,7 +94,7 @@ _Type._blanker.$root$inner._propagateDefinition = ALWAYS_SELF
 
 
 
-const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode) {
+const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode = VISIBLE) {
   const _$root      = this._blanker.$root$inner
   const definitions = this._definitions
 
@@ -128,15 +127,15 @@ const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode) {
 }
 
 
-_SetDefinitionAt.call(_$Something, "isSomething", true , VISIBLE)
-_SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false, VISIBLE)
-_SetDefinitionAt.call(_$Something, "id"         , null , VISIBLE)
+_SetDefinitionAt.call(_$Something, "isSomething", true )
+_SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false)
+_SetDefinitionAt.call(_$Something, "id"         , null )
 
-_SetDefinitionAt.call(_$Intrinsic, DURABLES                 , null , VISIBLE)
+_SetDefinitionAt.call(_$Intrinsic, DURABLES                 , null)
 // Perhaps remove these later???
-_SetDefinitionAt.call(_$Intrinsic, "_postInit"              , null , VISIBLE)
-_SetDefinitionAt.call(_$Intrinsic, "_initFrom_"             , null , VISIBLE)
-_SetDefinitionAt.call(_$Intrinsic, "_setPropertiesImmutable", null , VISIBLE)
+_SetDefinitionAt.call(_$Intrinsic, "_postInit"              , null)
+_SetDefinitionAt.call(_$Intrinsic, "_initFrom_"             , null)
+_SetDefinitionAt.call(_$Intrinsic, "_setPropertiesImmutable", null)
 
 SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true )
 SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)
@@ -161,11 +160,15 @@ Definition$root$inner._init = function _init(func_selector, func_, mode__, prope
 
   this.selector      = selector
   this.mode          = mode
+  this.isPublic      = isPublic
+  // Move the following to shared properties!!!
   this.isImmediate   = false
   this.isAssigner    = false
   this.isDeclaration = false
   this.isMethod      = false
-  this.isPublic      = isPublic
+  // this.isProperty    = false
+  // this.isValue       = false
+
   // this.super --> is a lazy property
 
   switch(mode) {
@@ -223,7 +226,7 @@ Type$root$inner._setDefinitionAt = _SetDefinitionAt
 
 const AddMethod = function addMethod(func_selector, func_, mode__, property___) {
   const definition = Definition(func_selector, func_, mode__, property___)
-  return this._setDefinitionAt(definition.tag, definition, VISIBLE)
+  return this._setDefinitionAt(definition.tag, definition)
 }
 
 AddMethod.call(_Type, AddMethod)
@@ -293,19 +296,19 @@ _Type.addMethod(function addAssigner(property_assigner, assigner_) {
   if (!selector) { return UnnamedFuncError(this, assigner) }
 
   const definition = Definition(selector, assigner, ASSIGNER)
-  this._setDefinitionAt(definition.tag, definition, VISIBLE)
+  this._setDefinitionAt(definition.tag, definition)
 })
 
 
 _Type.addMethod(function addDeclaration(selector) {
   const definition = Definition(selector, null, DECLARATION)
   const tag        = `$declaration@${AsName(selector)}`
-  this._setDefinitionAt(definition.tag, definition, VISIBLE)
+  this._setDefinitionAt(definition.tag, definition)
 })
 
 
 _Type.addMethod(function addSharedProperty(selector, value) {
-  this._setDefinitionAt(selector, value, VISIBLE)
+  this._setDefinitionAt(selector, value)
 })
 
 
