@@ -163,12 +163,6 @@ Definition$root$inner._init = function _init(func_selector, func_, mode__, prope
   this.isPublic      = isPublic
   // Move the following to shared properties!!!
   this.isImmediate   = false
-  this.isAssigner    = false
-  this.isDeclaration = false
-  this.isMethod      = false
-  // this.isProperty    = false
-  // this.isValue       = false
-
   // this.super --> is a lazy property
 
   switch(mode) {
@@ -609,7 +603,7 @@ _Type.addMandatorySetter("setName", function name(newName) {
     }
     const newMembershipSelector = AsMembershipSelector(properName)
 
-    _$Intrinsic.addSharedProperty(newMembershipSelector, false)
+    _$Intrinsic.addDeclaration(newMembershipSelector)
     this.addSharedProperty(newMembershipSelector, true)
     this.membershipSelector = newMembershipSelector
   }

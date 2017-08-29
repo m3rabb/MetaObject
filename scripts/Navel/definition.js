@@ -28,7 +28,11 @@ _Definition.addMethod(function toString(_) {
 }, BASIC_VALUE_METHOD)
 
 
-_Definition.addDeclaration("isImmediate property") // inner outer
+_Definition.addSharedProperty("isDeclaration", false)
+_Definition.addSharedProperty("isAssigner"   , false)
+_Definition.addSharedProperty("isProperty"   , false)
+_Definition.addSharedProperty("isMethod"     , false)
+_Definition.addSharedProperty("isValue"      , false)
 
 
 _Definition.addMethod(function _invalidSelectorError(selector) {
