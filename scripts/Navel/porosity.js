@@ -331,7 +331,7 @@ function SuperPropertyFor(_$target, selector) {
   var next, _$nextType, nextDefinitions, value, isDeclared, marker
 
   next = ancestors.length
-  if (!_$target._hasOwn(selector)) { next-- }
+  if (!_$target._has(selector)) { next-- }
 
   while (next--) {
     _$nextType      = InterMap.get(ancestors[next])
@@ -419,7 +419,7 @@ const _Super = new SuperBarrier()
 //     // return (value === NO_SUPER) ?
 //     //   ($inner._unknownProperty ?
 //     //     $inner[$PULP]._unknownProperty(property) : undefined) :
-//     //   (value && value[$SECRET] === $INNER ?
+//     //   (value && value[$PROOF] === INNER_SECRET ?
 //     //     value.handler.call($inner[$PULP]) : value)
 //   }
 // }

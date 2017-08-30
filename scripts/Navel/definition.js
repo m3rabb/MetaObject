@@ -28,11 +28,11 @@ _Definition.addMethod(function toString(_) {
 }, BASIC_VALUE_METHOD)
 
 
-_Definition.addSharedProperty("isDeclaration", false)
-_Definition.addSharedProperty("isAssigner"   , false)
-_Definition.addSharedProperty("isProperty"   , false)
-_Definition.addSharedProperty("isMethod"     , false)
-_Definition.addSharedProperty("isValue"      , false)
+AddMembershipSelector(_Definition, "isDeclaration", false)
+AddMembershipSelector(_Definition, "isAssigner"   , false)
+AddMembershipSelector(_Definition, "isProperty"   , false)
+AddMembershipSelector(_Definition, "isMethod"     , false)
+AddMembershipSelector(_Definition, "isValue"      , false)
 
 
 _Definition.addMethod(function _invalidSelectorError(selector) {

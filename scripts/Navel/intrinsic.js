@@ -210,26 +210,45 @@ _$Intrinsic.addMethod(function _newBlank() {
 }, BASIC_VALUE_METHOD)
 
 
-_$Intrinsic.addMethod(function has(propertyName) {
-  return (propertyName in this[$OUTER])
+// _$Intrinsic.addMethod(function has(propertyName) {
+//   return (propertyName in this[$OUTER])
+// }, BASIC_VALUE_METHOD)
+//
+// _$Intrinsic.addMethod(function _has(selector) {
+//   return (selector in this[$INNER])
+// }, BASIC_VALUE_METHOD)
+
+_$Intrinsic.addMethod(function has(selector) {
+  return (selector[0] !== "_") && this._has(selector)
 }, BASIC_VALUE_METHOD)
 
-_$Intrinsic.addMethod(function _has(propertyName) {
-  return (propertyName in this[$INNER])
-}, BASIC_VALUE_METHOD)
 
-_$Intrinsic.addMethod(function hasOwn(propertyName) {
-  if (propertyName[0] === "_") { return undefined }
-  return this._hasOwn(propertyName)
-}, BASIC_VALUE_METHOD)
+_$Intrinsic.addMethod("_has", HasOwnProperty, BASIC_VALUE_METHOD)
 
-
-_$Intrinsic.addMethod("_hasOwn", HasOwnProperty, BASIC_VALUE_METHOD)
-
-// _$Intrinsic.addMethod(function _hasOwn(propertyName) {
+// _$Intrinsic.addMethod(function _knowns(propertyName) {
 //   const properties = this[DURABLES] || SetDurableProperties(this)
 //   return (properties[propertyName] !== undefined)
 // }, BASIC_VALUE_METHOD)
+
+
+// const ancestry = this.ancestry
+// const knowns   = SpawnFrom(null)
+// var   next, _$nextType, nextDefinitions, tag, value
+//
+// next = ancestry.length
+// while (next--) {
+//   _$nextType      = InterMap.get(ancestry[next])
+//   nextDefinitions = _$nextType._definitions
+//
+//   for (tag in nextDefinitions) {
+//     if (!knowns[tag]) {
+//       knowns[tag] = true
+//       value       = nextDefinitions[tag]
+//       this._setDefinitionAt(tag, value, REINHERIT)
+//     }
+//   }
+// }
+
 
 
 _$Intrinsic.addMethod(function basicId() {
@@ -244,7 +263,7 @@ _$Intrinsic.addMethod(function oid() {
 
 
 _$Intrinsic.addMethod("uid", AsRetroactiveProperty("uid", function uid() {
-  return this._hasOwn("guid") ? this.guid : NewUniqueId()
+  return this._has("guid") ? this.guid : NewUniqueId()
 }), BASIC_VALUE_METHOD)
 
 
@@ -273,11 +292,17 @@ _$Intrinsic.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
 
 _$Intrinsic.addMethod(function addOwnAlias(aliasSelector, selector_definition) {
   const definition = selector_definition.isDefinition ?
-    selector_definition : this.methodAt(selector_definition)
+    selector_definition : this.knownMethodAt(selector_definition)
   return (definition) ?
     this.addOwnDefinition(aliasSelector, definition) :
     this._unknownMethodToAliasError(selector_definition)
 })
+
+
+_$Intrinsic.addMethod(function addOwnDeclaration(selector) {
+  const declaration = Definition(selector, null, DECLARATION)
+  return this.addOwnDefinition(declaration)
+}, BASIC_SELF_METHOD)
 
 
 _$Intrinsic.addMethod(function addOwnMethod(namedFunc_name, func_, mode__) {
@@ -319,7 +344,7 @@ _$Intrinsic.addMethod(function _addOwnDefinition(definition) {
 
 
 
-_$Intrinsic.addMethod(function methodAt(selector) {
+_$Intrinsic.addMethod(function knownMethodAt(selector) {
   return MethodAt(this[$INNER], selector)
 })
 
@@ -333,11 +358,6 @@ _$Intrinsic.addMethod(function methodAt(selector) {
 // _$Intrinsic.addMethod(function _addOwnValueImmediate(...namedFunc_name__handler) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
 // })
-
-_$Intrinsic.addMethod(function addOwnDeclaration(propertyName) {
-  this[propertyName] = null
-  return this
-}, BASIC_SELF_METHOD)
 
 // _$Intrinsic.addMethod(function addOwnAssigner(assigner_property, assigner_) {
 //   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)

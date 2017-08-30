@@ -81,15 +81,13 @@ const Definition$root$inner = _Definition._blanker.$root$inner
 
 
 // Stubs for known properties
-$Something$root$inner[$BARRIER]             = null
+$Something$root$inner[$BARRIER]                 = null
 // This secret is only known by inner objects
-$Something$root$inner[$SECRET]              = $INNER
-$Something$root$outer[$SECRET]              = null
+$Something$root$inner[$PROOF]                   = INNER_SECRET
+$Something$root$outer[$PROOF]                   = null
 
-
-
-$Something$root$outer.type                 = null
-$Intrinsic$root$inner._retarget            = null
+$Something$root$outer.type                      = null
+$Intrinsic$root$inner._retarget                 = null
 _Type._blanker.$root$inner._propagateDefinition = ALWAYS_SELF
 
 
@@ -129,13 +127,17 @@ const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode = VISIBLE) {
 
 _SetDefinitionAt.call(_$Something, "isSomething", true )
 _SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false)
-_SetDefinitionAt.call(_$Something, "id"         , null )
 
-_SetDefinitionAt.call(_$Intrinsic, DURABLES                 , null)
-// Perhaps remove these later???
+// Could have defined the follow properties later, after addDeclaration has
+// been defined, however it is fast execution within each objects' barrier#get
+// if implemented this way.  These properties are read very frequently.
+_SetDefinitionAt.call(_$Something, "id"                     , null)
+_SetDefinitionAt.call(_$Something, DURABLES                 , null)
 _SetDefinitionAt.call(_$Intrinsic, "_postInit"              , null)
 _SetDefinitionAt.call(_$Intrinsic, "_initFrom_"             , null)
 _SetDefinitionAt.call(_$Intrinsic, "_setPropertiesImmutable", null)
+
+
 
 SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true )
 SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)
@@ -196,7 +198,7 @@ Definition$root$inner._init = function _init(func_selector, func_, mode__, prope
   }
 
   this.isMethod = true
-  this.tag      = selector
+  this.tag      = AsName(selector)
 
   const outer = mode.outer(selector, handler, isPublic)
   const inner = mode.inner(selector, handler, isPublic)
@@ -296,7 +298,6 @@ _Type.addMethod(function addAssigner(property_assigner, assigner_) {
 
 _Type.addMethod(function addDeclaration(selector) {
   const definition = Definition(selector, null, DECLARATION)
-  const tag        = `$declaration@${AsName(selector)}`
   this._setDefinitionAt(definition.tag, definition)
 })
 
@@ -552,6 +553,7 @@ _Type.addMethod(function _setAsSubordinateOfSupertypes(supertypes) {
 
 
 
+
 _Type.addMandatorySetter("setSupertypes", function supertypes(nextSupertypes) {
   if (this.supertypes === nextSupertypes) { return nextSupertypes }
 
@@ -559,18 +561,18 @@ _Type.addMandatorySetter("setSupertypes", function supertypes(nextSupertypes) {
     return DuplicateSupertypeError(this)
   }
   const nextAncestry = BuildAncestryOf(this[$RIND], nextSupertypes)
-  const isThing      = nextAncestry.includes(Thing)
+  const beThing      = AncestryIncludesThing(nextAncestry)
 
   if (this._blanker) {
     if (this.isPermeable) {
       return AttemptedChangeOfAncestryOfPermeableTypeError(this)
     }
-    if (isThing !== this.ancestry.includes(Thing)) {
-      return ImproperChangeToAncestryError(this)
-    }
+    const isThing = _IsSubtypeOfThing(this)  //
+    if (beThing !== isThing) { return ImproperChangeToAncestryError(this) }
+    // Perhaps not. Might be able to redirect the _blanker of an existing type???
   }
   else {
-    const parentBlanker    = isThing ? $IntrinsicBlanker : $SomethingBlanker
+    const parentBlanker    = beThing ? $IntrinsicBlanker : $SomethingBlanker
     this._blanker          = new NewBlanker(parentBlanker)
     this._definitions      = SpawnFrom(null)
     this._subordinateTypes = new Set()
@@ -601,11 +603,7 @@ _Type.addMandatorySetter("setName", function name(newName) {
     if (priorName != null) {
       this.removeSharedProperty(AsMembershipSelector(priorName))
     }
-    const newMembershipSelector = AsMembershipSelector(properName)
-
-    _$Intrinsic.addDeclaration(newMembershipSelector)
-    this.addSharedProperty(newMembershipSelector, true)
-    this.membershipSelector = newMembershipSelector
+    AddMembershipSelector(this, AsMembershipSelector(properName))
   }
 
   this._setDisplayNames(properName)
@@ -623,15 +621,17 @@ _Type.addMandatorySetter("setName", function name(newName) {
 
 
 _Type.addMethod(function _init(spec_name, context_) {
-  var name, supertypes, supertype, shared, methods, definitions
+  var context, name, supertypes, supertype, shared, methods, definitions
 
+  context    = context_ || spec_name.context || null
   name       = spec_name.name || spec_name
   supertypes = spec_name.supertypes
 
   if (supertypes === undefined) {
     supertype  = spec_name.supertype
-    supertypes = (supertype === undefined) ? [Thing] :
-      (supertype === null) ? EMPTY_ARRAY : [supertype]
+    supertypes = (supertype === undefined) ?
+      [context && context.Thing || Thing] :
+      ((supertype === null) ? EMPTY_ARRAY : [supertype])
   }
   else if (supertypes === null || supertypes.isNothing) {
     supertypes = EMPTY_ARRAY
@@ -643,7 +643,7 @@ _Type.addMethod(function _init(spec_name, context_) {
   methods     = spec_name.methods || spec_name.instanceMethods
   definitions = spec_name.define  || spec_name.defines
 
-  this.context   = context_ || spec_name.context || null
+  this.context   = context
   this._iidCount = 0
 
   this.setSupertypes(supertypes)

@@ -46,7 +46,7 @@ _$Something.addMethod(function isImmutable() {
 // $Base
 //
 //   $Something
-//      $SECRET = $inner
+//      [$PROOF] === INNER_SECRET
 //      id = null
 //      IS_IMMUTABLE = null
 //

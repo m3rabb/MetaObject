@@ -176,7 +176,7 @@ describe("Deleting a property on the inner of immutable object", function() {
     })
 
     it("Makes no change", function () {
-      expect( this.$pulp._hasOwn("ball") ).toBe( false )
+      expect( this.$pulp._has("ball") ).toBe( false )
       expect( this.$pulp.ball ).toBe( this.redBall )
     })
   })
@@ -192,7 +192,7 @@ describe("Deleting a property on the inner of immutable object", function() {
     })
 
     it("Makes no change", function () {
-      expect( this.$pulp._hasOwn("xyz") ).toBe( false )
+      expect( this.$pulp._has("xyz") ).toBe( false )
     })
   })
 

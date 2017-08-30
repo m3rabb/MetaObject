@@ -3,7 +3,7 @@ function AsTameFunc(Func) {
   const func = {
     [name] : function (...args) {
       const receiver =
-        (this != null && this[$SECRET] === $INNER) ? this[$RIND] : this
+        (this != null && this[$PROOF] === INNER_SECRET) ? this[$RIND] : this
       return Func.apply(receiver, args)
     }
   }[name]

@@ -42,24 +42,24 @@ function DirectAssignmentFromOutsideError(target) {
   SignalError(target[$RIND], "Direct assignment is not allowed from the outside of an object, use a method instead!!")
 }
 
-function PrivateAccessFromOutsideError(target, property) {
-  SignalError(target[$RIND], `Access to private property '${property}' from outside of an object is forbidden!!`)
+function PrivateAccessFromOutsideError(target, selector) {
+  SignalError(target[$RIND], `Access to private property '${AsName(selector)}' from outside of an object is forbidden!!`)
 }
 
-function DisallowedDeleteError(target, property) {
-  SignalError(target[$RIND], `Delete of property '${property}' is not allowed!!`)
+function DisallowedDeleteError(target, selector) {
+  SignalError(target[$RIND], `Delete of property '${AsName(selector)}' is not allowed!!`)
 }
 
-function DisallowedAssignmentError(target, property, setter) {
-  SignalError(target[$RIND], `Assignment of property '${property}' is not allowed, use '${setter}' method instead!!`)
+function DisallowedAssignmentError(target, selector, setter) {
+  SignalError(target[$RIND], `Assignment of property '${AsName(selector)}' is not allowed, use '${setter}' method instead!!`)
 }
 
 function UnnamedFuncError(target, func) {
   SignalError(target[$RIND], `${func} function must be named!!`)
 }
 
-function AssignmentOfUndefinedError(target, property) {
-  SignalError(target[$RIND], `Assignment of undefined to property '${property}' is forbidden use null instead!!`)
+function AssignmentOfUndefinedError(target, selector) {
+  SignalError(target[$RIND], `Assignment of undefined to property '${AsName(selector)}' is forbidden, use null instead!!`)
 }
 
 function DetectedInnerError(target, value) {

@@ -41,7 +41,7 @@ const $BARRIER               = Symbol("$BARRIER")
 const $COPY                  = Symbol("$COPY")
 //const $IID                   = Symbol("$instanceId")
 const $PRIOR_IDS             = Symbol("$PRIOR_IDS")
-const $SECRET                = Symbol("$SECRET")
+const $PROOF                 = Symbol("$PROOF")
 
 const $ROOT                  = Symbol("$ROOT")
 const $BLANKER               = Symbol("$BLANKER")
@@ -58,6 +58,8 @@ const $DELETE_ALL_PROPERTIES = Symbol("$DELETE_ALL_PROPERTIES")
 
 
 // Sentinels
+const INNER_SECRET            = Symbol("INNER_SECRET")
+
 const ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
 // const CONSTRUCTOR         = Symbol("CONSTRUCTOR")
 const NO_SUPER               = Symbol("NO_SUPER")

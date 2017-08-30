@@ -52,6 +52,16 @@ only copyable properties should be visible
 ==
 Add object level properties and methods
 
+==
+Make $PRoperties be invisible too for debugging
+Check whether methods should be visible or Invisible
+DefineProperty($inner, selector, InvisibleConfig)
+if (isPublic) { DefineProperty($inner[$OUTER], selector, InvisibleConfig) }
+
+==
+Consider getting rid of these:
+  if (isPublic) { DefineProperty(_$root[$OUTER], property, InvisibleConfig) }
+
 
 ++
 Make immutable copy on demand work from calls to this as well!!!
@@ -214,6 +224,5 @@ _properties to _definitions
 
 Change Method to Definition
 Change $KNOWNS to $DECLARATIONS
-Change Type to use instanceMethodAt vs methodAt
 Change ExtendMethodsInfrastructure to MakeDefinitionsInfrastructure
 Fix _deleteDefinitionAt

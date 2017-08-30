@@ -159,18 +159,11 @@ Test to show barrier is unchanged when setting mutable object
 
 Add jasmineToString property
 
-Make $PRoperties be invisible too for debugging
-Check whether methods should be visible or Invisible
-DefineProperty($inner, selector, InvisibleConfig)
-if (isPublic) { DefineProperty($inner[$OUTER], selector, InvisibleConfig) }
 
 
 
 
 
-==
-Consider getting rid of these:
-  if (isPublic) { DefineProperty(_$root[$OUTER], property, InvisibleConfig) }
 
 ==
   change property to selector in most places
@@ -191,8 +184,8 @@ Create an option for unknownProperty to return undefined
 Check $OUTER_WRAPPER
 
 ==
-Consider making sharedProperties be visible or invisible and using a
-lookaside array to hold properties to be copied!
+Consider making sharedProperties be visible instead of invisible, and using a
+lookaside DURABLES array to hold properties to be copied!
 
 Think about how to manage $Intrinsic type NOT being copied!
 Make $Intrinsic's $DECLARATIONS be the old mutable property to
@@ -202,18 +195,11 @@ Once Contexts are complete, make it so that new_ & newAsFact_ are only added
 to permeable Types.
 
 
-$DECLARATIONS    public   private
-  true -         true     true
-  null           null     null
-  false                   null
-  undefined
-
-
-  $PULP
-
-  undefined
+Symbols are known but not visible
 
 ==========
+
+ikigai
 
 
 

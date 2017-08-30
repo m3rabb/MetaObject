@@ -218,7 +218,7 @@ describe("NewBlankConstructor", function () {
     it("has its prototype set to a new root descends from the Something core root", function () {
       var coreRoot = this.constructor.prototype
       var Something$core = RootOf(coreRoot)
-      expect( InHasSelector.call(Something$core, "_hasOwn") ).toBe( true )
+      expect( InHasSelector.call(Something$core, "_has") ).toBe( true )
     })
 
     it("has an outer root set to a new root descends from the Something outer root", function () {

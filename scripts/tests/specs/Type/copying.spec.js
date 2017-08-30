@@ -30,36 +30,43 @@ describe("Type copying", function () {
 
 
   beforeEach(function () {
-    this.Cat = Type(this.CatSpec)
+    this.Cat = Type.new_(this.CatSpec)
+    this.Cat.addOwnDeclaration("xyz")
     var id = this.Cat.id
   })
 
   describe("#copy", function () {
     describe("When called with 0 args", function () {
       beforeEach(function () {
-        this.copy = this.Cat.copy()
+        this.Cat2 = this.Cat.copy()
       })
 
-      describe("In the answer", function () {
+      describe("The answered copy", function () {
         it("has the same name", function () {
-          expect( this.copy.name ).toBe( this.Cat.name )
+          expect( this.Cat2.name ).toBe( this.Cat.name )
         })
 
         it("has the same supertypes", function () {
-          expect( this.copy.supertypes ).toBe( this.Cat.supertypes )
-          expect( IsFrosted(this.copy.supertypes) ).toBe( true )
+          expect( this.Cat2.supertypes ).toBe( this.Cat.supertypes )
+          expect( IsFrosted(this.Cat2.supertypes) ).toBe( true )
+        })
+
+        it("has its instances' type set to itself", function () {
+          var cat = this.Cat2("Bubba", "Tabby", 3)
+          var list = this.Cat2.methods
+          expect( cat.type ).toBe( this.Cat2 )
         })
 
         it("has no context", function () {
-          expect( this.copy.context ).toBe( null )
+          expect( this.Cat2.context ).toBe( null )
         })
 
         it("has a different id", function () {
-          expect( this.copy.id ).toBe( this.Cat.id )
+          expect( this.Cat2.id ).not.toBe( this.Cat.id )
         })
 
         it("has the same methods", function () {
-          expect( this.copy.methods ).toEqual( this.Cat.methods )
+          expect( this.Cat2._methods ).toEqual( this.Cat._methods )
         })
       })
     })

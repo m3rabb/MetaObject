@@ -84,19 +84,19 @@ describe("Deleting a property on the inner of mutable object", function() {
 
   describe("When the property exists only from the inherited shared property", function() {
     it("Makes no change", function () {
-      expect( this.$pulp._hasOwn("ball") ).toBe( false )
+      expect( this.$pulp._has("ball") ).toBe( false )
       expect( this.$pulp.ball ).toBe( this.redBall )
       delete this.$pulp.ball
-      expect( this.$pulp._hasOwn("ball") ).toBe( false )
+      expect( this.$pulp._has("ball") ).toBe( false )
       expect( this.$pulp.ball ).toBe( this.redBall )
     })
   })
 
   describe("When the property is nonexistent", function() {
     it("Makes no change", function () {
-      expect( this.$pulp._hasOwn("xyz") ).toBe( false )
+      expect( this.$pulp._has("xyz") ).toBe( false )
       delete this.$pulp.xyz
-      expect( this.$pulp._hasOwn("xyz") ).toBe( false )
+      expect( this.$pulp._has("xyz") ).toBe( false )
     })
   })
 

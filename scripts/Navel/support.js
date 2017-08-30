@@ -133,6 +133,12 @@ function AsDefinition(...args) {
 //
 
 
+function AddMembershipSelector(type, selector, value = true) {
+  _$Intrinsic.addDeclaration(selector)
+  type.addSharedProperty(selector, value)
+  if (value) { type.membershipSelector = selector }
+}
+
 // /**
 //  * Answers the parameter if it's already a method. Otherwise, it answers a new
 //  * Definition created from the handler function, selector, and mode.
@@ -253,7 +259,7 @@ function InSetProperty(_$target, property, value, _target) {
 
       case "object" :
              if (value === null)                 {        /* NOP */        }
-        else if (value[$SECRET] === $INNER) {
+        else if (value[$PROOF] === INNER_SECRET) {
           if (value === _target)                 { value = _$target[$RIND] }
          // Safety check: detect failure to use 'this.$' elsewhere.
           else                 { return DetectedInnerError(_target, value) }
@@ -299,7 +305,7 @@ function InSetProperty(_$target, property, value, _target) {
         break
     }
   }
-  else if (value && value[$SECRET] === $INNER && value[$PULP] !== _target) {
+  else if (value && value[$PROOF] === INNER_SECRET && value[$PULP] !== _target) {
     // Safety check: detect failure to use 'this.$' elsewhere.
     return DetectedInnerError(_target, value)
   }
@@ -490,7 +496,7 @@ function NewBlanker(rootBlanker, maker_) {
  * @property    {Proxy}        $RIND
  * @property    {$outer}         $RIND.target
  * @property    {Permeability}   $RIND.handler
- * @property    {symbol}       $SECRET
+ * @property    {symbol}       $PROOF
  * @property    {symbol}       $BARRIER
  * @property    {Proxy}        _super
  * @property    {Super}          _super.handler
@@ -542,7 +548,7 @@ function NewInner(CompanionOuterMaker) {
  * @property    {Type$outer}       $RIND.handler.$outer
  * @property    {Proxy}            $RIND.handler.$pulp
  * @property    {Permeability}     $RIND.handler.permeability
- * @property    {symbol}       $SECRET
+ * @property    {symbol}       $PROOF
  * @property    {symbol}       $BARRIER
  * @property    {Proxy}        _super
  * @property    {Super}          _super.handler
@@ -769,6 +775,21 @@ function SetAsymmetricProperty(_type, property, innerValue, outerValue) {
   // _type._properties[property] = ASYMMETRIC_PROPERTY
 }
 
+
+
+function _IsSubtypeOfThing(_type) {
+  return (RootOf(_type._blanker.$root$inner) === $Intrinsic$root$inner)
+}
+
+function AncestryIncludesThing(ancestry) {
+  for (var index = 0, count = ancestry.length - 1; index < count; index++) {
+    var _$type = InterMap.get(ancestry[index])
+    if (_IsSubtypeOfThing(_$type)) { return true }
+  }
+  return false
+}
+
+
 const _BasicNew = function _basicNew(...args) {
   const _$instance = new this._blanker(args)
   const  _instance = _$instance[$PULP]
@@ -821,9 +842,9 @@ function CompletelyDeleteProperty(_$target, selector) {
 }
 
 
-function KnownSelectors(root) {
-  const symbols = AllSymbols(root).filter(sym => AsName(sym)[0] !== "$")
-  const names   = VisibleProperties(root)
+function KnownSelectors(target) {
+  const symbols = AllSymbols(target).filter(sym => AsName(sym)[0] !== "$")
+  const names   = VisibleProperties(target)
   return names.concat(symbols)
 }
 
