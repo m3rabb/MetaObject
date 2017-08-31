@@ -50,16 +50,16 @@ describe("Setting a public property on the inner of mutable object", function() 
   })
 
   it("Before setting it's barrier, has no properties", function () {
-    expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+    expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
   })
 
 
   describe("When the value is undefined", function() {
     it("Throws an assignment of undefined error", function () {
-      expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+      expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       var execution =  () => { this.$pulp.xyz = undefined }
       expect( execution ).toThrowError( /Assignment of undefined/ )
-      expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+      expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
     })
   })
 
@@ -78,7 +78,7 @@ describe("Setting a public property on the inner of mutable object", function() 
     })
 
     it("Has no impact on the receiver's barrier", function () {
-      expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+      expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
     })
 
     it("Remains mutable", function () {
@@ -101,7 +101,7 @@ describe("Setting a public property on the inner of mutable object", function() 
     })
 
     it("Has no impact on the receiver's barrier", function () {
-      expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+      expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
     })
 
     it("Remains mutable", function () {
@@ -124,7 +124,7 @@ describe("Setting a public property on the inner of mutable object", function() 
     })
 
     it("Has no impact on the receiver's barrier", function () {
-      expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+      expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
     })
 
     it("Remains mutable", function () {
@@ -155,7 +155,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -184,7 +184,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -213,7 +213,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -238,7 +238,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -261,7 +261,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -288,7 +288,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -311,7 +311,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -337,7 +337,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -360,7 +360,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -383,7 +383,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -411,7 +411,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -433,7 +433,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -455,7 +455,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -484,7 +484,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -513,7 +513,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -551,7 +551,7 @@ describe("Setting a public property on the inner of mutable object", function() 
     })
 
     it("Has no impact on the receiver's barrier", function () {
-      expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+      expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
     })
 
     it("Remains mutable", function () {
@@ -575,7 +575,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -594,7 +594,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -617,7 +617,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       it("Has no impact on the receiver's barrier", function () {
         this.$pulp.xyz = this.redBall
         this.$pulp.xyz = this.blueBall
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -640,7 +640,7 @@ describe("Setting a public property on the inner of mutable object", function() 
       it("Has no impact on the receiver's barrier", function () {
         this.$pulp.xyz = this.redBall
         this.$pulp.xyz = this.redBall
-        expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+        expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
 
       it("Remains mutable", function () {
@@ -670,7 +670,7 @@ describe("Setting a public property on the inner of mutable object", function() 
           })
 
           it("Has no impact on the receiver's barrier", function () {
-            expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+            expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
           })
 
           it("Remains mutable", function () {
@@ -690,7 +690,7 @@ describe("Setting a public property on the inner of mutable object", function() 
           })
 
           it("Has no impact on the receiver's barrier", function () {
-            expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+            expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
           })
 
           it("Remains mutable", function () {
@@ -727,7 +727,7 @@ describe("Setting a public property on the inner of mutable object", function() 
           })
 
           it("Has no impact on the receiver's barrier", function () {
-            expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+            expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
           })
 
           it("Remains mutable", function () {
@@ -747,7 +747,7 @@ describe("Setting a public property on the inner of mutable object", function() 
           })
 
           it("Has no impact on the receiver's barrier", function () {
-            expect( AllProperties(this.$inner[$BARRIER]).length ).toBe( 0 )
+            expect( OwnSelectors(this.$inner[$BARRIER]).length ).toBe( 0 )
           })
 
           it("Remains mutable", function () {

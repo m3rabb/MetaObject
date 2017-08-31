@@ -287,7 +287,7 @@ _Type.addAlias("forRemoveAssigner", "removeAssigner"       )
 //
 // _Type.addMethod(function _getMethods(onlyPublic) {
 //   var methods, selector, selectors, next, value, method
-//   const selectorPicker   = onlyPublic ? KnownSelectors : VisibleProperties
+//   const selectorPicker   = onlyPublic ? KnownSelectors : OwnVisibleNames
 //   const root             = onlyPublic ?
 //     this._blanker.$root$outer : this._blanker.$root$inner
 //   const immediateMethods = this._getImmediateMethods(onlyPublic)

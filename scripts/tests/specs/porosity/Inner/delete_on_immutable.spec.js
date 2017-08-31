@@ -172,7 +172,7 @@ describe("Deleting a property on the inner of immutable object", function() {
     })
 
     it("Has no impact on the receiver's barrier", function () {
-      expect( AllProperties(this.$barrier).length ).toBe( 0 )
+      expect( OwnSelectors(this.$barrier).length ).toBe( 0 )
     })
 
     it("Makes no change", function () {
@@ -188,7 +188,7 @@ describe("Deleting a property on the inner of immutable object", function() {
     })
 
     it("Has no impact on the receiver's barrier", function () {
-      expect( AllProperties(this.$barrier).length ).toBe( 0 )
+      expect( OwnSelectors(this.$barrier).length ).toBe( 0 )
     })
 
     it("Makes no change", function () {

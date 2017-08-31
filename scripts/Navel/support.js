@@ -872,7 +872,7 @@ function CompletelyDeleteProperty(_$target, selector) {
 
 function KnownSelectors(target) {
   const symbols = OwnSymbols(target).filter(sym => AsName(sym)[0] !== "$")
-  const names   = VisibleProperties(target)
+  const names   = OwnVisibleNames(target)
   return names.concat(symbols)
 }
 

@@ -52,17 +52,17 @@ describe("Setting a public property on the inner of immutable object", function(
   })
 
   it("Before setting it's barrier, has no properties", function () {
-    expect( AllProperties(this.$barrier).length ).toBe( 0 )
+    expect( OwnSelectors(this.$barrier).length ).toBe( 0 )
   })
 
 
   describe("When the value is undefined", function() {
     it("Throws an assignment of undefined error", function () {
-      var priorCount = AllProperties(this.$barrier).length
+      var priorCount = OwnSelectors(this.$barrier).length
       expect( priorCount ).toBe( 0 )
       var execution =  () => { this.$pulp.xyz = undefined }
       expect( execution ).toThrowError( /Assignment of undefined/ )
-      expect( AllProperties(this.$barrier).length ).toBe( 0 )
+      expect( OwnSelectors(this.$barrier).length ).toBe( 0 )
     })
   })
 
@@ -933,7 +933,7 @@ describe("Setting a public property on the inner of immutable object", function(
       })
 
       it("Has no impact on the receiver's barrier", function () {
-        expect( AllProperties(this.$barrier).length ).toBe( 0 )
+        expect( OwnSelectors(this.$barrier).length ).toBe( 0 )
       })
     })
   })
@@ -1166,7 +1166,7 @@ describe("Setting a public property on the inner of immutable object", function(
           })
 
           it("Has no impact on the receiver's barrier", function () {
-            expect( AllProperties(this.$barrier).length ).toBe( 0 )
+            expect( OwnSelectors(this.$barrier).length ).toBe( 0 )
           })
         })
       })

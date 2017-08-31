@@ -73,7 +73,7 @@ PropertyLoader.addMethod(function _loadFromArray(items, mode) {
 })
 
 PropertyLoader.addMethod(function _loadFromSpec(item, mode) {
-  var keys = VisibleProperties(item)
+  var keys = OwnVisibleNames(item)
 
   keys.forEach(key => {
     var value = item[key]
