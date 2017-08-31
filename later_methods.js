@@ -257,7 +257,9 @@ passive is getting
 integument
 blubber/flubber
 
-enjoyment
+enjoyment|hotsauce
+
+delector|delight|delightment
 
 ==
 *

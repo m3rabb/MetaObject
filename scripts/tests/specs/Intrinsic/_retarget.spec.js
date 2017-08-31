@@ -33,7 +33,7 @@ describe("#_retarget", function () {
 
     it("Has no impact on the receiver's barrier", function () {
       this._cat._retarget
-      expect( OwnSelectors(this.$barrier).length ).toBe( 0 )
+      expect( OwnKeys(this.$barrier).length ).toBe( 0 )
     })
 
     it("Adds _retarget as retroactive property", function () {

@@ -5,7 +5,7 @@ function NewStash(spec_) {
   stash = SpawnFrom(null)
   if (spec_) {
     if (HandleInheritancePoisoning && spec_ instanceof Object) {
-      selectors = OwnSelectors(spec_)
+      selectors = OwnKeys(spec_)
       index = selectors.length
       while (next--) {
         selector = selectors[next]

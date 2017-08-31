@@ -53,7 +53,6 @@ describe("Type copying", function () {
 
         it("has its instances' type set to itself", function () {
           var cat = this.Cat2("Bubba", "Tabby", 3)
-          var list = this.Cat2.selectors
           expect( cat.type ).toBe( this.Cat2 )
         })
 

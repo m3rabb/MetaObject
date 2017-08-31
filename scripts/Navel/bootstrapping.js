@@ -503,11 +503,11 @@ _Type.addMethod(function _reinheritDefinitions(_) {
     const $root$outer = blanker.$root$outer
     const supers      = $root$inner[$SUPERS]
 
-    DeleteNon$SelectorsIn([$root$inner, $root$outer, supers])
-    DeleteNon$SelectorsIn(
+    DeleteSelectorsIn([$root$inner, $root$outer, supers])
+    DeleteSelectorsIn(
       [$root$inner[$IMMEDIATES], $root$outer[$IMMEDIATES], supers[$IMMEDIATES]])
-    DeleteNon$SelectorsIn([$root$inner[$DECLARATIONS]])
-    DeleteNon$SelectorsIn([$root$inner[$ASSIGNERS]])
+    DeleteSelectorsIn([$root$inner[$DECLARATIONS]])
+    DeleteSelectorsIn([$root$inner[$ASSIGNERS]])
   }
 
   const ancestry = this.ancestry

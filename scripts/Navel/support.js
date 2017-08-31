@@ -672,7 +672,7 @@ function BuildAncestryOf(type, supertypes) {
 
 
 
-function OwnNon$Selectors(target) {
+function OwnSelectors(target) {
   const selectors = OwnNames(target)
   const symbols   = OwnSymbols(target)
 
@@ -687,7 +687,7 @@ function OwnNon$Selectors(target) {
 
 
 function OwnOrderedSelectors(target) {
-  const selectors = OwnNon$Selectors(target)
+  const selectors = OwnSelectors(target)
   selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
   return SetImmutable(selectors)
 }
@@ -697,7 +697,7 @@ function OwnOrderedSelectors(target) {
 
 function AllSelectors(target, excludeSymbols_) {
   var targetSelectors, selector, index, next
-  const selectorPicker = excludeSymbols_ ? OwnNames : OwnNon$Selectors
+  const selectorPicker = excludeSymbols_ ? OwnNames : OwnSelectors
   const knowns         = SpawnFrom(null)
   const selectors      = []
 
@@ -720,10 +720,10 @@ function AllSelectors(target, excludeSymbols_) {
 
 
 
-function DeleteNon$SelectorsIn(targets) {
+function DeleteSelectorsIn(targets) {
   var selectors, selectorIndex, selector, targetIndex
 
-  selectors     = OwnNon$Selectors(targets[0])
+  selectors     = OwnSelectors(targets[0])
   selectorIndex = selectors.length
 
   while (selectorIndex--) {
