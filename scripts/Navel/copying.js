@@ -84,7 +84,7 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
           // itself as a 'copy'.
         }
       }
-      else if (source.id === null || source[DURABLES]) {
+      else if (source.id === null || source[_DURABLES]) {
         // Only copy ordinary custom object with expressed intention
       }
       else { return source } // Never copy ordinary custom objects
@@ -95,8 +95,8 @@ function CopyObject(source, asImmutable, visited = new WeakMap()) {
     case Object :
       visited.set(source, (target = target || {})) // Handles cyclic objects
 
-      properties = source[DURABLES] || SetDurableProperties(source)
-      if (!target[DURABLES]) { target[DURABLES] = properties }
+      properties = source[_DURABLES] || SetDurableProperties(source)
+      if (!target[_DURABLES]) { target[_DURABLES] = properties }
       next = properties.length
 
       while (next--) {
@@ -156,7 +156,7 @@ function NextValue(value, asImmutable, visited, source, target) {
   const _$value = InterMap.get(value)
 
   return (_$value) ?
-    $Copy(_$value, asImmutable, visited)[$RIND] :
+    _$Copy(_$value, asImmutable, visited)[$RIND] :
     CopyObject(value, asImmutable, visited)
 }
 
@@ -170,7 +170,7 @@ function Copy(value, asImmutable_) {
   const _$value = InterMap.get(value)
 
   return (_$value) ?
-    $Copy(_$value, asImmutable_)[$RIND] :
+    _$Copy(_$value, asImmutable_)[$RIND] :
     CopyObject(value, asImmutable_)
 }
 
@@ -187,7 +187,7 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
     case WeakSet : return target
 
     default :
-      properties = target[DURABLES] || SetDurableProperties(target)
+      properties = target[_DURABLES] || SetDurableProperties(target)
       next       = properties.length
 
       while (next--) {
@@ -262,6 +262,6 @@ function SetImmutableValue(value, inPlace, visited, target) {
     return SetImmutableObject(value, true, visited)
   }
   return (_$value) ?
-    $Copy(_$value, true, visited)[$RIND] :
+    _$Copy(_$value, true, visited)[$RIND] :
     CopyObject(value, true, visited)
 }

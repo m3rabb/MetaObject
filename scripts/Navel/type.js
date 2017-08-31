@@ -46,16 +46,16 @@ _Type.addMethod(function addLazyProperty(assigner_selector, assigner_) {
   this.addMethod(selector, AsLazyProperty(selector, assigner))
 })
 
-
-_Type.addMethod(function addDurableProperty(selector) {
-  const properties = this[DURABLES] || []
-  if (!properties.includes(selector)) {
-    this[DURABLES] = SetImmutable([...properties, selector])
+// MAKE THIS use a Definition!!!
+_Type.addMethod(function addDurable(selector) {
+  const $root$inner = this._blanker.$root$inner
+  const durables    = $root$inner[_DURABLES] || []
+  if (!durables.includes(selector)) {
+    $root$inner[_DURABLES] = SetImmutable([...durables, selector])
     this.addDeclaration(selector)
   }
   return this
 }, BASIC_SELF_METHOD)
-
 
 
 
@@ -77,7 +77,7 @@ _Type.addMethod(function addDeclarations(items) {
   PropertyLoader.new(this.$).load(items, "DECLARATION")
 })
 
-_Type.addMethod(function addDurableProperties(items) {
+_Type.addMethod(function addDurables(items) {
   PropertyLoader.new(this.$).load(items, "DURABLES")
 })
 
@@ -122,90 +122,6 @@ _Type.addMethod(function inheritsFrom(type) {
 })
 
 
-_Type.addMethod(function _getDefinedMethods(onlyPublic) {
-  const definitions = this._definitions
-  const methods     = []
-  var   tag, value
-
-  for (tag in definitions) {
-    value = definitions[tag]
-    if (value && value.isMethod) {
-      if (!onlyPublic || value.isPublic) { methods.push(value) }
-    }
-  }
-  methods.sort((methodA, methodB) => methodA.tag.localeCompare(methodB.tag))
-  return methods
-})
-
-
-_Type.addMethod(function _getImmediateMethods(onlyPublic) {
-  var methods, selector
-  const immediates = onlyPublic ?
-    this._blanker.$root$outer[$IMMEDIATES] :
-    this._blanker.$root$inner[$IMMEDIATES]
-
-  methods = []
-  for (selector in immediates) { methods.push(immediates[selector].method) }
-  methods.sort((methodA, methodB) => methodA.tag.localeCompare(methodB.tag))
-  return methods
-})
-
-_Type.addMethod(function _getMethods(onlyPublic) {
-  var methods, selector, selectors, next, value, method
-  const selectorPicker   = onlyPublic ? KnownSelectors : VisibleProperties
-  const root             = onlyPublic ?
-    this._blanker.$root$outer : this._blanker.$root$inner
-  const immediateMethods = this._getImmediateMethods(onlyPublic)
-  const somethingMethods = _$Something._getDefinedMethods(onlyPublic)
-  const intrinsicMethods = _IsSubtypeOfThing(this) ?
-    _$Intrinsic._getDefinedMethods(onlyPublic) : EMPTY_ARRAY
-
-  methods   = [].concat(immediateMethods, somethingMethods, intrinsicMethods)
-  selectors = selectorPicker(root)
-  next      = selectors.length
-  while (next--) {
-    selector = selectors[next]
-    value    = root[selector]
-    if (typeof value === "function" && InterMap.get(value) === marker) {
-      if ((method = value.method)) { methods.push(method) }
-    }
-  }
-  methods.sort((methodA, methodB) => methodA.tag.localeCompare(methodB.tag))
-  return methods
-})
-
-
-
-
-_Type.addMethod(function _immediateMethods() {
-  return SetImmutable(this._getImmediateMethods(false))
-})
-
-_Type.addMethod(function _methods() {
-  return SetImmutable(this._getMethods(false))
-})
-
-_Type.addMethod(function _definedMethods() {
-  return SetImmutable(this._getDefinedMethods(false))
-})
-
-
-_Type.addMethod(function immediateMethods() {
-  return SetImmutable(this._getImmediateMethods(true))
-})
-
-_Type.addMethod(function methods() {
-  return SetImmutable(this._getMethods(true))
-})
-
-_Type.addMethod(function definedMethods() {
-  return SetImmutable(this._getDefinedMethods(true))
-})
-
-
-
-
-
 
 _Type.addMethod(function hasDefinedMethod(selector) {
   const value = this._definitions[selector]
@@ -214,11 +130,12 @@ _Type.addMethod(function hasDefinedMethod(selector) {
 
 
 _Type.addMethod(function methodAt(selector) {
-  return MethodAt(this._blanker.$root$inner, selector)
+  const property = PropertyAt(this._blanker.$root$inner, selector)
+  return property.isMethod ? property : null
 })
 
 _Type.addMethod(function definitionAt(selector) {
-  return this._definitions[selector]
+  return this._definitions[selector] || null
 })
 
 
@@ -227,19 +144,21 @@ _Type.addMethod(function methodAncestry(selector) {
     this.ancestry.filter(type => type.hasDefinedMethod(selector)))
 })
 
-
-
-_Type.addMethod(function methodsListing() {
-  return this.methods.map(method => method.tag).join(" ")
-})
-
-_Type.addMethod(function definedMethodsListing() {
-  return this.definedMethods.map(method => method.tag).join(" ")
-})
-
 _Type.addMethod(function methodAncestryListing(selector) {
   const ancestry = this.methodAncestry(selector)
   return ancestry.map(type => type.name).join(" ")
+})
+
+
+
+
+_Type.addMethod(function selectors() {
+  return AllSelectors(this._blanker.$root$inner)
+})
+
+_Type.addMethod(function publicSelectors() {
+  // All visible public selectors
+  return AllSelectors(this._blanker.$root$outer)
 })
 
 
@@ -278,6 +197,50 @@ _Type.addMethod(function newAsFact_(...args) {
 }, BASIC_VALUE_METHOD)
 
 
+
+
+_Type.addMethod(function _initFrom_(_type) {
+  var tag, definitions
+
+  this._init({
+    name       : _type.name,
+    supertypes : _type.supertypes,
+  })
+
+  definitions = _type._definitions
+  for (tag in definitions) {
+    if (tag !== "type") { this._setDefinitionAt(tag, Copy(definitions[tag])) }
+  }
+
+  if ((definitions = _type[$OWN_DEFINITIONS])) {
+    for (tag in definitions) {
+      this.addOwnDefinition(tag, Copy(definitions[tag]))
+    }
+  }
+})
+
+
+_Type.addAlias("_basicNew"        , "new"                  )
+_Type.addAlias("declare"          , "addDeclaration"       )
+_Type.addAlias("removeMethod"     , "removeSharedProperty" )
+_Type.addAlias("defines"          , "define"               )
+_Type.addAlias("forAddAssigner"   , "addAssigner"          )
+_Type.addAlias("forRemoveAssigner", "removeAssigner"       )
+
+
+
+
+
+
+
+
+// Type.addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])
+
+// Type.moveMethodTo("", target)
+
+////=====
+
+
 // function MakeNew_(existingCustomNew) {
 //   return function new_(...args) {
 //     const instance   = existingCustomNew.apply(this, args)
@@ -293,47 +256,92 @@ _Type.addMethod(function newAsFact_(...args) {
 // }
 
 
-_Type.addMethod(function _initFrom_(_type) {
-  var tag, value, nextValue, definitions, ownDefinitions
 
-  this._init({
-    name       : _type.name,
-    supertypes : _type.supertypes,
-  })
-
-  definitions = _type._definitions
-  for (tag in definitions) {
-    value     = definitions[tag]
-    nextValue = Copy(value)
-    this._setDefinitionAt(tag, nextValue, VISIBLE)
-  }
-
-  if ((ownDefinitions = _type[$OWN_DEFINITIONS])) {
-    for (tag in ownDefinitions) {
-      value     = ownDefinitions[tag]
-      nextValue = Copy(value)
-      this.addOwnDefinition(tag, nextValue)
-    }
-  }
-})
-
-
-_Type.addAlias("_basicNew"        , "new"                 )
-_Type.addAlias("declare"          , "addDeclaration"      )
-_Type.addAlias("removeMethod"     , "removeSharedProperty")
-_Type.addAlias("defines"          , "define"              )
-_Type.addAlias("addDurables"      , "addDurableProperties")
-_Type.addAlias("forAddAssigner"   , "addAssigner"         )
-_Type.addAlias("forRemoveAssigner", "removeAssigner"      )
-
-
-
-
-
-
-
-
-
-// Type.addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])
-
-// Type.moveMethodTo("", target)
+// _Type.addMethod(function _getDefinedMethods(onlyPublic) {
+//   const definitions = this._definitions
+//   const methods     = []
+//   var   tag, value
+//
+//   for (tag in definitions) {
+//     value = definitions[tag]
+//     if (value && value.isMethod) {
+//       if (!onlyPublic || value.isPublic) { methods.push(value) }
+//     }
+//   }
+//   methods.sort((methodA, methodB) => methodA.tag.localeCompare(methodB.tag))
+//   return methods
+// })
+//
+//
+// _Type.addMethod(function _getImmediateMethods(onlyPublic) {
+//   var methods, selector
+//   const immediates = onlyPublic ?
+//     this._blanker.$root$outer[$IMMEDIATES] :
+//     this._blanker.$root$inner[$IMMEDIATES]
+//
+//   methods = []
+//   for (selector in immediates) { methods.push(immediates[selector].method) }
+//   methods.sort((methodA, methodB) => methodA.tag.localeCompare(methodB.tag))
+//   return methods
+// })
+//
+// _Type.addMethod(function _getMethods(onlyPublic) {
+//   var methods, selector, selectors, next, value, method
+//   const selectorPicker   = onlyPublic ? KnownSelectors : VisibleProperties
+//   const root             = onlyPublic ?
+//     this._blanker.$root$outer : this._blanker.$root$inner
+//   const immediateMethods = this._getImmediateMethods(onlyPublic)
+//   const somethingMethods = _$Something._getDefinedMethods(onlyPublic)
+//   const intrinsicMethods = IsSubtypeOfThing(this) ?
+//     _$Intrinsic._getDefinedMethods(onlyPublic) : EMPTY_ARRAY
+//
+//   methods   = [].concat(immediateMethods, somethingMethods, intrinsicMethods)
+//   selectors = selectorPicker(root)
+//   next      = selectors.length
+//   while (next--) {
+//     selector = selectors[next]
+//     value    = root[selector]
+//     if (typeof value === "function" && InterMap.get(value) === marker) {
+//       if ((method = value.method)) { methods.push(method) }
+//     }
+//   }
+//   methods.sort((methodA, methodB) => methodA.tag.localeCompare(methodB.tag))
+//   return methods
+// })
+//
+//
+//
+//
+// _Type.addMethod(function _immediateMethods() {
+//   return SetImmutable(this._getImmediateMethods(false))
+// })
+//
+// _Type.addMethod(function _methods() {
+//   return SetImmutable(this._getMethods(false))
+// })
+//
+// _Type.addMethod(function _definedMethods() {
+//   return SetImmutable(this._getDefinedMethods(false))
+// })
+//
+//
+// _Type.addMethod(function immediateMethods() {
+//   return SetImmutable(this._getImmediateMethods(true))
+// })
+//
+// _Type.addMethod(function methods() {
+//   return SetImmutable(this._getMethods(true))
+// })
+//
+// _Type.addMethod(function definedMethods() {
+//   return SetImmutable(this._getDefinedMethods(true))
+// })
+//
+//
+// _Type.addMethod(function methodsListing() {
+//   return this.methods.map(method => method.tag).join(" ")
+// })
+//
+// _Type.addMethod(function definedMethodsListing() {
+//   return this.definedMethods.map(method => method.tag).join(" ")
+// })

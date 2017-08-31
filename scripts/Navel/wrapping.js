@@ -148,13 +148,15 @@ function AsOuterFact(property, Handler) {
       switch (typeof result) {
         default         :                                   return result
         case "function" :
-          outer = result[$OUTER_WRAPPER]
-          return (outer && InterMap.get(outer) === OUTER_FUNC) ? outer : result
+          return result[$OUTER_WRAPPER] || result
+          // Note: the following approach was overkill as $OUTER_WRAPPER are
+          // never assigned to untrusted external functions.
+          // return (outer && InterMap.get(outer) === OUTER_FUNC) ? outer : result
         case "object"   : if (result === null)            { return result }
           // if (result === _$receiver[$RIND])               { return result }
           if (result[IS_IMMUTABLE] || result.id != null)  { return result }
           return ((_$result = InterMap.get(result))) ?
-            $Copy(_$result, true)[$RIND] : CopyObject(result, true)
+            _$Copy(_$result, true)[$RIND] : CopyObject(result, true)
       }
     }
   }[name]
@@ -286,7 +288,7 @@ function AsInnerFact(property, Handler) {
       if (typeof result !== "object" || result === null) { return result    }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
       return ((_$result = InterMap.get(result))) ?
-        $Copy(_$result, true) : CopyObject(result, true)
+        _$Copy(_$result, true) : CopyObject(result, true)
     }
   }[name]
 }
@@ -328,7 +330,7 @@ function AsSuperFact(property, Handler) {
       if (typeof result !== "object" || result === null) { return result    }
       if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
       return ((_$result = InterMap.get(result))) ?
-        $Copy(_$result, true) : CopyObject(result, true)
+        _$Copy(_$result, true) : CopyObject(result, true)
     }
   }[name]
 }

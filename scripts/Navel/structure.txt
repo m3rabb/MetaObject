@@ -1,0 +1,134 @@
+
+
+
+
+$KNOWNS
+_$root[$OUTER]    = $root
+
+
+
+
+Standard Instance
+_$instance {
+  $RIND : instance <$instance, permeability>
+  $INNER : _$instance
+  $OUTER : $instance {
+    $RIND : instance
+  }
+  $PULP : _instance <_$instance, barrier>
+  $BARRIER : {
+    _$target
+    get
+    set
+    deleteProperty
+  }
+  IS_IMMUTABLE
+  id
+  uid
+  iid
+  $
+  _retarget
+  _super
+}
+InterMap.set(instance, _$instance)
+
+
+Disguised Instance
+_$instance {
+  _func : vacuousFunc
+  $RIND : instance <vacuousFunc, disguisingPermeability(_instance, $instance, permeability)>
+  $INNER : _$instance
+  $OUTER : $instance {
+    $RIND : instance
+  }
+  $PULP : _instance <vacuousFunc, disguisingInnerBarrier(_$instance) >
+  $BARRIER : {
+    _$target
+    get
+    set
+    deleteProperty
+  }
+  IS_IMMUTABLE
+  id
+  uid
+  iid
+  $
+  _retarget
+  _super
+}
+InterMap.set(_instance, DISGUISE_PULP)
+InterMap.set(instance, _$instance)
+
+
+Type Instance
+_$type {
+  _func : vacuousFunc
+  $RIND : type <vacuousFunc, disguisingPermeability(_type, $type, permeability)>
+  $INNER : _$type
+  $OUTER : $type {
+    $RIND : type
+  }
+  $PULP : _type <vacuousFunc, disguisingInnerBarrier(_$type) >
+  $BARRIER : {
+    _$target
+    get
+    set
+    deleteProperty
+  }
+  id
+  uid
+  iid
+  _iidCount : 0
+  _subordinateTypes : Set
+
+  _blanker : blanker {
+    innerMaker : blankerMaker
+    $root$outer : $root {
+      $IMMEDIATES : s {}
+      $KNOWNS : knowns {}
+      type : type
+    }
+    $root$inner : _$root {
+      $ROOT : _$root
+      $OUTER : $root
+      $ASSIGNERS : s {}
+      $IMMEDIATES : s {}
+      $SUPERS : {
+        $IMMEDIATES : s {}
+      }
+      $KNOWNS : knowns {}
+      $BLANKER : blanker
+      type : type
+    }
+    prototype : _$root
+  }
+
+  context : context
+  supertypes : []
+  name : name
+}
+InterMap.set(_type, DISGUISE_PULP)
+InterMap.set(type, _$type)
+
+
+
+
+copy
+  _initFrom_
+  _postInit
+
+new
+  _init
+  _postInit
+
+
+
+
+
+context
+
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/

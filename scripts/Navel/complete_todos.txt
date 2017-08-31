@@ -53,7 +53,7 @@ only copyable properties should be visible
 Add object level properties and methods
 
 ==
-Make $PRoperties be invisible too for debugging
+Make $Properties be invisible too for debugging
 Check whether methods should be visible or Invisible
 DefineProperty($inner, selector, InvisibleConfig)
 if (isPublic) { DefineProperty($inner[$OUTER], selector, InvisibleConfig) }

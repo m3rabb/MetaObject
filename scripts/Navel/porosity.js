@@ -50,19 +50,21 @@ const Impermeable = new OuterBarrier()
 
 Impermeable.id = "Impermeable"
 
-Impermeable.get = function get($target, property, target) {
-  const value = $target[property]
+Impermeable.get = function get($target, selector, target) {
+  const value = $target[selector]
   if (value !== undefined) { return value }
 
-  const _$method_outer = $target[$IMMEDIATES][property]
+  const _$method_outer = $target[$IMMEDIATES][selector]
   if (_$method_outer) { return _$method_outer.call(target) }
-  if ($target[$DECLARATIONS][property]) { return null }
-  if (property[0] === "_") {
-    return PrivateAccessFromOutsideError(target, property)
+  if ($target[$DECLARATIONS][selector]) { return null }
+
+  const firstChar = (selector.charAt) ? selector[0] : selector.toString()[7]
+  if (firstChar === "_") {
+    return PrivateAccessFromOutsideError(target, selector)
   }
 
   const _$target = InterMap.get(target)
-  return _$target._unknownProperty.call(_$target[$PULP], property)
+  return _$target._unknownProperty.call(_$target[$PULP], selector)
 }
 
 Impermeable.has = function has($target, property) {
@@ -70,13 +72,12 @@ Impermeable.has = function has($target, property) {
   //   property.toString()[7] : property[0]
 
   switch (property[0]) {
+    case undefined : return null  // Effective, answers a s
     case "_"       :
       return PrivateAccessFromOutsideError($target[$RIND], property) || false
     // case undefined : if (!(property in VISIBLE_SYMBOLS)) { return false }
-    case undefined :
-      return false
+    default        : return (property in $target)
   }
-  return (property in $target)
 }
 
 
@@ -156,21 +157,27 @@ InnerBarrier_prototype.set = function set(_$source, property, value, _source) {
     // Existing value has either never been set, or the current value has been
     // set to the same value as its root's value. The second case is less likely.
 
+
     if (value === existing) {
       if (value === undefined) {
         return AssignmentOfUndefinedError(_source, property)
       }
       if (HasOwnProperty.call(_$target, property))  { return true }
       if (isImmutable && _$source.type.isImmutable) { return true }
+      // Else, target is mutable, and new value matches inherited shared value
     }
-  }  // Existing value is definitely one that's been set before.
-     // If new value equals existing, then easy out.
+    else if (existing === undefined) {
+      delete _$target[_DURABLES] // Invalidate durables because set new property
+    }
+  }
+  // Existing value is definitely one that's been set before.
+  // If new value equals existing, then easy out.
   else if (value === existing) { return true }
 
   // Need to double check this as the execution of the assigner might trigger
   // the barrier and cause the object to already be copied as writable!!!
   if (isImmutable) {
-    _$target            = $Copy(_$source, false, undefined, property)
+    _$target            = _$Copy(_$source, false, undefined, property)
     this._$target       = _$target
     this.get            = this.retargetedGet
     this.set            = this.retargetedSet
@@ -199,7 +206,7 @@ InnerBarrier_prototype.deleteProperty = function deleteProperty(_$source, proper
 
   switch (property) {
     case $DELETE_IMMUTABILITY   :  // Only called on immutable objects!!!
-      _$target = $Copy(_$source, false)
+      _$target = _$Copy(_$source, false)
       break
 
     case $DELETE_ALL_PROPERTIES :  // Only called on immutable objects!!!
@@ -211,14 +218,14 @@ InnerBarrier_prototype.deleteProperty = function deleteProperty(_$source, proper
       value      = _$source[property]
 
       if (value === value$root) {
-        if (value === undefined || !HasOwnProperty.call(_$source, property)) {
+        if (value === undefined || !HasOwn_.call(_$source, property)) {
           return true // Doesn't actually have the property. Inherited from root.
         }
       }
   }
 
   if (_$source[IS_IMMUTABLE]) {
-    this._$target       = _$target || $Copy(_$source, false, undefined, property)
+    this._$target       = _$target || _$Copy(_$source, false, undefined, property)
     this.set            = this.retargetedSet
     this.get            = this.retargetedGet
     this.deleteProperty = this.retargetedDelete
@@ -226,6 +233,7 @@ InnerBarrier_prototype.deleteProperty = function deleteProperty(_$source, proper
   else {
     delete _$source[property]
     delete _$source[$OUTER][property]
+    delete _$source[_DURABLES]
   }
 
   return true

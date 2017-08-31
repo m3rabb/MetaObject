@@ -16,23 +16,25 @@ const $BaseBlanker = {
   $root$outer : {
     __proto__       : null,
     constructor     : NewVacuousConstructor("$Something$outer"), // ???
-    [$IMMEDIATES]   : EMPTY_OBJECT,
+    [$IMMEDIATES]   : null, // EMPTY_OBJECT,
   },
   $root$inner : {
     __proto__       : null,
     constructor     : NewVacuousConstructor("$Something$inner"), // ???
-    [$IMMEDIATES]   : EMPTY_OBJECT,
-    [$ASSIGNERS]    : EMPTY_OBJECT,
-    [$DECLARATIONS] : EMPTY_OBJECT,
+    [$IMMEDIATES]   : null, // EMPTY_OBJECT,
+    [$ASSIGNERS]    : null, // EMPTY_OBJECT,
+    [$DECLARATIONS] : null, // EMPTY_OBJECT,
     [$SUPERS]       : {
       __proto__        : null,
-      [$IMMEDIATES]    : EMPTY_OBJECT,
+      [$IMMEDIATES]    : null, // EMPTY_OBJECT,
       [$PULP]          : IMPLEMENTATION,
     },
   },
 }
 
 $BaseBlanker.$root$inner[$OUTER] = $BaseBlanker.$root$outer
+DefineProperty($BaseBlanker.$root$outer, "constructor", InvisibleConfig)
+DefineProperty($BaseBlanker.$root$inner, "constructor", InvisibleConfig)
 
 const $SomethingBlanker   = NewBlanker($BaseBlanker)
 const   $IntrinsicBlanker = NewBlanker($SomethingBlanker)
@@ -105,7 +107,7 @@ const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode = VISIBLE) {
   else {
     const selector = tag
     CompletelyDeleteProperty(_$root, selector)
-    DefineProperty(_$root, selector, InvisibleConfig)
+    // DefineProperty(_$root, selector, InvisibleConfig) // CHECK!!!
     InSetProperty(_$root, selector, value, this)
   }
 
@@ -132,15 +134,15 @@ _SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false)
 // been defined, however it is fast execution within each objects' barrier#get
 // if implemented this way.  These properties are read very frequently.
 _SetDefinitionAt.call(_$Something, "id"                     , null)
-_SetDefinitionAt.call(_$Something, DURABLES                 , null)
+_SetDefinitionAt.call(_$Something, _DURABLES                , null)
 _SetDefinitionAt.call(_$Intrinsic, "_postInit"              , null)
 _SetDefinitionAt.call(_$Intrinsic, "_initFrom_"             , null)
 _SetDefinitionAt.call(_$Intrinsic, "_setPropertiesImmutable", null)
 
 
 
-SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true )
-SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)
+SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true , VISIBLE)
+SetAsymmetricProperty(_$Intrinsic, "isInner", true , false, VISIBLE)
 
 
 
@@ -154,7 +156,7 @@ Definition$root$inner._init = function _init(func_selector, func_, mode__, prope
     (typeof func_selector === "function") ?
       [func_selector.name, func_selector, func_ , mode__     ] :
       [func_selector     , func_        , mode__, property___]
-  const isPublic = (selector[0] !== "_")
+  const isPublic = (AsName(selector)[0] !== "_")
   const $inner   = InterMap.get(this[$RIND])
   const $outer   = $inner[$OUTER]
 
@@ -203,7 +205,7 @@ Definition$root$inner._init = function _init(func_selector, func_, mode__, prope
   const outer = mode.outer(selector, handler, isPublic)
   const inner = mode.inner(selector, handler, isPublic)
 
-  inner[$OUTER_WRAPPER] = outer    // For access via Permeable outer
+  inner[$OUTER_WRAPPER] = outer    // Also used as a reliable method marker!!!
 
   outer.method   = inner.method   = this[$RIND]
 
@@ -244,7 +246,7 @@ _$Intrinsic.addMethod(function _basicSet(property, value) {
 
 // Note: This method might need to be moved to _$Something!!!
 //
-// It's not enought to simple make this method access the receiver's barrier.
+// It's not enough to simple make this method access the receiver's barrier.
 // Th receiver only references its original barrier, and there may be more than
 // one proxy/barrier associated with the receiver, so we need to invoke the
 // proxy to force the proper change to occur thru it.
@@ -567,7 +569,7 @@ _Type.addMandatorySetter("setSupertypes", function supertypes(nextSupertypes) {
     if (this.isPermeable) {
       return AttemptedChangeOfAncestryOfPermeableTypeError(this)
     }
-    const isThing = _IsSubtypeOfThing(this)  //
+    const isThing = IsSubtypeOfThing(this)  //
     if (beThing !== isThing) { return ImproperChangeToAncestryError(this) }
     // Perhaps not. Might be able to redirect the _blanker of an existing type???
   }
@@ -587,10 +589,10 @@ _Type.addMandatorySetter("setSupertypes", function supertypes(nextSupertypes) {
 
 _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
   const innerName     = innerName_ || ("_" + outerName)
-  const innerTypeName = NewVacuousConstructor(innerName)
-  const outerTypeName = NewVacuousConstructor(outerName)
+  const _name = NewVacuousConstructor(innerName)
+  const $name = NewVacuousConstructor(outerName)
 
-  SetAsymmetricProperty(this, "constructor", innerTypeName, outerTypeName)
+  SetAsymmetricProperty(this, "constructor", _name, $name, INVISIBLE)
 })
 
 
@@ -646,13 +648,15 @@ _Type.addMethod(function _init(spec_name, context_) {
   this.context   = context
   this._iidCount = 0
 
+  // The ordering of the following is critical to avoid breaking the bootstrapping!!!
   this.setSupertypes(supertypes)
+  this.addSharedProperty("type", this[$RIND])
+  // this._setDefinitionAt("type", this[$RIND], INVISIBLE)
   this.setName(name)
-  // this.addSharedProperty("type", this[$RIND])
-  this._setDefinitionAt("type", this[$RIND], INVISIBLE)
+
 
   declared    && this.addDeclarations(declared)
-  durables    && this.addDurableProperties(durables) // This needs to be for the root!!!
+  durables    && this.addDurables(durables) // This needs to be for the root!!!
   shared      && this.addSharedProperties(shared)
   methods     && this.addMethods(methods)
   definitions && this.define(definitions)

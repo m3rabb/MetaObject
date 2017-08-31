@@ -655,7 +655,7 @@ describe("Setting a public property on the inner of mutable object", function() 
         it("Inherits the value", function () {
           expect( this.$pulp.isMutable ).toBe( true )
           expect( this.$pulp.ball.color ).toBe( "red" )
-          expect( this.$pulp.has("ball") ).toBe( false )
+          expect( this.$pulp.hasOwn("ball") ).toBe( false )
         })
 
         describe("When the existing value is a different value", function () {
@@ -666,7 +666,7 @@ describe("Setting a public property on the inner of mutable object", function() 
           it("Sets its own property to the new value", function () {
             expect( this.$inner.ball ).toBe( this.blueBall )
             expect( this.$outer.ball ).toBe( this.blueBall )
-            expect( this.$pulp.has("ball") ).toBe( true )
+            expect( this.$pulp.hasOwn("ball") ).toBe( true )
           })
 
           it("Has no impact on the receiver's barrier", function () {
@@ -686,7 +686,7 @@ describe("Setting a public property on the inner of mutable object", function() 
           it("Set its own property to the new value", function () {
             expect( this.$inner.ball ).toBe( this.redBall )
             expect( this.$outer.ball ).toBe( this.redBall )
-            expect( this.$pulp.has("ball") ).toBe( true )
+            expect( this.$pulp.hasOwn("ball") ).toBe( true )
           })
 
           it("Has no impact on the receiver's barrier", function () {
@@ -712,7 +712,7 @@ describe("Setting a public property on the inner of mutable object", function() 
         it("Inherits the value", function () {
           expect( this.$pulp.isMutable ).toBe( true )
           expect( this.$pulp.ball.color ).toBe( "red" )
-          expect( this.$pulp.has("ball") ).toBe( false )
+          expect( this.$pulp.hasOwn("ball") ).toBe( false )
         })
 
         describe("When the existing value is a different value", function () {
@@ -723,7 +723,7 @@ describe("Setting a public property on the inner of mutable object", function() 
           it("Sets its own property to the new value", function () {
             expect( this.$inner.ball ).toBe( this.blueBall )
             expect( this.$outer.ball ).toBe( this.blueBall )
-            expect( this.$pulp.has("ball") ).toBe( true )
+            expect( this.$pulp.hasOwn("ball") ).toBe( true )
           })
 
           it("Has no impact on the receiver's barrier", function () {
@@ -743,7 +743,7 @@ describe("Setting a public property on the inner of mutable object", function() 
           it("Set its own property to the new value", function () {
             expect( this.$inner.ball ).toBe( this.redBall )
             expect( this.$outer.ball ).toBe( this.redBall )
-            expect( this.$pulp.has("ball") ).toBe( true )
+            expect( this.$pulp.hasOwn("ball") ).toBe( true )
           })
 
           it("Has no impact on the receiver's barrier", function () {

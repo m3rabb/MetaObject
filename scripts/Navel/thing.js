@@ -34,7 +34,7 @@ _Thing.addMethod(function _init(spec_) {
 
 // This method should only be called on a mutable object!!!
 _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
-  var next, property, value, nextValue
+  var durables, selector, next, value, nextValue
   const $inner                  = this[$INNER]
   const $outer                  = $inner[$OUTER]
   const $rind                   = $inner[$RIND]
@@ -47,30 +47,21 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   if (_setPropertiesImmutable) {
     _setPropertiesImmutable.call(this, inPlace, visited)
   }
-  else if ((properties = $inner[DURABLES])) {
-    next = properties.length
+  else {
+    durables = $inner[_DURABLES] || SetDurables($inner)
+    next      = durables.length
 
     while (next--) {
-      property = properties[next]
-      if (property[0] !== "_") { continue }
+      selector = durables[next]
+      if (selector[0] !== "_") { continue }
 
-      value     = $inner[property]
+      value     = $inner[selector]
       nextValue = SetImmutableValue(value, inPlace, visited, $rind)
-      if (nextValue !== value) { $inner[property] = nextValue }
-    }
-  }
-  else {
-    for (property in $inner) {
-      if (property[0] !== "_") { continue }
-
-      value     = $inner[property]
-      nextValue = SetImmutableValue(value, inPlace, visited, $rind)
-      if (nextValue !== value) { $inner[property] = nextValue }
+      if (nextValue !== value) { $inner[selector] = nextValue }
     }
   }
 
-  $outer[IS_IMMUTABLE] = $inner[IS_IMMUTABLE] = true
-  Frost($outer)
+  return this._basicSetImmutable()
 })
 
 _Thing.addMethod(function toString(_) {
@@ -103,7 +94,7 @@ _Thing.addMethod(function toString(_) {
 //   return this
 // })
 
-// _Thing.addMethod(function _initFrom_(permeableSource, propertiesBeImmutable, visited, exceptProperty_) {
+// _Thing.addMethod(function _initFrom_(permeableSource, propertiesBeImmutable, visited, except_) {
 //   this.id = this.oid
 //   return this
 // })

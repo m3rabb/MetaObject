@@ -1018,7 +1018,7 @@ describe("Setting a public property on the inner of immutable object", function(
         it("Inherits the value", function () {
           expect( this.$pulp.isImmutable ).toBe( true )
           expect( this.$pulp.ball.color ).toBe( "red" )
-          expect( this.$pulp.has("ball") ).toBe( false )
+          expect( this.$pulp.hasOwn("ball") ).toBe( false )
         })
 
         describe("When the existing value is a different value", function () {
@@ -1027,7 +1027,7 @@ describe("Setting a public property on the inner of immutable object", function(
           })
 
           it("Doesn't set the property in the receiver, itself", function () {
-            expect( this.$pulp.has("ball") ).toBe( false )
+            expect( this.$pulp.hasOwn("ball") ).toBe( false )
             expect( this.$inner.ball.color ).toBe( "red" )
             expect( this.$outer.ball.color ).toBe( "red" )
           })
@@ -1064,7 +1064,7 @@ describe("Setting a public property on the inner of immutable object", function(
           })
 
           it("Doesn't set the property in the receiver, itself", function () {
-            expect( this.$pulp.has("ball") ).toBe( false )
+            expect( this.$pulp.hasOwn("ball") ).toBe( false )
           })
 
           it("Sets its barrier to the inner of a copy of the target", function () {
@@ -1107,7 +1107,7 @@ describe("Setting a public property on the inner of immutable object", function(
         it("Inherits the value", function () {
           expect( this.$pulp.isImmutable ).toBe( true )
           expect( this.$pulp.ball.color ).toBe( "red" )
-          expect( this.$pulp.has("ball") ).toBe( false )
+          expect( this.$pulp.hasOwn("ball") ).toBe( false )
         })
 
         describe("When the existing value is a different value", function () {
@@ -1116,7 +1116,7 @@ describe("Setting a public property on the inner of immutable object", function(
           })
 
           it("Doesn't set the property in the receiver, itself", function () {
-            expect( this.$pulp.has("ball") ).toBe( false )
+            expect( this.$pulp.hasOwn("ball") ).toBe( false )
             expect( this.$inner.ball.color ).toBe( "red" )
             expect( this.$outer.ball.color ).toBe( "red" )
           })
@@ -1153,7 +1153,7 @@ describe("Setting a public property on the inner of immutable object", function(
           })
 
           it("Doesn't set the property in the receiver, itself", function () {
-            expect( this.$pulp.has("ball") ).toBe( false )
+            expect( this.$pulp.hasOwn("ball") ).toBe( false )
           })
 
           it("The property value in the receiver remains the same", function () {

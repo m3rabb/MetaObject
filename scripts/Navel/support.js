@@ -62,7 +62,7 @@ function AsCapitalized(word) {
  * @returns     {string}
  */
 function AsName(string_symbol) {
-  if (typeof string_symbol === "string") { return string_symbol }
+  if (string_symbol.charAt) { return string_symbol }
   const name = string_symbol.toString()
   return name.slice(7, name.length - 1)
 }
@@ -188,8 +188,9 @@ function SetDefinition(_$target, definition) {
       // value. Doing this specifically to deal with inherited null id value
       // which breaks defining immediate/lazy id values by the type instances.
       CompletelyDeleteProperty(_$target, selector)
-      DefineProperty(_$target, selector, InvisibleConfig)
-      // _$target[selector] = undefined  // Handled by previous line!!!
+      // DefineProperty(_$target, selector, InvisibleConfig)
+      // // _$target[selector] = undefined  // Handled by previous line!!!
+       _$target[selector] = undefined // CHECK!!!
       _$target[$IMMEDIATES][selector] = _$definition.inner
       if (isPublic) {
         $target[selector] = undefined
@@ -217,7 +218,7 @@ function SetDefinition(_$target, definition) {
     default :
       // Store the inner (and outer) wrapper in the property chain.
       CompletelyDeleteProperty(_$target, selector)
-      DefineProperty(_$target, selector, InvisibleConfig)
+      // DefineProperty(_$target, selector, InvisibleConfig) // CHECK!!!
       _$target[selector] = _$definition.inner
       if (isPublic) { $target[selector] = _$definition.outer }
   }
@@ -247,15 +248,17 @@ function SetDefinition(_$target, definition) {
 // https://en.wikipedia.org/wiki/Cyclomatic_complexity
 // http://www.guru99.com/cyclomatic-complexity.html
 // http://jshint.com/  CC = 22!!!
-function InSetProperty(_$target, property, value, _target) {
-  if (property[0] !== "_") {   // Public property
+function InSetProperty(_$target, selector, value, _target) {
+  const firstChar = (selector.charAt) ? selector[0] : selector.toString()[7]
+
+  if (firstChar !== "_") {    // Public selector
     const $target = _$target[$OUTER]
     var   _$value
 
     switch (typeof value) {
       case "undefined" :
         // Storing undefined is prohibited!
-        return AssignmentOfUndefinedError(_target, property)
+        return AssignmentOfUndefinedError(_target, selector)
 
       case "object" :
              if (value === null)                 {        /* NOP */        }
@@ -268,9 +271,9 @@ function InSetProperty(_$target, property, value, _target) {
         else if (value.id != null)               {        /* NOP */        }
         else if (value === _$target[$RIND])      {        /* NOP */        }
         else {   value = (_$value = InterMap.get(value)) ?
-                   $Copy(_$value, true)[$RIND] : CopyObject(value, true) }
+                   _$Copy(_$value, true)[$RIND] : CopyObject(value, true)  }
 
-        $target[property] = value
+        $target[selector] = value
         break
 
       case "function" : // LOOK: will catch Type things!!!
@@ -281,7 +284,7 @@ function InSetProperty(_$target, property, value, _target) {
             return DetectedInnerError(_target, value)
 
           case INNER_FUNC    :
-            $target[property] = value[$OUTER_WRAPPER]
+            $target[selector] = value[$OUTER_WRAPPER]
             break
 
           case undefined     : // New unknown untrusted function to be wrapped.
@@ -295,13 +298,13 @@ function InSetProperty(_$target, property, value, _target) {
           case SAFE_FUNC     :
           case BLANKER_FUNC  :
           default            : // value is a type's $rind, etc
-            $target[property] = value
+            $target[selector] = value
             break
         }
         break
 
       default :
-        $target[property] = value
+        $target[selector] = value
         break
     }
   }
@@ -310,7 +313,7 @@ function InSetProperty(_$target, property, value, _target) {
     return DetectedInnerError(_target, value)
   }
 
-  return (_$target[property] = value)
+  return (_$target[selector] = value)
 }
 
 
@@ -668,6 +671,28 @@ function BuildAncestryOf(type, supertypes) {
 }
 
 
+function AllSelectors(target, excludeSymbols_) {
+  var targetSelectors, selector, next
+  const selectorPicker = excludeSymbols_ ? OwnNames : OwnSelectors
+  const knowns         = SpawnFrom(null)
+  const selectors      = []
+
+  while (target) {
+    targetSelectors = selectorPicker(target)
+    next            = targetSelectors.length
+    while (next--) {
+      selector = targetSelectors[next]
+      if (!knowns[selector]) {
+        knowns[selector] = true
+        selectors[selectors.length] = selector
+      }
+    }
+    target = RootOf(target)
+  }
+  selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
+  return SetImmutable(selectors)
+}
+
 
 /**
  * Creates an immutable list of all of the visible properties of the target,
@@ -678,11 +703,12 @@ function BuildAncestryOf(type, supertypes) {
  * When true, it stores the list on outside as well as the inside of the target.
  * @return      {Array.<name>}  The list of visible properties.
  */
-function SetDurableProperties(object) {
-  const properties = VisibleProperties(object)
-  properties[IS_IMMUTABLE] = true
-  return (object[DURABLES] = Frost(properties))
-}
+ function SetDurables(target) {
+   const durables = OwnNames(target)
+   durables[IS_IMMUTABLE] = true
+   return (target[_DURABLES] = Frost(durables))
+ }
+
 
 
 
@@ -752,39 +778,41 @@ const ALWAYS_SELF      = MarkFunc( function () { return this }, SAFE_FUNC)
 
 
 
-function MethodAt(_$target, selector) {
+function PropertyAt(_$target, selector) {
   const _$method_inner = _$target[$IMMEDIATES][selector]
-  if (_$method_inner) { return _$method_inner.method || null }
+  if (_$method_inner) { return _$method_inner.method /* || null */ }
 
   const value = _$target[selector]
-  return (typeof value === "function" && InterMap.get(value) === INNER_FUNC) ?
-    (value.method || null) : null
+  return (value == null) ? null :
+    (value[$OUTER_WRAPPER] ? value.method : value)
 }
 
 
-function SetAsymmetricProperty(_type, property, innerValue, outerValue) {
+function SetAsymmetricProperty(_type, property, _value, $value, visibility) {
   const blanker = _type._blanker
   const  $root  = blanker.$root$outer
   const _$root  = blanker.$root$inner
 
-  DefineProperty( $root, property, InvisibleConfig)
-  DefineProperty(_$root, property, InvisibleConfig)
+  if (visibility === INVISIBLE) {
+    DefineProperty( $root, property, InvisibleConfig)
+    DefineProperty(_$root, property, InvisibleConfig)
+  }
 
-   $root[property] = outerValue
-  _$root[property] = innerValue
+   $root[property] = $value
+  _$root[property] = _value
   // _type._properties[property] = ASYMMETRIC_PROPERTY
 }
 
 
 
-function _IsSubtypeOfThing(_type) {
+function IsSubtypeOfThing(_type) {
   return (RootOf(_type._blanker.$root$inner) === $Intrinsic$root$inner)
 }
 
 function AncestryIncludesThing(ancestry) {
   for (var index = 0, count = ancestry.length - 1; index < count; index++) {
     var _$type = InterMap.get(ancestry[index])
-    if (_IsSubtypeOfThing(_$type)) { return true }
+    if (IsSubtypeOfThing(_$type)) { return true }
   }
   return false
 }
@@ -843,7 +871,7 @@ function CompletelyDeleteProperty(_$target, selector) {
 
 
 function KnownSelectors(target) {
-  const symbols = AllSymbols(target).filter(sym => AsName(sym)[0] !== "$")
+  const symbols = OwnSymbols(target).filter(sym => AsName(sym)[0] !== "$")
   const names   = VisibleProperties(target)
   return names.concat(symbols)
 }

@@ -53,7 +53,7 @@ describe("Type copying", function () {
 
         it("has its instances' type set to itself", function () {
           var cat = this.Cat2("Bubba", "Tabby", 3)
-          var list = this.Cat2.methods
+          var list = this.Cat2.selectors
           expect( cat.type ).toBe( this.Cat2 )
         })
 
@@ -66,7 +66,7 @@ describe("Type copying", function () {
         })
 
         it("has the same methods", function () {
-          expect( this.Cat2._methods ).toEqual( this.Cat._methods )
+          expect( this.Cat2.selectors ).toEqual( this.Cat.selectors )
         })
       })
     })

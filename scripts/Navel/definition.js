@@ -29,6 +29,7 @@ _Definition.addMethod(function toString(_) {
 
 
 AddMembershipSelector(_Definition, "isDeclaration", false)
+AddMembershipSelector(_Definition, "isDurable",     false)
 AddMembershipSelector(_Definition, "isAssigner"   , false)
 AddMembershipSelector(_Definition, "isProperty"   , false)
 AddMembershipSelector(_Definition, "isMethod"     , false)

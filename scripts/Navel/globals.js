@@ -10,9 +10,14 @@ const VisibleProperties   = Object.keys
 const AllProperties       = Reflect.ownKeys
 const AllNames            = Object.getOwnPropertyNames
 const AllSymbols          = Object.getOwnPropertySymbols
+const OwnSelectors        = Reflect.ownKeys
+const OwnSymbols          = Object.getOwnPropertySymbols
+const OwnNames            = Object.getOwnPropertyNames
+const OwnVisibleNames     = Object.keys
 const Frost               = Object.freeze
 const IsFrosted           = Object.isFrozen
 const Object_prototype    = Object.prototype
+const HasOwn_             = Object_prototype.hasOwnProperty  // ._hasOwn
 const HasOwnProperty      = Object_prototype.hasOwnProperty  // ._hasOwn
 const PropertyDescriptor  = Object.getOwnPropertyDescriptor
 const PropertyDescriptors = Object.getOwnPropertyDescriptors
@@ -25,7 +30,7 @@ const Apply               = Reflect.apply
 
 // symbols for publicly knowable properties
 const IS_IMMUTABLE           = Symbol("IS_IMMUTABLE")
-const DURABLES               = Symbol("DURABLES")
+const _DURABLES              = Symbol("_DURABLES")
 const INSTANCEOF             = Symbol.hasInstance
 
 // private symbols for implementation usage, $ means non-ya-bizness!!!
@@ -38,7 +43,6 @@ const $RIND                  = Symbol("$RIND")  // Consider simply using $ !!!
 
 const $DISGUISE              = Symbol("$DISGUISE")
 const $BARRIER               = Symbol("$BARRIER")
-const $COPY                  = Symbol("$COPY")
 //const $IID                   = Symbol("$instanceId")
 const $PRIOR_IDS             = Symbol("$PRIOR_IDS")
 const $PROOF                 = Symbol("$PROOF")
