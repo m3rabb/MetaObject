@@ -496,18 +496,18 @@ _Type.addMethod(function addRetroactiveProperty(assigner_selector, assigner_) {
 
 
 _Type.addMethod(function _reinheritDefinitions(_) {
-  if (this.name != null) {
+  if (this.name) {
     // Not a virgin type
     const blanker     = this._blanker
     const $root$inner = blanker.$root$inner
     const $root$outer = blanker.$root$outer
     const supers      = $root$inner[$SUPERS]
 
-    DeleteKnownsIn([$root$inner, $root$outer, supers])
-    DeleteKnownsIn(
+    DeleteNon$SelectorsIn([$root$inner, $root$outer, supers])
+    DeleteNon$SelectorsIn(
       [$root$inner[$IMMEDIATES], $root$outer[$IMMEDIATES], supers[$IMMEDIATES]])
-    DeleteKnownsIn([$root$inner[$DECLARATIONS]])
-    DeleteKnownsIn([$root$inner[$ASSIGNERS]])
+    DeleteNon$SelectorsIn([$root$inner[$DECLARATIONS]])
+    DeleteNon$SelectorsIn([$root$inner[$ASSIGNERS]])
   }
 
   const ancestry = this.ancestry

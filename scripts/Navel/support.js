@@ -671,12 +671,29 @@ function BuildAncestryOf(type, supertypes) {
 }
 
 
+
+function OwnNon$Selectors(target) {
+  const selectors = OwnNames(target)
+  const symbols   = OwnSymbols(target)
+
+  index = selectors.length
+  next  = symbols.length
+  while (next--) {
+    symbol = symbols[next]
+    if (AsName(symbol)[0] !== "$") { selectors[index++] = symbol }
+  }
+  return selectors
+}
+
+
+
 function AllSelectors(target, excludeSymbols_) {
-  var targetSelectors, selector, next
-  const selectorPicker = excludeSymbols_ ? OwnNames : OwnSelectors
+  var targetSelectors, selector, index, next
+  const selectorPicker = excludeSymbols_ ? OwnNames : OwnNon$Selectors
   const knowns         = SpawnFrom(null)
   const selectors      = []
 
+  index = 0
   while (target) {
     targetSelectors = selectorPicker(target)
     next            = targetSelectors.length
@@ -684,13 +701,31 @@ function AllSelectors(target, excludeSymbols_) {
       selector = targetSelectors[next]
       if (!knowns[selector]) {
         knowns[selector] = true
-        selectors[selectors.length] = selector
+        selectors[index++] = selector
       }
     }
     target = RootOf(target)
   }
   selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
   return SetImmutable(selectors)
+}
+
+
+
+function DeleteNon$SelectorsIn(targets) {
+  var selectors, selectorIndex, selector, targetIndex
+
+  selectors     = OwnNon$Selectors(targets[0])
+  selectorIndex = selectors.length
+
+  while (selectorIndex--) {
+    selector = selectors[selectorIndex]
+    targetIndex = targets.length
+
+    while (targetIndex--) {
+      delete targets[targetIndex][selector]
+    }
+  }
 }
 
 
@@ -870,27 +905,9 @@ function CompletelyDeleteProperty(_$target, selector) {
 }
 
 
-function KnownSelectors(target) {
-  const symbols = OwnSymbols(target).filter(sym => AsName(sym)[0] !== "$")
-  const names   = OwnVisibleNames(target)
-  return names.concat(symbols)
-}
 
-function DeleteKnownsIn(targets) {
-  var selectors, selectorIndex, selector, targetIndex
 
-  selectors     = KnownSelectors(targets[0])
-  selectorIndex = selectors.length
 
-  while (selectorIndex--) {
-    selector = selectors[selectorIndex]
-    targetIndex = targets.length
-
-    while (targetIndex--) {
-      delete targets[targetIndex][selector]
-    }
-  }
-}
 
 
 
