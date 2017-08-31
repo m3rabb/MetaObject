@@ -209,7 +209,7 @@ _$Intrinsic.addMethod(function visibleSelectors() {
 
 _$Intrinsic.addMethod(function _ownSelectors() {
   // All string and symbol properties, includes invisibles
-  return SetImmutable(OwnSelectors(this[$INNER]).sort())
+  return OwnOrderedSelectors(this[$INNER])
 })
 
 _$Intrinsic.addMethod(function ownSelectors() {

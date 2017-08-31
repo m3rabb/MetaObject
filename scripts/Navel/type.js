@@ -161,6 +161,15 @@ _Type.addMethod(function publicSelectors() {
   return AllSelectors(this._blanker.$root$outer)
 })
 
+_Type.addMethod(function definedSelectors() {
+  return OwnOrderedSelectors(this._blanker.$root$inner)
+})
+
+_Type.addMethod(function publicDefinedSelectors() {
+  return OwnOrderedSelectors(this._blanker.$root$outer)
+})
+
+
 
 
 

@@ -686,6 +686,14 @@ function OwnNon$Selectors(target) {
 }
 
 
+function OwnOrderedSelectors(target) {
+  const selectors = OwnNon$Selectors(target)
+  selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
+  return SetImmutable(selectors)
+}
+
+
+
 
 function AllSelectors(target, excludeSymbols_) {
   var targetSelectors, selector, index, next
