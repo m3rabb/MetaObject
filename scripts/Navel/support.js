@@ -188,9 +188,7 @@ function SetDefinition(_$target, definition) {
       // value. Doing this specifically to deal with inherited null id value
       // which breaks defining immediate/lazy id values by the type instances.
       CompletelyDeleteProperty(_$target, selector)
-      // DefineProperty(_$target, selector, InvisibleConfig)
-      // // _$target[selector] = undefined  // Handled by previous line!!!
-       _$target[selector] = undefined // CHECK!!!
+       _$target[selector] = undefined
       _$target[$IMMEDIATES][selector] = _$definition.inner
       if (isPublic) {
         $target[selector] = undefined
@@ -224,7 +222,6 @@ function SetDefinition(_$target, definition) {
     default :
       // Store the inner (and outer) wrapper in the property chain.
       CompletelyDeleteProperty(_$target, selector)
-      // DefineProperty(_$target, selector, InvisibleConfig) // CHECK!!!
       _$target[selector] = _$definition.inner
       if (isPublic) { $target[selector] = _$definition.outer }
   }

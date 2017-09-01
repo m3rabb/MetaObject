@@ -106,7 +106,6 @@ const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode = VISIBLE) {
   else {
     const selector = tag
     CompletelyDeleteProperty(_$root, selector)
-    // DefineProperty(_$root, selector, InvisibleConfig) // CHECK!!!
     InSetProperty(_$root, selector, value, this)
   }
 
