@@ -83,6 +83,27 @@ _Type.addMethod(function addDurables(items) {
 
 
 
+_Type.addMethod(function removeAssigner(selector) {
+  const tag = `$assigner@${AsName(selector)}`
+  if (this._definitions[tag] !== undefined) {
+    this._deleteDefinitionAt(tag)
+  }
+})
+
+_Type.addMethod(function removeDeclaration(selector) {
+  const tag = `$declaration@${AsName(selector)}`
+if (this._definitions[tag] !== undefined) {
+    this._deleteDefinitionAt(tag)
+  }
+})
+
+_Type.addMethod(function removeSharedProperty(selector) {
+  if (this._definitions[selector] !== undefined) {
+    this._deleteDefinitionAt(selector)
+  }
+})
+
+
 
 
 _Type.addMethod(function _nextIID() {
