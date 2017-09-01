@@ -39,8 +39,8 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
       })
 
-      it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
+      it("There is no set undefined placeholder in the root", function () {
+        expect( HasOwnProperty.call("mood" in this._$root) ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -55,8 +55,9 @@ describe("Type setting methods", function () {
         this.Cat_.forAddAssigner(this.assigner)
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root.mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       it("Doesn't put a setter property in the root", function () {
@@ -65,10 +66,6 @@ describe("Type setting methods", function () {
 
       it("Puts an assigner func in the root", function () {
         expect( this._$root[$ASSIGNERS].mood ).toBe( this.assigner )
-      })
-
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the property is assigned", function () {
@@ -92,8 +89,9 @@ describe("Type setting methods", function () {
         this.Cat_.forAddAssigner("mood", this.assigner)
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root.mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       it("Doesn't put a setter property in the root", function () {
@@ -102,10 +100,6 @@ describe("Type setting methods", function () {
 
       it("Puts an assigner func in the root", function () {
         expect( this._$root[$ASSIGNERS].mood ).toBe( this.assigner )
-      })
-
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the property is assigned", function () {
@@ -147,8 +141,8 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
       })
 
-      it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
+      it("There is no set undefined placeholder in the root", function () {
+        expect( HasOwnProperty.call("mood" in this._$root) ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -162,9 +156,9 @@ describe("Type setting methods", function () {
         this.Cat_.addSetter("setMood")
       })
 
-      it("Doesn't set the root property", function () {
+      it("Sets undefined as a placeholder at the selector in the root", function () {
         expect( this._$root.mood ).toBe( undefined )
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       it("Puts as basic setter property in the root", function () {
@@ -173,10 +167,6 @@ describe("Type setting methods", function () {
 
       it("Doesn't put an assigner func in the root", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
-      })
-
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -209,9 +199,9 @@ describe("Type setting methods", function () {
         this.Cat_.addSetter(this.setter)
       })
 
-      it("Doesn't set the root property", function () {
+      it("Sets undefined as a placeholder at the selector in the root", function () {
         expect( this._$root.mood ).toBe( undefined )
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       it("Puts a basic setter property in the root", function () {
@@ -220,10 +210,6 @@ describe("Type setting methods", function () {
 
       it("Doesn't put an assigner func in the root", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
-      })
-
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -253,8 +239,9 @@ describe("Type setting methods", function () {
           this.Cat_.addSetter(this.setter)
         })
 
-        it("Declares the property in the root", function () {
-          expect( this._$root[$DECLARATIONS].mood ).toBe( true )
+        it("Sets undefined as a placeholder at the selector in the root", function () {
+          expect( this._$root.mood ).toBe( undefined )
+          expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
         })
 
         it("Answers null when the property is read", function () {
@@ -269,9 +256,9 @@ describe("Type setting methods", function () {
         this.Cat_.addSetter("setXyz", "_qrs")
       })
 
-      it("Doesn't set the root property", function () {
+      it("Sets undefined as a placeholder at the selector in the root", function () {
         expect( this._$root._qrs ).toBe( undefined )
-        expect( HasOwnProperty.call(this._$root, "_qrs") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root, "_qrs") ).toBe( true )
       })
 
       it("Puts a basic setter property in the root", function () {
@@ -280,11 +267,6 @@ describe("Type setting methods", function () {
 
       it("Doesn't put an assigner func in the root", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "_qrs") ).toBe( false )
-      })
-
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].setXyz ).toBe( undefined )
-        expect( this._$root[$DECLARATIONS]._qrs ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -317,9 +299,9 @@ describe("Type setting methods", function () {
         this.Cat_.addSetter("setMood", this.func)
       })
 
-      it("Doesn't set the root property", function () {
+      it("Sets undefined as a placeholder at the selector in the root", function () {
         expect( this._$root.mood ).toBe( undefined )
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       it("Puts a basic setter property in the root", function () {
@@ -328,10 +310,6 @@ describe("Type setting methods", function () {
 
       it("Doesn't put an assigner func in the root", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
-      })
-
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -361,8 +339,9 @@ describe("Type setting methods", function () {
           this.Cat_.addSetter(this.setter)
         })
 
-        it("Declares the property in the root", function () {
-          expect( this._$root[$DECLARATIONS].mood ).toBe( true )
+        it("Sets undefined as a placeholder at the selector in the root", function () {
+          expect( this._$root.mood ).toBe( undefined )
+          expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
         })
 
         it("Answers null when the property is read", function () {
@@ -380,12 +359,6 @@ describe("Type setting methods", function () {
         })
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
-        expect( HasOwnProperty.call(this._$root, "_mood") ).toBe( false )
-      })
-
-
       it("Puts a basic setter property in the root", function () {
         expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
       })
@@ -395,8 +368,14 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
       })
 
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS]._mood ).toBe( true )
+      it("Sets undefined as a placeholder at the property in the root", function () {
+        expect( this._$root._mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "_mood") ).toBe( true )
+      })
+
+      it("Sets undefined as a placeholder at the matching selector in the root", function () {
+        expect( this._$root._mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "_mood") ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -453,8 +432,8 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
       })
 
-      it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
+      it("There is no set undefined placeholder in the root", function () {
+        expect( HasOwnProperty.call("mood" in this._$root) ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -468,9 +447,9 @@ describe("Type setting methods", function () {
         this.Cat_.forAddSetter("mood")
       })
 
-      it("Doesn't set the root property", function () {
+      it("Sets undefined as a placeholder at the selector in the root", function () {
         expect( this._$root.mood ).toBe( undefined )
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       it("Puts as basic setter property in the root", function () {
@@ -479,10 +458,6 @@ describe("Type setting methods", function () {
 
       it("Doesn't put an assigner func in the root", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
-      })
-
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -512,9 +487,9 @@ describe("Type setting methods", function () {
         this.Cat_.forAddSetter("_qrs", "setXyz")
       })
 
-      it("Doesn't set the root property", function () {
+      it("Sets undefined as a placeholder at the selector in the root", function () {
         expect( this._$root._qrs ).toBe( undefined )
-        expect( HasOwnProperty.call(this._$root, "_qrs") ).toBe( false )
+        expect( HasOwnProperty.call(this._$root, "_qrs") ).toBe( true )
       })
 
       it("Puts a basic setter property in the root", function () {
@@ -523,11 +498,6 @@ describe("Type setting methods", function () {
 
       it("Doesn't put an assigner func in the root", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "_qrs") ).toBe( false )
-      })
-
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].setXyz ).toBe( undefined )
-        expect( this._$root[$DECLARATIONS]._qrs ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -575,8 +545,8 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
       })
 
-      it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
+      it("There is no set undefined placeholder in the root", function () {
+        expect( HasOwnProperty.call("mood" in this._$root) ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -590,10 +560,6 @@ describe("Type setting methods", function () {
         this.Cat_.addMandatorySetter("setMood")
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
-      })
-
       it("Puts as basic setter property in the root", function () {
         expect( this._$root.setMood.method.handler.name ).toBe( "setMood_$set_mood" )
       })
@@ -602,8 +568,9 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( true )
       })
 
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root.mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -636,10 +603,6 @@ describe("Type setting methods", function () {
         this.Cat_.addMandatorySetter(this.setter)
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
-      })
-
       it("Puts a basic setter property in the root", function () {
         expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
       })
@@ -648,8 +611,9 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( true )
       })
 
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root.mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -679,8 +643,9 @@ describe("Type setting methods", function () {
           this.Cat_.addMandatorySetter(this.setter)
         })
 
-        it("Declares the property in the root", function () {
-          expect( this._$root[$DECLARATIONS].mood ).toBe( true )
+        it("Sets undefined as a placeholder at the selector in the root", function () {
+          expect( this._$root.mood ).toBe( undefined )
+          expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
         })
 
         it("Answers null when the property is read", function () {
@@ -695,10 +660,6 @@ describe("Type setting methods", function () {
         this.Cat_.addMandatorySetter("setXyz", "_qrs")
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
-      })
-
       it("Puts a basic setter property in the root", function () {
         expect( this._$root.setXyz.name ).toBe( "setXyz_$inner$self" )
       })
@@ -707,8 +668,9 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "_qrs") ).toBe( true )
       })
 
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS]._qrs ).toBe( true )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root._qrs ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "_qrs") ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -740,10 +702,6 @@ describe("Type setting methods", function () {
         })
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
-      })
-
       it("Puts a basic setter property in the root", function () {
         expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
       })
@@ -752,8 +710,9 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( true )
       })
 
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root.mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -783,8 +742,9 @@ describe("Type setting methods", function () {
           this.Cat_.addMandatorySetter(this.setter)
         })
 
-        it("Declares the property in the root", function () {
-          expect( this._$root[$DECLARATIONS].mood ).toBe( true )
+        it("Sets undefined as a placeholder at the selector in the root", function () {
+          expect( this._$root.mood ).toBe( undefined )
+          expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
         })
 
         it("Answers null when the property is read", function () {
@@ -801,11 +761,6 @@ describe("Type setting methods", function () {
         })
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
-        expect( HasOwnProperty.call(this._$root, "_mood") ).toBe( false )
-      })
-
       it("Puts a basic setter property in the root", function () {
         expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
       })
@@ -815,9 +770,9 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
       })
 
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( undefined )
-        expect( this._$root[$DECLARATIONS]._mood ).toBe( true )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root._mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "_mood") ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -873,8 +828,8 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
       })
 
-      it("The instance root doesn't mark the property as known", function () {
-        expect( HasOwnProperty.call(this._$root[$DECLARATIONS], "mood") ).toBe( false )
+      it("There is no set undefined placeholder in the root", function () {
+        expect( HasOwnProperty.call("mood" in this._$root) ).toBe( false )
       })
 
       it("Throws an error when the property is read", function () {
@@ -888,10 +843,6 @@ describe("Type setting methods", function () {
         this.Cat_.forAddMandatorySetter("mood")
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
-      })
-
       it("Puts as basic setter property in the root", function () {
         expect( this._$root.setMood.method.handler.name ).toBe( "setMood_$set_mood" )
       })
@@ -900,8 +851,9 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "mood") ).toBe( true )
       })
 
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( true )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root.mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -931,10 +883,6 @@ describe("Type setting methods", function () {
         this.Cat_.forAddMandatorySetter("_qrs", "setXyz")
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
-      })
-
       it("Puts a basic setter property in the root", function () {
         expect( this._$root.setXyz.name ).toBe( "setXyz_$inner$self" )
       })
@@ -943,8 +891,9 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "_qrs") ).toBe( true )
       })
 
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS]._qrs ).toBe( true )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root._qrs ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "_qrs") ).toBe( true )
       })
 
       describe("When the setter is called", function () {
@@ -976,11 +925,6 @@ describe("Type setting methods", function () {
         })
       })
 
-      it("Doesn't put a value at the property to be set", function () {
-        expect( HasOwnProperty.call(this._$root, "mood") ).toBe( false )
-        expect( HasOwnProperty.call(this._$root, "_mood") ).toBe( false )
-      })
-
       it("Puts a basic setter property in the root", function () {
         expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
       })
@@ -990,9 +934,9 @@ describe("Type setting methods", function () {
         expect( HasOwnProperty.call(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
       })
 
-      it("Declares the property in the root", function () {
-        expect( this._$root[$DECLARATIONS].mood ).toBe( undefined )
-        expect( this._$root[$DECLARATIONS]._mood ).toBe( true )
+      it("Sets undefined as a placeholder at the selector in the root", function () {
+        expect( this._$root._mood ).toBe( undefined )
+        expect( HasOwnProperty.call(this._$root, "_mood") ).toBe( true )
       })
 
       describe("When the setter is called", function () {

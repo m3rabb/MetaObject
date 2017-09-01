@@ -203,7 +203,10 @@ function SetDefinition(_$target, definition) {
       // break omitted
 
     case DECLARATION :
-      _$target[$DECLARATIONS][selector] = isPublic
+      if (_$target[selector] === undefined) {
+        _$target[selector] = undefined
+        if (isPublic) { $target[selector] = undefined }
+      }
       return
 
     case MANDATORY_SETTER_METHOD :
@@ -212,7 +215,10 @@ function SetDefinition(_$target, definition) {
       // break omitted
 
     case SETTER_METHOD :
-      _$target[$DECLARATIONS][property] = isPublic
+      if (_$target[property] === undefined) {
+        _$target[property] = undefined
+        if (isPublic) { $target[property] = undefined }
+      }
       // break omitted
 
     default :
@@ -371,7 +377,6 @@ const DefaultDisguiseFunc = NewVacuousConstructor("$disguise$")
 function MakeDefinitionsInfrastructure(_$target, _$root) {
   const $root        = _$root[$OUTER]
   const $target      = _$target[$OUTER]
-  const declarations = SpawnFrom(_$root[$DECLARATIONS])
   const supers       = SpawnFrom(_$root[$SUPERS])
 
   supers[$IMMEDIATES] = SpawnFrom(supers[$IMMEDIATES])
@@ -380,8 +385,6 @@ function MakeDefinitionsInfrastructure(_$target, _$root) {
   _$target[$ASSIGNERS]    = SpawnFrom(_$root[$ASSIGNERS])
   _$target[$IMMEDIATES]   = SpawnFrom(_$root[$IMMEDIATES])
    $target[$IMMEDIATES]   = SpawnFrom( $root[$IMMEDIATES])
-  _$target[$DECLARATIONS] = declarations
-   $target[$DECLARATIONS] = declarations
 }
 
 /**

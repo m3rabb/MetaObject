@@ -23,7 +23,6 @@ const $BaseBlanker = {
     constructor     : NewVacuousConstructor("$Something$inner"), // ???
     [$IMMEDIATES]   : null, // EMPTY_OBJECT,
     [$ASSIGNERS]    : null, // EMPTY_OBJECT,
-    [$DECLARATIONS] : null, // EMPTY_OBJECT,
     [$SUPERS]       : {
       __proto__        : null,
       [$IMMEDIATES]    : null, // EMPTY_OBJECT,
@@ -333,30 +332,34 @@ _Type.addMethod(function removeSharedProperty(selector) {
 
 
 _Type.addMethod(function _deleteDefinitionAt(tag) {
+  var   selectors, nextSelector, next
   const blanker          = this._blanker
   const $root$inner      = blanker.$root$inner
   const $root$outer      = blanker.$root$outer
-  const definitions      = this._definitions
-  const value            = definitions[tag]
-  const [mode, selector] = (value && value.type === Definition) ?
-    [value.mode, value.selector] : [null, tag]
+  const defs             = this._definitions
+  const value            = defs[tag]
+  const [selector, mode] = (value && value.type === Definition) ?
+    [value.selector, value.mode] : [tag, null]
 
   switch (mode) {
     case IMMEDIATE_METHOD :
       delete $root$inner[$IMMEDIATES][selector]
       delete $root$outer[$IMMEDIATES][selector]
       delete $root$inner[$SUPERS][$IMMEDIATES][selector]
+      selectors = [selector]
       break
 
     case ASSIGNER :
       delete $root$inner[$ASSIGNERS][selector]
-      if (!definitions[`$declaration@${AsName(selector)}`]) {
-        delete $root$inner[$DECLARATIONS][selector]
-      }
-      break
+      // break omitted
 
     case DECLARATION :
-      delete $root$inner[$DECLARATIONS][value.selector]
+      selectors = EMPTY_ARRAY
+      if ($root$inner[selector] !== undefined)      { break } // Has value
+      if (defs[selector])                           { break } // Has immediate
+      if (defs[`$assigner@${AsName(selector)}`])    { break } // Has assigner
+      if (defs[AsSetterFromProperty(selector)])     { break } // Has setter
+      selectors = [selector]
       break
 
     case MANDATORY_SETTER_METHOD :
@@ -365,19 +368,27 @@ _Type.addMethod(function _deleteDefinitionAt(tag) {
       // break omitted
 
     case SETTER_METHOD :
-      if (!definitions[`$declaration@${AsName(selector)}`]) {
-        delete $root$inner[$DECLARATIONS][selector]
-      }
+      selectors = [selector]
+      var property = value.property
+      if ($root$inner[property] !== undefined)      { break } // Has value
+      if (defs[property])                           { break } // Has immediate
+      if (defs[`$declaration@${AsName(property)}`]) { break } // Has def
+      selectors[1] = property
       // break omitted
 
     default :
-      delete $root$inner[selector]
-      delete $root$outer[selector]
-      delete $root$inner[$SUPERS][selector]
+      selectors = [selector]
       break
   }
 
-  delete definitions[tag]
+  next = selectors.length
+  while (next--) {
+    nextSelector = selectors[next]
+    delete $root$inner[nextSelector]
+    delete $root$outer[nextSelector]
+    delete $root$inner[$SUPERS][nextSelector]
+    delete definitions[tag]
+  }
   this._inheritDefinitionAt(tag)
 })
 
@@ -506,7 +517,6 @@ _Type.addMethod(function _reinheritDefinitions(_) {
     DeleteSelectorsIn([$root$inner, $root$outer, supers])
     DeleteSelectorsIn(
       [$root$inner[$IMMEDIATES], $root$outer[$IMMEDIATES], supers[$IMMEDIATES]])
-    DeleteSelectorsIn([$root$inner[$DECLARATIONS]])
     DeleteSelectorsIn([$root$inner[$ASSIGNERS]])
   }
 
@@ -715,7 +725,6 @@ _Type.addMethod(function _setImmutable(inPlace_, visited__) {
   // Frost($root$supers[$IMMEDIATES])
   // Frost($root$inner[$IMMEDIATES])
   // Frost($root$inner[$ASSIGNERS])
-  // Frost($root$inner[$DECLARATIONS])
   // Frost($root$outer)
   // Frost($root$supers)
   // Frost($root$inner)
