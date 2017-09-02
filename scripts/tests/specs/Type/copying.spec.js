@@ -65,7 +65,7 @@ describe("Type copying", function () {
         })
 
         it("has the same methods", function () {
-          expect( this.Cat2.selectors ).toEqual( this.Cat.selectors )
+          expect( this.Cat2.definedSelectors ).toEqual( this.Cat.definedSelectors )
         })
       })
     })
