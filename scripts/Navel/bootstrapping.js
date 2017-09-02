@@ -134,12 +134,11 @@ _SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false)
 // Could have defined the follow properties later, after addDeclaration has
 // been defined, however it is fast execution within each objects' barrier#get
 // if implemented this way.  These properties are read very frequently.
-_SetDefinitionAt.call(_$Something, "id"                     , null)
-_SetDefinitionAt.call(_$Something, _DURABLES                , null)
-_SetDefinitionAt.call(_$Intrinsic, "_postInit"              , null)
-_SetDefinitionAt.call(_$Intrinsic, "_initFrom_"             , null)
-_SetDefinitionAt.call(_$Intrinsic, "_setPropertiesImmutable", null)
-
+_SetDefinitionAt.call(_$Something, "id"     , null, INVISIBLE)
+_SetDefinitionAt.call(_$Something, _DURABLES, null, INVISIBLE)
+AddIntrinsicDeclaration("_postInit")
+AddIntrinsicDeclaration("_initFrom_")
+AddIntrinsicDeclaration("_setPropertiesImmutable")
 
 
 SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true , VISIBLE)

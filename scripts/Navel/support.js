@@ -134,7 +134,7 @@ function AsDefinition(...args) {
 
 
 function AddIntrinsicDeclaration(selector) {
-  _$Intrinsic._setDefinitionAt(selector, false, INVISIBLE)
+  _SetDefinitionAt.call(_$Intrinsic, selector, null, INVISIBLE)
 }
 
 function AddBaseMembershipProperty(type, selector) {
@@ -685,7 +685,7 @@ function OwnSelectors(target, ignoreDeclarations_) {
   next  = symbols.length
   while (next--) {
     symbol = symbols[next]
-    if (AsName(symbol)[0] !== "$") { selectors[index++] = symbol }
+    if (symbol.toString()[7] !== "$") { selectors[index++] = symbol }
   }
   return selectors
 }

@@ -182,6 +182,7 @@ _Type.addMethod(function allPublicSelectors() {
 })
 
 _Type.addMethod(function allDefinedSelectors() {
+  // All but intrinsic selectors
   return OwnSelectorsSorted(this._blanker.$root$inner)
 })
 

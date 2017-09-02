@@ -203,8 +203,9 @@ $dog  immutable
  dog  unspecified
 _dog  mutable
 
+HS.sub(function test(List, SCREW, PERMEABLE, Dog_))
 
-
+List: S
 --
 $INNER ==> $_
 ++
