@@ -72,9 +72,6 @@ const REINHERIT              = Symbol("REINHERIT")
 const INHERIT                = Symbol("INHERIT")
 
 
-// const KNOWN_GETTER       = {[IS_IMMUTABLE] : true, [GETTER] : true}
-
-
 
 const VisibleConfig = {
   configurable : true,

@@ -172,28 +172,26 @@ _Type.addMethod(function methodAncestryListing(selector) {
 
 
 
-
-_Type.addMethod(function selectors() {
-  return AllSelectors(this._blanker.$root$inner)
+_Type.addMethod(function allKnownSelectors() {
+  return AllSelectorsSorted(this._blanker.$root$inner, OwnSelectors)
 })
 
-_Type.addMethod(function publicSelectors() {
+_Type.addMethod(function allPublicSelectors() {
   // All visible public selectors
-  return AllSelectors(this._blanker.$root$outer)
+  return OwnSelectorsSorted(this._blanker.$root$outer)
+})
+
+_Type.addMethod(function allDefinedSelectors() {
+  return OwnSelectorsSorted(this._blanker.$root$inner)
 })
 
 _Type.addMethod(function definedSelectors() {
-  return OwnOrderedSelectors(this._blanker.$root$inner)
+  return OwnSelectorsSorted(this._definitions)
 })
 
-_Type.addMethod(function publicDefinedSelectors() {
-  return OwnOrderedSelectors(this._blanker.$root$outer)
+_Type.addMethod(function publicSelectors() {
+  return this.definedSelectors.filter(s => AsName(s)[0] !== "_")
 })
-
-
-
-
-
 
 
 

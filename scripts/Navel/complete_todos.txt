@@ -226,3 +226,11 @@ Change Method to Definition
 Change $KNOWNS to $DECLARATIONS
 Change ExtendMethodsInfrastructure to MakeDefinitionsInfrastructure
 Fix _deleteDefinitionAt
+
+===
+
+Selector families
+-
+DurableSelectors
+Visible|Invisible|All
+Public|Private|All

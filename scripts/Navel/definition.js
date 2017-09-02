@@ -28,12 +28,12 @@ _Definition.addMethod(function toString(_) {
 }, BASIC_VALUE_METHOD)
 
 
-AddMembershipSelector(_Definition, "isDeclaration", false)
-AddMembershipSelector(_Definition, "isDurable",     false)
-AddMembershipSelector(_Definition, "isAssigner"   , false)
-AddMembershipSelector(_Definition, "isProperty"   , false)
-AddMembershipSelector(_Definition, "isMethod"     , false)
-AddMembershipSelector(_Definition, "isValue"      , false)
+AddIntrinsicDeclaration("isDeclaration")
+AddIntrinsicDeclaration("isDurable")
+AddIntrinsicDeclaration("isAssigner")
+AddIntrinsicDeclaration("isProperty")
+AddIntrinsicDeclaration("isMethod")
+AddIntrinsicDeclaration("isValue")
 
 
 _Definition.addMethod(function _invalidSelectorError(selector) {

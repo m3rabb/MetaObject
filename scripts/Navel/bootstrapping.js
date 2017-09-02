@@ -106,6 +106,9 @@ const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode = VISIBLE) {
   else {
     const selector = tag
     CompletelyDeleteProperty(_$root, selector)
+    if (mode === INVISIBLE) {
+      DefineProperty(_$root, selector, InvisibleConfig)
+    }
     InSetProperty(_$root, selector, value, this)
   }
 
@@ -592,7 +595,9 @@ _Type.addMandatorySetter("setName", function name(newName) {
     if (priorName != null) {
       this.removeSharedProperty(AsMembershipSelector(priorName))
     }
-    AddMembershipSelector(this, AsMembershipSelector(properName))
+    const selector = AsMembershipSelector(properName)
+    this.addSharedProperty(selector, true)
+    AddIntrinsicDeclaration(selector)
   }
 
   this._setDisplayNames(properName)
@@ -638,7 +643,6 @@ _Type.addMethod(function _init(spec_name, context_) {
   // The ordering of the following is critical to avoid breaking the bootstrapping!!!
   this.setSupertypes(supertypes)
   this.addSharedProperty("type", this[$RIND])
-  // this._setDefinitionAt("type", this[$RIND], INVISIBLE)
   this.setName(name)
 
 

@@ -7,11 +7,19 @@ const Dog = Type({
   },
 
   define : [
+    "MANDATORY", [
+      function setName(name) {
+        this._basicSet("name", name)
+      },
+
+      "setAge"
+    ],
+
     "SHARED", { hasTeeth : true },
 
     function _init(name, age, breed) {
-      this.name = name
-      this.age  = age
+      this.setName(name)
+      this.setAge(age)
       this.breed = breed
     },
 
@@ -36,13 +44,5 @@ const Dog = Type({
     "LAZY", function humanAge() {
       return this.age * 7
     },
-
-    "MANDATORY", [
-      function setName(name) {
-        this.name = name
-      },
-
-      "setAge"
-    ]
   ]
 })

@@ -196,20 +196,20 @@ _$Intrinsic.addMethod(function _newBlank() {
 
 
 _$Intrinsic.addMethod(function _allSelectors() {
-  return AllSelectors(this[$INNER])
+  return AllSelectorsSorted(this[$INNER], OwnSelectors)
 })
 
 _$Intrinsic.addMethod(function _inheritedSelectors() {
-  return AllSelectors(this[$ROOT])
+  return this.type.allKnownSelectors
 })
 
 _$Intrinsic.addMethod(function visibleSelectors() {
-  return AllSelectors(this[$OUTER], true)
+  return AllSelectorsSorted(this[$OUTER], OwnVisibleNames)
 })
 
 _$Intrinsic.addMethod(function _ownSelectors() {
   // All string and symbol properties, includes invisibles
-  return OwnOrderedSelectors(this[$INNER])
+  return OwnSelectorsSorted(this[$INNER])
 })
 
 _$Intrinsic.addMethod(function ownSelectors() {

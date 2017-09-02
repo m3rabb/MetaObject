@@ -133,8 +133,12 @@ function AsDefinition(...args) {
 //
 
 
-function AddMembershipSelector(type, selector, value = true) {
-  _$Intrinsic.addDeclaration(selector)
+function AddIntrinsicDeclaration(selector) {
+  _$Intrinsic._setDefinitionAt(selector, false, INVISIBLE)
+}
+
+function AddBaseMembershipProperty(type, selector) {
+  AddIntrinsicMembershipProperty(selector)
   type.addSharedProperty(selector, value)
   if (value) { type.membershipSelector = selector }
 }
@@ -524,8 +528,8 @@ function NewInner(CompanionOuterMaker) {
 
     $inner[$BARRIER] = barrier
     $inner[$INNER]   = $inner
-    $inner[$PULP]    = new Proxy($inner, barrier)
     $inner[$OUTER]   = $outer
+    $inner[$PULP]    = new Proxy($inner, barrier)
     $inner[$RIND]    = $rind
     $outer[$RIND]    = $rind
     InterMap.set($rind, $inner)
@@ -586,8 +590,8 @@ function NewDisguisedInner(CompanionOuterMaker) {
     $inner[$DISGUISE] = func
     $inner[$BARRIER]  = mutability // barrier
     $inner[$INNER]    = $inner
-    $inner[$PULP]     = $pulp
     $inner[$OUTER]    = $outer
+    $inner[$PULP]     = $pulp
     $inner[$RIND]     = $rind
     $outer[$RIND]     = $rind
 
@@ -672,8 +676,9 @@ function BuildAncestryOf(type, supertypes) {
 
 
 
-function OwnSelectors(target) {
-  const selectors = OwnNames(target)
+function OwnSelectors(target, ignoreDeclarations_) {
+  const selectors = ignoreDeclarations_ ?
+    OwnVisibleNames(target) : OwnNames(target)
   const symbols   = OwnSymbols(target)
 
   index = selectors.length
@@ -686,18 +691,15 @@ function OwnSelectors(target) {
 }
 
 
-function OwnOrderedSelectors(target) {
-  const selectors = OwnSelectors(target)
+function OwnSelectorsSorted(target) {
+  const selectors = OwnSelectors(target, true) // Do ignore declarations
   selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
   return SetImmutable(selectors)
 }
 
 
-
-
-function AllSelectors(target, excludeSymbols_) {
+function AllSelectorsSorted(target, selectorPicker) {
   var targetSelectors, selector, index, next
-  const selectorPicker = excludeSymbols_ ? OwnNames : OwnSelectors
   const knowns         = SpawnFrom(null)
   const selectors      = []
 
@@ -723,7 +725,7 @@ function AllSelectors(target, excludeSymbols_) {
 function DeleteSelectorsIn(targets) {
   var selectors, selectorIndex, selector, targetIndex
 
-  selectors     = OwnSelectors(targets[0])
+  selectors     = _(targets[0])
   selectorIndex = selectors.length
 
   while (selectorIndex--) {

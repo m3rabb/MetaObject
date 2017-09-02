@@ -105,7 +105,7 @@ function AsOuterFact(property, Handler) {
   return {
     [name] : function (...args) {
       const _$receiver = InterMap.get(this)
-      var   barrier, useNewBarrier, hasNewTarget, _receiver, result, _$target
+      var   barrier, useNewBarrier, changedTarget, _receiver, result, _$target
       var   outer, _$result
 
       if (_$receiver[IS_IMMUTABLE]) {
@@ -122,19 +122,23 @@ function AsOuterFact(property, Handler) {
           _receiver = _$receiver[$PULP]
         }
 
-        barrier._$target = _$receiver
+        barrier._$target = _$receiver // Marks barrier as in use
         result           = Handler.apply(_receiver, args) // <<----------
         _$target         = barrier._$target
-        barrier._$target = null
+        barrier._$target = null       // Marks barrier as not in use
 
-        if ((hasNewTarget = (_$target !== _$receiver)) && !useNewBarrier) {
+        changedTarget = (_$target !== _$receiver)
+        if (changedTarget && !useNewBarrier) { // Reset existing barrier
+
           delete barrier.get
           delete barrier.set
           delete barrier.deleteProperty
         }
+        // Else, if didn't change targets handlers were not set. Or if new
+        // barrier, it will be garbage collected, so no need to clean it up
 
         if (result === undefined || result === _receiver) {
-          if (hasNewTarget) { _$target._setImmutable.call(_$target[$PULP]) }
+          if (changedTarget) { _$target._setImmutable.call(_$target[$PULP]) }
           return _$target[$RIND]
         }
       }
@@ -167,7 +171,7 @@ function AsOuterValue(property, Handler) {
   return {
     [name] : function (...args) {
       const _$receiver = InterMap.get(this)
-      var   barrier, useNewBarrier, hasNewTarget, _receiver, result, _$target
+      var   barrier, useNewBarrier, changedTarget, _receiver, result, _$target
 
       if (_$receiver[IS_IMMUTABLE]) {
         barrier = _$receiver[$BARRIER]
@@ -188,14 +192,15 @@ function AsOuterValue(property, Handler) {
         _$target         = barrier._$target
         barrier._$target = null
 
-        if ((hasNewTarget = (_$target !== _$receiver)) && !useNewBarrier) {
+        changedTarget = (_$target !== _$receiver)
+        if (changedTarget && !useNewBarrier) {
           delete barrier.get
           delete barrier.set
           delete barrier.deleteProperty
         }
 
         if (result === undefined || result === _receiver) {
-          if (hasNewTarget) { _$target._setImmutable.call(_$target[$PULP]) }
+          if (changedTarget) { _$target._setImmutable.call(_$target[$PULP]) }
           return _$target[$RIND]
         }
       }
@@ -216,7 +221,7 @@ function AsOuterSelf(property, Handler) {
   return {
     [name] : function (...args) {
       const _$receiver = InterMap.get(this)
-      var   barrier, useNewBarrier, hasNewTarget, _receiver, _$target
+      var   barrier, useNewBarrier, changedTarget, _receiver, _$target
 
       if (_$receiver[IS_IMMUTABLE]) {
         barrier = _$receiver[$BARRIER]
@@ -237,13 +242,14 @@ function AsOuterSelf(property, Handler) {
         _$target         = barrier._$target
         barrier._$target = null
 
-        if ((hasNewTarget = (_$target !== _$receiver)) && !useNewBarrier) {
+        changedTarget = (_$target !== _$receiver)
+        if (changedTarget && !useNewBarrier) {
           delete barrier.get
           delete barrier.set
           delete barrier.deleteProperty
         }
 
-        if (hasNewTarget) { _$target._setImmutable.call(_$target[$PULP]) }
+        if (changedTarget) { _$target._setImmutable.call(_$target[$PULP]) }
         return _$target[$RIND]
       }
 
