@@ -100,7 +100,7 @@ const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode = VISIBLE) {
   const definitions = this._definitions
 
   if (definitions[tag] === value) { return this }
-  if (mode === "VISIBLE" || mode === "INVISIBLE") { this._retarget }
+  if (mode === VISIBLE || mode === INVISIBLE") { this._retarget }
   // Set retroactively if INHERIT or REINHERIT!!!
 
   if (value && value.type === Definition) {
@@ -242,7 +242,7 @@ _$Something.addMethod(function isPermeable() {
 
 
 _$Intrinsic.addMethod(function _basicSet(property, value) {
-  const selector = PropertyToSymbol[property] || property
+  const selector = PropertyToSymbolMap[property] || property
   this[selector] = value
   return this
 }, BASIC_SELF_METHOD)

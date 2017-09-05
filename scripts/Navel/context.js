@@ -1,3 +1,5 @@
+const CONTEXT_PARAM_MATCHER  = /^((\$)|(_))?([\w$]+)(_)?$/
+
 function MakePermeableNewHandler(NewHandler) {
   return function permeableNew(...args) {
     const   instance = NewHandler.apply(this, args)

@@ -91,9 +91,9 @@ function AsSetterFromProperty(propertyName) {
 
 
 
-function AsPropertySymbol(propertyName) {
-  return PropertyToSymbol[propertyName] ||
-    (PropertyToSymbol[propertyName] = Symbol(`<$${propertyName}$>`))
+function AsPropertySymbol(selector) {
+  return PropertyToSymbolMap[selector] ||
+    (PropertyToSymbolMap[selector] = Symbol(`<$${AsName(selector)}$>`))
 }
 
 

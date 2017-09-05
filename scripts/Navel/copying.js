@@ -5,10 +5,10 @@ function InAtPut(source, property, value) {
   switch (source.constructor) {
     case WeakSet :
     case Set :
-      return InvalidCopyType(source)
+      return InvalidCopyTypeError(source)
 
     case WeakMap :
-      if (isImmutable) { return InvalidCopyType(source) }
+      if (isImmutable) { return InvalidCopyTypeError(source) }
       // break omitted
 
     case Map :
@@ -34,7 +34,7 @@ function CopyAtPut(source, property, value) {
     case WeakMap :
     case WeakSet :
     case Set :
-      return InvalidCopyType(source)
+      return InvalidCopyTypeError(source)
 
     case Map :
       target.set(property, value)
