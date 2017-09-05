@@ -14,7 +14,7 @@ _Void.isVoid = true
 
 _BasicSetImmutable.call(_$Void)
 
-_$Nothing._setImmutable()
+_$Nothing.beImmutable
 
 
 //     Nothing

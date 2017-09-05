@@ -229,6 +229,14 @@ Change ExtendMethodsInfrastructure to MakeDefinitionsInfrastructure
 Fix _deleteDefinitionAt
 
 ===
+Consider making sharedProperties be visible instead of invisible, and using a
+lookaside DURABLES array to hold properties to be copied!
+
+
+Once Contexts are complete, make it so that new_ & newAsFact_ are only added
+to permeable Types.
+
+
 
 Selector families
 -

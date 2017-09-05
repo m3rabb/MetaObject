@@ -2,7 +2,7 @@
 PropertyLoader = Type("PropertyLoader")
 
 const modeNames = `DECLARE DECLARATION STANDARD SHARED ALIAS METHOD
-                   LAZY RETROACTIVE DURABLE
+                   LAZY RETRO RETROACTIVE DURABLE
                    FOR_ASSIGN FOR_SETTER FOR_MANDATORY SETTER MANDATORY`
 
 PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
@@ -91,6 +91,7 @@ PropertyLoader.addMethod(function _loadPair(name, value, mode) {
 
     case "METHOD"        : return this._type.addMethod             (name, value)
     case "LAZY"          : return this._type.addLazyProperty       (name, value)
+    case "RETRO"         :
     case "RETROACTIVE"   : return this._type.addRetroactiveProperty(name, value)
     case "SETTER"        : return this._type.addSetter             (name, value)
     case "MANDATORY"     : return this._type.addMandatorySetter    (name, value)
@@ -113,6 +114,7 @@ PropertyLoader.addMethod(function _loadFunc(func, mode) {
     case "METHOD"        : return this._type.addMethod             (func)
 
     case "LAZY"          : return this._type.addLazyProperty       (func)
+    case "RETRO"         :
     case "RETROACTIVE"   : return this._type.addRetroactiveProperty(func)
     case "SETTER"        : return this._type.addSetter             (func)
     case "MANDATORY"     : return this._type.addMandatorySetter    (func)

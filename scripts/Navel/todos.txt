@@ -184,15 +184,8 @@ Create an option for unknownProperty to return undefined
 Check $OUTER_WRAPPER
 
 ==
-Consider making sharedProperties be visible instead of invisible, and using a
-lookaside DURABLES array to hold properties to be copied!
 
 Think about how to manage $Intrinsic type NOT being copied!
-Make $Intrinsic's $DECLARATIONS be the old mutable property to
-enable any object to response to membership methods
-
-Once Contexts are complete, make it so that new_ & newAsFact_ are only added
-to permeable Types.
 
 
 Symbols are known but not visible
@@ -200,7 +193,11 @@ Symbols are known but not visible
 ==========
 
 ikigai
-
+ponzu
+enjoyment
+ObjectSauce
+osauce
+isSauced
 
 
 // var ParenthesesMatcher   = /\(|\)/

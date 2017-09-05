@@ -2,7 +2,6 @@ describe("Type impermeable outer", function() {
   beforeEach(function () {
     this.Bat = Type({
       name: "Bat",
-      context: {id: "Tester"},
       defines: [
         "name, kind",
 
@@ -35,7 +34,7 @@ describe("Type impermeable outer", function() {
 
     describe("public immediate method", function () {
       it("Executes the method", function () {
-        expect( this.Bat.formalName ).toBe( "Tester@Bat" )
+        expect( this.Bat.formalName ).toBe( "Bat" )
       })
     })
 
@@ -175,7 +174,7 @@ describe("Type impermeable outer", function() {
       expect( bat.name ).toBe( "Spooky" )
       expect( bat.kind ).toBe( "Fruit" )
       expect( bat.isImmutable ).toBe( true )
-      expect( bat.oid ).toBe( "1.Tester@Bat" )
+      expect( bat.oid ).toBe( "1.Bat" )
     })
 
     xit("Answers an instance that's the exactly same as when executing .newAsFact", function () {

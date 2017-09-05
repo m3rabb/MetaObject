@@ -458,17 +458,18 @@ function MakeDefinitionsInfrastructure(_$target, _$root) {
  * created instance.
  */
 
-function NewBlanker(rootBlanker, maker_) {
+function NewBlanker(rootBlanker, applyHandler_) {
   const root$root$inner = rootBlanker.$root$inner
   const root$root$outer = rootBlanker.$root$outer
-  const blankerMaker    = maker_ || rootBlanker.innerMaker
+  const blankerMaker    = applyHandler_ ?
+    NewDisguisedInner : rootBlanker.innerMaker
   const _$root          = SpawnFrom(root$root$inner)
   const  $root          = SpawnFrom(root$root$outer)
   // Note: The blanker function must be unnamed in order for the debugger to
   // display the type of instances using type name determined by the name of
   // its constructor function property.
   const OuterMaker      = NewNamelessVacuousFunc()
-  const Blanker         = blankerMaker(OuterMaker)
+  const Blanker         = blankerMaker(OuterMaker, applyHandler_)
                          // Should this simply inherit from null!!!???
 
   OuterMaker.prototype = $root
@@ -568,7 +569,7 @@ function NewInner(CompanionOuterMaker) {
  * @param       {OuterMaker} CompanionOuterMaker The companion blanker.
  * @returns     {Blanker}
  */
-function NewDisguisedInner(CompanionOuterMaker) {
+function NewDisguisedInner(CompanionOuterMaker, applyHandler) {
   // Note: The blanker function must be unnamed in order for the debugger to
   // display the type of instances using type name determined by the name of
   // its constructor function property.
@@ -583,7 +584,7 @@ function NewDisguisedInner(CompanionOuterMaker) {
     // const barrier    = new InnerBarrier()
     const $pulp      = new Proxy(func, mutability)
     // mutability._target = $pulp
-    const porosity   = new DisguisedOuterBarrier($pulp, $outer)
+    const porosity   = new DisguisedOuterBarrier($pulp, $outer, applyHandler)
     const $rind      = new Proxy(func, porosity)
     // const $rind           = new Proxy(NewAsFact, privacyPorosity)
 
@@ -656,7 +657,7 @@ function BuildRoughAncestryOf(supertypes, originalTypes_) {
  * @param       {Type[]}     supertypes   The type's supertypes.
  * @returns     {Type[]}
  */
-function BuildAncestryOf(type, supertypes) {
+function BuildAncestryOf(type, supertypes = type.supertypes) {
   const roughAncestry   = BuildRoughAncestryOf(supertypes)
   const visited         = new Set()
   const dupFreeAncestry = []
@@ -671,7 +672,7 @@ function BuildAncestryOf(type, supertypes) {
     }
   }
   dupFreeAncestry.reverse().push(type)
-  return SetImmutable(dupFreeAncestry)
+  return BasicSetObjectImmutable(dupFreeAncestry)
 }
 
 
@@ -694,7 +695,7 @@ function OwnSelectors(target, ignoreDeclarations_) {
 function OwnSelectorsSorted(target) {
   const selectors = OwnSelectors(target, true) // Do ignore declarations
   selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
-  return SetImmutable(selectors)
+  return BasicSetObjectImmutable(selectors)
 }
 
 
@@ -717,7 +718,7 @@ function AllSelectorsSorted(target, selectorPicker) {
     target = RootOf(target)
   }
   selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
-  return SetImmutable(selectors)
+  return BasicSetObjectImmutable(selectors)
 }
 
 
@@ -725,7 +726,7 @@ function AllSelectorsSorted(target, selectorPicker) {
 function DeleteSelectorsIn(targets) {
   var selectors, selectorIndex, selector, targetIndex
 
-  selectors     = _(targets[0])
+  selectors     = OwnSelectors(targets[0])
   selectorIndex = selectors.length
 
   while (selectorIndex--) {
@@ -758,18 +759,10 @@ function DeleteSelectorsIn(targets) {
 
 
 
-/**
- * Makes the target JS object be immutable. Note: This method is quick and
- * dirty. Use SetImmutableObject instead for comprehensive immutability!
- * @private
- * @param       {Object} target The target JS object.
- * @returns     {Object} Answers the target, itself.
- * @todo Consider renaming this method BasicSetImmutable
- */
-function SetImmutable(target) {
-  target[IS_IMMUTABLE] = true
-  return Frost(target)
-}
+
+
+
+
 
 /**
  * Makes the target function and its prototype be immutable. Also, marks the
@@ -851,6 +844,8 @@ function SetAsymmetricProperty(_type, property, _value, $value, visibility) {
 
 
 function IsSubtypeOfThing(_type) {
+  // return (_type._basicSet !== undefined)
+  // The following fails when testing _$Something
   return (RootOf(_type._blanker.$root$inner) === $Intrinsic$root$inner)
 }
 
@@ -903,6 +898,38 @@ const _BasicSetImmutable = function _basicSetImmutable(inPlace_, visited__) {
 } // BASIC_SELF_METHOD
 
 
+// This method should only be called on a mutable object!!!
+function BasicSetImmutable(_target) {
+  var _$target, $target
+  if ((_$target = _target[$INNER])) {
+    $target = _$target[$OUTER]
+    delete _$target._retarget
+    $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
+    Frost($target)
+    return _target
+  }
+
+  _target[IS_IMMUTABLE] = true
+  return Frost(_target)
+}
+
+
+// /**
+//  * Makes the target JS object be immutable. Note: This method is quick and
+//  * dirty. Use SetImmutableObject instead for comprehensive immutability!
+//  * @private
+//  * @param       {Object} target The target JS object.
+//  * @returns     {Object} Answers the target, itself.
+//  * @todo Consider renaming this method BasicSetImmutable
+//  */
+//
+// This method should only be called on a mutable object!!!
+function BasicSetObjectImmutable(target) {
+  target[IS_IMMUTABLE] = true
+  return Frost(target)
+}
+
+
 
 function CompletelyDeleteProperty(_$target, selector) {
   delete _$target[selector]
@@ -914,6 +941,31 @@ function CompletelyDeleteProperty(_$target, selector) {
   delete supers[$IMMEDIATES][selector]
 }
 
+
+
+
+function BePermeable(target) {
+  const _$target = InterMap.get(target)
+  if (!_$target) {
+    return SignalError(source, "Can only make permeable copies of sauced objects!!")
+  }
+  if (_$target[$LOCKED]) {
+    return _$source._signalError("Can't make permeable copies of locked objects!!")
+  }
+
+  const _target = _$target[$PULP]
+  const $target = _$target[$OUTER]
+  DefineProperty($target, "this", InvisibleConfig)
+  $target.this = _target
+
+  if (_$target.isType) {
+    newHandler = _$target.new.handler
+    newDefinition = (newHandler === _BasicNew) ?
+      BasicPermeableNewDef : MakePermeableNewHandler(newHandler)
+    _target.addOwnDefinition(newDefinition)
+  }
+  return target
+}
 
 
 

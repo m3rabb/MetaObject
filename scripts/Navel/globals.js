@@ -71,6 +71,14 @@ const INVISIBLE              = Symbol("INVISIBLE")
 const REINHERIT              = Symbol("REINHERIT")
 const INHERIT                = Symbol("INHERIT")
 
+const PERMEABLE              = Symbol("PERMEABLE")
+const IMPERMEABLE            = Symbol("IMPERMEABLE")
+
+const PARAMS_MATCHER         = /[\w$]+/g
+const CONTEXT_PARAM_MATCHER  = /^((\$)|(_))?([\w$]+)(_)?$/
+const FUNC_PROLOG_MATCHER    =
+  /^(function(\s+([\w$]+))?\s*\(([\w$\s,]*)\)|(\(([\w$\s,]*)\)|([\w$]+))\s*=>)/
+
 
 
 const VisibleConfig = {

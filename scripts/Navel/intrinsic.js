@@ -17,7 +17,7 @@
 _$Intrinsic.addMethod(function _addOwnDurable(selector) {
   var durables = this[_DURABLES] || []
   if (!durables.includes(selector)) {
-    this[_DURABLES] = SetImmutable([...durables, selector])
+    this[_DURABLES] = BasicSetObjectImmutable([...durables, selector])
     addOwnDeclaration(selector)
   }
   return this
@@ -214,7 +214,7 @@ _$Intrinsic.addMethod(function _ownSelectors() {
 
 _$Intrinsic.addMethod(function ownSelectors() {
   // Includes placed retroactive|lazy properties, but not symbols
-  return SetImmutable(OwnNames(this[$OUTER]).sort())
+  return BasicSetObjectImmutable(OwnNames(this[$OUTER]).sort())
 })
 
 
@@ -398,8 +398,8 @@ _$Intrinsic.addMethod(Symbol.toPrimitive, function (hint) {
 
 
 
-_$Intrinsic.addMethod(function _unknownProperty(property) {
-  return this._signalError(`Receiver ${this.basicId} doesn't have a property '${AsName(property)}'!!`)
+_$Intrinsic.addMethod(function _unknownProperty(selector) {
+  return this._signalError(`Receiver ${this.basicId} doesn't have a property '${AsName(selector)}'!!`)
 })
 
 _$Intrinsic.addMethod("_basicUnknownProperty", $Intrinsic$root$inner._unknownProperty)

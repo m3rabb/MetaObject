@@ -33,6 +33,7 @@ _Thing.addMethod(function _init(spec_) {
 
 
 // This method should only be called on a mutable object!!!
+// must ensure visited is set to a WeakMap if used!!!
 _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
   var durables, selector, next, value, nextValue
   const $inner                  = this[$INNER]
@@ -56,7 +57,7 @@ _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
       if (selector[0] !== "_") { continue }
 
       value     = $inner[selector]
-      nextValue = SetImmutableValue(value, inPlace, visited, $rind)
+      nextValue = ValueAsFact(value, inPlace, visited, $rind)
       if (nextValue !== value) { $inner[selector] = nextValue }
     }
   }

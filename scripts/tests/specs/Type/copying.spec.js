@@ -4,7 +4,7 @@ describe("Type copying", function () {
   function mood(newMood) { return `very ${newMood}` }
 
   beforeAll(function () {
-    this.redBall = SetImmutable({color : "red"})
+    this.redBall = BasicSetObjectImmutable({color : "red"})
 
     this.CatSpec = {
       name   : "Cat",

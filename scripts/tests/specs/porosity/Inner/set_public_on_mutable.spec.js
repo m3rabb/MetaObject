@@ -4,8 +4,8 @@ describe("Setting a public property on the inner of mutable object", function() 
   function mood(newMood) { return `very ${newMood}` }
 
   beforeAll(function () {
-    this.redBall  = SetImmutable({color : "red"})
-    this.blueBall = SetImmutable({color : "blue"})
+    this.redBall  = BasicSetObjectImmutable({color : "red"})
+    this.blueBall = BasicSetObjectImmutable({color : "blue"})
 
     this.Cat_ = Type.new_({
       name   : "Cat",
@@ -370,7 +370,7 @@ describe("Setting a public property on the inner of mutable object", function() 
 
     describe("When the value is an immutable JS object", function() {
       beforeEach(function () {
-        this.value     = SetImmutable([1, 2, 3])
+        this.value     = BasicSetObjectImmutable([1, 2, 3])
         this.$pulp.xyz = this.value
       })
 

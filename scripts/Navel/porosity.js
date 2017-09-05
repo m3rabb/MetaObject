@@ -267,9 +267,11 @@ InnerBarrier_prototype.retargetedDelete = function retargetedDelete(_$source, se
 }
 
 
+function Context_apply(disguiseFunc, receiver, args) {
+  return this._target.sub(...args).beImmutable
+}
 
-function Type_apply(func, receiver, args) {
-  // return func.apply(this.$inner, args)
+function Type_apply(disguiseFunc, receiver, args) {
   // return this._target.newAsFact(...args)
 
   // This is the same code as in newAsFact(...args)
@@ -281,9 +283,10 @@ function Type_apply(func, receiver, args) {
 }
 
 
-function DisguisedOuterBarrier(_target, $target) {
-  this._target      = _target
-  this.$target      = $target
+function DisguisedOuterBarrier(_target, $target, applyHandler) {
+  this._target = _target
+  this.$target = $target
+  this.apply   = applyHandler
 }
 
 const DisguisedOuterBarrier_prototype = SpawnFrom(OuterBarrier_prototype)
@@ -296,8 +299,6 @@ DisguisedOuterBarrier_prototype.get = function get(func, selector, target) {
 DisguisedOuterBarrier_prototype.has = function has(func, selector) {
   return Impermeable.has(this.$target, selector)
 }
-
-DisguisedOuterBarrier_prototype.apply = Type_apply
 
 
 

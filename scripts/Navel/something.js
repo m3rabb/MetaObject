@@ -13,8 +13,8 @@ _$Something.addMethod(function _super() { // RetroactiveProperty
 
 
 
-_$Something.addMethod(function _unknownProperty(property) {
-  return SignalError(this, `Receiver ${this.id} doesn't have a property: ${AsName(property)}!!`)
+_$Something.addMethod(function _unknownProperty(selector) {
+  return SignalError(this, `Receiver ${this.id} doesn't have a property: ${AsName(selector)}!!`)
 })
 
 
@@ -33,11 +33,11 @@ _$Something.addMethod(function is(value) {
 // }, BASIC_VALUE_METHOD)
 
 
-
+_$Something.addSharedProperty("isSauced", true)
 
 
 _$Something.addMethod(function isImmutable() {
-  return this[IS_IMMUTABLE] ? true : false
+  return this[IS_IMMUTABLE] || false
 }, BASIC_VALUE_METHOD)
 
 

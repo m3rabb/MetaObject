@@ -35,7 +35,7 @@ InterMap.set(instance, _$instance)
 
 Disguised Instance
 _$instance {
-  _func : vacuousFunc
+  $DISGUISE : vacuousFunc
   $RIND : instance <vacuousFunc, disguisingPermeability(_instance, $instance, permeability)>
   $INNER : _$instance
   $OUTER : $instance {
@@ -62,7 +62,7 @@ InterMap.set(instance, _$instance)
 
 Type Instance
 _$type {
-  _func : vacuousFunc
+  $DISGUISE : vacuousFunc
   $RIND : type <vacuousFunc, disguisingPermeability(_type, $type, permeability)>
   $INNER : _$type
   $OUTER : $type {
@@ -80,12 +80,12 @@ _$type {
   iid
   _iidCount : 0
   _subordinateTypes : Set
+  _definitions
 
   _blanker : blanker {
     innerMaker : blankerMaker
     $root$outer : $root {
       $IMMEDIATES : s {}
-      $KNOWNS : knowns {}
       type : type
     }
     $root$inner : _$root {
@@ -96,7 +96,6 @@ _$type {
       $SUPERS : {
         $IMMEDIATES : s {}
       }
-      $KNOWNS : knowns {}
       $BLANKER : blanker
       type : type
     }

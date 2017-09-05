@@ -4,7 +4,7 @@ describe("Deleting a property on the inner of immutable object", function() {
   function mood(newMood) { return `very ${newMood}` }
 
   beforeAll(function () {
-    this.redBall = SetImmutable({color : "red"})
+    this.redBall = BasicSetObjectImmutable({color : "red"})
 
     this.Cat_ = Type.new_({
       name   : "Cat",

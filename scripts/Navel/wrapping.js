@@ -24,8 +24,8 @@ function AsAssignmentSetter(propertyName, setterName, Assigner) {
   const name = `${AsName(setterName)}_$assignSet_${propertyName}`
   const PropertyName = AsPropertySymbol(propertyName)
   return {
-    [name] : function (value) {
-      this[PropertyName] = Assigner.call(this, value)
+    [name] : function (...args) {
+      this[PropertyName] = Assigner.apply(this, args)
     }
   }[name]
 }

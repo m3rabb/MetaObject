@@ -161,7 +161,7 @@ function NextValue(value, asImmutable, visited, source, target) {
 }
 
 
-function Copy(value, asImmutable_) {
+function Copy(value, asImmutable_, visited__) {
   if (typeof value !== "object") { return value }
   if (value === null)            { return value }
   if (value[IS_IMMUTABLE])       { return value }
@@ -170,8 +170,17 @@ function Copy(value, asImmutable_) {
   const _$value = InterMap.get(value)
 
   return (_$value) ?
-    _$Copy(_$value, asImmutable_)[$RIND] :
-    CopyObject(value, asImmutable_)
+    _$Copy(_$value, asImmutable_, visited__)[$RIND] :
+    CopyObject(value, asImmutable_, visited__)
+}
+
+
+function SetImmutable(target) {
+  if (typeof value !== "object") { return value }
+  if (value === null)            { return value }
+  if (value[IS_IMMUTABLE])       { return value }
+
+  return value.beImmutable || SetImmutableObject(target)
 }
 
 
@@ -193,7 +202,7 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
       while (next--) {
         property  = properties[next]
         value     = target[property]
-        nextValue = SetImmutableValue(value, inPlace, visited, target)
+        nextValue = ValueAsFact(value, inPlace, visited, target)
         if (nextValue === value) { continue }
         target[property] = nextValue
       }
@@ -204,7 +213,7 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
 
       while (next--) {
         value     = target[next]
-        nextValue = SetImmutableValue(value, inPlace, visited, target)
+        nextValue = ValueAsFact(value, inPlace, visited, target)
         if (nextValue === value) { continue }
         target[next] = nextValue
       }
@@ -215,8 +224,8 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
 
       for (key of keys) {
         value     = target.get(key)
-        nextKey   = SetImmutableValue(key  , inPlace, visited, target)
-        nextValue = SetImmutableValue(value, inPlace, visited, target)
+        nextKey   = ValueAsFact(key  , inPlace, visited, target)
+        nextValue = ValueAsFact(value, inPlace, visited, target)
 
         if (nextKey !== key) {
           target.delete(key)
@@ -230,7 +239,7 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
       values = target.values()
 
       for (value of values) {
-        nextValue = SetImmutableValue(value, inPlace, visited, target)
+        nextValue = ValueAsFact(value, inPlace, visited, target)
 
         if (nextValue === value) { continue }
         target.delete(value)
@@ -245,7 +254,7 @@ function SetImmutableObject(target, inPlace, visited = new WeakMap()) {
 
 
 
-function SetImmutableValue(value, inPlace, visited, target) {
+function ValueAsFact(value, inPlace, visited, target) {
   if (typeof value !== "object") { return value }
   if (value === null)            { return value }
   if (value === target)          { return value }

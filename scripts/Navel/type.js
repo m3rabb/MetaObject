@@ -51,7 +51,7 @@ _Type.addMethod(function addDurable(selector) {
   const $root$inner = this._blanker.$root$inner
   const durables    = $root$inner[_DURABLES] || []
   if (!durables.includes(selector)) {
-    $root$inner[_DURABLES] = SetImmutable([...durables, selector])
+    $root$inner[_DURABLES] = BasicSetObjectImmutable([...durables, selector])
     this.addDeclaration(selector)
   }
   return this
@@ -111,7 +111,7 @@ _Type.addMethod(function _nextIID() {
   return ++this[$INNER]._iidCount
 }, BASIC_VALUE_METHOD)
 
-_Type.addLazyProperty(function id() {
+_Type.addRetroactiveProperty(function id() {
   return `${this.formalName},${this.basicId}`
 })
 
@@ -128,8 +128,13 @@ _Type.addMethod(function toString(_) {
 
 
 
+
+_Type.addMethod(function addSubtype(name) {
+  return Type.new(name, [this.$])
+})
+
 _Type.addMethod(function addSupertype(type) {
-  const newSupertypes = SetImmutable([...this.supertypes, types])
+  const newSupertypes = BasicSetObjectImmutable([...this.supertypes, types])
   this.setSupertypes(newSupertypes)
 })
 
@@ -161,7 +166,7 @@ _Type.addMethod(function definitionAt(selector) {
 
 
 _Type.addMethod(function methodAncestry(selector) {
-  return SetImmutable(
+  return BasicSetObjectImmutable(
     this.ancestry.filter(type => type.hasDefinedMethod(selector)))
 })
 
@@ -231,10 +236,7 @@ _Type.addMethod(function newAsFact_(...args) {
 _Type.addMethod(function _initFrom_(_type) {
   var tag, definitions
 
-  this._init({
-    name       : _type.name,
-    supertypes : _type.supertypes,
-  })
+  this._init(_type.name, _type.supertypes)
 
   definitions = _type._definitions
   for (tag in definitions) {
@@ -258,9 +260,67 @@ _Type.addAlias("forRemoveAssigner", "removeAssigner"       )
 
 
 
+_Type.addMethod(function lock() {
+  this._blanker.$root$inner[$LOCKED] = this[$INNER][$LOCKED] = true
+}, BASIC_SELF_METHOD)
+
+_Type.addMethod(function isLocked() {
+  return this[$LOCKED] || false
+}, BASIC_VALUE_METHOD)
 
 
 
+
+// //===
+// _Type.addMethod(function _initFrom_(_type) {
+//   this$                  = this[$RIND]
+//   this.context           = null
+//   this._iidCount         = 0
+//   this._subordinateTypes = new Set()
+//
+//   this.ancestry = _type.ancestry
+//   this._basicSet("supertypes", supertypes)
+//   this._basicSet("name", name)
+//
+//   const isThing       = IsSubtypeOfThing(_type)
+//   const parentBlanker = isThing ? $IntrinsicBlanker : $SomethingBlanker
+//   const blanker       = new NewBlanker(parentBlanker)
+//
+//   this._definitions   = CopyInto(SpawnFrom(null), _type._definitions, "COPY")
+//
+//   const sourceBlanker = _type._blanker
+//   const _$source      = sourceBlanker.$root$inner
+//   const  $source      = sourceBlanker.$root$outer
+//   const _$root        = this.blanker.$root$inner
+//   const  $root        = this.blanker.$root$outer
+//
+//   AssignInto(_$root, _$source, "AVOID$SELECTORS")
+//   AssignInto( $root,  $source) // Warning, copies $RIND (and $IMMEDIATES) too!
+//   $root = this$
+//   AssignInto(_$root[$IMMEDIATES]         , _$source[$IMMEDIATES])
+//   AssignInto( $root[$IMMEDIATES]         ,  $source[$IMMEDIATES])
+//   AssignInto(_$root[$ASSIGNERS]          , _$source[$ASSIGNERS])
+//   AssignInto(_$root[$SUPERS]             , _$source[$SUPERS])
+//   AssignInto(_$root[$SUPERS][$IMMEDIATES], _$source[$SUPERS][$IMMEDIATES])
+//
+//   this.addSharedProperty("type", this$)
+//   this._setAsSubordinateOfSupertypes(supertypes)
+// }
+//
+// function AssignInto(target, source, mode_) {
+//   var next, selector, selectors
+//   selectorPicker = (mode_ === "AVOID$SELECTORS") ? OwnSelectors : OwnKeys
+//   selectors      = selectorPicker(source)
+//   next           = selectors.length
+//   if (mode_ === "COPY") {
+//     while (next--) { target[selector] = Copy(source[selector]) }
+//   }
+//   else {
+//     while (next--) { target[selector] = source[selector] }
+//   }
+//   return target
+// }
+// //===
 
 
 // Type.addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])
@@ -268,21 +328,6 @@ _Type.addAlias("forRemoveAssigner", "removeAssigner"       )
 // Type.moveMethodTo("", target)
 
 ////=====
-
-
-// function MakeNew_(existingCustomNew) {
-//   return function new_(...args) {
-//     const instance   = existingCustomNew.apply(this, args)
-//     const _$instance = InterMap.get(instance)
-//     const $instance  = _$instance[$OUTER]
-//     const instance_  = new Proxy($instance, Permeable)
-//
-//     $instance.this = _$instance
-//     $instance[$RIND] = _$instance[$RIND] = instance_
-//     InterMap.set(instance_, _$instance)
-//     return instance_
-//   }
-// }
 
 
 
@@ -339,38 +384,3 @@ _Type.addAlias("forRemoveAssigner", "removeAssigner"       )
 // })
 //
 //
-//
-//
-// _Type.addMethod(function _immediateMethods() {
-//   return SetImmutable(this._getImmediateMethods(false))
-// })
-//
-// _Type.addMethod(function _methods() {
-//   return SetImmutable(this._getMethods(false))
-// })
-//
-// _Type.addMethod(function _definedMethods() {
-//   return SetImmutable(this._getDefinedMethods(false))
-// })
-//
-//
-// _Type.addMethod(function immediateMethods() {
-//   return SetImmutable(this._getImmediateMethods(true))
-// })
-//
-// _Type.addMethod(function methods() {
-//   return SetImmutable(this._getMethods(true))
-// })
-//
-// _Type.addMethod(function definedMethods() {
-//   return SetImmutable(this._getDefinedMethods(true))
-// })
-//
-//
-// _Type.addMethod(function methodsListing() {
-//   return this.methods.map(method => method.tag).join(" ")
-// })
-//
-// _Type.addMethod(function definedMethodsListing() {
-//   return this.definedMethods.map(method => method.tag).join(" ")
-// })

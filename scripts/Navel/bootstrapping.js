@@ -37,8 +37,8 @@ DefineProperty($BaseBlanker.$root$inner, "constructor", InvisibleConfig)
 
 const $SomethingBlanker   = NewBlanker($BaseBlanker)
 const   $IntrinsicBlanker = NewBlanker($SomethingBlanker)
-const     TypeBlanker     = NewBlanker($IntrinsicBlanker, NewDisguisedInner)
-
+const     TypeBlanker     = NewBlanker($IntrinsicBlanker, Type_apply)
+const     ContextBlanker  = NewBlanker($IntrinsicBlanker, Context_apply)
 
 
 
@@ -53,8 +53,8 @@ function BootstrapType(name, blanker_) {
   _$type._definitions      = SpawnFrom(null)
   _$type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
   _$type._subordinateTypes = new Set()
-  _$type.supertypes        = ($type.supertypes = EMPTY_ARRAY)
-  _$type.ancestry          = isImplementation ? EMPTY_ARRAY : ThingAncestry
+  _$type._supertypes       = EMPTY_ARRAY
+  _$type._ancestry         = isImplementation ? EMPTY_ARRAY : ThingAncestry
   return _$type[$PULP]
 }
 
@@ -65,12 +65,14 @@ const _$Intrinsic = BootstrapType("$Intrinsic", $IntrinsicBlanker )
 const _Thing      = BootstrapType("Thing"     , null              )
 const _Type       = BootstrapType("Type"      , TypeBlanker       )
 const _Definition = BootstrapType("Definition", null              )
+const _Context    = BootstrapType("Type"      , ContextBlanker    )
 
 const $Something = _$Something[$RIND]
 const $Intrinsic = _$Intrinsic[$RIND]
 const Thing      = _Thing     [$RIND]
 const Type       = _Type      [$RIND]
 const Definition = _Definition[$RIND]
+const Context    = _Context   [$RIND]
 
 ThingAncestry[0] = Thing
 
@@ -98,7 +100,8 @@ const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode = VISIBLE) {
   const definitions = this._definitions
 
   if (definitions[tag] === value) { return this }
-  this._retarget
+  if (mode === "VISIBLE" || mode === "INVISIBLE") { this._retarget }
+  // Set retroactively if INHERIT or REINHERIT!!!
 
   if (value && value.type === Definition) {
     SetDefinition(_$root, value)
@@ -128,8 +131,9 @@ const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode = VISIBLE) {
 }
 
 
-_SetDefinitionAt.call(_$Something, "isSomething", true )
 _SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false)
+_SetDefinitionAt.call(_$Something, "isSomething", true )
+_SetDefinitionAt.call(_$Something, "isNothing"  , null , INVISIBLE)
 
 // Could have defined the follow properties later, after addDeclaration has
 // been defined, however it is fast execution within each objects' barrier#get
@@ -524,6 +528,7 @@ _Type.addMethod(function _reinheritDefinitions(_) {
 _Type.addMethod(function _propagateReinheritance() {
   this._subordinateTypes.forEach(subtype => {
     var _$subtype = InterMap.get(subtype)
+    _$subtype._ancestry = BuildAncestryOf(subtype) // Reset retroactively!!!
     _$subtype._reinheritDefinitions.call(_$subtype[$PULP])
   })
 })
@@ -538,15 +543,20 @@ _Type.addMethod(function _setAsSubordinateOfSupertypes(supertypes) {
 
   while (next--) {
     _$supertype = InterMap.get(supertypes[next])
-    if ((subtypes = _$supertype._subordinateTypes)) { subtypes.add(subtype) }
+    if (!_$supertype[IS_IMMUTABLE]) {
+      _$supertype._subordinateTypes.add(subtype)
+    }
   }
 })
 
 
+_Type.addMethod(function ancestry() { return this._ancestry })
+
+_Type.addMethod(function supertypes() { return this._supertypes })
 
 
-_Type.addMandatorySetter("setSupertypes", function supertypes(nextSupertypes) {
-  if (this.supertypes === nextSupertypes) { return nextSupertypes }
+_Type.addMandatorySetter("setSupertypes", function _supertypes(nextSupertypes) {
+  if (this._supertypes === nextSupertypes) { return nextSupertypes }
 
   if (nextSupertypes.length !== new Set(nextSupertypes).size) {
     return DuplicateSupertypeError(this)
@@ -569,10 +579,10 @@ _Type.addMandatorySetter("setSupertypes", function supertypes(nextSupertypes) {
     this._subordinateTypes = new Set()
   }
 
-  this.ancestry = nextAncestry
+  this._ancestry = nextAncestry
   this._setAsSubordinateOfSupertypes(nextSupertypes)
   this._reinheritDefinitions()
-  return nextSupertypes
+  return BasicSetObjectImmutable(nextSupertypes)
 })
 
 
@@ -605,6 +615,13 @@ _Type.addMandatorySetter("setName", function name(newName) {
 })
 
 
+_Type.addMandatorySetter("setContext", function context(context) {
+  return (this.context) ?
+    this._signalError("A type's context can only be set once!!") : context
+})
+
+
+
 
 //  spec
 //    name
@@ -612,38 +629,41 @@ _Type.addMandatorySetter("setName", function name(newName) {
 //    shared|sharedProperties
 //    methods|instanceMethods
 
-
-_Type.addMethod(function _init(spec_name, context_) {
-  var context, name, supertypes, supertype, shared, methods, definitions
-
-  context    = context_ || spec_name.context || null
-  name       = spec_name.name || spec_name
-  supertypes = spec_name.supertypes
-
-  if (supertypes === undefined) {
-    supertype  = spec_name.supertype
-    supertypes = (supertype === undefined) ?
-      [context && context.Thing || Thing] :
-      ((supertype === null) ? EMPTY_ARRAY : [supertype])
+_Type.addMethod(function _extractSupertypes(spec_name, supertypes_) {
+  var supertypes = supertypes_
+  if (supertypes_ === undefined) {
+    supertypes = spec_name.supertypes
+    if (supertypes === undefined) { supertypes = spec_name.supertype }
+    if (supertypes === undefined) {
+      const context = this.context
+      return [context && context.Thing || Thing]  // ObjectSauce.Thing
+    }
   }
-  else if (supertypes === null || supertypes.isNothing) {
-    supertypes = EMPTY_ARRAY
-  }
+  if (IsArray(supertypes))  { return supertypes  }
+  if (supertypes === null)  { return EMPTY_ARRAY }
+  if (supertypes.isNothing) { return EMPTY_ARRAY }
+  return [supertypes]
+})
 
+
+_Type.addMethod(function _init(spec_name, supertypes_) {
+  var name, supertypes, supertype, shared, methods, definitions
+
+  name        = spec_name.name || spec_name
+  supertypes  = this._extractSupertypes(spec_name, supertypes_)
   declared    = spec_name.declare || spec_name.declared
   durables    = spec_name.durable || spec_name.durables
   shared      = spec_name.shared  || spec_name.sharedProperties
   methods     = spec_name.methods || spec_name.instanceMethods
   definitions = spec_name.define  || spec_name.defines
 
-  this.context   = context
   this._iidCount = 0
 
   // The ordering of the following is critical to avoid breaking the bootstrapping!!!
+  // this.setContext(context)
   this.setSupertypes(supertypes)
   this.addSharedProperty("type", this[$RIND])
   this.setName(name)
-
 
   declared    && this.addDeclarations(declared)
   durables    && this.addDurables(durables) // This needs to be for the root!!!
@@ -663,7 +683,7 @@ _$Something._init({ name: "$Something", supertypes: null })
 _$Intrinsic._init({ name: "$Intrinsic", supertypes: null })
 _Thing     ._init({ name: "Thing"     , supertypes: null })
 _Definition._init(        "Definition"                    )
-
+_Context   ._init(        "Context"                       )
 
 // Helps with debugging!!!
 _$Something._setDisplayNames("$Intrinsic$Outer", "$Intrinsic$Inner")
@@ -695,8 +715,8 @@ _Type.addMethod(function _setImmutable(inPlace_, visited__) {
   const $root$inner  = blanker.$root$inner
   const $root$supers = $root$inner[$SUPERS]
 
-  // $inner._subordinateTypes = SetImmutable([])
-  delete $inner._subordinateTypes
+  // $inner._subordinateTypes = BasicSetObjectImmutable([])
+  // delete $inner._subordinateTypes
 
   this.addOwnDefinition(PermeableNewErrorMethod)
   this.addOwnDefinition(PermeableNewAsFactErrorMethod)
