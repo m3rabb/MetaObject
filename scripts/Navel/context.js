@@ -1,7 +1,35 @@
 const CONTEXT_PARAM_MATCHER  = /^((\$)|(_))?([\w$]+)(_)?$/
 
-function MakePermeableNewHandler(NewHandler) {
-  return function permeableNew(...args) {
+function BePermeable(target) {
+  const _$target = InterMap.get(target)
+  if (!_$target) {
+    return SignalError(source, "Can only make permeable copies of sauced objects!!")
+  }
+  if (_$target[$LOCKED]) {
+    return _$source._signalError("Can't make permeable copies of locked objects!!")
+  }
+
+  const _target = _$target[$PULP]
+  const $target = _$target[$OUTER]
+  DefineProperty($target, "this", InvisibleConfig)
+  $target.this = _target
+
+  if (_$target.isType) { AddPermeableDefinitionToType(_$target) }
+  return target
+}
+
+
+
+function AddPermeableDefinitionToType(_target) {
+  const newHandler    = _target.new.handler
+  const newDefinition = (newHandler === _BasicNew) ?
+    BasicPermeableNewDef : MakePermeableNewDef(newHandler)
+  return _target.addOwnDefinition(newDefinition)
+}
+
+
+function MakePermeableNewDef(NewHandler) {
+  const handler = function permeableNew(...args) {
     const   instance = NewHandler.apply(this, args)
     const _$instance = InterMap.get(instance)
     const  $instance = _$instance[$OUTER]
@@ -11,16 +39,16 @@ function MakePermeableNewHandler(NewHandler) {
     $instance.this = _instance
     return instance
   }
+  return Definition("new", handler, BASIC_VALUE_METHOD)
 }
 
-const BasicPermeableNewDef =
-  Definition("new", MakePermeableNewHandler(_BasicNew), BASIC_VALUE_METHOD)
+const BasicPermeableNewDef = MakePermeableNewHandler(_BasicNew)
 
-function MakePermeableNewDef(newHandler) {
-  return (newHandler === _BasicNew) ?
-    BasicPermeableNewDef : MakePermeableNewHandler(newHandler)
-}
 
+
+// _Context.addMethod(function _privateAccessFromOutside(selector) {
+//  this._notYetImplemented("_privateAccessFromOutside")
+// })
 
 _Context.addMethod(function _unknownProperty(selector) {
   const supercontext = this.supercontext
@@ -41,7 +69,7 @@ _Context.addMethod(function _init(supercontext_name_, supercontext_) {
 
 _Context.addRetroactiveProperty(function id() {
   return `${this.formalName},${this.basicId}`
-})
+}, BASIC_VALUE_METHOD)
 
 _Context.addMethod(function formalName() {
   const context = this.supercontext
@@ -100,6 +128,16 @@ _Context.addMethod(function add(object) {
   this.atPut(object.name, object)
 })
 
+function IsReadOnly(paramListing, params) {
+  if (paramListing.indexOf("_") < 0) { return true }
+  next = params.length
+  while (next--) {
+    param = params[next]
+    if (!param.match(READ_ONLY_PARAM_MATCHER)) { return false }
+  }
+  return true
+}
+
 
 _Context.addMethod(function sub(execContext) {
   const supercontext   = this[$RIND]
@@ -107,10 +145,9 @@ _Context.addMethod(function sub(execContext) {
   const newContext     = _Context.new(newContextName, supercontext)
 
   const paramListing = ExtractParamListing(execContext)
-  const isReadOnly   = (paramListing.indexOf("_") < 0)
   const params       = PARAMS_MATCHER.exec(paramListing)
 
-  if (isReadOnly) {
+  if (IsReadOnly(paramListing, params)) {
     args = params.map(param => {
       const name = (param[0] === "$") ? param.slice(1) : param
       return this[name]
@@ -163,7 +200,7 @@ _Context.addMethod(function sub(execContext) {
     if (newValue) {
       if (value.isType) { newValue.setContext(this.$) }
       if (isPermeable)  { BePermeable(value) }
-      if (asImmutable)  { value.beImmutable || SetImmutableObject(target) }
+      if (asImmutable)  { value.beImmutable || SetObjectImmutable(target) }
     }
     newContext.atPut(name, newValue)
   }
@@ -195,6 +232,9 @@ _Context.addMethod(function _setPropertiesImmutable(inPlace, visited) {
     else { this[name] = ValueAsFact(value, inPlace, visited, this.$) }
   })
 })
+
+
+
 
 
 // isAbsolutelyImpermeable

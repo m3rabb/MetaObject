@@ -1,48 +1,55 @@
-const Dog = Type({
-  name : "Dog",
-  supertype : Thing,
+_ObjectSauce(function (Thing, Type, OSauce) {
+  "use strict"
 
-  shared : {
-    boneyard : "345 Bone Way",
-  },
+  const Dog = Type({
+    name : "Dog",
+    supertype : Thing,
 
-  define : [
-    "MANDATORY", [
-      function setName(name) {
-        this._basicSet("name", name)
+    shared : {
+      boneyard : "345 Bone Way",
+    },
+
+    define : [
+      "MANDATORY", [
+        function setName(name) {
+          this._basicSet("name", name)
+        },
+
+        "setAge"
+      ],
+
+      "SHARED", { hasTeeth : true },
+
+      function _init(name, age, breed) {
+        this.setName(name)
+        this.setAge(age)
+        this.breed = breed
       },
 
-      "setAge"
-    ],
+      "ALIAS", {
+        yowl : "howl"
+      },
 
-    "SHARED", { hasTeeth : true },
+      { RETROACTIVE : function speak() {
+        return `My name is ${this.name}!`
+      } },
 
-    function _init(name, age, breed) {
-      this.setName(name)
-      this.setAge(age)
-      this.breed = breed
-    },
+      "LAZY",
 
-    "ALIAS", {
-      yowl : "howl"
-    },
+      function howl() {
+        return "AooooohhH!!!"
+      },
 
-    { RETROACTIVE : function speak() {
-      return `My name is ${this.name}!`
-    } },
+      {
+        SETTER : "setBreed",
+      },
 
-    "LAZY",
+      "LAZY", function humanAge() {
+        return this.age * 7
+      },
+    ]
+  })
 
-    function howl() {
-      return "AooooohhH!!!"
-    },
+  OSauce.Dog = Dog
 
-    {
-      SETTER : "setBreed",
-    },
-
-    "LAZY", function humanAge() {
-      return this.age * 7
-    },
-  ]
 })

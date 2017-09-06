@@ -1,108 +1,210 @@
-// "use strict"
+(function (globals) {
+  "use strict"
 
-const RootOf              = Object.getPrototypeOf
-const SpawnFrom           = Object.create
-const IsArray             = Array.isArray
-const Floor               = Math.floor
-const RandomUnitValue     = Math.random
-const DefineProperty      = Object.defineProperty
-const OwnKeys             = Reflect.ownKeys
-const OwnSymbols          = Object.getOwnPropertySymbols
-const OwnNames            = Object.getOwnPropertyNames
-const OwnVisibleNames     = Object.keys
-const Frost               = Object.freeze
-const IsFrosted           = Object.isFrozen
-const Object_prototype    = Object.prototype
-const HasOwn_             = Object_prototype.hasOwnProperty  // ._hasOwn
-const HasOwnProperty      = Object_prototype.hasOwnProperty  // ._hasOwn
-const PropertyDescriptor  = Object.getOwnPropertyDescriptor
-const PropertyDescriptors = Object.getOwnPropertyDescriptors
-const Apply               = Reflect.apply
+  const Object_prototype    = Object.prototype
+  const Frost               = Object.freeze
+  const SpawnFrom           = Object.create
 
-// Reflect.ownKeys === Object.getOwnPropertyNames(target).concat(Object.getOwnPropertySymbols(target)
+  const OSauce  = SpawnFrom(null)
+  const _OSauce = SpawnFrom(OSauce)
 
-// Protected Implementation properties (so no namespace clashing)
-// private
-
-// symbols for publicly knowable properties
-const IS_IMMUTABLE           = Symbol("IS_IMMUTABLE")
-const _DURABLES              = Symbol("_DURABLES")
-const INSTANCEOF             = Symbol.hasInstance
-
-// private symbols for implementation usage, $ means non-ya-bizness!!!
-// Once everything is working, consider removing the names from the symbols
-// to discourage tampering!!!
-const $INNER                 = Symbol("$INNER")
-const $PULP                  = Symbol("$PULP")
-const $OUTER                 = Symbol("$OUTER")
-const $RIND                  = Symbol("$RIND")  // Consider simply using $ !!!
-
-const $DISGUISE              = Symbol("$DISGUISE")
-const $BARRIER               = Symbol("$BARRIER")
-//const $IID                   = Symbol("$instanceId")
-const $PRIOR_IDS             = Symbol("$PRIOR_IDS")
-const $PROOF                 = Symbol("$PROOF")
-
-const $ROOT                  = Symbol("$ROOT")
-const $BLANKER               = Symbol("$BLANKER")
-const $ASSIGNERS             = Symbol("$ASSIGNERS")
-const $IMMEDIATES            = Symbol("$IMMEDIATES")
-const $DECLARATIONS          = Symbol("$DECLARATIONS")
-const $SUPERS                = Symbol("$SUPERS")
-const $OWN_DEFINITIONS       = Symbol("$OWN_DEFINITIONS")
-
-const $OUTER_WRAPPER         = Symbol("$OUTER_WRAPPER")
-
-const $DELETE_IMMUTABILITY   = Symbol("$DELETE_IMMUTABILITY")
-const $DELETE_ALL_PROPERTIES = Symbol("$DELETE_ALL_PROPERTIES")
+  OSauce.OSauce   = OSauce
+  _OSauce._OSauce = _OSauce
 
 
-// Sentinels
-const INNER_SECRET            = Symbol("INNER_SECRET")
+  OSauce.spawnFrom           = SpawnFrom
+  OSauce.frost               = Frost
+  OSauce.isFrosted           = Object.isFrozen
+  OSauce.isArray             = Array.isArray
+  OSauce.rootOf              = Object.getPrototypeOf
+  OSauce.roundUp             = Math.ceil
+  OSauce.roundDown           = Math.floor
+  OSauce.randomUnitValue     = Math.random
+  OSauce.defineProperty      = Object.defineProperty
+  OSauce.ownKeys             = Reflect.ownKeys
+  OSauce.ownSymbols          = Object.getOwnPropertySymbols
+  OSauce.ownNames            = Object.getOwnPropertyNames
+  OSauce.ownVisibleNames     = Object.keys
+  OSauce.hasOwn              = Object_prototype.hasOwnProperty  // ._hasOwn
+  OSauce.propertyDescriptor  = Object.getOwnPropertyDescriptor
+  OSauce.propertyDescriptors = Object.getOwnPropertyDescriptors
+  // OSauce.apply               = Reflect.apply
 
-const ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
-// const CONSTRUCTOR         = Symbol("CONSTRUCTOR")
-const NO_SUPER               = Symbol("NO_SUPER")
-const IMMEDIATE              = Symbol("IMMEDIATE")
-const IMPLEMENTATION         = Symbol("IMPLEMENTATION")
+  // Reflect.ownKeys === Object.getOwnPropertyNames(target).concat(Object.getOwnPropertySymbols(target)
 
-const VISIBLE                = Symbol("VISIBLE")
-const INVISIBLE              = Symbol("INVISIBLE")
-const REINHERIT              = Symbol("REINHERIT")
-const INHERIT                = Symbol("INHERIT")
+  // Protected Implementation properties (so no namespace clashing)
+  // private
 
-const PERMEABLE              = Symbol("PERMEABLE")
-const IMPERMEABLE            = Symbol("IMPERMEABLE")
+  // symbols for publicly knowable properties
 
-const PARAMS_MATCHER         = /[\w$]+/g
-const CONTEXT_PARAM_MATCHER  = /^((\$)|(_))?([\w$]+)(_)?$/
-const FUNC_PROLOG_MATCHER    =
-  /^(function(\s+([\w$]+))?\s*\(([\w$\s,]*)\)|(\(([\w$\s,]*)\)|([\w$]+))\s*=>)/
+  const IS_IMMUTABLE            = Symbol("IS_IMMUTABLE")
 
+  OSauce.IS_IMMUTABLE           = IS_IMMUTABLE
+  OSauce._DURABLES              = Symbol("_DURABLES")
+  OSauce.INSTANCEOF             = Symbol.hasInstance
 
+  OSauce.VisibleConfig = {
+    configurable : true,
+    writable     : true,
+    enumerable   : true,
+  }
 
-const VisibleConfig = {
-  configurable : true,
-  writable     : true,
-  enumerable   : true,
-}
-
-const InvisibleConfig = {
-  configurable : true,
-  writable     : true,
-  enumerable   : false,
-}
+  OSauce.InvisibleConfig = {
+    configurable : true,
+    writable     : true,
+    enumerable   : false,
+  }
 
 
-// const SymbolPropertyMap  = SpawnFrom(null)
+  const InterMap              = new WeakMap()
+  _OSauce.InterMap            = InterMap
+  // OSauce.SymbolPropertyMap  = SpawnFrom(null)
+  _OSauce.PropertyToSymbolMap = SpawnFrom(null)
+  // Safe functions are stored in here so that the diguised Types function are
+  // automatically recognized as safe functions too
 
-const EMPTY_OBJECT    = Frost(SpawnFrom(null))
-const EMPTY_ARRAY     = Frost([])
 
-const InterMap         = new WeakMap()
-const PropertyToSymbol = SpawnFrom(null)
-// Safe functions are stored in here so that the diguised Types function are
-// automatically recognized as safe functions too
+  function MarkFunc(func, marker) {
+    if (InterMap.get(func)) { return func }
+    InterMap.set(func, marker)
+    return func
+  }
+
+  // Document these!!!
+  const SAFE_FUNC       = Frost({ id : "SAFE_FUNC"   , [IS_IMMUTABLE] : true })
+
+  _OSauce.SAFE_FUNC     = SAFE_FUNC
+  _OSauce.BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC", [IS_IMMUTABLE] : true })
+  _OSauce.TAMED_FUNC    = Frost({ id : "TAMED_FUNC"  , [IS_IMMUTABLE] : true })
+  _OSauce.OUTER_FUNC    = Frost({ id : "OUTER_FUNC"  , [IS_IMMUTABLE] : true })
+  _OSauce.INNER_FUNC    = Frost({ id : "INNER_FUNC"  , [IS_IMMUTABLE] : true })
+
+  _OSauce.DISGUISE_PULP = Frost({ id : "DISGUISE_PULP" })
+  _OSauce.ASSIGNER_FUNC = Frost({ id : "ASSIGNER_FUNC" })
+  _OSauce.HANDLER_FUNC  = Frost({ id : "HANDLER_FUNC"  })
+
+  _OSauce.MarkFunc      = MarkFunc
+
+  // Simpleton function
+  OSauce.ALWAYS_FALSE     = MarkFunc(          () => false       , SAFE_FUNC)
+  OSauce.ALWAYS_NULL      = MarkFunc(          () => null        , SAFE_FUNC)
+  OSauce.ALWAYS_UNDEFINED = MarkFunc(          () => undefined   , SAFE_FUNC)
+  OSauce.ALWAYS_SELF      = MarkFunc( function () { return this }, SAFE_FUNC)
+
+
+  OSauce.asName = function (string_symbol) {
+    if (string_symbol.charAt) { return string_symbol }
+    const name = string_symbol.toString()
+    return name.slice(7, name.length - 1)
+  }
+
+
+
+  // private symbols for implementation usage, $ means non-ya-bizness!!!
+  // Once everything is working, consider removing the names from the symbols
+  // to discourage tampering!!!
+  _OSauce.$INNER                 = Symbol("$INNER")
+  _OSauce.$PULP                  = Symbol("$PULP")
+  _OSauce.$OUTER                 = Symbol("$OUTER")
+  _OSauce.$RIND                  = Symbol("$RIND")  // Consider simply using $ !!!
+
+  _OSauce.$DISGUISE              = Symbol("$DISGUISE")
+  _OSauce.$BARRIER               = Symbol("$BARRIER")
+  //_OSauce.$IID                   = Symbol("$instanceId")
+  _OSauce.$PRIOR_IDS             = Symbol("$PRIOR_IDS")
+  _OSauce.$PROOF                 = Symbol("$PROOF")
+  _OSauce.$IS_DEF                = Symbol("$IS_DEF")
+
+  _OSauce.$ROOT                  = Symbol("$ROOT")
+  _OSauce.$BLANKER               = Symbol("$BLANKER")
+  _OSauce.$ASSIGNERS             = Symbol("$ASSIGNERS")
+  _OSauce.$IMMEDIATES            = Symbol("$IMMEDIATES")
+  _OSauce.$DECLARATIONS          = Symbol("$DECLARATIONS")
+  _OSauce.$SUPERS                = Symbol("$SUPERS")
+  _OSauce.$OWN_DEFINITIONS       = Symbol("$OWN_DEFINITIONS")
+  _OSauce.$LOCKED                = Symbol("$LOCKED")
+
+  _OSauce.$OUTER_WRAPPER         = Symbol("$OUTER_WRAPPER")
+
+  _OSauce.$DELETE_IMMUTABILITY   = Symbol("$DELETE_IMMUTABILITY")
+  _OSauce.$DELETE_ALL_PROPERTIES = Symbol("$DELETE_ALL_PROPERTIES")
+
+
+  // Sentinels
+  _OSauce.INNER_SECRET           = Symbol("INNER_SECRET")
+
+  _OSauce.ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
+  // _OSauce.CONSTRUCTOR         = Symbol("CONSTRUCTOR")
+  _OSauce.NO_SUPER               = Symbol("NO_SUPER")
+  _OSauce.IMMEDIATE              = Symbol("IMMEDIATE")
+  _OSauce.IMPLEMENTATION         = Symbol("IMPLEMENTATION")
+
+  _OSauce.VISIBLE                = Symbol("VISIBLE")
+  _OSauce.INVISIBLE              = Symbol("INVISIBLE")
+  _OSauce.REINHERIT              = Symbol("REINHERIT")
+  _OSauce.INHERIT                = Symbol("INHERIT")
+
+  _OSauce.PERMEABLE              = Symbol("PERMEABLE")
+  _OSauce.IMPERMEABLE            = Symbol("IMPERMEABLE")
+
+
+  const FUNC_PROLOG_MATCHER =
+    /^(function(\s+([\w$]+))?\s*\(([\w$\s.,]*)\)|(\(([\w$\s.,]*)\)|([\w$.]+))\s*=>)/
+  const PARAMS_MATCHER = /[\w$]+/g
+
+  function ExtractParamListing(func) {
+    const match = FUNC_PROLOG_MATCHER.exec(func)
+    return match[4] || match[6] || match[7] || ""
+  }
+
+  function ExtractParamNames(func) {
+    const paramListing = ExtractParamListing(func)
+    const params       = paramListing.match(PARAMS_MATCHER)
+    return params || []
+  }
+
+  function AsCapitalized(word) {
+    return `${word[0].toUpperCase()}${word.slice(1)}`
+  }
+
+  function AsDecapitalized(word) {
+    return `${word[0].toLowerCase()}${word.slice(1)}`
+  }
+
+  // This method should only be called on a mutable object!!!
+  function BasicSetObjectImmutable(target) {
+    target[IS_IMMUTABLE] = true
+    return Frost(target)
+  }
+
+
+
+  _OSauce.ExtractParamListing     = ExtractParamListing
+  _OSauce.ExtractParamNames       = ExtractParamNames
+  _OSauce.BasicSetObjectImmutable = BasicSetObjectImmutable
+
+  OSauce.asCapitalized            = AsCapitalized
+  OSauce.asDecapitalized          = AsDecapitalized
+
+  OSauce.EMPTY_OBJECT             = BasicSetObjectImmutable(SpawnFrom(null))
+  OSauce.EMPTY_ARRAY              = BasicSetObjectImmutable([])
+
+  function MakeSauce(TargetContext) {
+    return function (execContext) {
+      const names = ExtractParamNames(execContext)
+      const args  = names.map(name =>
+        TargetContext[name] || TargetContext[AsDecapitalized(name)])
+      return execContext.apply(null, args)
+    }
+  }
+
+  globals.ObjectSauce  = MakeSauce(OSauce)
+  globals._ObjectSauce = MakeSauce(_OSauce)
+
+})(this)
+
+
+
 
 
 /*       1         2         3         4         5         6         7         8

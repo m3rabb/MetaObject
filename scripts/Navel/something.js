@@ -1,44 +1,46 @@
+_ObjectSauce(function (
+  $INNER, $RIND, BASIC_VALUE_METHOD, IS_IMMUTABLE,
+  AsName, DefineProperty, InvisibleConfig, _$Something, _Super
+) {
+  "use strict"
 
-_$Something.addMethod("$", AsRetroactiveProperty("$", function $() {
-  return this[$RIND]
-}), BASIC_VALUE_METHOD)
-
-
-
-_$Something.addMethod(function _super() { // RetroactiveProperty
-  const $inner = this[$INNER]
-  DefineProperty($inner, "_super", InvisibleConfig)
-  return ($inner._super = new Proxy($inner, _Super))
-}, BASIC_VALUE_METHOD)
+  _$Something.addRetroactiveProperty(function $() {
+    return this[$RIND]
+  }, BASIC_VALUE_METHOD)
 
 
 
-_$Something.addMethod(function _unknownProperty(selector) {
-  return SignalError(this, `Receiver ${this.id} doesn't have a property: ${AsName(selector)}!!`)
+  _$Something.addMethod(function _super() { // RetroactiveProperty
+    const $inner = this[$INNER]
+    DefineProperty($inner, "_super", InvisibleConfig)
+    return ($inner._super = new Proxy($inner, _Super))
+  }, BASIC_VALUE_METHOD)
+
+
+
+
+  _$Something.addMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
+    return this.id
+  }, BASIC_VALUE_METHOD) // VALUE_METHOD)
+
+
+  _$Something.addMethod(function is(value) {
+    return (this[$RIND] === value)
+  }, BASIC_VALUE_METHOD)
+
+  // _$Something.addMethod(function is(value) {
+  //   return (this === value) || (this[$RIND] === value)
+  // }, BASIC_VALUE_METHOD)
+
+
+  _$Something.addSharedProperty("isSauced", true)
+
+
+  _$Something.addMethod(function isImmutable() {
+    return this[IS_IMMUTABLE] || false
+  }, BASIC_VALUE_METHOD)
+
 })
-
-
-
-_$Something.addMethod(Symbol.toPrimitive, function (hint) {
-  return this.id
-}, VALUE_METHOD)
-
-
-_$Something.addMethod(function is(value) {
-  return (this[$RIND] === value)
-}, BASIC_VALUE_METHOD)
-
-// _$Something.addMethod(function is(value) {
-//   return (this === value) || (this[$RIND] === value)
-// }, BASIC_VALUE_METHOD)
-
-
-_$Something.addSharedProperty("isSauced", true)
-
-
-_$Something.addMethod(function isImmutable() {
-  return this[IS_IMMUTABLE] || false
-}, BASIC_VALUE_METHOD)
 
 
 // _$Something._setImmutable()

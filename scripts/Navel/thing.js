@@ -1,80 +1,84 @@
+_ObjectSauce(function (
+  $INNER, $OUTER, $PRIOR_IDS, $RIND, _DURABLES,
+  AsName, SetDurables, ValueAsFact, _Thing
+) {
+  "use strict"
 
 
+  _Thing.addSetter("_setId", function id(newId_) {
+    const existingId = this.id
+    var   newId, priorIds
 
-_Thing.addSetter("_setId", function id(newId_) {
-  const existingId = this.id
-  var   newId, priorIds
-
-  if (newId_ === undefined) {
-    if (existingId != null) { return existingId }
-    newId = this._retarget.oid
-  }
-  else if (newId_ === existingId) { return existingId }
-  else { newId = newId_ }
-
-  if (existingId != null) {
-    priorIds = this[$PRIOR_IDS] || []
-    this[$PRIOR_IDS] = [...priorIds, existingId]
-  }
-  return newId
-})
-
-
-_Thing.addSetter("_setName", "name")
-
-_Thing.addMethod(function _init(spec_) {
-  if (spec_) {
-    var id   = spec_.id
-    var name = spec_.name
-  }
-  id   && (this.id   = id)
-  name && (this.name = name)
-})
-
-
-// This method should only be called on a mutable object!!!
-// must ensure visited is set to a WeakMap if used!!!
-_Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
-  var durables, selector, next, value, nextValue
-  const $inner                  = this[$INNER]
-  const $outer                  = $inner[$OUTER]
-  const $rind                   = $inner[$RIND]
-  const _setPropertiesImmutable = $inner._setPropertiesImmutable
-
-  delete $inner._retarget
-
-  visited.set($rind, $rind)
-
-  if (_setPropertiesImmutable) {
-    _setPropertiesImmutable.call(this, inPlace, visited)
-  }
-  else {
-    durables = $inner[_DURABLES] || SetDurables($inner)
-    next      = durables.length
-
-    while (next--) {
-      selector = durables[next]
-      if (selector[0] !== "_") { continue }
-
-      value     = $inner[selector]
-      nextValue = ValueAsFact(value, inPlace, visited, $rind)
-      if (nextValue !== value) { $inner[selector] = nextValue }
+    if (newId_ === undefined) {
+      if (existingId != null) { return existingId }
+      newId = this._retarget.oid
     }
-  }
+    else if (newId_ === existingId) { return existingId }
+    else { newId = newId_ }
 
-  return this._basicSetImmutable()
+    if (existingId != null) {
+      priorIds = this[$PRIOR_IDS] || []
+      this[$PRIOR_IDS] = [...priorIds, existingId]
+    }
+    return newId
+  })
+
+
+  _Thing.addSetter("_setName", "name")
+
+  _Thing.addMethod(function _init(spec_) {
+    if (spec_) {
+      var id   = spec_.id
+      var name = spec_.name
+    }
+    id   && (this.id   = id)
+    name && (this.name = name)
+  })
+
+
+  // This method should only be called on a mutable object!!!
+  // must ensure visited is set to a WeakMap if used!!!
+  _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
+    var durables, selector, next, value, nextValue
+    const $inner                  = this[$INNER]
+    const $rind                   = $inner[$RIND]
+    const _setPropertiesImmutable = $inner._setPropertiesImmutable
+
+    delete $inner._retarget
+
+    visited.set($rind, $rind)
+
+    if (_setPropertiesImmutable) {
+      _setPropertiesImmutable.call(this, inPlace, visited)
+    }
+    else {
+      durables = $inner[_DURABLES] || SetDurables($inner)
+      next      = durables.length
+
+      while (next--) {
+        selector = durables[next]
+        if (selector[0] !== "_") { continue }
+
+        value     = $inner[selector]
+        nextValue = ValueAsFact(value, inPlace, visited, $rind)
+        if (nextValue !== value) { $inner[selector] = nextValue }
+      }
+    }
+
+    return this._basicSetImmutable()
+  })
+
+  _Thing.addMethod(function toString(_) { // eslint-disable-line
+    const name = this.name
+    return `${name}${name ? "," : ""}${this.basicId}`
+  })
+
+
+  _Thing.addMethod(function _notYetImplemented(selector) {
+    this._signalError(`The method ${AsName(selector)} has not been implemented yet!!`)
+  })
+
 })
-
-_Thing.addMethod(function toString(_) {
-  const name = this.name
-  return `${name}${name ? "," : ""}${this.basicId}`
-})
-
-
-// _Thing._setImmutable()
-
-
-
 
 // _Thing.addMethod(function _setCopyId() {
 //    if it has a way to make a new id then set it,

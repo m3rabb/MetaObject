@@ -771,7 +771,7 @@ function DeleteSelectorsIn(targets) {
  * @param       {function} target The target function.
  * @returns     {function} Answers the target function, itself.
  */
-function SetImmutableFunc(func, marker = SAFE_FUNC) {
+function SetFuncImmutable(func, marker = SAFE_FUNC) {
   if (InterMap.get(func)) { return func }
 
   func[IS_IMMUTABLE] = true

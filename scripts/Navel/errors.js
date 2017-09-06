@@ -1,89 +1,114 @@
-const ErrorLog = []
+_ObjectSauce(function ($LOCKED, $RIND, AsName, OSauce, _OSauce) {
+  "use strict"
 
-var HandleErrorsQuietly = true
-var LogErrors           = false
+  const ErrorLog = []
+
+  var HandleErrorsQuietly = true
+  var LogErrors           = false
 
 // var HandleInheritancePoisoning = true
 
-function SignalError(target, message) {
-  if (LogErrors) { ErrorLog.push(`${target}: ${message}`) }
+  function SignalError(target, message) {
+    if (LogErrors) { ErrorLog.push(`${target}: ${message}`) }
 
-  const error = new Error(message)
-  error.name = "Navel Error"
-  error.target = target
-  throw error
-}
+    const error = new Error(message)
+    error.name = "Navel Error"
+    error.target = target
+    throw error
+  }
 
+  // function SignalError(target, message) {
+  //   if (LogErrors) { ErrorLog.push(`${target}: ${message}`) }
+  //
+  //   if (HandleErrorsQuietly) {
+  //     console.warn(message) // eslint-disable-line no-console
+  //   } else {
+  //     const error = new Error(message)
+  //     error.name = "Purple Carrot Error"
+  //     error.target = target
+  //     throw error
+  //   }
+  //   return null
+  // }
 
-// function SignalError(target, message) {
-//   if (LogErrors) { ErrorLog.push(`${target}: ${message}`) }
-//
-//   if (HandleErrorsQuietly) {
-//     console.warn(message) // eslint-disable-line no-console
-//   } else {
-//     const error = new Error(message)
-//     error.name = "Purple Carrot Error"
-//     error.target = target
-//     throw error
-//   }
-//   return null
-// }
+  OSauce.ErrorLog    = ErrorLog
+  OSauce.signalError = SignalError
 
+  OSauce.setLogErrors = function (bool) {
+    if (this[$LOCKED]) { return this }
+    LogErrors = !!bool
+  }
 
-
-
-// function ImproperMethodHandlerError(target) {
-//   SignalError(target[$RIND], "Can't reuse same handler function for different types of methods!!")
-// }
-
-
-
-function DirectAssignmentFromOutsideError(target) {
-  SignalError(target[$RIND], "Direct assignment is not allowed from the outside of an object, use a method instead!!")
-}
-
-function PrivateAccessFromOutsideError(target, selector) {
-  SignalError(target[$RIND], `Access to private property '${AsName(selector)}' from outside of an object is forbidden!!`)
-}
-
-function DisallowedDeleteError(target, selector) {
-  SignalError(target[$RIND], `Delete of property '${AsName(selector)}' is not allowed!!`)
-}
-
-function DisallowedAssignmentError(target, selector, setter) {
-  SignalError(target[$RIND], `Assignment of property '${AsName(selector)}' is not allowed, use '${setter}' method instead!!`)
-}
-
-function UnnamedFuncError(target, func) {
-  SignalError(target[$RIND], `${func} function must be named!!`)
-}
-
-function AssignmentOfUndefinedError(target, selector) {
-  SignalError(target[$RIND], `Assignment of undefined to property '${AsName(selector)}' is forbidden, use null instead!!`)
-}
-
-function DetectedInnerError(target, value) {
-  SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value.name}#${value.oid}!!`)
-}
-
-function InvalidCopyType(target) {
-  SignalError(target, `Cannot use InAtPut with ${target.constructor.name}!!`)
-}
+  OSauce.setHandleErrorsQuietly = function (bool) {
+    if (this[$LOCKED]) { return this }
+    HandleErrorsQuietly = !!bool
+  }
 
 
+  // _OSauce.ImproperMethodHandlerError = function (target) {
+  //   SignalError(target[$RIND], "Can't reuse same handler function for different types of methods!!")
+  // }
 
-function ImproperChangeToAncestryError(target) {
-  SignalError(target[$RIND], "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
-}
 
-function AttemptedChangeOfAncestryOfPermeableTypeError(target) {
-  SignalError(target[$RIND], `Cannot change supertypes of permeable Type '${target.name}', change impermeable version instead!!`)
-}
+  _OSauce.DetectedInnerError = function (target, value) {
+    SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value.name}#${value.oid}!!`)
+  }
 
-function DuplicateSupertypeError(target) {
-  SignalError(target[$RIND], "Duplicate supertypes are not allowed!!")
-}
 
-function AssignerSetterError(target) {
-  SignalError(target[$RIND], "Cannot define setter and assigner functions for the same property!!")
-}
+  _OSauce.DirectAssignmentFromOutsideError = function (target) {
+    SignalError(target[$RIND], "Direct assignment is not allowed from the outside of an object, use a method instead!!")
+  }
+
+  _OSauce.AttemptSetOnSuperError = function (target) {
+    SignalError(target[$RIND], "Setting properties via _super in forbidden!!")
+  }
+
+  _OSauce.PrivateAccessFromOutsideError = function (target, selector) {
+    SignalError(target[$RIND], `Access to private property '${AsName(selector)}' from outside of an object is forbidden!!`)
+  }
+
+  _OSauce.DisallowedDeleteError = function (target, selector) {
+    SignalError(target[$RIND], `Delete of property '${AsName(selector)}' is not allowed!!`)
+  }
+
+  _OSauce.DisallowedAssignmentError = function (target, selector, setter) {
+    SignalError(target[$RIND], `Assignment of property '${AsName(selector)}' is not allowed, use '${setter}' method instead!!`)
+  }
+
+  _OSauce.UnnamedFuncError = function (target, func) {
+    SignalError(target[$RIND], `${func} function must be named!!`)
+  }
+
+  _OSauce.AssignmentOfUndefinedError = function (target, selector) {
+    SignalError(target[$RIND], `Assignment of undefined to property '${AsName(selector)}' is forbidden, use null instead!!`)
+  }
+
+  _OSauce.InvalidCopyTypeError = function (target) {
+    SignalError(target, `Cannot use InAtPut with ${target.constructor.name}!!`)
+  }
+
+
+
+  _OSauce.ImproperChangeToAncestryError = function (target) {
+    SignalError(target[$RIND], "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
+  }
+
+  _OSauce.AttemptedChangeOfAncestryOfPermeableTypeError = function (target) {
+    SignalError(target[$RIND], `Cannot change supertypes of permeable Type '${target.name}', change impermeable version instead!!`)
+  }
+
+  _OSauce.DuplicateSupertypeError = function (target) {
+    SignalError(target[$RIND], "Duplicate supertypes are not allowed!!")
+  }
+
+  _OSauce.AssignerSetterError = function (target) {
+    SignalError(target[$RIND], "Cannot define setter and assigner functions for the same property!!")
+  }
+
+})
+
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/

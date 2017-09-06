@@ -1,21 +1,24 @@
+_ObjectSauce(function (
+  $PULP, $RIND, _Nothing,
+  AddIntrinsicDeclaration, InterMap, Type, _BasicSetImmutable, OSauce
+) {
+  "use strict"
 
-const Nothing = Type({
-  name      : "Nothing",
-  supertype : null,
+  const Nothing   = _Nothing[$RIND]
+  const _$Nothing = InterMap.get(Nothing)
+  const _$Void    = new _$Nothing._blanker()
+  const _Void     = _$Void[$PULP]
+
+  _Void.id     = "Void,0.Nothing"
+  _Void.isVoid = true
+
+  AddIntrinsicDeclaration("isVoid")
+  _BasicSetImmutable.call(_$Void)
+
+  OSauce.Nothing = Nothing
+  OSauce.Void    = _$Void[$RIND]
+
 })
-
-const _$Nothing = InterMap.get(Nothing)
-const _$Void    = new _$Nothing._blanker()
-const _Void     = _$Void[$PULP]
-const Void      = _$Void[$RIND]
-
-_Void.id     = "Void,0.Nothing"
-_Void.isVoid = true
-
-_BasicSetImmutable.call(_$Void)
-
-_$Nothing.beImmutable
-
 
 //     Nothing
 //        _unknownProperty

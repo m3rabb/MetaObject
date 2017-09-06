@@ -1,4 +1,5 @@
 
+// eslint-disable-next-line
 Perhaps name classes with $, such as $Method to signify them as immutable instances
 
 
@@ -243,6 +244,7 @@ topjs
 Tranya
 Corbomite
 HotSauce
+ObjectSauce
 
 enduring/perennial/durable
 
