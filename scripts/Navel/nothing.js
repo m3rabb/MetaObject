@@ -1,4 +1,4 @@
-_ObjectSauce(function (
+ObjectSauce(function (
   $PULP, $RIND, _Nothing,
   AddIntrinsicDeclaration, InterMap, Type, _BasicSetImmutable, OSauce
 ) {

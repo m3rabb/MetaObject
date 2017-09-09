@@ -1,4 +1,4 @@
-_ObjectSauce(function (RoundDown, RandomUnitValue, OSauce) {
+ObjectSauce(function (RoundDown, RandomUnitValue, OSauce) {
   "use strict"
 
   // #### Random Number Generation

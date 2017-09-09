@@ -1,4 +1,4 @@
-_ObjectSauce(function (Type, AsName) {
+ObjectSauce(function (Type, AsName) {
   "use strict"
 
   describe("Inner get", function() {

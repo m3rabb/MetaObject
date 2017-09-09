@@ -1,4 +1,4 @@
-_ObjectSauce(function (
+ObjectSauce(function (
   $INNER, $OUTER, $PRIOR_IDS, $RIND, _DURABLES,
   AsName, SetDurables, ValueAsFact, _Thing
 ) {

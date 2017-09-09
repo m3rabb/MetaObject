@@ -1,4 +1,4 @@
-_ObjectSauce(function (OwnVisibleNames, SpawnFrom, Type, OSauce) {
+ObjectSauce(function (OwnVisibleNames, SpawnFrom, Type, OSauce) {
   "use strict"
 
 

@@ -1,5 +1,5 @@
-_ObjectSauce(function (
-  $INNER, $RIND, BASIC_VALUE_METHOD, IS_IMMUTABLE,
+ObjectSauce(function (
+  $INNER, $RIND, IDEMPOT_VALUE_METHOD, IS_IMMUTABLE, TRUSTED_VALUE_METHOD,
   AsName, DefineProperty, InvisibleConfig, _$Something, _Super
 ) {
   "use strict"

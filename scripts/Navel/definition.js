@@ -1,7 +1,8 @@
-_ObjectSauce(function (
-  $INNER, ASSIGNER, BASIC_VALUE_METHOD, DECLARATION, LAZY_INSTALLER, SAFE_FUNC,
-  AddIntrinsicDeclaration, Definition, SetFuncImmutable, SignalError,
-  _Definition,
+ObjectSauce(function (
+  $INNER, ASSIGNER, DECLARATION, LAZY_INSTALLER, SAFE_FUNC,
+  IDEMPOT_VALUE_METHOD,
+  AddIntrinsicDeclaration, MarkAndSetFuncImmutable, SignalError,
+  Definition, _Definition,
   _OSauce
 ) {
   // "use strict"

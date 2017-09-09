@@ -1,4 +1,4 @@
-_ObjectSauce(function (Type, $RIND) {
+ObjectSauce(function (Type, $RIND) {
   "use strict"
 
   describe("Impermeable outer", function() {

@@ -1,4 +1,4 @@
-_ObjectSauce(function ($LOCKED, $RIND, AsName, OSauce, _OSauce) {
+ObjectSauce(function ($LOCKED, $RIND, AsName, OSauce, _OSauce) {
   "use strict"
 
   const ErrorLog = []

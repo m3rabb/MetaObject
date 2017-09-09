@@ -1,4 +1,8 @@
-_ObjectSauce(function (OwnKeys, SpawnFrom) {
+ObjectSauce(function (
+  $IS_INNER, $RIND, IS_IMMUTABLE, PROOF,
+  InterMap, OwnKeys, SpawnFrom,
+  OSauce
+) {
   "use strict"
 
   const PARAM_FAMILY_MATCHER = /^(\w+(_[a-zA-Z]+))|([a-zA-Z]*[a-z]([A-Z][a-z]+))$/

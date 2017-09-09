@@ -1,4 +1,4 @@
-_ObjectSauce(function (
+ObjectSauce(function (
   $ASSIGNERS, $BARRIER, $OUTER, $PULP,
   HasOwn, OwnKeys, RootOf, Type
 ) {

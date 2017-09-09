@@ -1,4 +1,4 @@
-_ObjectSauce(function (
+ObjectSauce(function (
   $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT,
   IS_IMMUTABLE, _DURABLES,
   AsName, AsPropertySymbol, CopyObject, HasOwn, InnerBarrier, InterMap,

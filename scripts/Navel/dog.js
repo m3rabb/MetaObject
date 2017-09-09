@@ -1,4 +1,4 @@
-_ObjectSauce(function (Thing, Type, OSauce) {
+ObjectSauce(function (Thing, Type, OSauce) {
   "use strict"
 
   const Dog = Type({

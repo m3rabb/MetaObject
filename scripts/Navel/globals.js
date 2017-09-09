@@ -198,8 +198,7 @@
     }
   }
 
-  globals.ObjectSauce  = MakeSauce(OSauce)
-  globals._ObjectSauce = MakeSauce(_OSauce)
+  globals.ObjectSauce = MakeSauce(_OSauce)
 
 })(this)
 

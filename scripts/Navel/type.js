@@ -1,4 +1,4 @@
-_ObjectSauce(function (
+ObjectSauce(function (
   $BLANKER, $INNER, $LOCKED, $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, _DURABLES,
   BASIC_SELF_METHOD, BASIC_VALUE_METHOD,
   AsDefinition, AsLazyProperty, AsName, AddPermeableDefinitionToType,

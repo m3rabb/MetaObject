@@ -1,4 +1,4 @@
-_ObjectSauce(function (
+ObjectSauce(function (
   $BARRIER, $INNER, $OUTER,
   BasicSetObjectImmutable, OwnKeys, RootOf,
   Thing, Type
