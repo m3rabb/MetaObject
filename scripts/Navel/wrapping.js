@@ -381,24 +381,25 @@ ObjectSauce(function (
   _OSauce.AsLazyProperty        = AsLazyProperty
 
 
-  _OSauce.VALUE_METHOD = {
-    id    : "VALUE_METHOD",
+  _OSauce.TRUSTED_VALUE_METHOD = {
+    id    : "TRUSTED_VALUE_METHOD",
     outer : AsOuterValue,
     inner : AsInnerValue,
     super : AsSuperValue,
   }
 
-  // BASIC_VALUE_METHOD and BASIC_SELF_METHOD methods must be methods that call
-  // no other methods, except other basic methods.
-  _OSauce.BASIC_VALUE_METHOD = {
-    id    : "BASIC_VALUE_METHOD",
+  // IDEMPOT_VALUE_METHOD and IDEMPOT_SELF_METHOD must be methods that can
+  // NEVER can any change to the receiver and
+  // that call no other methods, except other idempot methods.
+  _OSauce.IDEMPOT_VALUE_METHOD = {
+    id    : "IDEMPOT_VALUE_METHOD",
     outer : AsOuterBasicValue,
     inner : PassThru,
     super : AsSuperBasic,
   }
 
-  _OSauce.BASIC_SELF_METHOD = {
-    id    : "BASIC_SELF_METHOD",
+  _OSauce.IDEMPOT_SELF_METHOD = {
+    id    : "IDEMPOT_SELF_METHOD",
     outer : AsOuterBasicSelf,
     inner : PassThru,
     super : AsSuperBasic,
@@ -461,6 +462,8 @@ ObjectSauce(function (
 
 })
 
+// NOTE: Change the 'As' method names!!!!
+// NOTE: new New methods need to be added using addMutableValueMethod
 
 
 /*       1         2         3         4         5         6         7         8

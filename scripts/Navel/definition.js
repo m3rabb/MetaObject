@@ -21,9 +21,9 @@ ObjectSauce(function (
       const handler =
         $inner.mode.super($inner.selector, $inner.handler, $inner.isPublic)
 
-      return SetFuncImmutable(handler, SAFE_FUNC)
+      return MarkAndSetFuncImmutable(handler, SAFE_FUNC)
     }
-  }.super, BASIC_VALUE_METHOD)
+  }.super, IDEMPOT_VALUE_METHOD)
 
 
   // _Definition.addLazyProperty(function isLazy() {
@@ -34,7 +34,7 @@ ObjectSauce(function (
   _Definition.addMethod(function toString(_) { // eslint-disable-line
     var count = this.handler.length
     return `${this.selector}(${count})`
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
   AddIntrinsicDeclaration("isDeclaration")
@@ -50,12 +50,13 @@ ObjectSauce(function (
   })
 
 
-  // AsDefinition(definition)
-  // AsDefinition(tag, definition)
-  // AsDefinition(namedFunc, mode_)
-  // AsDefinition(selector, func, mode_)
+  // AsDefinition([definition], context_)
+  // AsDefinition([tag, definition], context_)
+  // AsDefinition([namedFunc, mode_], context_)
+  // AsDefinition([selector, func, mode_], context_)
 
-  function AsDefinition(...args) {
+  function AsDefinition(args, context_) {
+    const definitionType = context_ && context_.Definition || Definition
     var def, tag
     switch (args.length) {
       case 1 :
@@ -66,12 +67,13 @@ ObjectSauce(function (
       case 2 :
         [tag, def] = args
         if (def.isDefinition) {
-          return (tag === def.tag) ? def : Definition(tag, def.handler, def.mode)
+          return (tag === def.tag) ?
+            def : definitionType(tag, def.handler, def.mode)
         }
         // break omitted
 
       case 3 :
-        return Definition(...args) // selector, value, mode
+        return definitionType(...args) // selector, value, mode
     }
     return SignalError("Improper arguments to make a Definition!!")
   }

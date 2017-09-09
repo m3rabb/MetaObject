@@ -105,6 +105,14 @@ ObjectSauce(function ($LOCKED, $RIND, AsName, OSauce, _OSauce) {
     SignalError(target[$RIND], "Cannot define setter and assigner functions for the same property!!")
   }
 
+  _OSauce.AttemptInvertedFuncCopyError = function (func) {
+    SignalError(func, "Cannot make a copy of a function with different mutability! Try AsRigid, AsFact, BeImmutable instead!!")
+  }
+
+  _OSauce.AttemptToMakeLockedObjectPermeableError = function (target) {
+    SignalError(target[$RIND], "Cannot make a locked object ${target} permeable!!")
+  }
+
 })
 
 

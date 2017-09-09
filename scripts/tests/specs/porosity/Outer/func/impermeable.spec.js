@@ -49,7 +49,7 @@ ObjectSauce(function (Type, $RIND) {
 
       describe("public method", function () {
         it("Answers the outer method handler", function () {
-          expect( this.Bat.toString.method.outer.name ).toBe( "toString_$outer$fact" )
+          expect( this.Bat.toString.method.outer.name ).toBe( "toString_$outer$value" )
         })
       })
     })

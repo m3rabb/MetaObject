@@ -5,6 +5,60 @@ ObjectSauce(function (
 ) {
   "use strict"
 
+
+  function AsName(string_symbol) {
+    if (string_symbol.charAt) { return string_symbol }
+    const name = string_symbol.toString()
+    return name.slice(7, name.length - 1)
+  }
+
+
+  function IsSauced(value) {
+    switch (typeof value) {
+      default         : return false
+      case "function" : break
+      case "object"   : if (value === null) { return false } else { break }
+    }
+    const value$ = value[$RIND]
+    if (value$ === undefined) { return false }
+    return (InterMap.get(value$)[$IS_INNER] === PROOF)
+  }
+
+  function IsImmutable(value) {
+    switch (typeof value) {
+      case "function" : break
+      case "object"   : break
+      default         : return true
+    }
+    return value[IS_IMMUTABLE] ? true : false
+  }
+
+  function IsRigid(value) {
+    var value$
+    switch (typeof value) {
+      case "function" :
+        if (value[IS_IMMUTABLE])  { return true }
+        value$ = value[$RIND]
+        if (value$ === undefined) { return true }
+        return (InterMap.get(value$)[$IS_INNER] !== PROOF)
+
+      case "object"   :
+        if (value === null)      { return true }
+        if (value[IS_IMMUTABLE]) { return true }
+        return false
+    }
+    return true
+  }
+
+  function IsFact(value) {
+    if (typeof value !== "object") { return true }
+    if (value === null)            { return true }
+    if (value[IS_IMMUTABLE])       { return true }
+    if (value.id != null)          { return true }
+    return false
+  }
+
+
   const PARAM_FAMILY_MATCHER = /^(\w+(_[a-zA-Z]+))|([a-zA-Z]*[a-z]([A-Z][a-z]+))$/
 
   function _SortParams(params) {
@@ -35,7 +89,7 @@ ObjectSauce(function (
     return lines
   }
 
-  _ObjectSauce.sortParams = function (paramsListing) {
+  ObjectSauce.sortParams = function (paramsListing) {
     var params    = paramsListing.split(/\s*,\s*/)
     var constants = []
     var standards = []
@@ -55,5 +109,11 @@ ObjectSauce(function (
     osauces   = osauces.join(", ")
     return constants.concat(standards, osauces).join(", \n")
   }
+
+  OSauce.asName                   = AsName
+  OSauce.isSauced                 = IsSauced
+  OSauce.isImmutable              = IsImmutable
+  OSauce.isRigid                  = IsRigid
+  OSauce.isFact                   = IsFact
 
 })

@@ -92,13 +92,6 @@
   OSauce.ALWAYS_SELF      = MarkFunc( function () { return this }, SAFE_FUNC)
 
 
-  OSauce.asName = function (string_symbol) {
-    if (string_symbol.charAt) { return string_symbol }
-    const name = string_symbol.toString()
-    return name.slice(7, name.length - 1)
-  }
-
-
 
   // private symbols for implementation usage, $ means non-ya-bizness!!!
   // Once everything is working, consider removing the names from the symbols
@@ -112,8 +105,8 @@
   _OSauce.$BARRIER               = Symbol("$BARRIER")
   //_OSauce.$IID                   = Symbol("$instanceId")
   _OSauce.$PRIOR_IDS             = Symbol("$PRIOR_IDS")
-  _OSauce.$PROOF                 = Symbol("$PROOF")
-  _OSauce.$IS_DEF                = Symbol("$IS_DEF")
+  _OSauce.$IS_INNER              = Symbol("$IS_INNER")
+  _OSauce.$IS_DEFINITION         = Symbol("$IS_DEFINITION")
 
   _OSauce.$ROOT                  = Symbol("$ROOT")
   _OSauce.$BLANKER               = Symbol("$BLANKER")
@@ -131,7 +124,7 @@
 
 
   // Sentinels
-  _OSauce.INNER_SECRET           = Symbol("INNER_SECRET")
+  _OSauce.PROOF                  = Symbol("PROOF")
 
   _OSauce.ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
   // _OSauce.CONSTRUCTOR         = Symbol("CONSTRUCTOR")
@@ -144,8 +137,8 @@
   _OSauce.REINHERIT              = Symbol("REINHERIT")
   _OSauce.INHERIT                = Symbol("INHERIT")
 
-  _OSauce.PERMEABLE              = Symbol("PERMEABLE")
-  _OSauce.IMPERMEABLE            = Symbol("IMPERMEABLE")
+  _OSauce.MUTABLE                = Symbol("MUTABLE")
+  _OSauce.INHERITED              = Symbol("INHERITED")
 
 
   const FUNC_PROLOG_MATCHER =
@@ -188,6 +181,7 @@
 
   OSauce.EMPTY_OBJECT             = BasicSetObjectImmutable(SpawnFrom(null))
   OSauce.EMPTY_ARRAY              = BasicSetObjectImmutable([])
+  OSauce.EMPTY_THING_ANCESTRY     = BasicSetObjectImmutable([])
 
   function MakeSauce(TargetContext) {
     return function (execContext) {

@@ -1,6 +1,6 @@
 ObjectSauce(function (
   $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,
-  $IMMEDIATES, $INNER, $IS_DEF, $OUTER, $PULP, $RIND, $ROOT, $SUPERS,
+  $IMMEDIATES, $INNER, $IS_DEFINITION, $OUTER, $PULP, $RIND, $ROOT, $SUPERS,
   ALWAYS_FALSE, ALWAYS_NULL, IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE,
   NO_SUPER, _DURABLES,
   HasOwn, InSetProperty, InterMap, SpawnFrom, _$Copy,
@@ -185,7 +185,7 @@ ObjectSauce(function (
     // Need to double check this as the execution of the assigner might trigger
     // the barrier and cause the object to already be copied as writable!!!
     if (isImmutable) {
-      _$target            = _$Copy(_$source, false, undefined, selector)
+      _$target            = _$Copy(_$source, false, null, null, selector)
       this._$target       = _$target
       this.get            = this.retargetedGet
       this.set            = this.retargetedSet
@@ -233,7 +233,7 @@ ObjectSauce(function (
     }
 
     if (_$source[IS_IMMUTABLE]) {
-      this._$target = _$target || _$Copy(_$source, false, undefined, selector)
+      this._$target = _$target || _$Copy(_$source, false, null, null, selector)
       this.set = this.retargetedSet
       this.get = this.retargetedGet
       this.deleteProperty = this.retargetedDelete
@@ -255,7 +255,7 @@ ObjectSauce(function (
     // return InnerBarrier_prototype.get(_$target, selector, _$target[$PULP])
 
     const _$target = this._$target
-    const value = _$target[selector]
+    const value    = _$target[selector]
     if (value !== undefined) { return value }
 
     const $method_inner = _$target[$IMMEDIATES][selector]
@@ -343,7 +343,7 @@ ObjectSauce(function (
 
       if (value !== undefined) {
         _$value = InterMap.get(value)
-        if (_$value && _$value[$IS_DEF]) {
+        if (_$value && _$value[$IS_DEFINITION]) {
           if (_$value.isImmediate) {
             supers[$IMMEDIATES][selector] = _$value.super
             return IMMEDIATE
@@ -426,7 +426,7 @@ ObjectSauce(function (
   //     // return (value === NO_SUPER) ?
   //     //   ($inner._unknownProperty ?
   //     //     $inner[$PULP]._unknownProperty(selector) : undefined) :
-  //     //   (value && value[$PROOF] === INNER_SECRET ?
+  //     //   (value && value[$IS_INNER] === PROOF ?
   //     //     value.handler.call($inner[$PULP]) : value)
   //   }
   // }

@@ -3,8 +3,9 @@ ObjectSauce(function (
   DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   SAFE_FUNC, TAMED_FUNC,
-  DefineProperty, Frost, InterMap, InvisibleConfig, OwnNames, SpawnFrom, RootOf,
-  AssignmentOfUndefinedError, DetectedInnerError,
+  DefineProperty, Frost, InterMap, InvisibleConfig, IsFact, IsRigid,
+  OwnNames, SpawnFrom, RootOf,
+  AssignmentOfUndefinedError, AttemptInvertedFuncCopyError, DetectedInnerError,
   OSauce, _OSauce
 ) {
   "use strict"
@@ -22,11 +23,11 @@ ObjectSauce(function (
     const func = {
       [name] : function (...args) {
         const receiver =
-          (this != null && this[$PROOF] === INNER_SECRET) ? this[$RIND] : this
+          (this != null && this[$IS_INNER] === PROOF) ? this[$RIND] : this
         return Func.apply(receiver, args)
       }
     }[name]
-    return SetFuncImmutable(func, TAMED_FUNC)
+    return MarkAndSetFuncImmutable(func, TAMED_FUNC)
   }
 
 
@@ -46,7 +47,7 @@ ObjectSauce(function (
 
         case "object" :
                if (value === null)                 {        /* NOP */        }
-          else if (value[$PROOF] === INNER_SECRET) {
+          else if (value[$IS_INNER] === PROOF)     {
             if (value === _target)                 { value = _$target[$RIND] }
            // Safety check: detect failure to use 'this.$' elsewhere.
             else                 { return DetectedInnerError(_target, value) }
@@ -87,7 +88,7 @@ ObjectSauce(function (
       }
       if (writeOuter) { $target[selector] = value }
     }
-    else if (value && value[$PROOF] === INNER_SECRET && value[$PULP] !== _target) {
+    else if (value && value[$IS_INNER] === PROOF && value[$PULP] !== _target) {
       // Safety check: detect failure to use 'this.$' elsewhere.
       return DetectedInnerError(_target, value)
     }
@@ -98,15 +99,20 @@ ObjectSauce(function (
 
 
   // Still need to ensure ownMethods are copied a well!!!
-  function _$Copy(_$source, asImmutable, visited = new WeakMap(), except_) {
-    var durables, selector, next, value
-    const   source     = _$source[$RIND]
-    const _$target     = new _$source[$BLANKER](_$source)
-    const  $target     = _$target[$OUTER]
-    const  _target     = _$target[$PULP]
-    const   target     = _$target[$RIND]
-    const _initFrom_   = _$target._initFrom_
+  function _$Copy(_$source, asImmutable, visited, context, optional) {
+    var newType, durables, selector, next, value
+    const source     = _$source[$RIND]
+    const blanker    =
+      (context && (newType = optional || context[_$source.type.name])) ?
+        InterMap.get(newType)._blanker : _$source[$BLANKER]
 
+    const _$target   = new blanker(_$source)
+    const  $target   = _$target[$OUTER]
+    const  _target   = _$target[$PULP]
+    const   target   = _$target[$RIND]
+    const _initFrom_ = _$target._initFrom_
+
+    visited = visited || new WeakMap()
     visited.set(source, target) // to manage cyclic objects
 
     if (_$source[$OUTER].this) {
@@ -115,7 +121,7 @@ ObjectSauce(function (
     }
 
     if (_initFrom_) {
-     _initFrom_.call(_target, _$source[$PULP], asImmutable, visited, except_)
+     _initFrom_.call(_target, _$source[$PULP], asImmutable, visited, context)
     }
     else {
       durables = _$source[_DURABLES] || SetDurables(_$source)
@@ -123,13 +129,13 @@ ObjectSauce(function (
 
       while (next--) {
         selector = durables[next]
-        if (selector === except_) { continue }
+        if (selector === optional) { continue }
 
         value = _$source[selector]
         if (selector[0] !== "_") {  // public selector
           $target[selector] = (value === source) ? (value = target) : value
         }                           // private selector
-        else { value = AsNextValue(value, asImmutable, visited, source, target) }
+        else { value = AsNextValue(value, asImmutable, visited, context) }
 
         _$target[selector] = value
       }
@@ -153,18 +159,21 @@ ObjectSauce(function (
   }
 
 
-  const ReliableObjectCopy = function copy(visited_asImmutable_, visited_) {
-    const [asImmutable, visited] = (typeof visited_asImmutable_ === "boolean") ?
-      [visited_asImmutable_, visited_] : [undefined, visited_asImmutable_]
+  const ReliableObjectCopy = function copy(visited_asImmutable_, visited_, context__) {
+    const [asImmutable, visited, context] =
+      (typeof visited_asImmutable_ === "boolean") ?
+        [visited_asImmutable_,  visited_, context__] :
+        [undefined, visited_asImmutable_, visited_ ]
     return (this[IS_IMMUTABLE] && asImmutable !== false) ?
-      this : CopyObject(this, asImmutable, visited)
+      this : CopyObject(this, asImmutable, visited, context)
   }
 
 
   // Note: The CopyObject is only called AFTER confirming that the source
   //       is NOT a fact!!! ***
-  function CopyObject(source, asImmutable, visited = new WeakMap()) {
+  function CopyObject(source, asImmutable, visited, context) {
     var target, next, value, property, properties
+    visited = visited || new WeakMap()
 
     switch (source.constructor) {
       case WeakMap : return source
@@ -205,7 +214,7 @@ ObjectSauce(function (
           property = properties[next]
           value    = source[property]
           target[property] =
-            AsNextValue(value, asImmutable, visited, source, target)
+            AsNextValue(value, asImmutable, visited, context)
         }
       break
 
@@ -216,7 +225,7 @@ ObjectSauce(function (
         while (next--) {
           value = source[next]
           target[next] =
-            AsNextValue(value, asImmutable, visited, source, target)
+            AsNextValue(value, asImmutable, visited, context)
         }
       break
 
@@ -224,8 +233,8 @@ ObjectSauce(function (
         visited.set(source, (target = new Map())) // Handles cyclic objects
 
         source.forEach((value, key) => {
-          var nextKey = AsNextValue(key, asImmutable, visited, source, target)
-          var nextValue = AsNextValue(value, asImmutable, visited)
+          var nextKey   = AsNextValue(key  , asImmutable, visited, context)
+          var nextValue = AsNextValue(value, asImmutable, visited, context)
           target.set(nextKey, nextValue)
         })
       break
@@ -235,7 +244,7 @@ ObjectSauce(function (
 
         source.forEach((value) => {
           var nextValue =
-            AsNextValue(value, asImmutable, visited, source, target)
+            AsNextValue(value, asImmutable, visited, context)
           target.add(nextValue)
         })
       break
@@ -248,26 +257,35 @@ ObjectSauce(function (
     return target
   }
 
-  function AsNextValue(value, asImmutable, visited, source, target) {
-    var traversed
+  function AsNextValue(value, asImmutable, visited, context) {
+    var traversed, _$value, newType, isImmutable
+
     if (typeof value !== "object")        { return value     }
     if (value === null)                   { return value     }
-    if (value === source)                 { return target    }
-    if (value[IS_IMMUTABLE])              { return value     }
-    if (value.id != null)                 { return value     }
     if ((traversed = visited.get(value))) { return traversed }
+    // if (value.id != null)                 { return value     }
 
-    const _$value = InterMap.get(value)
+    if (context && context !== value.context) {
+      if ((_$value = InterMap.get(value))) {
+        if ((newType = context[_$value.type.name])) {
+          isImmutable = value[IS_IMMUTABLE] || false
+          return _$Copy(_$value, isImmutable, visited, context, newType)[$RIND]
+        }
+      }
+    }
+    if (value.id != null)                 { return value     }
+    if (value[IS_IMMUTABLE])              { return value     }
 
-    return (_$value) ?
-      _$Copy(_$value, asImmutable, visited)[$RIND] :
-      CopyObject(value, asImmutable, visited)
+    return (_$value || (_$value = InterMap.get(value))) ?
+      _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
+      CopyObject(value, asImmutable, visited, context)
   }
 
 
-  function SetObjectImmutable(target, inPlace, visited = new WeakMap()) {
+  function SetObjectImmutable(target, inPlace, visited) {
     var keys, key, values, value, next, nextKey, nextValue, properties, property
 
+    visited = visited || new WeakMap()
     visited.set(target, target)
 
     switch (target.constructor) {
@@ -332,11 +350,16 @@ ObjectSauce(function (
   }
 
 
-  function SetFuncImmutable(func, marker = SAFE_FUNC) {
+  function MarkAndSetFuncImmutable(func, marker) {
     if (InterMap.get(func)) { return func }
-
     func[IS_IMMUTABLE] = true
     InterMap.set(func, marker)
+    Frost(func.prototype)
+    return Frost(func)
+  }
+
+  function SetFuncImmutable(func) {
+    func[IS_IMMUTABLE] = true
     Frost(func.prototype)
     return Frost(func)
   }
@@ -360,49 +383,90 @@ ObjectSauce(function (
       return SetObjectImmutable(value, true, visited)
     }
     return (_$value) ?
-      _$Copy(_$value, true, visited)[$RIND] :
+      _$Copy(  _$value, true, visited)[$RIND] :
       CopyObject(value, true, visited)
   }
 
+    // asImmutable
+    // true       make immutable copy
+    // false      make mutable copy
+    // undefined  make copy of same mutability as the receiver
 
+  function Copy(value, visited_asImmutable_, visited_, context__) {
+    var _$value
+    const [asImmutable, visited, context] =
+      (typeof visited_asImmutable_ === "object") ?
+        [undefined           , visited_asImmutable_, visited_ ] :
+        [visited_asImmutable_, visited_            , context__]
 
-  function Copy(value, asImmutable_, visited__) {
-    if (typeof value !== "object") { return value }
-    if (value === null)            { return value }
-    if (value[IS_IMMUTABLE])       { return value }
-    if (value.id != null)          { return value }
+    switch (typeof value) {
+      case "function" :
+        _$value = InterMap.get(value)
+        return (_$value) ?
+          _$Copy(_$value, asImmutable, visited, context)[$RIND] : value
 
-    const _$value = InterMap.get(value)
+      case "object"   :
+        if (value === null) { return value }
+        if (value[IS_IMMUTABLE] && asImmutable !== false) { return value }
 
-    return (_$value) ?
-      _$Copy(_$value, asImmutable_, visited__)[$RIND] :
-      CopyObject(value, asImmutable_, visited__)
+        _$value = InterMap.get(value)
+        return (_$value) ?
+          _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
+          CopyObject(value, asImmutable, visited, context)
+    }
+  }
+
+  function AsRigid(value, visited_, context__) {
+    return IsRigid(value) ? value : Copy(value, true, visited_, context__)
+  }
+
+  function AsFact(value, visited_, context__) {
+    return IsFact(value) ? value : Copy(value, true, visited_, context__)
+  }
+
+  function AsImmutable(value) {
+    switch (typeof value) {
+      case "function" :
+        return value[IS_IMMUTABLE] ? value :
+          value.asImmutable || AttemptInvertedFuncCopyError(value)
+
+      case "object"   :
+        return value && value.asImmutable ||
+          (value[IS_IMMUTABLE] ? value : SetObjectImmutable(value))
+    }
+    return value
+  }
+
+  function BeImmutable(value) {
+    switch (typeof value) {
+      case "function" :
+        return value.beImmutable ||
+          (value[IS_IMMUTABLE] ? value : SetFuncImmutable(value))
+      case "object"   :
+        return value && value.beImmutable ||
+          (value[IS_IMMUTABLE] ? value :SetObjectImmutable(value))
+    }
+    return value
   }
 
 
-  function SetImmutable(value) {
-    if (typeof value !== "object") { return value }
-    if (value === null)            { return value }
-    if (value[IS_IMMUTABLE])       { return value }
+  _OSauce.InSetProperty           = InSetProperty
+  _OSauce._$Copy                  = _$Copy
+  _OSauce.CopyObject              = CopyObject
+  _OSauce.MarkAndSetFuncImmutable = MarkAndSetFuncImmutable
+  _OSauce.SetObjectImmutable      = SetObjectImmutable  // Necessary???s
 
-    return value.beImmutable || SetObjectImmutable(value)
-  }
+  OSauce.setDurables              = SetDurables
+  OSauce.reliableObjectCopy       = ReliableObjectCopy
+  OSauce.asNextValue              = AsNextValue
+  OSauce.valueAsFact              = ValueAsFact
+  OSauce.copy                     = Copy
+  OSauce.asFact                   = AsFact
+  OSauce.asRigid                  = AsRigid
+  OSauce.asImmutable              = AsImmutable
+  OSauce.beImmutable              = BeImmutable
 
-
-  _OSauce.InSetProperty      = InSetProperty
-  _OSauce._$Copy             = _$Copy
-  _OSauce.CopyObject         = CopyObject
-  _OSauce.SetFuncImmutable   = SetFuncImmutable
-  _OSauce.SetObjectImmutable = SetObjectImmutable  // Necessary???s
-
-  OSauce.setDurables         = SetDurables
-  OSauce.reliableObjectCopy  = ReliableObjectCopy
-  OSauce.asNextValue         = AsNextValue
-  OSauce.valueAsFact         = ValueAsFact
-  OSauce.copy                = Copy
-  OSauce.setImmutable        = SetImmutable
 })
-
 
 
 

@@ -6,7 +6,7 @@ ObjectSauce(function (
 
   _$Something.addRetroactiveProperty(function $() {
     return this[$RIND]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
@@ -14,23 +14,23 @@ ObjectSauce(function (
     const $inner = this[$INNER]
     DefineProperty($inner, "_super", InvisibleConfig)
     return ($inner._super = new Proxy($inner, _Super))
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
 
   _$Something.addMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
     return this.id
-  }, BASIC_VALUE_METHOD) // VALUE_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
 
   _$Something.addMethod(function is(value) {
     return (this[$RIND] === value)
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   // _$Something.addMethod(function is(value) {
   //   return (this === value) || (this[$RIND] === value)
-  // }, BASIC_VALUE_METHOD)
+  // }, IDEMPOT_VALUE_METHOD)
 
 
   _$Something.addSharedProperty("isSauced", true)
@@ -38,7 +38,7 @@ ObjectSauce(function (
 
   _$Something.addMethod(function isImmutable() {
     return this[IS_IMMUTABLE] || false
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 })
 
@@ -48,7 +48,7 @@ ObjectSauce(function (
 // $Base
 //
 //   $Something
-//      [$PROOF] === INNER_SECRET
+//      [$IS_INNER] === PROOF
 //      id = null
 //      IS_IMMUTABLE = null
 //

@@ -241,10 +241,25 @@ kontext
 krust
 topjs
 
-Tranya
+Tranya|gagh
 Corbomite
 HotSauce
 ObjectSauce
+
+harissa|Zhug
+allspice
+cloves
+tumeric
+jerked
+tarragon
+cornbread|sweetpotato
+cocoabutter
+hairy|hairless
+domesticated|cultivated
+southern|fried|pickled
+bep|blackeyedpea|hoppin
+
+Spiced|Seasoned|Seasoning
 
 enduring/perennial/durable
 

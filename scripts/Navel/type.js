@@ -1,19 +1,20 @@
 ObjectSauce(function (
   $BLANKER, $INNER, $LOCKED, $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, _DURABLES,
-  BASIC_SELF_METHOD, BASIC_VALUE_METHOD,
-  AsDefinition, AsLazyProperty, AsName, AddPermeableDefinitionToType,
-  BasicSetObjectImmutable, Copy, DefineProperty, InterMap, InvisibleConfig,
-  OwnSelectors, PropertyAt, _BasicNew_, _Type,
-  AllSelectorsSorted, OwnSelectorsSorted,
+  IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
+  AsDefinition, AsLazyProperty, AsName, AsNextValue,
+  AddPermeableNewDefinitionToType, BasicSetObjectImmutable, Copy,
+  DefineProperty, InterMap, InvisibleConfig, OwnSelectors, PropertyAt,
+  _BasicNew_, _Type,
+  KnownSelectorsSorted, OwnSelectorsSorted,
   OSauce
 ) {
   "use strict"
 
-  // _Type.addMethod(function addFactMethod(...namedFunc_name__handler) {
+  // _Type.addMethod(function addCertainFactMethod(...namedFunc_name__handler) {
   //   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
   // })
   //
-  // _Type.addMethod(function addImmutableValueMethod(...namedFunc_name__handler) {
+  // _Type.addMethod(function addSelfMethod(...namedFunc_name__handler) {
   //   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
   // })
   //
@@ -29,9 +30,9 @@ ObjectSauce(function (
   // addDefinition(selector, func, mode_)
 
   _Type.addMethod(function addDefinition(...args) {
-    const definition = AsDefinition(...args)
+    const definition = AsDefinition(args, this.context)
     this._setDefinitionAt(definition.tag, definition)
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
   _Type.addMethod(function addAlias(aliasName, selector_definition) {
@@ -41,10 +42,14 @@ ObjectSauce(function (
         this._unknownMethodToAliasError(selector_definition))
 
     this.addDefinition(aliasName, definition)
-  })
+  }, TRUSTED_VALUE_METHOD)
 
   _Type.addMethod(function _unknownMethodToAliasError(selector) {
     this._signalError(`Can't find method '${AsName(selector)}' to alias!!`)
+  })
+
+  _Type.addMethod(function _attemptToReassignContextError(context) {
+    this._signalError(`Can't reassign context of ${this} from ${this.context} to ${context}!!`)
   })
 
 
@@ -65,8 +70,7 @@ ObjectSauce(function (
       $root$inner[_DURABLES] = BasicSetObjectImmutable([...durables, selector])
       this.addDeclaration(selector)
     }
-    return this
-  }, BASIC_SELF_METHOD)
+  })
 
 
 
@@ -122,43 +126,42 @@ ObjectSauce(function (
 
     if ($inner[$OUTER].this) {
       DefineProperty($instance, "this", InvisibleConfig)
-      $instance.this = AddPermeableDefinitionToType(_$instance[$PULP])
+      $instance.this = AddPermeableNewDefinitionToType(_$instance)
     }
     return _$instance[$RIND]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
   _Type.addMethod(function _nextIID() {
     // This works on an immutable type without creating a new copy.
     return ++this[$INNER]._iidCount
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   _Type.addRetroactiveProperty(function id() {
     return `${this.formalName},${this.basicId}`
-  }, BASIC_VALUE_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
 
   _Type.addMethod(function formalName() {
-    const context = this.context
-    const prefix  = context ? context.id + "@" : ""
+    const contextId = this.context.id
+    const prefix  = contextId ? contextId + "@" : ""
     return `${prefix}${this.name}`
-  })
+  }, TRUSTED_VALUE_METHOD)
 
   _Type.addMethod(function toString(_) { // eslint-disable-line
     return this.formalName
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
 
-
-  _Type.addMethod(function addSubtype(name) {
-    return _Type.new(name, [this.$])
-  })
+  _Type.addMethod(function newSubtype(name) {
+    return this.context.Type.new(name, [this.$])
+  }, IDEMPOT_VALUE_METHOD)
 
   _Type.addMethod(function addSupertype(type) {
     this.setSupertypes([...this.supertypes, type])
-  })
+  }, TRUSTED_VALUE_METHOD)
 
   _Type.addMethod(function inheritsFrom(type) {
     var self, ancestry, next
@@ -167,63 +170,63 @@ ObjectSauce(function (
     next     = ancestry.length - 1
     while (next--) { if (ancestry[next] === self) { return true } }
     return false
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
   _Type.addMethod(function hasDefinedMethod(selector) {
     const value = this._definitions[selector]
     return (value) ? value.isMethod : false
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
   _Type.addMethod(function methodAt(selector) {
     const property = PropertyAt(this._blanker.$root$inner, selector)
     return property.isMethod ? property : null
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
   _Type.addMethod(function definitionAt(selector) {
     return this._definitions[selector] || null
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
 
   _Type.addMethod(function methodAncestry(selector) {
     return BasicSetObjectImmutable(
       this.ancestry.filter(type => type.hasDefinedMethod(selector)))
-  })
+  }, TRUSTED_VALUE_METHOD)
 
   _Type.addMethod(function methodAncestryListing(selector) {
     const ancestry = this.methodAncestry(selector)
     return ancestry.map(type => type.name).join(" ")
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
 
   _Type.addMethod(function allKnownSelectors() {
-    return AllSelectorsSorted(this._blanker.$root$inner, OwnSelectors)
-  })
+    return KnownSelectorsSorted(this._blanker.$root$inner, OwnSelectors)
+  }, IDEMPOT_VALUE_METHOD)
 
   _Type.addMethod(function allPublicSelectors() {
     // All visible public selectors
     return OwnSelectorsSorted(this._blanker.$root$outer)
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
   _Type.addMethod(function allDefinedSelectors() {
     // All but intrinsic selectors
     return OwnSelectorsSorted(this._blanker.$root$inner)
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
   _Type.addMethod(function definedSelectors() {
     return OwnSelectorsSorted(this._definitions)
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
   _Type.addMethod(function publicSelectors() {
-    return this.definedSelectors.filter(s => AsName(s)[0] !== "_")
-  })
+    return this.definedSelectors.filter(sel => AsName(sel)[0] !== "_")
+  }, TRUSTED_VALUE_METHOD)
 
 
 
-  _Type.addMethod(_BasicNew_, BASIC_VALUE_METHOD)  // Remove later!!!
+  _Type.addMethod(_BasicNew_, IDEMPOT_VALUE_METHOD)  // Remove later!!!
 
   // _basicNew_
   _Type.addOwnMethod(function new_(...args) {
@@ -241,7 +244,7 @@ ObjectSauce(function (
     const instance_ = _instance[$PULP]
     if (instance_.id == null) { _instance._setImmutable.call(instance_) }
     return instance
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   _Type.addMethod(function newAsFact_(...args) {
     // Note: same as implementation in TypeOuter and TypeInner
@@ -250,27 +253,35 @@ ObjectSauce(function (
     const _instance  = _$instance[$PULP]
     if (_instance.id == null) { _$instance._setImmutable.call(_instance) }
     return instance_
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
-
-  _Type.addMethod(function _initFrom_(_type) {
-    var tag, definitions
-
+  _Type.addMethod(function _initFrom_(_type, asImmutable, visited, context) {
     this._init(_type.name, _type.supertypes)
+    this._initDefinitionsFrom_(_type, visited, context)
+  }, TRUSTED_VALUE_METHOD)
+
+  _Type.addMethod(function _initDefinitionsFrom_(_type, visited, context) {
+    var definitions, tag, value, newValue
 
     definitions = _type._definitions
     for (tag in definitions) {
-      if (tag !== "type") { this._setDefinitionAt(tag, Copy(definitions[tag])) }
+      if (tag !== "type") {
+        value    = definitions[tag]
+        newValue = AsNextValue(value, false, visited, context)
+        this._setDefinitionAt(tag, newValue)
+      }
     }
 
     if ((definitions = _type[$OWN_DEFINITIONS])) {
       for (tag in definitions) {
-        this.addOwnDefinition(tag, Copy(definitions[tag]))
+        value    = definitions[tag]
+        newValue = Copy(value, visited, context)
+        this.addOwnDefinition(tag, newValue)
       }
     }
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
   _Type.addAlias("_basicNew"        , "new"                  )
@@ -284,11 +295,24 @@ ObjectSauce(function (
 
   _Type.addMethod(function lock() {
     this._blanker.$root$inner[$LOCKED] = this[$INNER][$LOCKED] = true
-  }, BASIC_SELF_METHOD)
+    return this
+  }, IDEMPOT_SELF_METHOD)
 
-  _Type.addMethod(function isLocked() {
-    return this[$LOCKED] || false
-  }, BASIC_VALUE_METHOD)
+
+  _Type.addMethod(function _reconcileFrom(sourceType, asMutable, visited, context) {
+    const _sourceType = InterMap.get(sourceType)[$PULP]
+    const supertypes  = _sourceType._reconciledSupertypes(visited)
+
+    this._setSupertypes(supertypes)
+    this._initDefinitionsFrom_(_sourceType, visited, context)
+
+    if (!asMutable && sourceType.isImmutable) { this._setImmutable }
+  })
+
+  _Type.addMethod(function _reconciledSupertypes(visited) {
+    return this._supertypes.map(supertype =>
+      visited.get(supertype) || supertype)
+  })
 
 })
 

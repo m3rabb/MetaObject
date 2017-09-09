@@ -1,8 +1,8 @@
 ObjectSauce(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER, $OUTER,
   $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
-  DISGUISE_PULP, INNER_SECRET, INVISIBLE, IS_IMMUTABLE, _DURABLES,
-  ASSIGNER_FUNC, BLANKER_FUNC,
+  DISGUISE_PULP, EMPTY_THING_ANCESTRY, INVISIBLE, IS_IMMUTABLE,
+  ASSIGNER_FUNC, BLANKER_FUNC, _DURABLES,
   AsCapitalized, AsName, BasicSetObjectImmutable, Frost, Impermeable,
   InvisibleConfig, MarkFunc, OwnSymbols, RootOf, SetDurables, SpawnFrom,
   DisguisedInnerBarrier, DisguisedOuterBarrier, InnerBarrier,
@@ -192,6 +192,7 @@ ObjectSauce(function (
 
 
   function BuildAncestryOf(type, supertypes = type.supertypes) {
+    if (supertypes === EMPTY_THING_ANCESTRY) { return supertypes }
     const roughAncestry   = BuildRoughAncestryOf(supertypes)
     const visited         = new Set()
     const dupFreeAncestry = []
@@ -293,7 +294,7 @@ ObjectSauce(function (
   }
 
 
-  function AllSelectorsSorted(target, selectorPicker) {
+  function KnownSelectorsSorted(target, selectorPicker) {
     var targetSelectors, selector, index, next
     const knowns         = SpawnFrom(null)
     const selectors      = []
@@ -344,7 +345,7 @@ ObjectSauce(function (
   _OSauce.Context_apply                 = Context_apply
   _OSauce.Type_apply                    = Type_apply
   _OSauce.OwnSelectorsSorted            = OwnSelectorsSorted
-  _OSauce.AllSelectorsSorted            = AllSelectorsSorted
+  _OSauce.KnownSelectorsSorted          = KnownSelectorsSorted
   _OSauce.PropertyAt                    = PropertyAt
 
 })

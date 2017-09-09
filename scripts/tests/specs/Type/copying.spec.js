@@ -61,10 +61,6 @@ ObjectSauce(function (
             expect( cat.type ).toBe( this.Cat2 )
           })
 
-          it("has no context", function () {
-            expect( this.Cat2.context ).toBe( null )
-          })
-
           it("has a different id", function () {
             expect( this.Cat2.id ).not.toBe( this.Cat.id )
           })

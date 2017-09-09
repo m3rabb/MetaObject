@@ -1,18 +1,19 @@
-_ObjectSauce(function (
-  $ASSIGNERS, $BARRIER, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY, $DISGUISE, $IMMEDIATES, $INNER, $OUTER, $OUTER_WRAPPER, $PROOF, $PULP,
-  $IS_DEF, $RIND, $ROOT, $SUPERS,
+ObjectSauce(function (
+  $ASSIGNERS, $BARRIER, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,
+  $DISGUISE, $IMMEDIATES, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP,
+  $IS_DEFINITION, $RIND, $ROOT, $SUPERS,
   ALWAYS_SELF, ASSIGNER, DECLARATION, EMPTY_ARRAY, IMPLEMENTATION, INHERIT,
-  INNER_SECRET, INVISIBLE, IS_IMMUTABLE, REINHERIT, VISIBLE, _DURABLES,
+  INVISIBLE, IS_IMMUTABLE, PROOF, REINHERIT, VISIBLE, _DURABLES,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
-  BASIC_SELF_METHOD, BASIC_VALUE_METHOD, IMMEDIATE_METHOD,
-  MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD,
+  IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, IMMEDIATE_METHOD,
+  MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD, TRUSTED_VALUE_METHOD,
   AsCapitalized, AsMembershipSelector, AsName, AsPropertySymbol,
   DeleteSelectorsIn, ExtractParamListing, Frost, InvisibleConfig, IsArray,
   MarkFunc, NewAssignmentErrorHandler, NewBlanker, NewInner,
   NewVacuousConstructor, SpawnFrom,
   AttemptedChangeOfAncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, SignalError, UnnamedFuncError,
-  BasicSetObjectImmutable, SetFuncImmutable, SetImmutable,
+  BeImmutable, BasicSetObjectImmutable, MarkAndSetFuncImmutable,
   InterMap, PropertyToSymbolMap,
   BuildAncestryOf, RootOf,
   AsRetroactiveProperty, AsSetterFromProperty, CompletelyDeleteProperty,
@@ -99,8 +100,8 @@ _ObjectSauce(function (
   // Stubs for known properties
   $Something$root$inner[$BARRIER]                 = null
   // This secret is only known by inner objects
-  $Something$root$inner[$PROOF]                   = INNER_SECRET
-  $Something$root$outer[$PROOF]                   = null
+  $Something$root$inner[$IS_INNER]                = PROOF
+  $Something$root$outer[$IS_INNER]                = null
 
   $Something$root$outer.type                      = null
   $Intrinsic$root$inner._retarget                 = null
@@ -111,7 +112,7 @@ _ObjectSauce(function (
   const _BasicNew = function _basicNew(...args) {
     const _$instance = new this._blanker(args)
     const  _instance = _$instance[$PULP]
-    const  _postInit = _$instance._postInit
+    const  _postInit = _$instance[$IMMEDIATES]._postInit
 
     _$instance._init.apply(_instance, args) // <<----------
     if (_postInit) {
@@ -147,7 +148,7 @@ _ObjectSauce(function (
     $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
     Frost($target)
     return this
-  } // BASIC_SELF_METHOD
+  } // IDEMPOT_SELF_METHOD
 
 
   function SetDefinition(_$target, definition) {
@@ -214,7 +215,7 @@ _ObjectSauce(function (
 
     const _$value = InterMap.get(value)
 
-    if (_$value && _$value[$IS_DEF]) {
+    if (_$value && _$value[$IS_DEFINITION]) {
       SetDefinition(_$root, value)
     }
     else {
@@ -242,17 +243,23 @@ _ObjectSauce(function (
   }
 
 
-  _SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false, VISIBLE  )
-  _SetDefinitionAt.call(_$Something, "isSomething", true , VISIBLE  )
-  _SetDefinitionAt.call(_$Something, "isNothing"  , null , INVISIBLE)
+  var DefaultContext            = SpawnFrom(null)
+  DefaultContext.Definition     = Definition
+  DefaultContext.Thing          = Thing
+
+  _SetDefinitionAt.call(_$Something, "context"    , DefaultContext, VISIBLE  )
+  _SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false         , VISIBLE  )
+  _SetDefinitionAt.call(_$Something, "isSomething", true          , VISIBLE  )
+  _SetDefinitionAt.call(_$Something, "isNothing"  , null          , INVISIBLE)
+
 
   // Could have defined the follow properties later, after addDeclaration has
   // been defined, however it is fast execution within each objects' barrier#get
   // if implemented this way.  These properties are read very frequently.
-  _SetDefinitionAt.call(_$Something, "id"     , null, INVISIBLE)
-  _SetDefinitionAt.call(_$Something, _DURABLES, null, INVISIBLE)
+  _SetDefinitionAt.call(_$Something, "id"          , null, INVISIBLE)
+  _SetDefinitionAt.call(_$Something, _DURABLES     , null, INVISIBLE)
 
-  _SetDefinitionAt.call(_Definition, $IS_DEF  , true, VISIBLE  )
+  _SetDefinitionAt.call(_Definition, $IS_DEFINITION, true, VISIBLE  )
 
 
 
@@ -329,9 +336,9 @@ _ObjectSauce(function (
     outer.method = inner.method // this[$RIND]
 
     // Need to subvert function assignment to enable raw functions to be stored.
-    $outer.outer   = $inner.outer   = SetFuncImmutable(outer  , OUTER_FUNC)
-    $outer.inner   = $inner.inner   = SetFuncImmutable(inner  , INNER_FUNC)
-    $outer.handler = $inner.handler = MarkFunc        (handler, HANDLER_FUNC)
+    $outer.outer   = $inner.outer   = MarkAndSetFuncImmutable(outer, OUTER_FUNC)
+    $outer.inner   = $inner.inner   = MarkAndSetFuncImmutable(inner, INNER_FUNC)
+    $outer.handler = $inner.handler = MarkFunc           (handler, HANDLER_FUNC)
   }
 
 
@@ -342,7 +349,8 @@ _ObjectSauce(function (
 
 
   const AddMethod = function addMethod(func_selector, func_, mode__, property___) {
-    const definition = Definition(func_selector, func_, mode__, property___)
+    const definition =
+      this.context.Definition(func_selector, func_, mode__, property___)
     return this._setDefinitionAt(definition.tag, definition)
   }
 
@@ -356,15 +364,14 @@ _ObjectSauce(function (
 
   _$Something.addMethod(function isPermeable() {
     return (this[$INNER].this) ? true : false
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
   _$Intrinsic.addMethod(function _basicSet(property, value) {
     const selector = PropertyToSymbolMap[property] || property
     this[selector] = value
-    return this
-  }, BASIC_SELF_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
 
   // Note: This method might need to be moved to _$Something!!!
@@ -383,18 +390,18 @@ _ObjectSauce(function (
 
     DefineProperty($inner, "_retarget", InvisibleConfig)
     return ($inner._retarget = this)  // InSetProperty($inner, "_retarget", this, this)
-  }, BASIC_SELF_METHOD)
+  }, IDEMPOT_SELF_METHOD)
 
 
-  _$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+  _$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
 
-  _Definition.addMethod(Definition$root$inner._init)
-  _Definition.addMethod("_setImmutable", _BasicSetImmutable, BASIC_SELF_METHOD)
+  _Definition.addMethod(Definition$root$inner._init, TRUSTED_VALUE_METHOD)
+  _Definition.addMethod("_setImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
 
 
 
-  _Type.addMethod("new", _BasicNew, BASIC_VALUE_METHOD)
-  _Type.addMethod(_SetDefinitionAt)
+  _Type.addMethod("new", _BasicNew, IDEMPOT_VALUE_METHOD)
+  _Type.addMethod(_SetDefinitionAt, TRUSTED_VALUE_METHOD)
 
   _Type.addMethod(function _propagateDefinition(tag) {
     this._subordinateTypes.forEach(subtype => {
@@ -417,13 +424,13 @@ _ObjectSauce(function (
 
     if (!selector) { return UnnamedFuncError(this, assigner) }
 
-    const definition = Definition(selector, assigner, ASSIGNER)
+    const definition = this.context.Definition(selector, assigner, ASSIGNER)
     this._setDefinitionAt(definition.tag, definition)
   })
 
 
   _Type.addMethod(function addDeclaration(selector) {
-    const definition = Definition(selector, null, DECLARATION)
+    const definition = this.context.Definition(selector, null, DECLARATION)
     this._setDefinitionAt(definition.tag, definition)
   })
 
@@ -442,7 +449,7 @@ _ObjectSauce(function (
     const defs             = this._definitions
     const value            = defs[tag]
     const _$value          = InterMap.get(value)
-    const [selector, mode] = (_$value && _$value[$IS_DEF]) ?
+    const [selector, mode] = (_$value && _$value[$IS_DEFINITION]) ?
       [_$value.selector, _$value.mode] : [tag, null]
 
     switch (mode) {
@@ -649,7 +656,6 @@ _ObjectSauce(function (
   _Type.addMethod(function _propagateReinheritance() {
     this._subordinateTypes.forEach(subtype => {
       var _$subtype = InterMap.get(subtype)
-      _$subtype._ancestry = BuildAncestryOf(subtype) // Reset retroactively!!!
       _$subtype._reinheritDefinitions.call(_$subtype[$PULP])
     })
   })
@@ -695,7 +701,21 @@ _ObjectSauce(function (
   _Type.addMethod(function supertypes() { return this._supertypes })
 
 
-  _Type.addMandatorySetter("setSupertypes", function _supertypes(nextSupertypes) {
+
+  _Type.addMandatorySetter("setContext", function context(context) {
+    if (this._hasOwn("context")) { return this._attemptToReassignContextError }
+    this.addSharedProperty("context", context)
+    return context
+  })
+
+
+  _Type.addMethod(function setSupertypes(nextSupertypes) {
+    this._setSupertypes(nextSupertypes, true)
+  })
+
+  _Type.addMandatorySetter("_setSupertypes", function _supertypes(
+    nextSupertypes, reinherit_
+  ) {
     if (this._supertypes === nextSupertypes) { return nextSupertypes }
 
     if (nextSupertypes.length !== new Set(nextSupertypes).size) {
@@ -706,9 +726,12 @@ _ObjectSauce(function (
 
     if (this._blanker) {
       if (this.isPermeable) {
+        // This is a security measure. Keep someone from merge a protect type
+        // into a programmer controller type in order to access aspects of the
+        // merged type.
         return AttemptedChangeOfAncestryOfPermeableTypeError(this)
       }
-      const isThing = IsSubtypeOfThing(this)  //
+      const isThing = IsSubtypeOfThing(this)
       if (beThing !== isThing) { return ImproperChangeToAncestryError(this) }
       // Perhaps not. Might be able to redirect the _blanker of an existing type???
     }
@@ -721,8 +744,8 @@ _ObjectSauce(function (
 
     this._ancestry = nextAncestry
     this._setAsSubordinateOfSupertypes(nextSupertypes)
-    this._reinheritDefinitions()
-    return SetImmutable(nextSupertypes)
+    if (reinherit_) { this._reinheritDefinitions() }
+    return BeImmutable(nextSupertypes)
   })
 
 
@@ -755,13 +778,6 @@ _ObjectSauce(function (
   })
 
 
-  _Type.addMandatorySetter("setContext", function context(context) {
-    return (this.context) ?
-      this._signalError("A type's context can only be set once!!") : context
-  })
-
-
-
 
   //  spec
   //    name
@@ -775,8 +791,7 @@ _ObjectSauce(function (
       supertypes = spec_name.supertypes
       if (supertypes === undefined) { supertypes = spec_name.supertype }
       if (supertypes === undefined) {
-        const context = this.context
-        return BasicSetObjectImmutable([context && context.Thing || Thing])
+        return BasicSetObjectImmutable([this.context.Thing])
       }
     }
     if (IsArray(supertypes))  { return supertypes  }
@@ -867,8 +882,8 @@ _ObjectSauce(function (
     // Frost($root$supers)
     // Frost($root$inner)
 
-    return this._basicSetImmutable()
-  }, BASIC_SELF_METHOD)
+    this._basicSetImmutable()
+  }, TRUSTED_VALUE_METHOD)
 
 
   OSauce.Type         = Type
@@ -883,12 +898,15 @@ _ObjectSauce(function (
   _OSauce._Definition = _Definition
   _OSauce._Context    = _Context
 
+  _OSauce.DefaultContext = DefaultContext
+
   _OSauce.AddIntrinsicDeclaration = AddIntrinsicDeclaration
   _OSauce.SetDefinition           = SetDefinition
   _OSauce.$Intrinsic$root$inner   = $Intrinsic$root$inner
   _OSauce._BasicSetImmutable      = _BasicSetImmutable
   _OSauce._BasicNew               = _BasicNew
   _OSauce._BasicNew_              = _BasicNew_
+  _OSauce.Definition_init         = Definition$root$inner._init
 })
 
 

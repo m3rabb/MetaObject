@@ -16,14 +16,14 @@
 ObjectSauce(function (
   $BLANKER, $INNER, $LOCKED, $OUTER, $OWN_DEFINITIONS, $PULP, $RIND,
   DECLARATION, IS_IMMUTABLE, LAZY_INSTALLER, _DURABLES,
-  BASIC_SELF_METHOD, BASIC_VALUE_METHOD,
+  IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
   $Intrinsic$root$inner, AsName, BasicSetObjectImmutable, Definition, HasOwn,
   InterMap, InvisibleConfig, MakeDefinitionsInfrastructure, NewUniqueId,
   OwnSelectors, PropertyAt, SignalError, SpawnFrom, _$Copy, _$Intrinsic,
   AsDefinition, SetDefinition,
   OwnNames, OwnVisibleNames,
   CompletelyDeleteProperty, DefineProperty,
-  AllSelectorsSorted, OwnSelectorsSorted
+  KnownSelectorsSorted, OwnSelectorsSorted
 ) {
   // "use strict"
 
@@ -34,56 +34,55 @@ ObjectSauce(function (
       this[_DURABLES] = BasicSetObjectImmutable([...durables, selector])
       this.addOwnDeclaration(selector)
     }
-    return this
-  }, BASIC_SELF_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
 
   _$Intrinsic.addMethod(function _addOwnDurables(selectors) {
     selectors.forEach(selector => this._addOwnDurable(selector))
-    return this
-  }, BASIC_SELF_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
 
 
   _$Intrinsic.addMethod(function isMutable() {
     return !this[IS_IMMUTABLE]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function isFact() {
     return this[IS_IMMUTABLE] ? true : (this.id != null)
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
   _$Intrinsic.addMethod(function isA(type) {
     return this[type.membershipSelector]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
 
-  _$Intrinsic.addMethod(function copy(visited_asImmutable_, visited_) {
-    const [asImmutable, visited] =
-      (typeof visited_asImmutable_ === "boolean") ?
-        [visited_asImmutable_, visited_            ] :
-        [undefined           , visited_asImmutable_]
+  _$Intrinsic.addMethod(function copy(visited_asImmutable_, visited_, context__) {
     const $inner = this[$INNER]
+    const [asImmutable, visited, context] =
+      (typeof visited_asImmutable_ === "object") ?
+        [undefined           , visited_asImmutable_, visited_ ] :
+        [visited_asImmutable_, visited_            , context__]
 
     return (($inner[IS_IMMUTABLE] && asImmutable !== false) ? // true or undefined
-      $inner : _$Copy($inner, asImmutable, visited))[$RIND]
-  }, BASIC_VALUE_METHOD)
+      $inner : _$Copy($inner, asImmutable, visited, context))[$RIND]
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function immutableCopy(visited_) {
     const $inner = this[$INNER]
-    return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner, true, visited_))[$RIND]
-  }, BASIC_VALUE_METHOD)
+    return ($inner[IS_IMMUTABLE] ?
+      $inner : _$Copy($inner, true, visited_))[$RIND]
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function mutableCopy(visited_) {
     return _$Copy(this[$INNER], false, visited_)[$RIND]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function mutableCopyExcept(selector) {
-    return _$Copy(this[$INNER], false, undefined, selector)[$RIND]
-  }, BASIC_VALUE_METHOD)
+    return _$Copy(this[$INNER], false, null, null, selector)[$RIND]
+  }, IDEMPOT_VALUE_METHOD)
 
   // Thing.add(function _nonCopy() {
   //   return (this[IS_FACT] === IMMUTABLE) ? this._newBlank() : this
@@ -93,27 +92,27 @@ ObjectSauce(function (
   _$Intrinsic.addMethod(function asCopy() {
     const $inner = this[$INNER]
     return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner, false))[$RIND]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function asMutableCopy() {
     return _$Copy(this[$INNER], false)[$RIND]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function asFact() {
     const $inner = this[$INNER]
     return ($inner[IS_IMMUTABLE] || ($inner.id != null)) ?
       $inner : _$Copy($inner, true)[$RIND]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function asImmutable() {
     const $inner = this[$INNER]
     return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner, true))[$RIND]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function asMutable() {
     const $inner = this[$INNER]
     return ($inner[IS_IMMUTABLE] ? _$Copy($inner, false) : $inner)[$RIND]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
@@ -128,13 +127,13 @@ ObjectSauce(function (
     if (this[IS_IMMUTABLE]) { return this }
     const [inPlace, visited] = (typeof visited_inPlace_ === "boolean") ?
       [visited_inPlace_, visited_] : [undefined, visited_inPlace_]
-    return this._setImmutable(inPlace, visited)
-  })
+    this._setImmutable(inPlace, visited)
+  }, TRUSTED_VALUE_METHOD)
 
 
   _$Intrinsic.addMethod(function beImmutable() {
-    return this[IS_IMMUTABLE] ? this : this._setImmutable()
-  })
+    if (!this[IS_IMMUTABLE]) { this._setImmutable() }
+  }, TRUSTED_VALUE_METHOD)
 
 
 
@@ -148,35 +147,35 @@ ObjectSauce(function (
       $instance.this = _$instance[$PULP]
     }
     return _$instance[$RIND]
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
 
-  _$Intrinsic.addMethod(function _allSelectors() {
-    return AllSelectorsSorted(this[$INNER], OwnSelectors)
-  })
+  _$Intrinsic.addMethod(function _knownSelectors() {
+    return KnownSelectorsSorted(this[$INNER], OwnSelectors)
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function _inheritedSelectors() {
     return this.type.allKnownSelectors
-  })
+  }, TRUSTED_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function visibleSelectors() {
-    return AllSelectorsSorted(this[$OUTER], OwnVisibleNames)
-  })
+    return KnownSelectorsSorted(this[$OUTER], OwnVisibleNames)
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function _ownSelectors() {
     // All string and symbol properties, includes invisibles
     return OwnSelectorsSorted(this[$INNER])
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function ownSelectors() {
     // Includes placed retroactive|lazy properties, but not symbols
     return BasicSetObjectImmutable(OwnNames(this[$OUTER]).sort())
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
 
-  _$Intrinsic.addMethod("_hasOwn", HasOwn, BASIC_VALUE_METHOD)
+  _$Intrinsic.addMethod("_hasOwn", HasOwn, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function hasOwn(selector) {
     switch (selector[0]) {
@@ -184,16 +183,16 @@ ObjectSauce(function (
       case "_"       : return false
       default        : return this._hasOwn(selector)
     }
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
   _$Intrinsic.addMethod(function _has(selector) {
     return (selector in this[$INNER])
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function has(selector) {
     return (selector in this[$OUTER])
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
@@ -228,28 +227,37 @@ ObjectSauce(function (
   _$Intrinsic.addMethod(function basicId() {
     const suffix = this.isPermeable ? "_" : ""
     return `${this.uid}.${this.type.formalName}${suffix}`
-  }, BASIC_VALUE_METHOD) // VALUE_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function oid() {
     const suffix = this.isPermeable ? "_" : ""
     return `${this.iid}.${this.type.formalName}${suffix}`
-  }, BASIC_VALUE_METHOD) // VALUE_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
 
   _$Intrinsic.addRetroactiveProperty(function uid() {
     return this._hasOwn("guid") ? this.guid : NewUniqueId()
-  }, BASIC_VALUE_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
 
   _$Intrinsic.addRetroactiveProperty(function iid() {
     return InterMap.get(this.type)[$PULP]._nextIID
-  }, BASIC_VALUE_METHOD)
+  }, IDEMPOT_VALUE_METHOD)
 
 
   _$Intrinsic.addMethod(function typeName() {
     return this.type.name
-  }, BASIC_VALUE_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
+
+
+  _$Intrinsic.addMethod(function lock() {
+    this[$INNER][$LOCKED] = true
+  }, IDEMPOT_VALUE_METHOD)
+
+  _$Intrinsic.addMethod(function isLocked() {
+    return this[$LOCKED] || false
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
@@ -273,20 +281,20 @@ ObjectSauce(function (
         return this._unknownMethodToAliasError(selector_definition)
       }
     }
-    return this.addOwnDefinition(aliasSelector, value)
-  })
+    this.addOwnDefinition(aliasSelector, value)
+  }, TRUSTED_VALUE_METHOD)
 
 
   _$Intrinsic.addMethod(function addOwnDeclaration(selector) {
     const declaration = Definition(selector, null, DECLARATION)
-    return this.addOwnDefinition(declaration)
-  }, BASIC_SELF_METHOD)
+    this._addOwnDefinition(declaration)
+  }, TRUSTED_VALUE_METHOD)
 
 
   _$Intrinsic.addMethod(function addOwnMethod(namedFunc_name, func_, mode__) {
     const method = Definition(namedFunc_name, func_, mode__)
     this._addOwnDefinition(method)
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
   // addOwnDefinition(definition)
@@ -295,9 +303,9 @@ ObjectSauce(function (
   // addOwnDefinition(selector, func, mode_)
 
   _$Intrinsic.addMethod(function addOwnDefinition(...args) {
-    const definition = AsDefinition(...args)
+    const definition = AsDefinition(args, this.context)
     this._addOwnDefinition(definition)
-  })
+  }, TRUSTED_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function _addOwnDefinition(definition) {
     const tag    = definition.tag
@@ -317,19 +325,18 @@ ObjectSauce(function (
 
     SetDefinition($inner, definition)
     definitions[tag] = definition
-    return this
-  }, BASIC_SELF_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
 
 
   _$Intrinsic.addMethod(function _propertyAt(selector) {
     return PropertyAt(this[$INNER], selector)
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function propertyAt(selector) {
     return ((selector.charAt) ? selector[0] : selector.toString()[7] !== "_") ?
       PropertyAt(this[$INNER], selector) : null
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
 
 
@@ -352,7 +359,7 @@ ObjectSauce(function (
 
   _$Intrinsic.addMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
     return this.toString()
-  }, BASIC_VALUE_METHOD)
+  }, TRUSTED_VALUE_METHOD)
 
 
 
