@@ -11,7 +11,6 @@ module.exports = {
     },
     "globals": {
       "ObjectSauce" : true,
-      "_ObjectSauce": true,
     },
     "rules": {
         // "indent"         : ["error", 2],
