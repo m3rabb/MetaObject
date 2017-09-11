@@ -6,20 +6,19 @@ ObjectSauce(function (
 
 
   _Thing.addSetter("_setId", function id(newId_) {
-    const _$target   = this[$INNER]
-    const existingId = _$target.id
+    const existingId = this[$INNER].id
     var   newId, priorIds
 
     if (newId_ === undefined) {
       if (existingId != null) { return existingId }
-      newId = _$target._retarget.oid
+      newId = this._retarget.oid
     }
     else if (newId_ === existingId) { return existingId }
     else { newId = newId_ }
 
     if (existingId != null) {
-      priorIds = _$target[$PRIOR_IDS] || []
-      _$target[$PRIOR_IDS] = [...priorIds, existingId]
+      priorIds = this[$PRIOR_IDS] || []
+      this[$PRIOR_IDS] = [...priorIds, existingId]
     }
     return newId
   })
