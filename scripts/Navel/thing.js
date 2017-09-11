@@ -6,19 +6,20 @@ ObjectSauce(function (
 
 
   _Thing.addSetter("_setId", function id(newId_) {
-    const existingId = this.id
+    const _$target   = this[$INNER]
+    const existingId = _$target.id
     var   newId, priorIds
 
     if (newId_ === undefined) {
       if (existingId != null) { return existingId }
-      newId = this._retarget.oid
+      newId = _$target._retarget.oid
     }
     else if (newId_ === existingId) { return existingId }
     else { newId = newId_ }
 
     if (existingId != null) {
-      priorIds = this[$PRIOR_IDS] || []
-      this[$PRIOR_IDS] = [...priorIds, existingId]
+      priorIds = _$target[$PRIOR_IDS] || []
+      _$target[$PRIOR_IDS] = [...priorIds, existingId]
     }
     return newId
   })
@@ -70,7 +71,7 @@ ObjectSauce(function (
 
   _Thing.addMethod(function toString(_) { // eslint-disable-line
     const name = this.name
-    return `${name}${name ? "," : ""}${this.basicId}`
+    return `${name}${(name) ? "," : ""}${this.basicId}`
   })
 
 

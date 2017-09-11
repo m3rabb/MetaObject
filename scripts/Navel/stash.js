@@ -10,7 +10,7 @@ function NewStash(spec_) {
       while (next--) {
         selector = selectors[next]
         value    = spec_[selector]
-        if (value !== top[selector] || HasOwn.call(spec_, selector)) {
+        if (value !== top[selector] || _HasOwn.call(spec_, selector)) {
           stash[selector] = spec_[selector]
         }
       }

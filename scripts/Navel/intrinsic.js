@@ -17,9 +17,9 @@ ObjectSauce(function (
   $BLANKER, $INNER, $LOCKED, $OUTER, $OWN_DEFINITIONS, $PULP, $RIND,
   DECLARATION, IS_IMMUTABLE, LAZY_INSTALLER, _DURABLES,
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
-  $Intrinsic$root$inner, AsName, BasicSetObjectImmutable, Definition, HasOwn,
-  InterMap, InvisibleConfig, MakeDefinitionsInfrastructure, NewUniqueId,
-  OwnSelectors, PropertyAt, SignalError, SpawnFrom, _$Copy, _$Intrinsic,
+  $Intrinsic$root$inner, AsName, BasicSetObjectImmutable, InterMap,
+  InvisibleConfig, MakeDefinitionsInfrastructure, NewUniqueId, OwnSelectors,
+  PropertyAt, SignalError, SpawnFrom, _$Copy, _$Intrinsic, _HasOwn,
   AsDefinition, SetDefinition,
   OwnNames, OwnVisibleNames,
   CompletelyDeleteProperty, DefineProperty,
@@ -175,7 +175,7 @@ ObjectSauce(function (
   }, IDEMPOT_VALUE_METHOD)
 
 
-  _$Intrinsic.addMethod("_hasOwn", HasOwn, IDEMPOT_VALUE_METHOD)
+  _$Intrinsic.addMethod("_hasOwn", _HasOwn, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function hasOwn(selector) {
     switch (selector[0]) {
@@ -226,12 +226,7 @@ ObjectSauce(function (
 
   _$Intrinsic.addMethod(function basicId() {
     const suffix = this.isPermeable ? "_" : ""
-    return `${this.uid}.${this.type.formalName}${suffix}`
-  }, TRUSTED_VALUE_METHOD)
-
-  _$Intrinsic.addMethod(function oid() {
-    const suffix = this.isPermeable ? "_" : ""
-    return `${this.iid}.${this.type.formalName}${suffix}`
+    return `#${this.uid}.${this.type.name}${suffix}`
   }, TRUSTED_VALUE_METHOD)
 
 
@@ -240,9 +235,17 @@ ObjectSauce(function (
   }, TRUSTED_VALUE_METHOD)
 
 
+
+  _$Intrinsic.addMethod(function oid() {
+    const suffix = this.isPermeable ? "_" : ""
+    return `${this.iid}.${this.type.formalName}${suffix}`
+  }, TRUSTED_VALUE_METHOD)
+
+
   _$Intrinsic.addRetroactiveProperty(function iid() {
     return InterMap.get(this.type)[$PULP]._nextIID
   }, IDEMPOT_VALUE_METHOD)
+
 
 
   _$Intrinsic.addMethod(function typeName() {
@@ -286,13 +289,13 @@ ObjectSauce(function (
 
 
   _$Intrinsic.addMethod(function addOwnDeclaration(selector) {
-    const declaration = Definition(selector, null, DECLARATION)
+    const declaration = this.context.Definition(selector, null, DECLARATION)
     this._addOwnDefinition(declaration)
   }, TRUSTED_VALUE_METHOD)
 
 
   _$Intrinsic.addMethod(function addOwnMethod(namedFunc_name, func_, mode__) {
-    const method = Definition(namedFunc_name, func_, mode__)
+    const method = this.context.Definition(namedFunc_name, func_, mode__)
     this._addOwnDefinition(method)
   }, TRUSTED_VALUE_METHOD)
 

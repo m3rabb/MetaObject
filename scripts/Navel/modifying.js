@@ -32,7 +32,7 @@ ObjectSauce(function (
 
 
   function InSetProperty(_$target, selector, value, _target) {
-    const firstChar  = (selector.charAt) ? selector[0] : selector.toString()[7]
+    const firstChar = (selector.charAt) ? selector[0] : selector.toString()[7]
 
     if (firstChar !== "_") {    // Public selector
       var _$value, writeOuter
@@ -416,12 +416,12 @@ ObjectSauce(function (
     }
   }
 
-  function AsRigid(value, visited_, context__) {
-    return IsRigid(value) ? value : Copy(value, true, visited_, context__)
-  }
+  // function AsRigid(value, visited_, context__) {
+  //   return IsRigid(value) ? value : Copy(value, true, visited_, context__)
+  // }
 
-  function AsFact(value, visited_, context__) {
-    return IsFact(value) ? value : Copy(value, true, visited_, context__)
+  function AsFact(value) {
+    return IsFact(value) ? value : Copy(value, true)
   }
 
   function AsImmutable(value) {
@@ -432,7 +432,7 @@ ObjectSauce(function (
 
       case "object"   :
         return value && value.asImmutable ||
-          (value[IS_IMMUTABLE] ? value : SetObjectImmutable(value))
+          (value[IS_IMMUTABLE] ? value : CopyObject(value, true))
     }
     return value
   }
@@ -462,7 +462,7 @@ ObjectSauce(function (
   OSauce.valueAsFact              = ValueAsFact
   OSauce.copy                     = Copy
   OSauce.asFact                   = AsFact
-  OSauce.asRigid                  = AsRigid
+  // OSauce.asRigid                  = AsRigid
   OSauce.asImmutable              = AsImmutable
   OSauce.beImmutable              = BeImmutable
 

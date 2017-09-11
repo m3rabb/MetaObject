@@ -49,8 +49,8 @@ ObjectSauce(function (
       })
 
       it("Deletes the property", function () {
-        expect( HasOwn.call(this.$inner, "xyz") ).toBe( false )
-        expect( HasOwn.call(this.$outer, "xyz") ).toBe( false )
+        expect( HasOwn(this.$inner, "xyz") ).toBe( false )
+        expect( HasOwn(this.$outer, "xyz") ).toBe( false )
       })
     })
 
@@ -61,8 +61,8 @@ ObjectSauce(function (
       })
 
       it("Deletes the property", function () {
-        expect( HasOwn.call(this.$inner, "mood") ).toBe( false )
-        expect( HasOwn.call(this.$outer, "mood") ).toBe( false )
+        expect( HasOwn(this.$inner, "mood") ).toBe( false )
+        expect( HasOwn(this.$outer, "mood") ).toBe( false )
       })
     })
 
@@ -84,8 +84,8 @@ ObjectSauce(function (
       })
 
       it("Deletes the property", function () {
-        expect( HasOwn.call(this.$inner, "ball") ).toBe( false )
-        expect( HasOwn.call(this.$outer, "ball") ).toBe( false )
+        expect( HasOwn(this.$inner, "ball") ).toBe( false )
+        expect( HasOwn(this.$outer, "ball") ).toBe( false )
       })
     })
 

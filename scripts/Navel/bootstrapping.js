@@ -1,19 +1,19 @@
 ObjectSauce(function (
   $ASSIGNERS, $BARRIER, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,
-  $DISGUISE, $IMMEDIATES, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP,
-  $IS_DEFINITION, $RIND, $ROOT, $SUPERS,
-  ALWAYS_SELF, ASSIGNER, DECLARATION, EMPTY_ARRAY, IMPLEMENTATION, INHERIT,
-  INVISIBLE, IS_IMMUTABLE, PROOF, REINHERIT, VISIBLE, _DURABLES,
+  $DISGUISE, $IMMEDIATES, $INNER, $IS_CONTEXT, $IS_DEFINITION, $IS_INNER,
+  $IS_TYPE, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
+  ALWAYS_SELF, ASSIGNER, DECLARATION, EMPTY_ARRAY, EMPTY_OBJECT, IMPLEMENTATION,
+  INHERIT, INVISIBLE, IS_IMMUTABLE, PROOF, REINHERIT, VISIBLE, _DURABLES,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, IMMEDIATE_METHOD,
   MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD, TRUSTED_VALUE_METHOD,
-  AsCapitalized, AsMembershipSelector, AsName, AsPropertySymbol,
+  AsCapitalized, AsImmutable, AsMembershipSelector, AsName, AsPropertySymbol,
   DeleteSelectorsIn, ExtractParamListing, Frost, InvisibleConfig, IsArray,
   MarkFunc, NewAssignmentErrorHandler, NewBlanker, NewInner,
-  NewVacuousConstructor, SpawnFrom,
+  NewVacuousConstructor, SpawnFrom, _HasOwn,
   AttemptedChangeOfAncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, SignalError, UnnamedFuncError,
-  BeImmutable, BasicSetObjectImmutable, MarkAndSetFuncImmutable,
+  BasicSetObjectImmutable, MarkAndSetFuncImmutable,
   InterMap, PropertyToSymbolMap,
   BuildAncestryOf, RootOf,
   AsRetroactiveProperty, AsSetterFromProperty, CompletelyDeleteProperty,
@@ -23,89 +23,6 @@ ObjectSauce(function (
   OSauce, _OSauce
 ) {
   // "use strict"
-
-
-  const $BaseBlanker = {
-    innerMaker        : NewInner,
-    $root$outer : {
-      __proto__       : null,
-      constructor     : NewVacuousConstructor("$Something$outer"), // ???
-      [$IMMEDIATES]   : null, // EMPTY_OBJECT,
-    },
-    $root$inner : {
-      __proto__       : null,
-      constructor     : NewVacuousConstructor("$Something$inner"), // ???
-      [$IMMEDIATES]   : null, // EMPTY_OBJECT,
-      [$ASSIGNERS]    : null, // EMPTY_OBJECT,
-      [$SUPERS]       : {
-        __proto__        : null,
-        [$IMMEDIATES]    : null, // EMPTY_OBJECT,
-        [$PULP]          : IMPLEMENTATION,
-      },
-    },
-  }
-
-  $BaseBlanker.$root$inner[$OUTER] = $BaseBlanker.$root$outer
-  DefineProperty($BaseBlanker.$root$outer, "constructor", InvisibleConfig)
-  DefineProperty($BaseBlanker.$root$inner, "constructor", InvisibleConfig)
-
-  const $SomethingBlanker   = NewBlanker($BaseBlanker)
-  const $NothingBlanker     = NewBlanker($SomethingBlanker)
-  const   $IntrinsicBlanker = NewBlanker($SomethingBlanker)
-  const     TypeBlanker     = NewBlanker($IntrinsicBlanker, Type_apply)
-  const     ContextBlanker  = NewBlanker($IntrinsicBlanker, Context_apply)
-
-
-
-  const Type$root$inner = TypeBlanker.$root$inner
-  const ThingAncestry   = []
-
-
-  function BootstrapType(iid, name, blanker_) {
-    const _$type           = new TypeBlanker([name])
-    const isImplementation = (name[0] === "$")
-
-    DefineProperty(_$type, "iid", InvisibleConfig)
-    _$type.iid               = (_$type[$OUTER].iid = iid)
-    _$type._definitions      = SpawnFrom(null)
-    _$type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
-    _$type._subordinateTypes = new Set()
-    _$type._supertypes       = EMPTY_ARRAY
-    _$type._ancestry         = isImplementation ? EMPTY_ARRAY : ThingAncestry
-    return _$type[$PULP]
-  }
-
-
-  const _$Something = BootstrapType(-100, "$Something", $SomethingBlanker)
-  const _$Intrinsic = BootstrapType( -11, "$Intrinsic", $IntrinsicBlanker)
-  const _Nothing    = BootstrapType(   0, "Nothing"   , $NothingBlanker  )
-  const _Thing      = BootstrapType(   1, "Thing"     , null             )
-  const _Type       = BootstrapType(   2, "Type"      , TypeBlanker      )
-  const _Context    = BootstrapType(   3, "Type"      , ContextBlanker   )
-  const _Definition = BootstrapType(   4, "Definition", null             )
-
-
-  const Thing      = _Thing     [$RIND]
-  const Type       = _Type      [$RIND]
-  const Definition = _Definition[$RIND]
-
-  ThingAncestry[0] = Thing
-
-  const $Something$root$inner = $SomethingBlanker.$root$inner
-  const $Something$root$outer = $SomethingBlanker.$root$outer
-  const $Intrinsic$root$inner = $IntrinsicBlanker.$root$inner
-  const Definition$root$inner = _Definition._blanker.$root$inner
-
-
-  // Stubs for known properties
-  $Something$root$inner[$BARRIER]                 = null
-  // This secret is only known by inner objects
-  $Something$root$inner[$IS_INNER]                = PROOF
-  $Something$root$outer[$IS_INNER]                = null
-
-  $Something$root$outer.type                      = null
-  $Intrinsic$root$inner._retarget                 = null
-  _Type._blanker.$root$inner._propagateDefinition = ALWAYS_SELF
 
 
 
@@ -242,38 +159,7 @@ ObjectSauce(function (
     return this._propagateDefinition(tag)
   }
 
-
-  var DefaultContext            = SpawnFrom(null)
-  DefaultContext.Definition     = Definition
-  DefaultContext.Thing          = Thing
-
-  _SetDefinitionAt.call(_$Something, "context"    , DefaultContext, VISIBLE  )
-  _SetDefinitionAt.call(_$Something, IS_IMMUTABLE , false         , VISIBLE  )
-  _SetDefinitionAt.call(_$Something, "isSomething", true          , VISIBLE  )
-  _SetDefinitionAt.call(_$Something, "isNothing"  , null          , INVISIBLE)
-
-
-  // Could have defined the follow properties later, after addDeclaration has
-  // been defined, however it is fast execution within each objects' barrier#get
-  // if implemented this way.  These properties are read very frequently.
-  _SetDefinitionAt.call(_$Something, "id"          , null, INVISIBLE)
-  _SetDefinitionAt.call(_$Something, _DURABLES     , null, INVISIBLE)
-
-  _SetDefinitionAt.call(_Definition, $IS_DEFINITION, true, VISIBLE  )
-
-
-
-  SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true , VISIBLE)
-  SetAsymmetricProperty(_$Intrinsic, "isInner", true , false, VISIBLE)
-
-
-
-
-  Definition$root$inner[$OUTER].type  = Definition
-
-  Definition$root$inner._setImmutable = _BasicSetImmutable
-
-  Definition$root$inner._init = function _init(func_selector, func_, mode__, property___) {
+  const Definition_init = function _init(func_selector, func_, mode__, property___) {
     const [selector, handler, mode = STANDARD_METHOD, property] =
       (typeof func_selector === "function") ?
         [func_selector.name, func_selector, func_ , mode__     ] :
@@ -342,9 +228,21 @@ ObjectSauce(function (
   }
 
 
+  const Context_init = function _init(supercontext_name_, supercontext_) {
+    const [name, context] = (supercontext_name_ === undefined) ?
+      [null, supercontext_] :
+      (supercontext_name_.isContext ?
+        [null, supercontext_name_] : [supercontext_name_, supercontext_])
+    this.name          = name
+    this.supercontext  = context || null
+    this._knownEntries =
+      SpawnFrom(context ? InterMap.get(context)._knownEntries : null)
+  }
 
-  Type$root$inner.new              = _BasicNew
-  Type$root$inner._setDefinitionAt = _SetDefinitionAt
+
+  const Context_atPut = function _atPut(selector, entry) {
+    this[selector] = this._knownEntries[selector] = entry
+  }
 
 
 
@@ -353,6 +251,141 @@ ObjectSauce(function (
       this.context.Definition(func_selector, func_, mode__, property___)
     return this._setDefinitionAt(definition.tag, definition)
   }
+
+
+
+  const $BaseBlanker = {
+    innerMaker        : NewInner,
+    $root$outer : {
+      __proto__       : null,
+      constructor     : NewVacuousConstructor("$Something$outer"), // ???
+      [$IMMEDIATES]   : null, // EMPTY_OBJECT,
+    },
+    $root$inner : {
+      __proto__       : null,
+      constructor     : NewVacuousConstructor("$Something$inner"), // ???
+      [$IMMEDIATES]   : null, // EMPTY_OBJECT,
+      [$ASSIGNERS]    : null, // EMPTY_OBJECT,
+      [$SUPERS]       : {
+        __proto__        : null,
+        [$IMMEDIATES]    : null, // EMPTY_OBJECT,
+        [$PULP]          : IMPLEMENTATION,
+      },
+    },
+  }
+
+  $BaseBlanker.$root$inner[$OUTER] = $BaseBlanker.$root$outer
+  DefineProperty($BaseBlanker.$root$outer, "constructor", InvisibleConfig)
+  DefineProperty($BaseBlanker.$root$inner, "constructor", InvisibleConfig)
+
+  const $SomethingBlanker   = NewBlanker($BaseBlanker)
+  const $NothingBlanker     = NewBlanker($SomethingBlanker)
+  const   $IntrinsicBlanker = NewBlanker($SomethingBlanker)
+  const     TypeBlanker     = NewBlanker($IntrinsicBlanker, Type_apply)
+  const     ContextBlanker  = NewBlanker($IntrinsicBlanker, Context_apply)
+
+  const ThingAncestry       = []
+
+
+  function BootstrapType(iid, name, blanker_) {
+    const _$type           = new TypeBlanker([name])
+    const isImplementation = (name[0] === "$")
+
+    DefineProperty(_$type, "iid", InvisibleConfig)
+    _$type.iid               = (_$type[$OUTER].iid = iid)
+    _$type._definitions      = SpawnFrom(null)
+    _$type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
+    _$type._subordinateTypes = new Set()
+    _$type._supertypes       = EMPTY_ARRAY
+    _$type._ancestry         = isImplementation ? EMPTY_ARRAY : ThingAncestry
+    return _$type[$PULP]
+  }
+
+
+  const _$Something = BootstrapType(-100, "$Something", $SomethingBlanker)
+  const _$Intrinsic = BootstrapType( -11, "$Intrinsic", $IntrinsicBlanker)
+  const _Nothing    = BootstrapType(   0, "Nothing"   , $NothingBlanker  )
+  const _Thing      = BootstrapType(   1, "Thing"     , null             )
+  const _Type       = BootstrapType(   2, "Type"      , TypeBlanker      )
+  const _Context    = BootstrapType(   3, "Type"      , ContextBlanker   )
+  const _Definition = BootstrapType(   4, "Definition", null             )
+
+  const Thing      = _Thing     [$RIND]
+  const Type       = _Type      [$RIND]
+  const Definition = _Definition[$RIND]
+
+  ThingAncestry[0] = Thing
+
+  const $Something$root$inner = $SomethingBlanker.$root$inner
+  const $Something$root$outer = $SomethingBlanker.$root$outer
+  const $Intrinsic$root$inner = $IntrinsicBlanker.$root$inner
+  const Context$root$inner    = _Context._blanker.$root$inner
+  const Definition$root$inner = _Definition._blanker.$root$inner
+  const Type$root$inner       = TypeBlanker.$root$inner
+
+
+  // Stubs for known properties
+
+  // This secret is only known by inner objects
+  $Something$root$inner[$IS_INNER]       = PROOF
+  $Something$root$outer[$IS_INNER]       = null
+
+  $Something$root$outer.type             = null
+
+  $Intrinsic$root$inner._retarget        = null
+
+  Type$root$inner.new                    = _BasicNew
+  Type$root$inner._setDefinitionAt       = _SetDefinitionAt
+  Type$root$inner._propagateDefinition   = ALWAYS_SELF
+
+  Definition$root$inner._setImmutable    = _BasicSetImmutable
+  Definition$root$inner._init            = Definition_init
+
+  Context$root$inner._init               = Context_init
+  Context$root$inner._atPut              = Context_atPut
+
+
+  const _$RootContext    = new ContextBlanker("ObjectSauce")
+  const  _RootContext    = _$RootContext[$PULP]
+  const  $RootContext    = _$RootContext[$OUTER]
+  const   RootContext    = _$RootContext[$RIND]
+  const _$DefaultContext = new ContextBlanker("Default")
+  const  _DefaultContext = _$DefaultContext[$PULP]
+  const   DefaultContext = _$DefaultContext[$RIND]
+
+  _RootContext._init("ObjectSauce")
+  _DefaultContext._init("Default", RootContext)
+
+  _RootContext._atPut("ObjectSauce", RootContext   )
+  _RootContext._atPut("Default"    , DefaultContext)
+
+  $RootContext.Definition = Definition
+  $RootContext.Thing      = Thing
+
+
+
+
+
+
+
+  _SetDefinitionAt.call(_$Something, IS_IMMUTABLE  , false      , VISIBLE  )
+  _SetDefinitionAt.call(_$Something, "isSomething" , true       , VISIBLE  )
+
+  // Could have defined the follow properties later, after addDeclaration has
+  // been defined, however it is fast execution within each objects' barrier#get
+  // if implemented this way.  These properties are read very frequently.
+  _SetDefinitionAt.call(_$Something, "id"          , null       , INVISIBLE)
+  _SetDefinitionAt.call(_$Something, _DURABLES     , null       , INVISIBLE)
+
+
+  _SetDefinitionAt.call(_Type      , "context"     , RootContext, VISIBLE  )
+
+  _SetDefinitionAt.call(_Type      , $IS_TYPE      , true       , VISIBLE  )
+  _SetDefinitionAt.call(_Context   , $IS_CONTEXT   , true       , VISIBLE  )
+  _SetDefinitionAt.call(_Definition, $IS_DEFINITION, true       , VISIBLE  )
+
+
+
 
   AddMethod.call(_Type, AddMethod)
 
@@ -395,13 +428,31 @@ ObjectSauce(function (
 
   _$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
 
-  _Definition.addMethod(Definition$root$inner._init, TRUSTED_VALUE_METHOD)
+  _Definition.addMethod(Definition_init, TRUSTED_VALUE_METHOD)
   _Definition.addMethod("_setImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
-
-
 
   _Type.addMethod("new", _BasicNew, IDEMPOT_VALUE_METHOD)
   _Type.addMethod(_SetDefinitionAt, TRUSTED_VALUE_METHOD)
+
+  _Context.addMethod(Context_init , TRUSTED_VALUE_METHOD)
+  _Context.addMethod(Context_atPut, TRUSTED_VALUE_METHOD)
+
+
+
+  _Context.addMethod(function atPut(selector, entry) {
+    const self = this[$RIND]
+    if (self === DefaultContext || this[$INNER][selector] === entry) { return }
+    this._atPut(selector, entry)
+
+    const _$entry = InterMap.get(entry)
+    if (_$entry && _$entry[$IS_TYPE] && _$entry.context === DefaultContext) {
+      _$entry[$PULP]._setContext(this[$RIND])
+    }
+  }, TRUSTED_VALUE_METHOD)
+
+
+
+
 
   _Type.addMethod(function _propagateDefinition(tag) {
     this._subordinateTypes.forEach(subtype => {
@@ -702,11 +753,19 @@ ObjectSauce(function (
 
 
 
-  _Type.addMandatorySetter("setContext", function context(context) {
-    if (this._hasOwn("context")) { return this._attemptToReassignContextError }
+  _Type.addMandatorySetter("_setContext", function context(context) {
+    if (_HasOwn.call(this, "context")) {
+      return this._attemptToReassignContextError
+    }
     this.addSharedProperty("context", context)
     return context
   })
+
+  _Type.addMethod(function setContext(context) {
+    this._setContext(context)
+    context.atPut(this.name, this[$RIND])
+  }, TRUSTED_VALUE_METHOD)
+
 
 
   _Type.addMethod(function setSupertypes(nextSupertypes) {
@@ -745,7 +804,7 @@ ObjectSauce(function (
     this._ancestry = nextAncestry
     this._setAsSubordinateOfSupertypes(nextSupertypes)
     if (reinherit_) { this._reinheritDefinitions() }
-    return BeImmutable(nextSupertypes)
+    return AsImmutable(nextSupertypes)
   })
 
 
@@ -785,40 +844,49 @@ ObjectSauce(function (
   //    shared|sharedProperties
   //    methods|instanceMethods
 
-  _Type.addMethod(function _extractSupertypes(spec_name, supertypes_) {
-    var supertypes = supertypes_
-    if (supertypes === undefined) {
-      supertypes = spec_name.supertypes
-      if (supertypes === undefined) { supertypes = spec_name.supertype }
-      if (supertypes === undefined) {
-        return BasicSetObjectImmutable([this.context.Thing])
-      }
+  _Type.addMethod(function _extractArgs(spec_name, supertypes_context_, context__) {
+    var name, supertypes, context, _$arg2
+    name       = spec_name.name || spec_name
+    context    = context__      || spec_name.context || null
+
+    supertypes = supertypes_context_
+    if (supertypes === undefined)  { supertypes = spec_name.supertypes }
+    if (supertypes === undefined)  { supertypes = spec_name.supertype  }
+    if (supertypes === undefined)  { supertypes = [this.context.Thing] }
+    else if (supertypes === null)  { supertypes = EMPTY_ARRAY          }
+    else if (!IsArray(supertypes)) {
+      _$arg2 = InterMap.get(supertypes)
+      if      (_$arg2  ==  null)   { supertypes = [this.context.Thing] }
+      else if (_$arg2[$IS_TYPE])   { supertypes = [supertypes]         }
+      else if (_$arg2.isNothing)   { supertypes = EMPTY_ARRAY          }
+      else                         { supertypes = [this.context.Thing] }
     }
-    if (IsArray(supertypes))  { return supertypes  }
-    if (supertypes === null)  { return EMPTY_ARRAY }
-    if (supertypes.isNothing) { return EMPTY_ARRAY }
-    return BasicSetObjectImmutable([supertypes])
+
+    if (!context) {
+      _$arg2  = _$arg2 || InterMap.get(supertypes_context_) || EMPTY_OBJECT
+      context = _$arg2[$IS_CONTEXT] ? supertypes_context_ : null
+    }
+
+    return [name, supertypes, context]
   })
 
-  _Type.addMethod(function _init(spec_name, supertypes_) {
-    var name, supertypes, declared, durables, shared, methods, definitions
-
-    name        = spec_name.name || spec_name
-    supertypes  = this._extractSupertypes(spec_name, supertypes_)
-    declared    = spec_name.declare || spec_name.declared
-    durables    = spec_name.durable || spec_name.durables
-    shared      = spec_name.shared  || spec_name.sharedProperties
-    methods     = spec_name.methods || spec_name.instanceMethods
-    definitions = spec_name.define  || spec_name.defines
+  _Type.addMethod(function _init(spec_name, supertypes_context_, context__) {
+    const [name, supertypes, context] =
+      this._extractArgs(spec_name, supertypes_context_, context__)
+    const declared    = spec_name.declare || spec_name.declared
+    const durables    = spec_name.durable || spec_name.durables
+    const shared      = spec_name.shared  || spec_name.sharedProperties
+    const methods     = spec_name.methods || spec_name.instanceMethods
+    const definitions = spec_name.define  || spec_name.defines
 
     this._iidCount = 0
 
     // The ordering of the following is critical to avoid breaking the bootstrapping!!!
-    // this.setContext(context)
     this.setSupertypes(supertypes)
     this.addSharedProperty("type", this[$RIND])
     this.setName(name)
 
+    context     && this.setContext(context)
     declared    && this.addDeclarations(declared)
     durables    && this.addDurables(durables) // This needs to be for the root!!!
     shared      && this.addSharedProperties(shared)
@@ -832,20 +900,25 @@ ObjectSauce(function (
   _Context.addDeclaration($OUTER_WRAPPER) // Ensures method wrappers work!!!
 
 
+  // _Type.addSharedProperty("context", DefaultContext)
 
-  _Type      ._init(        "Type"                          )
-  _$Something._init({ name: "$Something", supertypes: null })
-  _$Intrinsic._init({ name: "$Intrinsic", supertypes: null })
-  _Nothing   ._init({ name: "Nothing"   , supertypes: null })
-  _Thing     ._init({ name: "Thing"     , supertypes: null })
-  _Definition._init(        "Definition"                    )
-  _Context   ._init(        "Context"                       )
+  _Type      ._init("Type"      , Thing, DefaultContext)
+  _$Something._init("$Something", []   )
+  _$Intrinsic._init("$Intrinsic", []   )
+  _Nothing   ._init("Nothing"   , []   , RootContext)
+  _Thing     ._init("Thing"     , null , RootContext)
+  _Definition._init("Definition", Thing, RootContext)
+  _Context   ._init("Context"   , Thing, RootContext)
+
+  _Type._iidCount = 4
+  _Type._basicSet("context", RootContext)
 
   // Helps with debugging!!!
   _$Something._setDisplayNames("$Intrinsic$Outer", "$Intrinsic$Inner")
   _$Intrinsic._setDisplayNames("$Outer"          , "$Inner"          )
 
-  _Type._iidCount = 4
+  SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true , VISIBLE)
+  SetAsymmetricProperty(_$Intrinsic, "isInner", true , false, VISIBLE)
 
 
   // Note: If this was called before the previous declarations,
@@ -886,9 +959,9 @@ ObjectSauce(function (
   }, TRUSTED_VALUE_METHOD)
 
 
-  OSauce.Type         = Type
-  OSauce.Thing        = Thing
-  OSauce.Definition   = Definition
+  OSauce.Thing       = Thing
+  OSauce.Type        = Type
+  OSauce.Definition  = Definition
 
   _OSauce._Type       = _Type
   _OSauce._$Something = _$Something
@@ -898,6 +971,7 @@ ObjectSauce(function (
   _OSauce._Definition = _Definition
   _OSauce._Context    = _Context
 
+  _OSauce.RootContext    = RootContext
   _OSauce.DefaultContext = DefaultContext
 
   _OSauce.AddIntrinsicDeclaration = AddIntrinsicDeclaration
@@ -906,7 +980,7 @@ ObjectSauce(function (
   _OSauce._BasicSetImmutable      = _BasicSetImmutable
   _OSauce._BasicNew               = _BasicNew
   _OSauce._BasicNew_              = _BasicNew_
-  _OSauce.Definition_init         = Definition$root$inner._init
+  _OSauce.Definition_init         = Definition_init
 })
 
 

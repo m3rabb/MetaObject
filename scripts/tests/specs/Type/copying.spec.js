@@ -1,6 +1,6 @@
 ObjectSauce(function (
   $BARRIER, $OUTER, $PULP,
-  BasicSetObjectImmutable, HasOwn, IsFrosted, OwnKeys, RootOf, Type
+  BasicSetObjectImmutable, IsFrosted, OwnKeys, RootOf, Type
 ) {
   "use strict"
 

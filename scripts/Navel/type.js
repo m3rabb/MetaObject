@@ -4,8 +4,8 @@ ObjectSauce(function (
   AsDefinition, AsLazyProperty, AsName, AsNextValue,
   AddPermeableNewDefinitionToType, BasicSetObjectImmutable, Copy,
   DefineProperty, InterMap, InvisibleConfig, OwnSelectors, PropertyAt,
-  _BasicNew_, _Type,
   KnownSelectorsSorted, OwnSelectorsSorted,
+  DefaultContext, _BasicNew_, _Type,
   OSauce
 ) {
   "use strict"
@@ -120,9 +120,9 @@ ObjectSauce(function (
 
 
   _Type.addMethod(function _newBlank() {
-    const $inner     = this[$INNER]
-    const _$instance = new $inner._super[$BLANKER]()
-    const $instance  = new _$instance[$OUTER]
+    const  $inner    = this[$INNER]
+    const _$instance = new $inner[$BLANKER]("")
+    const  $instance = new _$instance[$OUTER]
 
     if ($inner[$OUTER].this) {
       DefineProperty($instance, "this", InvisibleConfig)
@@ -138,14 +138,17 @@ ObjectSauce(function (
     return ++this[$INNER]._iidCount
   }, IDEMPOT_VALUE_METHOD)
 
-  _Type.addRetroactiveProperty(function id() {
-    return `${this.formalName},${this.basicId}`
+  _Type.addMethod(function id() { // Conditionally lazy property
+    const newId = `${this.formalName},${this.basicId}`
+    if (this.context === DefaultContext) { return newId }
+    DefineProperty(this[$INNER], "id", InvisibleConfig)
+    return (this.id = newId)
   }, TRUSTED_VALUE_METHOD)
 
 
   _Type.addMethod(function formalName() {
-    const contextId = this.context.id
-    const prefix  = contextId ? contextId + "@" : ""
+    const context = this.context
+    const prefix = (context === DefaultContext) ? "" : context.formalName + "@"
     return `${prefix}${this.name}`
   }, TRUSTED_VALUE_METHOD)
 
@@ -154,10 +157,6 @@ ObjectSauce(function (
   }, TRUSTED_VALUE_METHOD)
 
 
-
-  _Type.addMethod(function newSubtype(name) {
-    return this.context.Type.new(name, [this.$])
-  }, IDEMPOT_VALUE_METHOD)
 
   _Type.addMethod(function addSupertype(type) {
     this.setSupertypes([...this.supertypes, type])
@@ -258,6 +257,7 @@ ObjectSauce(function (
 
 
   _Type.addMethod(function _initFrom_(_type, asImmutable, visited, context) {
+    if (this[$OUTER].this) { AddPermeableNewDefinitionToType(this) }
     this._init(_type.name, _type.supertypes)
     this._initDefinitionsFrom_(_type, visited, context)
   }, TRUSTED_VALUE_METHOD)

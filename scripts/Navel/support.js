@@ -4,9 +4,11 @@ ObjectSauce(function (
   DISGUISE_PULP, EMPTY_THING_ANCESTRY, INVISIBLE, IS_IMMUTABLE,
   ASSIGNER_FUNC, BLANKER_FUNC, _DURABLES,
   AsCapitalized, AsName, BasicSetObjectImmutable, Frost, Impermeable,
-  InvisibleConfig, MarkFunc, OwnSymbols, RootOf, SetDurables, SpawnFrom,
+  InvisibleConfig, IsArray, MarkFunc, OwnSymbols, RootOf, SetDurables,
+  SpawnFrom,
   DisguisedInnerBarrier, DisguisedOuterBarrier, InnerBarrier,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
+  ImproperDisguiseNameError,
   InterMap, PropertyToSymbolMap,
   OwnNames, OwnVisibleNames,
   DefineProperty, InSetProperty,
@@ -142,8 +144,10 @@ ObjectSauce(function (
     // Note: The blanker function must be unnamed in order for the debugger to
     // display the type of instances using type name determined by the name of
     // its constructor function property.
-    return function (arg_) {
-      const name = arg_ && arg_.name || arg_[0].name || arg_[0]
+    return function (name_obj_spec_args) {
+      const arg  = IsArray(name_obj_spec_args) ?
+        name_obj_spec_args[0] : name_obj_spec_args
+      const name = arg.name || arg || ""
       const func = name ? NewVacuousConstructor(name) : DefaultDisguiseFunc
 
       var $inner = this

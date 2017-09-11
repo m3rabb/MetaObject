@@ -33,22 +33,22 @@ ObjectSauce(function (
     return value[IS_IMMUTABLE] ? true : false
   }
 
-  function IsRigid(value) {
-    var value$
-    switch (typeof value) {
-      case "function" :
-        if (value[IS_IMMUTABLE])  { return true }
-        value$ = value[$RIND]
-        if (value$ === undefined) { return true }
-        return (InterMap.get(value$)[$IS_INNER] !== PROOF)
-
-      case "object"   :
-        if (value === null)      { return true }
-        if (value[IS_IMMUTABLE]) { return true }
-        return false
-    }
-    return true
-  }
+  // function IsRigid(value) {
+  //   var value$
+  //   switch (typeof value) {
+  //     case "function" :
+  //       if (value[IS_IMMUTABLE])  { return true }
+  //       value$ = value[$RIND]
+  //       if (value$ === undefined) { return true }
+  //       return (InterMap.get(value$)[$IS_INNER] !== PROOF)
+  //
+  //     case "object"   :
+  //       if (value === null)      { return true }
+  //       if (value[IS_IMMUTABLE]) { return true }
+  //       return false
+  //   }
+  //   return true
+  // }
 
   function IsFact(value) {
     if (typeof value !== "object") { return true }
@@ -113,7 +113,7 @@ ObjectSauce(function (
   OSauce.asName                   = AsName
   OSauce.isSauced                 = IsSauced
   OSauce.isImmutable              = IsImmutable
-  OSauce.isRigid                  = IsRigid
+  // OSauce.isRigid                  = IsRigid
   OSauce.isFact                   = IsFact
 
 })

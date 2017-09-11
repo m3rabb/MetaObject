@@ -1,7 +1,7 @@
 ObjectSauce(function (
   $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT,
   IS_IMMUTABLE, _DURABLES,
-  AsName, AsPropertySymbol, CopyObject, HasOwn, InnerBarrier, InterMap,
+  AsName, AsPropertySymbol, CopyObject, _HasOwn, InnerBarrier, InterMap,
   InvisibleConfig, _$Copy,
   DefineProperty, InSetProperty,
   OSauce, _OSauce
@@ -21,7 +21,7 @@ ObjectSauce(function (
           // Object is already immutable
           if (value !== value$root) { return value }
           if (value === undefined)  { /* never been set */ }
-          else if (HasOwn.call(_$receiver, Property)) {
+          else if (_HasOwn.call(_$receiver, Property)) {
             // Fortunately, this (expensive) case is unlikely.to persist.
             return value
           }

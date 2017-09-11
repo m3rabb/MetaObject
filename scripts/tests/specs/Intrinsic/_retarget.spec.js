@@ -43,9 +43,9 @@ ObjectSauce(function (
       })
 
       it("Adds _retarget as retroactive property", function () {
-        expect( HasOwn.call(this._cat, "_retarget") ).toBe( false )
+        expect( HasOwn(this._cat, "_retarget") ).toBe( false )
         this._cat._retarget
-        expect( HasOwn.call(this._cat, "_retarget") ).toBe( true )
+        expect( HasOwn(this._cat, "_retarget") ).toBe( true )
       })
     })
 
@@ -64,7 +64,7 @@ ObjectSauce(function (
       })
 
       it("Doesn't add a _retarget property to the receiver", function () {
-        expect( HasOwn.call(this._cat, "_retarget") ).toBe( false )
+        expect( HasOwn(this._cat, "_retarget") ).toBe( false )
       })
 
       it("Sets its barrier to the inner of a copy of the target", function () {
@@ -91,7 +91,7 @@ ObjectSauce(function (
         })
 
         it("Has no '_retarget' property", function () {
-          expect( HasOwn.call(this._cat, "_retarget") ).toBe( false )
+          expect( HasOwn(this._cat, "_retarget") ).toBe( false )
         })
       })
 

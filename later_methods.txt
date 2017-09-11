@@ -258,12 +258,23 @@ hairy|hairless
 domesticated|cultivated
 southern|fried|pickled
 bep|blackeyedpea|hoppin
-
+Butta
+interrobang
+scallywag
+marzipan
+hotpie
+milkweed
+Dornish
+metaobject
+Pangolin
+bounty
+valaria
 Spiced|Seasoned|Seasoning
 
 enduring/perennial/durable
 
 idempot
+
 
 
 passive/active/permeability/diffusion/osmosis/hypotonic/hypertonic/isotonic

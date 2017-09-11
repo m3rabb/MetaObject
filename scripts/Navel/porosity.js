@@ -3,7 +3,7 @@ ObjectSauce(function (
   $IMMEDIATES, $INNER, $IS_DEFINITION, $OUTER, $PULP, $RIND, $ROOT, $SUPERS,
   ALWAYS_FALSE, ALWAYS_NULL, IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE,
   NO_SUPER, _DURABLES,
-  HasOwn, InSetProperty, InterMap, SpawnFrom, _$Copy,
+  InSetProperty, InterMap, SpawnFrom, _$Copy, _HasOwn,
   AssignmentOfUndefinedError, AttemptSetOnSuperError,
   DirectAssignmentFromOutsideError, DisallowedDeleteError,
   PrivateAccessFromOutsideError,
@@ -170,7 +170,7 @@ ObjectSauce(function (
         if (value === undefined) {
           return AssignmentOfUndefinedError(_source, selector)
         }
-        if (HasOwn.call(_$target, selector))          { return true }
+        if (_HasOwn.call(_$target, selector))        { return true }
         if (isImmutable && _$source.type.isImmutable) { return true }
         // Else, target is mutable, and new value matches inherited shared value
       }
@@ -218,7 +218,13 @@ ObjectSauce(function (
         break
 
       case $DELETE_ALL_PROPERTIES :  // Only called on immutable objects!!!
-        _$target = new _$source._newBlank()
+        _$target = InterMap.get(new _$source._newBlank())
+        // _$target = new _$source[$BLANKER]()
+        // if (_$target[$OUTER].this) {
+        //   DefineProperty(_$target, "this", InvisibleConfig)
+        //   $instance.this = _$target[$IS_TYPE] ?
+        //     AddPermeableNewDefinitionToType(_$instance) : _$target[$PULP]
+        // }
         break
 
       default :
@@ -226,7 +232,7 @@ ObjectSauce(function (
         value      = _$source[selector]
 
         if (value === value$root) {
-          if (value === undefined || !HasOwn.call(_$source, selector)) {
+          if (value === undefined || !_HasOwn.call(_$source, selector)) {
             return true // Doesn't have the property, but inherits it from root.
           }
         }

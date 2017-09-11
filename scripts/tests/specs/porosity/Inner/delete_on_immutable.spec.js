@@ -75,8 +75,8 @@ ObjectSauce(function (
         })
 
         it("Deletes the property", function () {
-          expect( HasOwn.call(this.$target$inner, "name") ).toBe( false )
-          expect( HasOwn.call(this.$target$outer, "name") ).toBe( false )
+          expect( HasOwn(this.$target$inner, "name") ).toBe( false )
+          expect( HasOwn(this.$target$outer, "name") ).toBe( false )
         })
       })
     })
@@ -114,8 +114,8 @@ ObjectSauce(function (
         })
 
         it("Deletes the property", function () {
-          expect( HasOwn.call(this.$target$inner, "mood") ).toBe( false )
-          expect( HasOwn.call(this.$target$outer, "mood") ).toBe( false )
+          expect( HasOwn(this.$target$inner, "mood") ).toBe( false )
+          expect( HasOwn(this.$target$outer, "mood") ).toBe( false )
         })
       })
     })
@@ -150,7 +150,7 @@ ObjectSauce(function (
         expect( this.$barrier._$target[BREED] ).toBe( undefined )
         expect( this.$barrier._$target._age ).toBe( 18 )
         expect( this.$barrier._$target.ball ).toBe( this.redBall )
-        expect( HasOwn.call(this.$barrier._$target, "ball") ).toBe( false )
+        expect( HasOwn(this.$barrier._$target, "ball") ).toBe( false )
       })
 
       it("Retargets the handlers in the receiver's barrier", function () {
@@ -166,8 +166,8 @@ ObjectSauce(function (
         })
 
         it("Deletes the property", function () {
-          expect( HasOwn.call(this.$target$inner, "ball") ).toBe( false )
-          expect( HasOwn.call(this.$target$outer, "ball") ).toBe( false )
+          expect( HasOwn(this.$target$inner, "ball") ).toBe( false )
+          expect( HasOwn(this.$target$outer, "ball") ).toBe( false )
         })
       })
     })

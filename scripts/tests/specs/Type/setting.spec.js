@@ -34,19 +34,19 @@ ObjectSauce(function (
 
       describe("Before the method is added", function () {
         it("The instance root has no property", function () {
-          expect( HasOwn.call(this._$root, "mood") ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
         it("The instance root has no setter", function () {
-          expect( HasOwn.call(this._$root, "setMood") ).toBe( false )
+          expect( HasOwn(this._$root, "setMood") ).toBe( false )
         })
 
         it("The instance root has no assigner", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn.call("mood" in this._$root) ).toBe( false )
+          expect( HasOwn("mood" in this._$root) ).toBe( false )
         })
 
         it("Throws an error when the property is read", function () {
@@ -63,11 +63,11 @@ ObjectSauce(function (
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Doesn't put a setter property in the root", function () {
-          expect( HasOwn.call(this._$root, "setMood") ).toBe( false )
+          expect( HasOwn(this._$root, "setMood") ).toBe( false )
         })
 
         it("Puts an assigner func in the root", function () {
@@ -97,11 +97,11 @@ ObjectSauce(function (
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Doesn't put a setter property in the root", function () {
-          expect( HasOwn.call(this._$root, "setMood") ).toBe( false )
+          expect( HasOwn(this._$root, "setMood") ).toBe( false )
         })
 
         it("Puts an assigner func in the root", function () {
@@ -136,19 +136,19 @@ ObjectSauce(function (
 
       describe("Before the method is added", function () {
         it("The instance root has no property", function () {
-          expect( HasOwn.call(this._$root, "mood") ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
         it("The instance root has no setter", function () {
-          expect( HasOwn.call(this._$root, "setMood") ).toBe( false )
+          expect( HasOwn(this._$root, "setMood") ).toBe( false )
         })
 
         it("The instance root has no assigner", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn.call("mood" in this._$root) ).toBe( false )
+          expect( HasOwn("mood" in this._$root) ).toBe( false )
         })
 
         it("Throws an error when the property is read", function () {
@@ -164,7 +164,7 @@ ObjectSauce(function (
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Puts as basic setter property in the root", function () {
@@ -172,7 +172,7 @@ ObjectSauce(function (
         })
 
         it("Doesn't put an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
         describe("When the setter is called", function () {
@@ -207,7 +207,7 @@ ObjectSauce(function (
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Puts a basic setter property in the root", function () {
@@ -215,7 +215,7 @@ ObjectSauce(function (
         })
 
         it("Doesn't put an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
         describe("When the setter is called", function () {
@@ -247,7 +247,7 @@ ObjectSauce(function (
 
           it("Sets undefined as a placeholder at the selector in the root", function () {
             expect( this._$root.mood ).toBe( undefined )
-            expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+            expect( HasOwn(this._$root, "mood") ).toBe( true )
           })
 
           it("Answers null when the property is read", function () {
@@ -264,7 +264,7 @@ ObjectSauce(function (
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root._qrs ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "_qrs") ).toBe( true )
+          expect( HasOwn(this._$root, "_qrs") ).toBe( true )
         })
 
         it("Puts a basic setter property in the root", function () {
@@ -272,7 +272,7 @@ ObjectSauce(function (
         })
 
         it("Doesn't put an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "_qrs") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "_qrs") ).toBe( false )
         })
 
         describe("When the setter is called", function () {
@@ -307,7 +307,7 @@ ObjectSauce(function (
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Puts a basic setter property in the root", function () {
@@ -315,7 +315,7 @@ ObjectSauce(function (
         })
 
         it("Doesn't put an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
         describe("When the setter is called", function () {
@@ -347,7 +347,7 @@ ObjectSauce(function (
 
           it("Sets undefined as a placeholder at the selector in the root", function () {
             expect( this._$root.mood ).toBe( undefined )
-            expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+            expect( HasOwn(this._$root, "mood") ).toBe( true )
           })
 
           it("Answers null when the property is read", function () {
@@ -370,18 +370,18 @@ ObjectSauce(function (
         })
 
         it("Put an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the property in the root", function () {
           expect( this._$root._mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "_mood") ).toBe( true )
+          expect( HasOwn(this._$root, "_mood") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the matching selector in the root", function () {
           expect( this._$root._mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "_mood") ).toBe( true )
+          expect( HasOwn(this._$root, "_mood") ).toBe( true )
         })
 
         describe("When the setter is called", function () {
@@ -427,19 +427,19 @@ ObjectSauce(function (
 
       describe("Before the method is added", function () {
         it("The instance root has no property", function () {
-          expect( HasOwn.call(this._$root, "mood") ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
         it("The instance root has no setter", function () {
-          expect( HasOwn.call(this._$root, "setMood") ).toBe( false )
+          expect( HasOwn(this._$root, "setMood") ).toBe( false )
         })
 
         it("The instance root has no assigner", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn.call("mood" in this._$root) ).toBe( false )
+          expect( HasOwn("mood" in this._$root) ).toBe( false )
         })
 
         it("Throws an error when the property is read", function () {
@@ -455,7 +455,7 @@ ObjectSauce(function (
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Puts as basic setter property in the root", function () {
@@ -463,7 +463,7 @@ ObjectSauce(function (
         })
 
         it("Doesn't put an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
         describe("When the setter is called", function () {
@@ -495,7 +495,7 @@ ObjectSauce(function (
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root._qrs ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "_qrs") ).toBe( true )
+          expect( HasOwn(this._$root, "_qrs") ).toBe( true )
         })
 
         it("Puts a basic setter property in the root", function () {
@@ -503,7 +503,7 @@ ObjectSauce(function (
         })
 
         it("Doesn't put an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "_qrs") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "_qrs") ).toBe( false )
         })
 
         describe("When the setter is called", function () {
@@ -540,19 +540,19 @@ ObjectSauce(function (
 
       describe("Before the method is added", function () {
         it("The instance root has no property", function () {
-          expect( HasOwn.call(this._$root, "mood") ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
         it("The instance root has no setter", function () {
-          expect( HasOwn.call(this._$root, "setMood") ).toBe( false )
+          expect( HasOwn(this._$root, "setMood") ).toBe( false )
         })
 
         it("The instance root has no assigner", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn.call("mood" in this._$root) ).toBe( false )
+          expect( HasOwn("mood" in this._$root) ).toBe( false )
         })
 
         it("Throws an error when the property is read", function () {
@@ -571,12 +571,12 @@ ObjectSauce(function (
         })
 
         it("Puts an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( true )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         describe("When the setter is called", function () {
@@ -614,12 +614,12 @@ ObjectSauce(function (
         })
 
         it("Puts an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( true )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         describe("When the setter is called", function () {
@@ -651,7 +651,7 @@ ObjectSauce(function (
 
           it("Sets undefined as a placeholder at the selector in the root", function () {
             expect( this._$root.mood ).toBe( undefined )
-            expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+            expect( HasOwn(this._$root, "mood") ).toBe( true )
           })
 
           it("Answers null when the property is read", function () {
@@ -671,12 +671,12 @@ ObjectSauce(function (
         })
 
         it("Puts an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "_qrs") ).toBe( true )
+          expect( HasOwn(this._$root[$ASSIGNERS], "_qrs") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root._qrs ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "_qrs") ).toBe( true )
+          expect( HasOwn(this._$root, "_qrs") ).toBe( true )
         })
 
         describe("When the setter is called", function () {
@@ -713,12 +713,12 @@ ObjectSauce(function (
         })
 
         it("Puts an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( true )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         describe("When the setter is called", function () {
@@ -750,7 +750,7 @@ ObjectSauce(function (
 
           it("Sets undefined as a placeholder at the selector in the root", function () {
             expect( this._$root.mood ).toBe( undefined )
-            expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+            expect( HasOwn(this._$root, "mood") ).toBe( true )
           })
 
           it("Answers null when the property is read", function () {
@@ -772,13 +772,13 @@ ObjectSauce(function (
         })
 
         it("Put an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root._mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "_mood") ).toBe( true )
+          expect( HasOwn(this._$root, "_mood") ).toBe( true )
         })
 
         describe("When the setter is called", function () {
@@ -823,19 +823,19 @@ ObjectSauce(function (
 
       describe("Before the method is added", function () {
         it("The instance root has no property", function () {
-          expect( HasOwn.call(this._$root, "mood") ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
         it("The instance root has no setter", function () {
-          expect( HasOwn.call(this._$root, "setMood") ).toBe( false )
+          expect( HasOwn(this._$root, "setMood") ).toBe( false )
         })
 
         it("The instance root has no assigner", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn.call("mood" in this._$root) ).toBe( false )
+          expect( HasOwn("mood" in this._$root) ).toBe( false )
         })
 
         it("Throws an error when the property is read", function () {
@@ -854,12 +854,12 @@ ObjectSauce(function (
         })
 
         it("Puts an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( true )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root.mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "mood") ).toBe( true )
+          expect( HasOwn(this._$root, "mood") ).toBe( true )
         })
 
         describe("When the setter is called", function () {
@@ -894,12 +894,12 @@ ObjectSauce(function (
         })
 
         it("Puts an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "_qrs") ).toBe( true )
+          expect( HasOwn(this._$root[$ASSIGNERS], "_qrs") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root._qrs ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "_qrs") ).toBe( true )
+          expect( HasOwn(this._$root, "_qrs") ).toBe( true )
         })
 
         describe("When the setter is called", function () {
@@ -936,13 +936,13 @@ ObjectSauce(function (
         })
 
         it("Put an assigner func in the root", function () {
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "mood") ).toBe( false )
-          expect( HasOwn.call(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
+          expect( HasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
+          expect( HasOwn(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
           expect( this._$root._mood ).toBe( undefined )
-          expect( HasOwn.call(this._$root, "_mood") ).toBe( true )
+          expect( HasOwn(this._$root, "_mood") ).toBe( true )
         })
 
         describe("When the setter is called", function () {

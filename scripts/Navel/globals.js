@@ -25,10 +25,17 @@
   OSauce.ownSymbols          = Object.getOwnPropertySymbols
   OSauce.ownNames            = Object.getOwnPropertyNames
   OSauce.ownVisibleNames     = Object.keys
-  OSauce.hasOwn              = Object_prototype.hasOwnProperty  // ._hasOwn
   OSauce.propertyDescriptor  = Object.getOwnPropertyDescriptor
   OSauce.propertyDescriptors = Object.getOwnPropertyDescriptors
   // OSauce.apply               = Reflect.apply
+
+
+  const   _HasOwn = Object_prototype.hasOwnProperty  // ._hasOwn
+  _OSauce._HasOwn = _HasOwn
+
+  OSauce.HasOwn = function (target, selector) {
+    return (target == null) ? false : _HasOwn.call(target, selector)
+  }
 
   // Reflect.ownKeys === Object.getOwnPropertyNames(target).concat(Object.getOwnPropertySymbols(target)
 
@@ -107,6 +114,8 @@
   _OSauce.$PRIOR_IDS             = Symbol("$PRIOR_IDS")
   _OSauce.$IS_INNER              = Symbol("$IS_INNER")
   _OSauce.$IS_DEFINITION         = Symbol("$IS_DEFINITION")
+  _OSauce.$IS_TYPE               = Symbol("$IS_TYPE")
+  _OSauce.$IS_CONTEXT            = Symbol("$IS_CONTEXT")
 
   _OSauce.$ROOT                  = Symbol("$ROOT")
   _OSauce.$BLANKER               = Symbol("$BLANKER")

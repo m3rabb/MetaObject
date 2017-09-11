@@ -1,5 +1,5 @@
 ObjectSauce(function (
-  $LOCKED, $OUTER, $PULP, $RIND, EMPTY_ARRAY, EMPTY_THING_ANCESTRY,
+  $IS_TYPE, $LOCKED, $OUTER, $PULP, $RIND, EMPTY_ARRAY, EMPTY_THING_ANCESTRY,
   INHERITED, IS_IMMUTABLE, MUTABLE, PERMEABLE, TRUSTED_VALUE_METHOD,
   AsDecapitalized, BasicSetObjectImmutable, BeImmutable, Copy, DefineProperty,
   Definition_init, ExtractParamNames, InterMap,
@@ -11,18 +11,6 @@ ObjectSauce(function (
   _OSauce
 ) {
   "use strict"
-
-
-  _Context.addMethod(function _init(supercontext_name_, supercontext_) {
-    const [name, context] = (supercontext_name_ === undefined) ?
-      [null, supercontext_ || null] :
-      (supercontext_name_.isContext ?
-        [null, supercontext_name_] :
-        [supercontext_name_, supercontext_])
-    this.name          = name
-    this.supercontext  = context
-    this._knownEntries = SpawnFrom(context && context._knownEntries)
-  })
 
 
   _Context.addMethod(function _privateAccessFromOutside(selector) {
@@ -39,11 +27,12 @@ ObjectSauce(function (
 
 
   _Context.addMethod(function _setPropertiesImmutable(inPlace, visited) {
-    var selector, entry
+    var selector, entry, _$entry
     const entries = this._knownEntries
     for (selector in entries) {
-      entry = entries[selector]
-      if (entry && entry.isType) { entry.beImmutable }
+      entry   = entries[selector]
+      _$entry = InterMap.get(entry)
+      if (_$entry && _$entry[$IS_TYPE]) { entry.beImmutable }
       else {
         var fact = ValueAsFact(entry, inPlace, visited, this.$)
         this[selector] = entries[selector] = fact
@@ -72,7 +61,7 @@ ObjectSauce(function (
     const context = this.supercontext
     const prefix  = context ? context.formalName + "@" : ""
     return `${prefix}${this.name}`
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
   _Context.addMethod(function ancestry() {
@@ -85,14 +74,15 @@ ObjectSauce(function (
   })
 
   _Context.addMethod(function _knownTypes() {
-    var selector, entry, index
+    var selector, entry, _$entry, index
     const entries = this._knownEntries
     const types   = []
 
     index = 0
     for (selector in entries) {
-      entry = entries[selector]
-      if (entry && entry.isType) { types[index++] = entry }
+      entry   = entries[selector]
+      _$entry = InterMap.get(entry)
+      if (_$entry && _$entry[$IS_TYPE]) { types[index++] = entry }
     }
     return types
   })
@@ -107,14 +97,6 @@ ObjectSauce(function (
   })
 
 
-  _Context.addMethod(function atPut(selector, entry) {
-    if (entry && entry.isType && entry.context === DefaultContext) {
-      entry.setContext(this.$)
-    }
-    this.ownTypes = BasicSetObjectImmutable([...this.ownTypes, entry])
-    this[selector] = this.entries[selector] = entry
-  })
-
   _Context.addMethod(function add(object) {
     this.atPut(object.name || object.tag, object)
   })
@@ -125,8 +107,7 @@ ObjectSauce(function (
   _Context.addMethod(function sub(execContext) {
     const supercontext   = this[$RIND]
     const newContextName = execContext.name || null
-    const contextType    = this.Context || _Context
-    const newContext     = contextType.new(newContextName, supercontext)
+    const newContext     = this.Context.new(newContextName, supercontext)
     const paramNames     = ExtractParamNames(execContext)
     const superEntries   = this._knownEntries
     const markedTypes    = SpawnFrom(null)
@@ -154,7 +135,7 @@ ObjectSauce(function (
   }
 
   function ClassifyParam(paramName, knownEntries, markedTypes) {
-    var value, paramSpec, name, isType
+    var value, _$value, paramSpec, name, isType
     value     = knownEntries[paramName]
     paramSpec = { paramName : paramName }
 
@@ -172,9 +153,10 @@ ObjectSauce(function (
         const asMutable   = !!match[3]
         const asPermeable = !!match[5]
 
-        name   =   match[4]
-        value  = knownEntries[name]
-        isType = !!(value && value.isType)
+        name    = match[4]
+        value   = knownEntries[name]
+        _$value = InterMap.get(_$value)
+        isType  = !!(_$value && _$value[$IS_TYPE])
 
         if (asPermeable && (asInherited || asMutable)) { return null }
         if (isType && asMutable) { markedTypes[name] = MUTABLE }
@@ -258,11 +240,11 @@ ObjectSauce(function (
     newTypes.sort((a, b) => a.ancestry.length - b.ancestry.length)
 
     newTypes.forEach(newType => {
-      const _$newType   = InterMap.get(newType)
-      const name        = _$newType.name
-      const sourceType  = sourceTypes[name]
-      const asMutable   = (markedTypes[name] === MUTABLE)
-      _$newType[$PULP]._reconcileFrom(sourceType, asMutable, visited, this.$)
+      const _newType   = InterMap.get(newType)[$PULP]
+      const name       = _newType.name
+      const sourceType = sourceTypes[name]
+      const asMutable  = (markedTypes[name] === MUTABLE)
+      _newType._reconcileFrom(sourceType, asMutable, visited, this[$RIND])
     })
   })
 
@@ -276,19 +258,19 @@ ObjectSauce(function (
     var arg, { name, $value, asInherited,
                asMutable, asPermeable, isType } = paramSpec
 
-    if (asInherited)         { return $value }
-    if (value === null)      { return  null  }
+    if (asInherited)    { return $value }
+    if (value === null) { return  null  }
     if (value === undefined) {
       if (!(asMutable && name.match(TYPE_NAME_MATCHER))) { return value }
-      arg = this.Type.new(name)
+      arg = this.Type.new(name, this.$)
     }
     else {
       if (asPermeable) {
         arg = Copy(value, false, visited, this.$)
         return (arg === value) ? arg : BePermeable(arg, value[IS_IMMUTABLE])
       }
-      if (isType)      { return value }
-      if (asMutable)   {
+      if ( isType  ) { return value  }
+      if (asMutable) {
         arg = Copy(value, false, visited, this.$)
       }
       else {
@@ -304,7 +286,7 @@ ObjectSauce(function (
 
 
 
-  function BePermeable(target, beImmutable) {
+function BePermeable(target, beImmutable) {
     const _$target = InterMap.get(target)
     if (!_$target) { return target }
     if (_$target[$LOCKED]) {
@@ -315,20 +297,21 @@ ObjectSauce(function (
     const $target = _$target[$OUTER]
     DefineProperty($target, "this", InvisibleConfig)
     $target.this = _target
-
-    if (_$target.isType) { AddPermeableNewDefinitionToType(_$target) }
+    _$entry = InterMap.get(entry)
+    if (_$target[$IS_TYPE]) { AddPermeableNewDefinitionToType(_$target) }
     if (beImmutable) { _target._setImmutable() }
     return target
   }
 
   function AddPermeableNewDefinitionToType(_$type) {
     const newHandler    = _$type.new.handler
+    const context       = _$type.context
     const newDefinition = (newHandler === _BasicNew) ?
-      BasicPermeableNewDef : MakePermeableNewDef(newHandler)
+      BasicPermeableNewDef : MakePermeableNewDef(newHandler, context)
     return _$type[$PULP].addOwnDefinition(newDefinition)
   }
 
-  function MakePermeableNewDef(NewHandler) {
+  function MakePermeableNewDef(NewHandler, context) {
     const handler = function permeableNew(...args) {
       const   instance = NewHandler.apply(this, args)
       const _$instance = InterMap.get(instance)
@@ -339,10 +322,10 @@ ObjectSauce(function (
       $instance.this = _instance
       return instance
     }
-    return this.Definition("new", handler, TRUSTED_VALUE_METHOD)
+    return context.Definition("new", handler, TRUSTED_VALUE_METHOD)
   }
 
-  const BasicPermeableNewDef = MakePermeableNewDef(_BasicNew)
+  const BasicPermeableNewDef = MakePermeableNewDef(_BasicNew, DefaultContext)
 
 
 
