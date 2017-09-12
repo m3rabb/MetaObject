@@ -376,7 +376,6 @@ ObjectSauce(function (
   _SetDefinitionAt.call(_$Something, "id"          , null       , INVISIBLE)
   _SetDefinitionAt.call(_$Something, _DURABLES     , null       , INVISIBLE)
 
-
   _SetDefinitionAt.call(_Type      , "context"     , RootContext, VISIBLE  )
 
   _SetDefinitionAt.call(_Type      , $IS_TYPE      , true       , VISIBLE  )
@@ -386,6 +385,20 @@ ObjectSauce(function (
 
 
   AddMethod.call(_Type, AddMethod)
+
+
+  _$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
+
+  _Definition.addMethod(Definition_init, TRUSTED_VALUE_METHOD)
+  _Definition.addMethod("_setImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
+
+  _Type.addMethod("new", _BasicNew, IDEMPOT_VALUE_METHOD)
+  _Type.addMethod(_SetDefinitionAt, TRUSTED_VALUE_METHOD)
+
+  _Context.addMethod(Context_init , TRUSTED_VALUE_METHOD)
+  _Context.addMethod(Context_atPut, TRUSTED_VALUE_METHOD)
+
+
 
 
   _$Something.addMethod(function _unknownProperty(selector) {
@@ -424,18 +437,6 @@ ObjectSauce(function (
     return ($inner._retarget = this)  // InSetProperty($inner, "_retarget", this, this)
   }, IDEMPOT_SELF_METHOD)
 
-
-
-  _$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
-
-  _Definition.addMethod(Definition_init, TRUSTED_VALUE_METHOD)
-  _Definition.addMethod("_setImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
-
-  _Type.addMethod("new", _BasicNew, IDEMPOT_VALUE_METHOD)
-  _Type.addMethod(_SetDefinitionAt, TRUSTED_VALUE_METHOD)
-
-  _Context.addMethod(Context_init , TRUSTED_VALUE_METHOD)
-  _Context.addMethod(Context_atPut, TRUSTED_VALUE_METHOD)
 
 
 
