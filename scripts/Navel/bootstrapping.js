@@ -1,15 +1,16 @@
 ObjectSauce(function (
   $ASSIGNERS, $BARRIER, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,
   $DISGUISE, $IMMEDIATES, $INNER, $IS_CONTEXT, $IS_DEFINITION, $IS_INNER,
-  $IS_TYPE, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
+  $IS_TYPE, $OUTER, $OUTER_WRAPPER, $OWN_DEFINITIONS, $PULP, $RIND, $ROOT, $SUPERS,
   ALWAYS_SELF, ASSIGNER, DECLARATION, EMPTY_ARRAY, EMPTY_OBJECT, IMPLEMENTATION,
   INHERIT, INVISIBLE, IS_IMMUTABLE, PROOF, REINHERIT, VISIBLE, _DURABLES,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, IMMEDIATE_METHOD,
   MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD, TRUSTED_VALUE_METHOD,
-  AsCapitalized, AsImmutable, AsMembershipSelector, AsName, AsPropertySymbol,
-  DeleteSelectorsIn, ExtractParamListing, Frost, InvisibleConfig, IsArray,
-  MarkFunc, NewAssignmentErrorHandler, NewBlanker, NewInner,
+  AsCapitalized, AsDecapitalized, AsImmutable, AsMembershipSelector, AsName,
+  AsPropertySymbol, DeleteSelectorsIn, ExtractParamListing, Frost,
+  InvisibleConfig, IsArray, MakeDefinitionsInfrastructure, MarkFunc,
+  NewAssignmentErrorHandler, NewBlanker, NewInner, NewUniqueId,
   NewVacuousConstructor, SpawnFrom, _HasOwn,
   AttemptedChangeOfAncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, SignalError, UnnamedFuncError,
@@ -23,7 +24,6 @@ ObjectSauce(function (
   OSauce, _OSauce
 ) {
   // "use strict"
-
 
 
   const _BasicNew = function _basicNew(...args) {
@@ -228,6 +228,7 @@ ObjectSauce(function (
   }
 
 
+
   const Context_init = function _init(supercontext_name_, supercontext_) {
     const [name, context] = (supercontext_name_ === undefined) ?
       [null, supercontext_] :
@@ -307,7 +308,7 @@ ObjectSauce(function (
   const _Nothing    = BootstrapType(   0, "Nothing"   , $NothingBlanker  )
   const _Thing      = BootstrapType(   1, "Thing"     , null             )
   const _Type       = BootstrapType(   2, "Type"      , TypeBlanker      )
-  const _Context    = BootstrapType(   3, "Type"      , ContextBlanker   )
+  const _Context    = BootstrapType(   3, "Context"   , ContextBlanker   )
   const _Definition = BootstrapType(   4, "Definition", null             )
 
   const Thing      = _Thing     [$RIND]
@@ -322,6 +323,7 @@ ObjectSauce(function (
   const Context$root$inner    = _Context._blanker.$root$inner
   const Definition$root$inner = _Definition._blanker.$root$inner
   const Type$root$inner       = TypeBlanker.$root$inner
+
 
 
   // Stubs for known properties
@@ -365,9 +367,6 @@ ObjectSauce(function (
 
 
 
-
-
-
   _SetDefinitionAt.call(_$Something, IS_IMMUTABLE  , false      , VISIBLE  )
   _SetDefinitionAt.call(_$Something, "isSomething" , true       , VISIBLE  )
 
@@ -383,7 +382,6 @@ ObjectSauce(function (
   _SetDefinitionAt.call(_Type      , $IS_TYPE      , true       , VISIBLE  )
   _SetDefinitionAt.call(_Context   , $IS_CONTEXT   , true       , VISIBLE  )
   _SetDefinitionAt.call(_Definition, $IS_DEFINITION, true       , VISIBLE  )
-
 
 
 
@@ -407,6 +405,7 @@ ObjectSauce(function (
   }, TRUSTED_VALUE_METHOD)
 
 
+
   // Note: This method might need to be moved to _$Something!!!
   //
   // It's not enough to simple make this method access the receiver's barrier.
@@ -426,6 +425,7 @@ ObjectSauce(function (
   }, IDEMPOT_SELF_METHOD)
 
 
+
   _$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
 
   _Definition.addMethod(Definition_init, TRUSTED_VALUE_METHOD)
@@ -436,6 +436,7 @@ ObjectSauce(function (
 
   _Context.addMethod(Context_init , TRUSTED_VALUE_METHOD)
   _Context.addMethod(Context_atPut, TRUSTED_VALUE_METHOD)
+
 
 
 
@@ -900,7 +901,6 @@ ObjectSauce(function (
   _Context.addDeclaration($OUTER_WRAPPER) // Ensures method wrappers work!!!
 
 
-  // _Type.addSharedProperty("context", DefaultContext)
 
   _Type      ._init("Type"      , Thing, DefaultContext)
   _$Something._init("$Something", []   )

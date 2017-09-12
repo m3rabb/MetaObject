@@ -3,9 +3,9 @@ ObjectSauce(function (
   $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   DISGUISE_PULP, EMPTY_THING_ANCESTRY, INVISIBLE, IS_IMMUTABLE,
   ASSIGNER_FUNC, BLANKER_FUNC, _DURABLES,
-  AsCapitalized, AsName, BasicSetObjectImmutable, Frost, Impermeable,
-  InvisibleConfig, IsArray, MarkFunc, OwnSymbols, RootOf, SetDurables,
-  SpawnFrom,
+  AsCapitalized, AsDecapitalized, AsName, BasicSetObjectImmutable, Frost,
+  Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId, OwnSymbols,
+  RootOf, SetDurables, SpawnFrom,
   DisguisedInnerBarrier, DisguisedOuterBarrier, InnerBarrier,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
   ImproperDisguiseNameError,
@@ -15,7 +15,6 @@ ObjectSauce(function (
   OSauce, _OSauce
 ) {
   "use strict"
-
 
 
   function AsPropertySymbol(selector) {
@@ -67,7 +66,7 @@ ObjectSauce(function (
     return DefineProperty(func, "name", InvisibleConfig)
   }
 
-  const DefaultDisguiseFunc = NewVacuousConstructor("$disguise$")
+  // const DefaultDisguiseFunc = NewVacuousConstructor("$disguise$")
 
 
   function MakeDefinitionsInfrastructure(_$target, _$root) {
@@ -145,14 +144,21 @@ ObjectSauce(function (
     // display the type of instances using type name determined by the name of
     // its constructor function property.
     return function (name_obj_spec_args) {
+      var $inner, $outer, name, uid
       const arg  = IsArray(name_obj_spec_args) ?
         name_obj_spec_args[0] : name_obj_spec_args
-      const name = arg.name || arg || ""
-      const func = name ? NewVacuousConstructor(name) : DefaultDisguiseFunc
 
-      var $inner = this
-      var $outer = new CompanionOuterMaker()
+      $inner = this
+      $outer = new CompanionOuterMaker()
+      name = arg.name || arg
 
+      if (!name) {
+        uid  = NewUniqueId()
+        name = `${AsDecapitalized($inner.type.name)}__${uid}`
+      }
+
+      // const func = (name) ? NewVacuousConstructor(name) : DefaultDisguiseFunc
+      const func       = NewVacuousConstructor(name)
       const mutability = new DisguisedInnerBarrier($inner, applyHandler)
       // const barrier    = new InnerBarrier()
       const $pulp      = new Proxy(func, mutability)
@@ -168,6 +174,11 @@ ObjectSauce(function (
       $inner[$PULP]     = $pulp
       $inner[$RIND]     = $rind
       $outer[$RIND]     = $rind
+
+      if (uid) {
+        DefineProperty($inner, "uid", InvisibleConfig)
+        $outer.uid = $inner.uid = uid
+      }
 
       InterMap.set($pulp, DISGUISE_PULP)
       InterMap.set($rind, $inner)

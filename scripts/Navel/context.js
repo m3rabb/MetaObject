@@ -297,7 +297,6 @@ function BePermeable(target, beImmutable) {
     const $target = _$target[$OUTER]
     DefineProperty($target, "this", InvisibleConfig)
     $target.this = _target
-    _$entry = InterMap.get(entry)
     if (_$target[$IS_TYPE]) { AddPermeableNewDefinitionToType(_$target) }
     if (beImmutable) { _target._setImmutable() }
     return target
