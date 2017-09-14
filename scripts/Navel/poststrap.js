@@ -1,7 +1,7 @@
 ObjectSauce(function (
   $OUTER_WRAPPER, $PULP, $RIND, VISIBLE,
-  Frost, InterMap, SetAsymmetricProperty, _BasicSetImmutable,
-  DefaultContext, OwnKeys, RootContext, _RootContext, $BaseBlanker,
+  $BaseBlanker, BasicSetObjectImmutable, Frost, InterMap, SetAsymmetricProperty,
+  DefaultContext, OwnKeys, RootContext, _BasicSetImmutable, _RootContext,
   _$Intrinsic, _$Something, _Context, _Definition, _Nothing, _Thing, _Type,
   OSauce, _OSauce
 ) {
@@ -38,6 +38,7 @@ ObjectSauce(function (
   // in the descendent $roots.
   Frost($BaseBlanker.$root$outer)
   Frost($BaseBlanker.$root$inner)
+  BasicSetObjectImmutable($BaseBlanker)
   // _BasicSetImmutable.call(_$Intrinsic)
   // _BasicSetImmutable.call(_$Something)
 
@@ -46,16 +47,16 @@ ObjectSauce(function (
 
   for (var name in OSauce) { _RootContext._atPut(name, OSauce[name]) }
 
-  const  Test = _Context.new("Test", RootContext)
-  const _Test = InterMap.get(Test)[$PULP]
+  const  TestContext = _Context.new("TestImplementation", RootContext)
+  const _TestContext = InterMap.get(TestContext)[$PULP]
 
   const selectors = OwnKeys(_OSauce)
   selectors.forEach(selector => {
     const value = _OSauce[selector]
-    if (value && !value.isInner) { _Test._atPut(selector, value) }
+    if (value && !value.isInner) { _TestContext._atPut(selector, value) }
   })
 
-  _RootContext.add(Test)
+  _RootContext.add(TestContext)
 
   ObjectSauce = RootContext
 })

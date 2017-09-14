@@ -8,8 +8,9 @@ ObjectSauce(function (
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, IMMEDIATE_METHOD,
   MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD, TRUSTED_VALUE_METHOD,
   AddIntrinsicDeclaration, AddPermeableNewDefinitionTo, AsCapitalized,
-  AsMembershipSelector, AsName, AsNextValue, AsPropertySymbol, BuildAncestryOf,
-  CopyValue, DefaultContext, DeleteSelectorsIn, ExtractDefinitionFrom,
+  AsMembershipSelector, AsName, AsNextValue, AsPropertySymbol,
+  BasicSetObjectImmutable, BuildAncestryOf,
+  DefaultContext, DeleteSelectorsIn, ExtractDefinitionFrom,
   ExtractParamListing, Frost, InterMap, IsArray, IsSubtypeOfThing,
   NewAssignmentErrorHandler, NewVacuousConstructor, OwnKeys, OwnSelectors,
   PropertyAt, RootContext, SetDefinition, SetInvisibly, SpawnFrom,
@@ -17,7 +18,6 @@ ObjectSauce(function (
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AttemptedChangeOfAncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
-  AsImmutableValue, BasicSetObjectImmutable,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
   CompletelyDeleteProperty, InSetProperty,
   SetAsymmetricProperty,
@@ -478,14 +478,14 @@ ObjectSauce(function (
 
 
   _Type.addMandatorySetter("_setSupertypes", function _supertypes(
-    nextSupertypes, reinherit_, blanker__
+    types, reinherit_, blanker__
   ) {
-    if (this._supertypes === nextSupertypes) { return nextSupertypes }
+    if (this._supertypes === types) { return types }
 
-    if (nextSupertypes.length !== new Set(nextSupertypes).size) {
+    if (types.length !== new Set(types).size) {
       return DuplicateSupertypeError(this)
     }
-    const nextAncestry = BuildAncestryOf(this[$RIND], nextSupertypes)
+    const nextAncestry = BuildAncestryOf(this[$RIND], types)
     const beThing      = AncestryIncludesThing(nextAncestry)
 
     if (this._blanker) {
@@ -507,9 +507,9 @@ ObjectSauce(function (
     }
 
     this._ancestry = nextAncestry
-    this._setAsSubordinateOfSupertypes(nextSupertypes)
+    this._setAsSubordinateOfSupertypes(types)
     if (reinherit_) { this._reinheritDefinitions() }
-    return AsImmutableValue(nextSupertypes)
+    return types[IS_IMMUTABLE] ? types : BasicSetObjectImmutable(types)
   })
 
 
@@ -551,11 +551,13 @@ ObjectSauce(function (
   //    methods|instanceMethods
 
   _Type.addMethod(function _extractArgs(spec_name, supertypes_context_, context__) {
-    var name, supertypes, context, _$arg2
-    name       = spec_name.name || spec_name
-    context    = context__      || spec_name.context || null
+    var spec, name, supertypes, context, _$arg2
+    ;[name, spec] = (typeof spec_name === "string") ?
+      [spec_name, null] : [spec_name.name, spec_name]
 
+    context    = context__ || spec_name.context || null
     supertypes = supertypes_context_
+
     if (supertypes === undefined)  { supertypes = spec_name.supertypes }
     if (supertypes === undefined)  { supertypes = spec_name.supertype  }
     if (supertypes === undefined)  { supertypes = [this.context.Thing] }
@@ -573,13 +575,13 @@ ObjectSauce(function (
       context = _$arg2[$IS_CONTEXT] ? supertypes_context_ : null
     }
 
-    return [name, supertypes, context]
+    return [spec, name, supertypes, context]
   })
 
   _Type.addMethod(function _init(
     spec_name, supertypes_context_, context__, blanker___
   ) {
-    const [name, supertypes, context] =
+    const [spec, name, supertypes, context] =
       this._extractArgs(spec_name, supertypes_context_, context__)
     const declared    = spec_name.declare || spec_name.declared
     const durables    = spec_name.durable || spec_name.durables
@@ -618,25 +620,25 @@ ObjectSauce(function (
 
 
   _Type.addMethod(function _initDefinitionsFrom_(_type, visited, context) {
-    var definitions, tags, value, newValue
+    var definitions, tags, value, nextValue
 
     definitions = _type._definitions
     tags        = OwnKeys(definitions)
 
     tags.forEach(tag => {
       if (tag !== "type") {
-        value    = definitions[tag]
-        newValue = AsNextValue(value, false, visited, context)
-        this._setDefinitionAt(tag, newValue)
+        value     = definitions[tag]
+        nextValue = AsNextValue(value, false, visited, context)
+        this._setDefinitionAt(tag, nextValue)
       }
     })
 
     if ((definitions = _type[$INNER][$OWN_DEFINITIONS])) {
       tags = OwnKeys(definitions)
       tags.forEach(tag => {
-        value    = definitions[tag]
-        newValue = CopyValue(value, undefined, visited, context)
-        this.addOwnDefinition(tag, newValue)
+        value     = definitions[tag]
+        nextValue = AsNextValue(value, undefined, visited, context)
+        this.addOwnDefinition(tag, nextValue)
       })
     }
   }, TRUSTED_VALUE_METHOD)
@@ -651,29 +653,25 @@ ObjectSauce(function (
 
 
 
-  _Type.addMethod(function define(spec) {
+  _Type.addMethod(function define(items, mode = "STANDARD") {
     const PropertyLoader = this.context.entryAt("PropertyLoader", true)
-    PropertyLoader.new(this.$).load(spec, "STANDARD")
+    PropertyLoader.new(this.$).load(items, mode)
   })
 
-  _Type.addMethod(function addSharedProperties(spec) {
-    const PropertyLoader = this.context.entryAt("PropertyLoader", true)
-    PropertyLoader.new(this.$).load(spec, "SHARED")
+  _Type.addMethod(function addSharedProperties(items) {
+    this.define(items, "SHARED")
   })
 
   _Type.addMethod(function addMethods(items) {
-    const PropertyLoader = this.context.entryAt("PropertyLoader", true)
-    PropertyLoader.new(this.$).load(items, "METHOD")
+    this.define(items, "METHOD")
   })
 
   _Type.addMethod(function addDeclarations(items) {
-    const PropertyLoader = this.context.entryAt("PropertyLoader", true)
-    PropertyLoader.new(this.$).load(items, "DECLARATION")
+    this.define(items, "DECLARATION")
   })
 
   _Type.addMethod(function addDurables(items) {
-    const PropertyLoader = this.context.entryAt("PropertyLoader", true)
-    PropertyLoader.new(this.$).load(items, "DURABLES")
+    this.define(items, "DURABLES")
   })
 
 

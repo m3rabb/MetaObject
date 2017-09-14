@@ -1,12 +1,12 @@
 ObjectSauce(function (
   $INNER, $IS_TYPE, $LOCKED, $OUTER, $PULP, $RIND,
-  COUNT, INHERITED, IS_IMMUTABLE, MUTABLE,
+  COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
-  AddPermeableNewDefinitionTo, AsDecapitalized, BasicSetObjectImmutable,
-  BeImmutableValue, CopyValue, DefaultContext, Definition, Definition_init,
-  EmptyThingAncestry, ExtractParamNames, InterMap, IsSauced, IsSubtypeOfThing,
-  OwnKeys, RootContext, SetInvisibly, SpawnFrom, TheEmptyArray, Type,
-  ValueAsFact, _BasicNew, _Context
+  AddPermeableNewDefinitionTo, AsDecapitalized, AsNextValue,
+  BasicSetObjectImmutable, BeImmutableValue, CopyValue, DefaultContext,
+  Definition, Definition_init, EmptyThingAncestry, ExtractParamNames,
+  InterMap, IsSauced, IsSubtypeOfThing, OwnKeys, RootContext, SetInvisibly,
+  SpawnFrom, TheEmptyArray, Type, ValueAsFact, _BasicNew, _Context
 ) {
   "use strict"
 
@@ -177,7 +177,7 @@ ObjectSauce(function (
     marked[COUNT]       = 0
     const paramSpecs    = ClassifyParams(paramNames, marked, sourceEntries)
 
-    const useNewContext =
+    const useNewContext = marked[MUTABLE] =
       !!(forceAsCopy_ || execName || this._hasOverwritingParam(marked))
     const Context       = this.context.entryAt("Context", true)
     const execContext   = useNewContext ?
@@ -237,7 +237,6 @@ ObjectSauce(function (
             marked[COUNT]++
           }
         }
-
 
         paramSpec.asInherited = asInherited
         paramSpec.asMutable   = asMutable
@@ -334,7 +333,7 @@ ObjectSauce(function (
 
 
   function ComposeArg(_$execContext, paramSpec, marked, visited) {
-    var Type, arg
+    var Type, arg, context
     const { selector : name, inheritedValue, asInherited,
             asMutable, asPermeable, isType } = paramSpec
     const entries     = _$execContext._knownEntries
@@ -342,7 +341,7 @@ ObjectSauce(function (
     const execContext = _$execContext[$RIND]
 
     if (asInherited)    { return inheritedValue }
-    if (value === null) { return  null  }
+    if (value === null) { return     null       }
     if (value === undefined) {
       if (!(asMutable && name.match(TYPE_NAME_MATCHER))) { return value }
       Type = entries.Type || RootContext.Type
@@ -350,21 +349,21 @@ ObjectSauce(function (
     }
     else {
       if (asPermeable) {
-        arg = CopyValue(value, 0, visited, execContext)
+        context = (value === inheritedValue) ? null : execContext
+        arg = CopyValue(value, false, visited, context)
         return (arg === value) ? arg : BePermeable(arg, value[IS_IMMUTABLE])
       }
       if ( isType  ) { return value  }
       if (asMutable) {
-        arg = CopyValue(value, 0, visited, execContext)
+        arg = CopyValue(value, false, visited, execContext)
       }
       else {
-        if (!marked[value.typeName]) { return value }
-        arg = CopyValue(value, 0, visited, execContext)
-        if (arg !== value && value[IS_IMMUTABLE]) { BeImmutableValue(arg) }
+        if (!marked[MUTABLE]) { return value }
+        arg = AsNextValue(value, value[IS_IMMUTABLE], visited, execContext)
       }
     }
 
-    execContext.atPut(name, arg)
+    if (arg !== value) { execContext.atPut(name, arg) }
     return arg
   }
 

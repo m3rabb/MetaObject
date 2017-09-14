@@ -113,11 +113,12 @@ ObjectSauce(function (
             delete barrier.deleteProperty
           }
           // Else, if didn't change targets handlers were not set. Or if new
-          // barrier, it will be garbage collected, so no need to clean it up
+          // barrier, it will be garbage collected, so no need to clean it up.
 
           if (result === undefined || result === _receiver) {
-            if (changedTarget) { _$target._setImmutable.call(_$target[$PULP]) }
-            return _$target[$RIND]
+            return (changedTarget) ?
+              _$target._setImmutable.call(_$target[$PULP])[$RIND] :
+              _$receiver[$RIND]
           }
         }
         else {
@@ -130,7 +131,8 @@ ObjectSauce(function (
         switch (typeof result) {
           default         :                                   return result
           case "function" :
-            return result[$OUTER_WRAPPER] || result
+          // Next line properly handlers contexts and types since they always have id.
+          return result[$OUTER_WRAPPER] || result
             // Note: the following approach was overkill as $OUTER_WRAPPER are
             // never assigned to untrusted external functions.
             // return (outer && InterMap.get(outer) === OUTER_FUNC) ? outer : result

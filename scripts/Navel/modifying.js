@@ -106,12 +106,11 @@ ObjectSauce(function (
 
 
   // Still need to ensure ownMethods are copied a well!!!
-  function _$Copy(_$source, asImmutable, visited, context, optional) {
+  function _$Copy(_$source, asImmutable, visited, context, exceptSelector_) {
     var newType, durables, selector, next, value
-    const source     = _$source[$RIND]
-    const blanker    =
-      (context && (newType = optional || context[_$source.type.name])) ?
-        InterMap.get(newType)._blanker : _$source[$BLANKER]
+    const source  = _$source[$RIND]
+    const blanker = (context && (newType = context[_$source.type.name])) ?
+      InterMap.get(newType)._blanker : _$source[$BLANKER]
 
     const _$target   = new blanker(_$source)
     const  $target   = _$target[$OUTER]
@@ -133,7 +132,7 @@ ObjectSauce(function (
 
       while (next--) {
         selector = durables[next]
-        if (selector === optional) { continue }
+        if (selector === exceptSelector_) { continue }
 
         value = _$source[selector]
         if (selector[0] !== "_") {  // public selector
@@ -165,9 +164,10 @@ ObjectSauce(function (
 
   const ReliableObjectCopy = function copy(visited_asImmutable_, visited_, context__) {
     const [asImmutable, visited, context] =
-      (typeof visited_asImmutable_ === "boolean") ?
-        [visited_asImmutable_,  visited_, context__] :
-        [undefined, visited_asImmutable_, visited_ ]
+      (typeof visited_asImmutable_ === "object") ?
+        [undefined, visited_asImmutable_, visited_ ] :
+        [visited_asImmutable_,  visited_, context__]
+
     return (this[IS_IMMUTABLE] && asImmutable !== false) ?
       this : CopyObject(this, asImmutable, visited, context)
   }
@@ -202,7 +202,7 @@ ObjectSauce(function (
         else if (source.id === null || source[_DURABLES]) {
           // Only copy ordinary custom object with expressed intention
         }
-        else { return source } // Never copy ordinary custom objects
+        else { return source } // Don't copy ordinary custom objects
 
         target = SpawnFrom(RootOf(source))
       // break omitted
@@ -345,32 +345,6 @@ ObjectSauce(function (
   }
 
 
-  function AsNextValue(value, asImmutable, visited, context) {
-    var traversed, _$value, newType, isImmutable
-
-    // Next line properly handlers contexts and types since they always have id.
-    if (typeof value !== "object")        { return value     }
-    if (value === null)                   { return value     }
-    if ((traversed = visited.get(value))) { return traversed }
-    // if (value.id != null)                 { return value     }
-
-    if (context && context !== value.context) {
-      if ((_$value = InterMap.get(value))) {
-        if ((newType = context[_$value.type.name])) {
-          isImmutable = value[IS_IMMUTABLE] || false
-          return _$Copy(_$value, isImmutable, visited, context, newType)[$RIND]
-        }
-      }
-    }
-    // Might need to switch the order of these two lines???
-    if (value[IS_IMMUTABLE])              { return value     }
-    if (value.id != null)                 { return value     }
-
-    return (_$value || (_$value = InterMap.get(value))) ?
-      _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
-      CopyObject(value, asImmutable, visited, context)
-  }
-
 
   function ValueAsFact(value, inPlace, visited) {
     // Next line properly handlers contexts and types since they always have id.
@@ -393,12 +367,31 @@ ObjectSauce(function (
       CopyObject(value, true, visited)
   }
 
+
+
+  function AsNextValue(value, asImmutable, visited, context) {
+    var traversed, _$value
+
+    switch(typeof value) {
+      default         : return value
+      case "function" : if (!value[$RIND])  { return value } else { break }
+      case "object"   : if (value === null) { return null  } else { break }
+    }
+
+    if ((traversed = visited.get(value))) { return traversed }
+    if (!context && value[IS_IMMUTABLE])  { return value     }
+    if (value.id != null)                 { return value     }
+
+    return ((_$value = InterMap.get(value))) ?
+      _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
+      CopyObject(value, asImmutable, visited, context)
+  }
+
+
     // asImmutable
     // true       make immutable copy
     // false      make mutable copy
     // undefined  make copy of same mutability as the receiver
-    // 0          make mutable copy, except for raw functions
-                 // 0 is only used from ComposeArg
 
   function CopyValue(value, visited_asImmutable_, visited_, context__) {
     var asImmutable, visited, context, _$value
@@ -409,23 +402,22 @@ ObjectSauce(function (
 
     switch (typeof value) {
       case "function" :
-        _$value = InterMap.get(value)
-        return (_$value) ?
-          _$Copy(_$value, asImmutable, visited, context)[$RIND] :
-          ((asImmutable == null) ? value :
-            ((!value[IS_IMMUTABLE] === asImmutable) ?
-              AttemptInvertedFuncCopyError(value) : value))
+        if (value[$RIND]) { return value.copy(asImmutable, visited, context) }
+        if (value[IS_IMMUTABLE] === asImmutable) { return value }
+        if (asImmutable === undefined)           { return value }
+        return (context) ? value : AttemptInvertedFuncCopyError(value)
 
       case "object"   :
         if (value === null) { return value }
-        asImmutable = asImmutable || (asImmutable === undefined)
-        if (value[IS_IMMUTABLE] && asImmutable) { return value }
+        if (!context) {
+          if (value[IS_IMMUTABLE] && asImmutable !== false) { return value }
+        }
 
-        _$value = InterMap.get(value)
-        return (_$value) ?
+        return ((_$value = InterMap.get(value))) ?
           _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
           CopyObject(value, asImmutable, visited, context)
     }
+    return value
   }
 
 
@@ -442,14 +434,18 @@ ObjectSauce(function (
     return value
   }
 
-  function BeImmutableValue(value) {
+  function BeImmutableValue(value, inPlace_) {
+    var _$value
     switch (typeof value) {
       case "function" :
         return value.beImmutable ||
           (value[IS_IMMUTABLE] ? value : SetFuncImmutable(value))
+
       case "object"   :
-        return value && value.beImmutable ||
-          (value[IS_IMMUTABLE] ? value : SetObjectImmutable(value))
+        return value[IS_IMMUTABLE] ? value :
+          ((_$value = InterMap.get(value))) ?
+            _$value._setImmutable.call(_$value[$PULP], inPlace_)[$RIND] :
+            SetObjectImmutable(value, inPlace_)
     }
     return value
   }

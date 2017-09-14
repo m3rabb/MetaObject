@@ -67,9 +67,8 @@
     writable     : true,
     enumerable   : false,
   }
-  OSauce.invisibleConfig = InvisibleConfig
-
-  OSauce.visibleConfig = {
+  
+  const VisibleConfig = {
     configurable : true,
     writable     : true,
     enumerable   : true,
@@ -190,7 +189,6 @@
 
 
 
-
   _OSauce.ExtractParamListing     = ExtractParamListing
   _OSauce.ExtractParamNames       = ExtractParamNames
   _OSauce.BasicSetObjectImmutable = BasicSetObjectImmutable
@@ -203,6 +201,8 @@
   OSauce.theEmptyArray            = BasicSetObjectImmutable([])
   _OSauce.EMPTY_THING_ANCESTRY    = BasicSetObjectImmutable([])
 
+  OSauce.invisibleConfig           = BasicSetObjectImmutable(InvisibleConfig)
+  OSauce.visibleConfig            = BasicSetObjectImmutable(VisibleConfig)
 
   _OSauce._OSauce = _OSauce
   _OSauce.OSauce  =  OSauce
