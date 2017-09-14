@@ -1,9 +1,12 @@
-ObjectSauce(function (Type, $RIND) {
+ObjectSauce.exec(function (Type_) {
   "use strict"
 
   describe("Type impermeable outer", function() {
+    const XYZ = Symbol("XYZ")
+    const QRS = Symbol("QRS")
+
     beforeEach(function () {
-      this.Bat = Type({
+      this.Bat = Type_({
         name: "Bat",
         defines: [
           "name, kind",
@@ -14,6 +17,7 @@ ObjectSauce(function (Type, $RIND) {
           }
         ]
       })
+      this.Bat.this[XYZ] = 123
     })
 
     describe("When accessing an existing", function() {
@@ -31,7 +35,7 @@ ObjectSauce(function (Type, $RIND) {
 
       describe("symbol property", function () {
         it("Answers the property value", function () {
-          expect( this.Bat[$RIND] ).toBe( this.Bat )
+          expect( this.Bat[XYZ] ).toBe( 123 )
         })
       })
 
@@ -69,8 +73,7 @@ ObjectSauce(function (Type, $RIND) {
 
       describe("symbol property", function () {
         it("Throws an unknown property error", function () {
-          var XYZ = Symbol("XYZ")
-          expect(() => this.Bat[XYZ] ).toThrowError(/doesn't have a property/)
+          expect(() => this.Bat[QRS] ).toThrowError(/doesn't have a property/)
         })
       })
     })
@@ -119,22 +122,22 @@ ObjectSauce(function (Type, $RIND) {
       })
 
       describe("a symbol property", function () {
-        xdescribe("When present", function () {
-          describe("When the receive is immutable", function () {
-            it("Answers false", function () {
-              this.Bat.beImmutable
-              expect( this.Bat.isImmutable ).toBe ( true )
-              expect( $RIND in this.Bat ).toBe( false )
-            })
-          })
-
-          describe("When the receive is mutable", function () {
-            it("Answers false", function () {
-              expect( this.Bat.isMutable ).toBe ( true )
-              expect( $RIND in this.Bat ).toBe( false )
-            })
-          })
-        })
+        // xdescribe("When present", function () {
+        //   describe("When the receive is immutable", function () {
+        //     it("Answers false", function () {
+        //       this.Bat.beImmutable
+        //       expect( this.Bat.isImmutable ).toBe ( true )
+        //       expect( $RIND in this.Bat ).toBe( false )
+        //     })
+        //   })
+        //
+        //   describe("When the receive is mutable", function () {
+        //     it("Answers false", function () {
+        //       expect( this.Bat.isMutable ).toBe ( true )
+        //       expect( $RIND in this.Bat ).toBe( false )
+        //     })
+        //   })
+        // })
 
         describe("When absent", function () {
           it("Answers false", function () {

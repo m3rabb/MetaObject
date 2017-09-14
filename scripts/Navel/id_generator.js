@@ -1,4 +1,4 @@
-ObjectSauce(function (RoundDown, RandomUnitValue, OSauce) {
+ObjectSauce(function (MarkFunc, RoundDown, RandomUnitValue, OSauce) {
   "use strict"
 
   // #### Random Number Generation
@@ -39,7 +39,7 @@ ObjectSauce(function (RoundDown, RandomUnitValue, OSauce) {
     }
   }
 
-  OSauce.randomInt   = RandomInt
-  OSauce.newUniqueId = NewUniqueId
+  OSauce.randomInt   = MarkFunc(RandomInt)
+  OSauce.newUniqueId = MarkFunc(NewUniqueId)
 
 })

@@ -1,4 +1,4 @@
-ObjectSauce(function ($LOCKED, $RIND, AsName, OSauce, _OSauce) {
+ObjectSauce(function ($LOCKED, $RIND, AsName, MarkFunc, OSauce, _OSauce) {
   "use strict"
 
   const ErrorLog = []
@@ -31,18 +31,18 @@ ObjectSauce(function ($LOCKED, $RIND, AsName, OSauce, _OSauce) {
   //   return null
   // }
 
-  OSauce.ErrorLog    = ErrorLog
-  OSauce.signalError = SignalError
+  OSauce.errorLog    = ErrorLog
+  OSauce.signalError = MarkFunc(SignalError)
 
-  OSauce.setLogErrors = function (bool) {
-    if (this[$LOCKED]) { return this }
-    LogErrors = !!bool
-  }
+  OSauce.setLogErrors = MarkFunc(function (bool) {
+    if (!this[$LOCKED]) { LogErrors = !!bool }
+    return this[$RIND]
+  })
 
-  OSauce.setHandleErrorsQuietly = function (bool) {
-    if (this[$LOCKED]) { return this }
-    HandleErrorsQuietly = !!bool
-  }
+  OSauce.setHandleErrorsQuietly = MarkFunc(function (bool) {
+    if (!this[$LOCKED]) { HandleErrorsQuietly = !!bool }
+    return this[$RIND]
+  })
 
 
   // _OSauce.ImproperMethodHandlerError = function (target) {

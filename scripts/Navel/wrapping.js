@@ -1,10 +1,9 @@
 ObjectSauce(function (
-  $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT,
-  IS_IMMUTABLE, _DURABLES,
+  $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, IS_IMMUTABLE,
   AsName, AsPropertySymbol, CopyObject, _HasOwn, InnerBarrier, InterMap,
   InvisibleConfig, _$Copy,
   DefineProperty, InSetProperty,
-  OSauce, _OSauce
+  _OSauce
 ) {
   "use strict"
 

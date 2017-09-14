@@ -1,12 +1,13 @@
-ObjectSauce(function (OwnVisibleNames, SpawnFrom, Type, OSauce) {
+ObjectSauce.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
   "use strict"
-
-
-  const PropertyLoader = Type("PropertyLoader")
 
   const modeNames = `DECLARE DECLARATION STANDARD SHARED ALIAS METHOD
                      LAZY RETRO RETROACTIVE DURABLE
                      FOR_ASSIGN FOR_SETTER FOR_MANDATORY SETTER MANDATORY`
+
+  const PropertyLoader = _PropertyLoader // this.Type.new("PropertyLoader")
+
+  this.add(PropertyLoader)
 
   PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
 
@@ -146,5 +147,4 @@ ObjectSauce(function (OwnVisibleNames, SpawnFrom, Type, OSauce) {
     }
   })
 
-  OSauce.PropertyLoader = PropertyLoader
 })

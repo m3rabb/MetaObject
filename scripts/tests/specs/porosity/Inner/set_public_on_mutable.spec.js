@@ -1,7 +1,7 @@
-ObjectSauce(function (
+ObjectSauce.Test.exec(function (
+  Thing_, Type_,
   $BARRIER, $INNER, $OUTER,
-  BasicSetObjectImmutable, OwnKeys, RootOf,
-  Thing, Type
+  BasicSetObjectImmutable, OwnKeys, RootOf
 ) {
   "use strict"
 
@@ -14,7 +14,7 @@ ObjectSauce(function (
       this.redBall  = BasicSetObjectImmutable({color : "red"})
       this.blueBall = BasicSetObjectImmutable({color : "blue"})
 
-      this.Cat_ = Type.new_({
+      this.Cat_ = Type_.new({
         name   : "Cat",
         define : [
           function _init(name, breed, age) {
@@ -34,7 +34,7 @@ ObjectSauce(function (
         ]
       })
 
-      this.Dog_ = Type.new_({
+      this.Dog_ = Type_.new({
         name   : "Dog",
         define : [
           function _init(name, breed, age) {
@@ -531,14 +531,14 @@ ObjectSauce(function (
 
       describe("When the value is another object's inner", function() {
         it("Throws an detected inner error", function () {
-          var value = Thing.new_().this
+          var value = Thing_.new().this
           expect( () => {this.$pulp.xyz = value} ).toThrowError(/forgot to pass the 'this'/)
         })
       })
 
       describe("When the value is another type's inner", function() {
         it("Throws an detected inner error", function () {
-          var value = Type.new_("Cat").this
+          var value = Type_.new("Cat").this
           expect( () => {this.$pulp.xyz = value} ).toThrowError(/forgot to pass the 'this'/)
         })
       })

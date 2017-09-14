@@ -1,9 +1,8 @@
 ObjectSauce(function (
-  $INNER, ASSIGNER, DECLARATION, LAZY_INSTALLER, SAFE_FUNC,
-  IDEMPOT_VALUE_METHOD,
-  AddIntrinsicDeclaration, MarkAndSetFuncImmutable, SignalError,
-  Definition, _Definition,
-  _OSauce
+  $INNER,
+  ASSIGNER, DECLARATION, IDEMPOT_VALUE_METHOD, LAZY_INSTALLER, SAFE_FUNC,
+  AddIntrinsicDeclaration, Definition, MarkAndSetFuncImmutable, SignalError,
+  _Definition
 ) {
   // "use strict"
 
@@ -48,44 +47,5 @@ ObjectSauce(function (
   _Definition.addMethod(function _invalidSelectorError(selector) {
     this._signalError(`Definition must be set with a valid selector!! Not: '${selector}'`)
   })
-
-
-  // AsDefinition([definition], context_)
-  // AsDefinition([tag, definition], context_)
-  // AsDefinition([namedFunc, mode_], context_)
-  // AsDefinition([selector, func, mode_], context_)
-
-  function AsDefinition(args, context_) {
-    const definitionType = context_ && context_.Definition || Definition
-    var def, tag
-    switch (args.length) {
-      case 1 :
-        [def] = args
-        if (def.isDefinition) { return def }
-        break
-
-      case 2 :
-        [tag, def] = args
-        if (def.isDefinition) {
-          return (tag === def.tag) ?
-            def : definitionType(tag, def.handler, def.mode)
-        }
-        // break omitted
-
-      case 3 :
-        return definitionType(...args) // selector, value, mode
-    }
-    return SignalError("Improper arguments to make a Definition!!")
-  }
-
-  // function AsDefinition(arg, arg_, arg__) {
-  //   if (arg.isDefinition) { return arg }
-  //   if (arg_.isDefinition) {
-  //     return (arg === arg_.tag) ? arg_ : Definition(arg, arg_.handler, arg_.mode)
-  //   }
-  //   return Definition(arg, arg_, arg__)
-  // }
-
-  _OSauce.AsDefinition = AsDefinition
 
 })

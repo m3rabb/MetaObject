@@ -14,13 +14,15 @@
 // USER CAN/SHOULD NEVER REDEFINE INATE METHODS
 
 ObjectSauce(function (
-  $BLANKER, $INNER, $LOCKED, $OUTER, $OWN_DEFINITIONS, $PULP, $RIND,
+  $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $LOCKED, $OUTER,
+  $OWN_DEFINITIONS, $PULP, $RIND,
   DECLARATION, IS_IMMUTABLE, LAZY_INSTALLER, _DURABLES,
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
-  $Intrinsic$root$inner, AsName, BasicSetObjectImmutable, InterMap,
-  InvisibleConfig, MakeDefinitionsInfrastructure, NewUniqueId, OwnSelectors,
-  PropertyAt, SignalError, SpawnFrom, _$Copy, _$Intrinsic, _HasOwn,
-  AsDefinition, SetDefinition,
+  $Intrinsic$root$inner, AsName, BasicSetObjectImmutable, ExtractDefinitionFrom,
+  FindAndSetDurables, MakeDefinitionsInfrastructure, NewUniqueId, OwnSelectors,
+  PropertyAt, SetDefinition, SetInvisibly, SignalError, SpawnFrom, ValueAsFact,
+  _HasOwn, _$Copy, _$Intrinsic,
+  InterMap, PropertyToSymbolMap,
   OwnNames, OwnVisibleNames,
   CompletelyDeleteProperty, DefineProperty,
   KnownSelectorsSorted, OwnSelectorsSorted
@@ -28,18 +30,6 @@ ObjectSauce(function (
   // "use strict"
 
 
-  _$Intrinsic.addMethod(function _addOwnDurable(selector) {
-    var durables = this[_DURABLES] || []
-    if (!durables.includes(selector)) {
-      this[_DURABLES] = BasicSetObjectImmutable([...durables, selector])
-      this.addOwnDeclaration(selector)
-    }
-  }, TRUSTED_VALUE_METHOD)
-
-
-  _$Intrinsic.addMethod(function _addOwnDurables(selectors) {
-    selectors.forEach(selector => this._addOwnDurable(selector))
-  }, TRUSTED_VALUE_METHOD)
 
 
 
@@ -125,8 +115,9 @@ ObjectSauce(function (
 
   _$Intrinsic.addMethod(function setImmutable(visited_inPlace_, visited_) {
     if (this[IS_IMMUTABLE]) { return this }
-    const [inPlace, visited] = (typeof visited_inPlace_ === "boolean") ?
-      [visited_inPlace_, visited_] : [undefined, visited_inPlace_]
+    const [inPlace, visited] = (typeof visited_inPlace_ === "object") ?
+      [undefined, visited_inPlace_] : [visited_inPlace_, visited_]
+
     this._setImmutable(inPlace, visited)
   }, TRUSTED_VALUE_METHOD)
 
@@ -136,6 +127,39 @@ ObjectSauce(function (
   }, TRUSTED_VALUE_METHOD)
 
 
+  // This method should only be called on a mutable object!!!
+  _$Intrinsic.addMethod(function _setImmutable(inPlace, visited) {
+    var durables, selector, next, value, nextValue
+    const $inner                  = this[$INNER]
+    const $rind                   = $inner[$RIND]
+    const _setPropertiesImmutable = $inner._setPropertiesImmutable
+
+    delete $inner._retarget
+
+    visited = visited || new WeakMap()
+    visited.set($rind, $rind)
+
+    if (_setPropertiesImmutable) {
+      _setPropertiesImmutable.call(this, inPlace, visited)
+    }
+    else {
+      durables = $inner[_DURABLES] || FindAndSetDurables($inner)
+      next      = durables.length
+
+      while (next--) {
+        selector = durables[next]
+        if (selector[0] !== "_") { continue }
+
+        value     = $inner[selector]
+        nextValue = ValueAsFact(value, inPlace, visited)
+        if (nextValue !== value) { $inner[selector] = nextValue }
+      }
+    }
+
+    return this._basicSetImmutable()
+  })
+
+
 
   _$Intrinsic.addMethod(function _newBlank() {
     const $inner     = this[$INNER]
@@ -143,8 +167,7 @@ ObjectSauce(function (
     const $instance  = new _$instance[$OUTER]
 
     if ($inner[$OUTER].this) {
-      DefineProperty($instance, "this", InvisibleConfig)
-      $instance.this = _$instance[$PULP]
+      SetInvisibly($instance, "this", _$instance[$PULP])
     }
     return _$instance[$RIND]
   }, IDEMPOT_VALUE_METHOD)
@@ -196,10 +219,34 @@ ObjectSauce(function (
 
 
 
+  _$Intrinsic.addMethod(function _basicSet(property, value) {
+    const selector = PropertyToSymbolMap[property] || property
+    this[selector] = value
+  }, TRUSTED_VALUE_METHOD)
+
+
+
+  // Note: This method might need to be moved to _$Something!!!
+  //
+  // It's not enough to simple make this method access the receiver's barrier.
+  // Th receiver only references its original barrier, and there may be more than
+  // one proxy/barrier associated with the receiver, so we need to invoke the
+  // proxy to force the proper change to occur thru it.
+  _$Intrinsic.addMethod(function _retarget() {
+    const $inner = this[$INNER]
+
+    if ($inner[IS_IMMUTABLE]) {
+      delete this[$DELETE_IMMUTABILITY]
+      return this
+    }
+
+    return SetInvisibly($inner, "_retarget", this)
+  }, IDEMPOT_SELF_METHOD)
+
 
 
   // _$Intrinsic.addMethod(function _knowns(propertyName) {
-  //   const properties = this[_DURABLES] || SetDurables(this)
+  //   const properties = this[_DURABLES] || FindAndSetDurables(this)
   //   return (properties[propertyName] !== undefined)
   // }, BASIC_VALUE_METHOD)
 
@@ -276,11 +323,12 @@ ObjectSauce(function (
   //
 
   _$Intrinsic.addMethod(function addOwnAlias(aliasSelector, selector_definition) {
-    var value
-    if (selector_definition.isDefinition) { value = selector_definition }
+    var value, _$value
+    if (typeof selector_definition !== "string") { value = selector_definition }
     else {
-      value = this._propertyAt(selector_definition)
-      if (!value.isDefinition) {
+        value = this._propertyAt(selector_definition)
+      _$value = InterMap.get(value)
+      if (!_$value || !_$value[$IS_DEFINITION]) {
         return this._unknownMethodToAliasError(selector_definition)
       }
     }
@@ -288,16 +336,31 @@ ObjectSauce(function (
   }, TRUSTED_VALUE_METHOD)
 
 
+
   _$Intrinsic.addMethod(function addOwnDeclaration(selector) {
-    const declaration = this.context.Definition(selector, null, DECLARATION)
-    this._addOwnDefinition(declaration)
+    this.addOwnDefinition(selector, null, DECLARATION)
   }, TRUSTED_VALUE_METHOD)
+
 
 
   _$Intrinsic.addMethod(function addOwnMethod(namedFunc_name, func_, mode__) {
-    const method = this.context.Definition(namedFunc_name, func_, mode__)
-    this._addOwnDefinition(method)
+    this.addOwnDefinition(namedFunc_name, func_, mode__)
   }, TRUSTED_VALUE_METHOD)
+
+
+  _$Intrinsic.addMethod(function _addOwnDurable(selector) {
+    var durables = this[_DURABLES] || []
+    if (!durables.includes(selector)) {
+      this[$INNER][_DURABLES] = BasicSetObjectImmutable([...durables, selector])
+      this.addOwnDeclaration(selector)
+    }
+  }, TRUSTED_VALUE_METHOD)
+
+
+  _$Intrinsic.addMethod(function _addOwnDurables(selectors) {
+    selectors.forEach(selector => this._addOwnDurable(selector))
+  }, TRUSTED_VALUE_METHOD)
+
 
 
   // addOwnDefinition(definition)
@@ -306,14 +369,10 @@ ObjectSauce(function (
   // addOwnDefinition(selector, func, mode_)
 
   _$Intrinsic.addMethod(function addOwnDefinition(...args) {
-    const definition = AsDefinition(args, this.context)
-    this._addOwnDefinition(definition)
-  }, TRUSTED_VALUE_METHOD)
-
-  _$Intrinsic.addMethod(function _addOwnDefinition(definition) {
-    const tag    = definition.tag
-    const $inner = this[$INNER]
-    var   definitions = $inner[$OWN_DEFINITIONS]
+    const definition   = ExtractDefinitionFrom(args, this.context)
+    const tag          = definition.tag
+    const $inner       = this[$INNER]
+    var   definitions  = $inner[$OWN_DEFINITIONS]
 
     if (definitions && definitions[tag] === definition) { return this }
     this._retarget
@@ -337,8 +396,10 @@ ObjectSauce(function (
   }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function propertyAt(selector) {
-    return ((selector.charAt) ? selector[0] : selector.toString()[7] !== "_") ?
-      PropertyAt(this[$INNER], selector) : null
+    return (selector[0] !== "_") ? PropertyAt(this[$INNER], selector) : null
+    // If restoring the following, also add it back to InSetProperty.
+    // return ((selector.charAt) ? selector[0] : selector.toString()[7] !== "_") ?
+    //   PropertyAt(this[$INNER], selector) : null
   }, IDEMPOT_VALUE_METHOD)
 
 
@@ -370,7 +431,8 @@ ObjectSauce(function (
     return this._signalError(`Receiver ${this.basicId} doesn't have a property '${AsName(selector)}'!!`)
   })
 
-  _$Intrinsic.addMethod("_basicUnknownProperty", $Intrinsic$root$inner._unknownProperty)
+  //_$Intrinsic.addMethod("_basicUnknownProperty", $Intrinsic$root$inner._unknownProperty)
+  _$Intrinsic.addAlias("_basicUnknownProperty", "_unknownProperty")
 
 
 

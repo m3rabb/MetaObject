@@ -243,8 +243,10 @@ topjs
 
 Tranya|gagh
 Corbomite
-HotSauce
+HotSauce.
 ObjectSauce
+
+
 
 harissa|Zhug
 allspice
@@ -257,6 +259,8 @@ cocoabutter
 hairy|hairless
 domesticated|cultivated
 southern|fried|pickled
+Butta
+
 bep|blackeyedpea|hoppin
 Butta
 interrobang

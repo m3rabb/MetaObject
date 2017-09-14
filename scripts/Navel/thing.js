@@ -1,6 +1,6 @@
 ObjectSauce(function (
   $INNER, $OUTER, $PRIOR_IDS, $RIND, _DURABLES,
-  AsName, SetDurables, ValueAsFact, _Thing
+  AsName, _Thing
 ) {
   "use strict"
 
@@ -36,37 +36,7 @@ ObjectSauce(function (
   })
 
 
-  // This method should only be called on a mutable object!!!
-  // must ensure visited is set to a WeakMap if used!!!
-  _Thing.addMethod(function _setImmutable(inPlace, visited = new WeakMap()) {
-    var durables, selector, next, value, nextValue
-    const $inner                  = this[$INNER]
-    const $rind                   = $inner[$RIND]
-    const _setPropertiesImmutable = $inner._setPropertiesImmutable
 
-    delete $inner._retarget
-
-    visited.set($rind, $rind)
-
-    if (_setPropertiesImmutable) {
-      _setPropertiesImmutable.call(this, inPlace, visited)
-    }
-    else {
-      durables = $inner[_DURABLES] || SetDurables($inner)
-      next      = durables.length
-
-      while (next--) {
-        selector = durables[next]
-        if (selector[0] !== "_") { continue }
-
-        value     = $inner[selector]
-        nextValue = ValueAsFact(value, inPlace, visited, $rind)
-        if (nextValue !== value) { $inner[selector] = nextValue }
-      }
-    }
-
-    return this._basicSetImmutable()
-  })
 
   _Thing.addMethod(function toString(_) { // eslint-disable-line
     const name = this.name

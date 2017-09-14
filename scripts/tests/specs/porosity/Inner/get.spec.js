@@ -1,4 +1,4 @@
-ObjectSauce(function (Type, AsName) {
+ObjectSauce.exec(function (Type_, AsName) {
   "use strict"
 
   describe("Inner get", function() {
@@ -6,7 +6,7 @@ ObjectSauce(function (Type, AsName) {
     const XYZ   = Symbol("XYZ")
 
     beforeAll(function () {
-      this.Cat = Type({
+      this.Cat = Type_({
         name   : "Cat",
         define : [
           function _init(name, breed, age) {
@@ -27,7 +27,8 @@ ObjectSauce(function (Type, AsName) {
     })
 
     beforeEach(function () {
-      this._cat = this.Cat.new_("Nutmeg", "Torty", 1.5).this
+      this.cat  = this.Cat.new("Nutmeg", "Torty", 1.5)
+      this._cat = this.cat.this
     })
 
     describe("When accessing an existing property", function() {

@@ -1,24 +1,23 @@
 ObjectSauce(function (
-  $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,
-  $IMMEDIATES, $INNER, $IS_DEFINITION, $OUTER, $PULP, $RIND, $ROOT, $SUPERS,
-  ALWAYS_FALSE, ALWAYS_NULL, IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE,
-  NO_SUPER, _DURABLES,
-  InSetProperty, InterMap, SpawnFrom, _$Copy, _HasOwn,
+  $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,$IMMEDIATES, $INNER,
+  $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
+  IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE, NO_SUPER, _DURABLES,
+  AlwaysFalse, AlwaysNull, InSetProperty, InterMap, SpawnFrom, _$Copy, _HasOwn,
   AssignmentOfUndefinedError, AttemptSetOnSuperError,
   DirectAssignmentFromOutsideError, DisallowedDeleteError,
   PrivateAccessFromOutsideError,
-  OSauce, _OSauce
+  _OSauce
 ) {
   "use strict"
 
   // UNTESTED
   const DefaultBarrier = {
-    __proto__      : null        ,
-    getPrototypeOf : ALWAYS_NULL ,
-    setPrototypeOf : ALWAYS_FALSE,
-    defineProperty : ALWAYS_FALSE,
-    deleteProperty : ALWAYS_FALSE,
-    // isExtensible   : ALWAYS_FALSE,
+    __proto__      : null       ,
+    getPrototypeOf : AlwaysNull ,
+    setPrototypeOf : AlwaysFalse,
+    defineProperty : AlwaysFalse,
+    deleteProperty : AlwaysFalse,
+    // isExtensible   : AlwaysFalse,
     // preventExtensions ???
   }
 
@@ -223,7 +222,7 @@ ObjectSauce(function (
         // if (_$target[$OUTER].this) {
         //   DefineProperty(_$target, "this", InvisibleConfig)
         //   $instance.this = _$target[$IS_TYPE] ?
-        //     AddPermeableNewDefinitionToType(_$instance) : _$target[$PULP]
+        //     AddPermeableNewDefinitionTo(_$instance) : _$target[$PULP]
         // }
         break
 
@@ -286,6 +285,7 @@ ObjectSauce(function (
   }
 
 
+
   function DisguisedOuterBarrier(_target, $target, applyHandler) {
     this._target = _target
     this.$target = $target
@@ -334,37 +334,32 @@ ObjectSauce(function (
 
 
 
-  function SuperPropertyFor(_$target, selector) {
+  function SetSuperPropertyFor(_$target, selector, supers) {
+    var next, _$nextType, _$nextRoot, value, isDeclared
     const ancestors = _$target.type.ancestry
-    const supers    = _$target[$SUPERS]
-    var next, _$nextType, nextDefinitions, value, _$value, isDeclared
 
     next = ancestors.length
-    if (!_$target._has(selector)) { next-- }
+    if (!_$target._hasOwn(selector)) { next -= 1 }
 
     while (next--) {
-      _$nextType      = InterMap.get(ancestors[next])
-      nextDefinitions = _$nextType._definitions
-      value           = nextDefinitions[selector]
+      _$nextType = InterMap.get(ancestors[next])
+      _$nextRoot = _$nextType._blanker.$root$inner
+      value      = _$nextRoot[selector]
 
-      if (value !== undefined) {
-        _$value = InterMap.get(value)
-        if (_$value && _$value[$IS_DEFINITION]) {
-          if (_$value.isImmediate) {
-            supers[$IMMEDIATES][selector] = _$value.super
-            return IMMEDIATE
-          }
-          if ((value = value.super)) { return value }
-
-          // Here because value is a DECLARATION or ASSIGNER method
-          isDeclared = true
-          // value = $root$inner[selector]
-          // if (value !== undefined) { return value }
-        }
-        else { return value }
+      if (value != null) {
+        return (supers[selector] =
+          (value[$OUTER_WRAPPER] && InterMap.get(value)) ?
+            value.method.super : value)
       }
-      else if (selector in _$nextType._blanker.$root$inner) { isDeclared = true }
+      if (value === null) { return (supers[selector] = null) }
+
+      if ((value = _$nextRoot[$IMMEDIATES][selector])) {
+        supers[$IMMEDIATES][selector] = value.method.super
+        return (supers[selector] = IMMEDIATE)
+      }
+      if (selector in _$nextRoot) { isDeclared = true }
     }
+
     return isDeclared ? null : NO_SUPER
   }
 
@@ -383,7 +378,7 @@ ObjectSauce(function (
     do {
       switch (value) {
         case undefined :
-          value = (supers[selector] = SuperPropertyFor(_$target, selector))
+          value = SetSuperPropertyFor(_$target, selector, supers)
           break
 
         case IMPLEMENTATION :

@@ -1,23 +1,40 @@
 ObjectSauce(function (
-  $IS_TYPE, $LOCKED, $OUTER, $PULP, $RIND, EMPTY_ARRAY, EMPTY_THING_ANCESTRY,
-  INHERITED, IS_IMMUTABLE, MUTABLE, PERMEABLE, TRUSTED_VALUE_METHOD,
-  AsDecapitalized, BasicSetObjectImmutable, BeImmutable, Copy, DefineProperty,
-  Definition_init, ExtractParamNames, InterMap,
-  InvisibleConfig, IsSauced, IsSubtypeOfThing, OwnKeys,
-  SignalError, _BasicNew,
-  SetObjectImmutable, SpawnFrom, ValueAsFact,
-  DefaultContext, Definition, Type, _Context,
-  PrivateAccessFromOutsideError,
-  _OSauce
+  $INNER, $IS_TYPE, $LOCKED, $OUTER, $PULP, $RIND,
+  COUNT, INHERITED, IS_IMMUTABLE, MUTABLE,
+  PERMEABLE, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
+  AddPermeableNewDefinitionTo, AsDecapitalized, BasicSetObjectImmutable,
+  BeImmutableValue, CopyValue, DefaultContext, Definition, Definition_init,
+  EmptyThingAncestry, ExtractParamNames, InterMap, IsSauced, IsSubtypeOfThing,
+  OwnKeys, RootContext, SetInvisibly, SpawnFrom, TheEmptyArray, Type,
+  ValueAsFact, _BasicNew, _Context
 ) {
   "use strict"
 
 
-  _Context.addMethod(function _privateAccessFromOutside(selector) {
-    const entry = this._knownEntries[selector]
-    return (entry !== undefined) ? entry :
-      PrivateAccessFromOutsideError(this, selector)
-  })
+  _Context.addMethod(function atPut(selector, entry) {
+    const self = this[$RIND]
+    if (self === DefaultContext || this[$INNER][selector] === entry) { return }
+    this._atPut(selector, entry)
+
+    const _$entry = InterMap.get(entry)
+    if (_$entry && _$entry[$IS_TYPE] && _$entry.context === DefaultContext) {
+      _$entry[$PULP]._setContext(this[$RIND])
+    }
+  }, TRUSTED_VALUE_METHOD)
+
+
+
+  _Context.addMethod(function add(object) {
+    this.atPut(object.name || object.tag, object)
+  }, TRUSTED_VALUE_METHOD)
+
+
+
+  // _Context.addMethod(function _privateAccessFromOutside(selector) {
+  //   const entry = this._knownEntries[selector]
+  //   return (entry !== undefined) ? entry :
+  //     PrivateAccessFromOutsideError(this, selector)
+  // })
 
   _Context.addMethod(function _unknownProperty(selector) {
     const entry = this._knownEntries[selector]
@@ -27,18 +44,22 @@ ObjectSauce(function (
 
 
   _Context.addMethod(function _setPropertiesImmutable(inPlace, visited) {
-    var selector, entry, _$entry
-    const entries = this._knownEntries
-    for (selector in entries) {
-      entry   = entries[selector]
+    const entries   = this._knownEntries
+    const selectors = OwnKeys(entries)
+
+    selectors.forEach(selector => {
+      var entry, _$entry, fact
+        entry = entries[selector]
       _$entry = InterMap.get(entry)
-      if (_$entry && _$entry[$IS_TYPE]) { entry.beImmutable }
+      if (_$entry && _$entry[$IS_TYPE]) { entry.setImmutable(inPlace, visited) }
       else {
-        var fact = ValueAsFact(entry, inPlace, visited, this.$)
-        this[selector] = entries[selector] = fact
+        fact = ValueAsFact(entry, inPlace, visited)
+        if (fact !== entry) { this[selector] = entries[selector] = fact }
       }
-    }
-  })
+    })
+  }, TRUSTED_VALUE_METHOD)
+
+
 
   _Context.addMethod(function lock() {
     var selector, entry
@@ -49,7 +70,7 @@ ObjectSauce(function (
       if (IsSauced(entry)) { entry.lock }
     }
     this._super.lock
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
 
@@ -71,7 +92,8 @@ ObjectSauce(function (
       contexts.unshift(nextContext)
     } while ((nextContext = nextContext.supercontext))
     return BasicSetObjectImmutable(contexts)
-  })
+  }, TRUSTED_VALUE_METHOD)
+
 
   _Context.addMethod(function _knownTypes() {
     var selector, entry, _$entry, index
@@ -85,7 +107,8 @@ ObjectSauce(function (
       if (_$entry && _$entry[$IS_TYPE]) { types[index++] = entry }
     }
     return types
-  })
+  }, IDEMPOT_VALUE_METHOD)
+
 
   _Context.addMethod(function _ownEntries() {
     const known     = this._knownEntries
@@ -94,47 +117,94 @@ ObjectSauce(function (
 
     selectors.forEach(selector => own[selector] = known[selector])
     return own
+  }, TRUSTED_VALUE_METHOD)
+
+
+  _Context.addMethod(function allEntrySelectors() {
+    var selectors, selector, index
+    const entries = this._knownEntries
+
+    selectors = []
+    index = 0
+    for (selector in entries) {
+      selectors[index++] = selector
+    }
+    return BasicSetObjectImmutable(selectors.sort())
+  }, IDEMPOT_VALUE_METHOD)
+
+
+  _Context.addMethod(function entrySelectors() {
+    return BasicSetObjectImmutable(OwnKeys(this._knownEntries).sort())
+  }, IDEMPOT_VALUE_METHOD)
+
+
+
+  _Context.addMethod(function newSub(execFunc) {
+    return this._exec(execFunc, true)
+  })
+
+  _Context.addAlias("newSubcontext", "newSub")
+
+
+  _Context.addMethod(function exec(execFunc) {
+    return this._exec(execFunc, false)
   })
 
 
-  _Context.addMethod(function add(object) {
-    this.atPut(object.name || object.tag, object)
+  // Work(function Xyz(Employee, Office, Job, Building) {
+  //   this.
+  // })
+  //
+  // Work(function (_Employee, Office, Job, Building) {
+  //   this.
+  // })
+
+  _Context.addMethod(function _hasOverwritingParam(marked) {
+    const mutability = marked[MUTABLE]
+    return mutability ||
+      this[IS_IMMUTABLE] && (mutability !== undefined) || false
   })
 
+  _Context.addMethod(function _exec(execFunc, forceAsCopy_) {
+    const sourceContext = this[$RIND]
+    const sourceEntries = this._knownEntries
+
+    const execName      = execFunc.name
+    const paramNames    = ExtractParamNames(execFunc)
+    const visited       = new WeakMap()
+    const marked        = SpawnFrom(null)
+
+    marked[COUNT]       = 0
+    const paramSpecs    = ClassifyParams(paramNames, marked, sourceEntries)
+
+    const useNewContext =
+      !!(forceAsCopy_ || execName || this._hasOverwritingParam(marked))
+    const Context       = this.context.entryAt("Context", true)
+    const execContext   = useNewContext ?
+      Context.new(execName, sourceContext) : sourceContext
+
+    if (useNewContext && marked[COUNT]) {
+      MarkDependentTypes    (execContext, marked)
+      InPutCopyForEachMarked(execContext, sourceEntries, marked, visited)
+    }
+
+    const args = ComposeArgs(execContext, paramSpecs, marked, visited)
+    execFunc.apply(execContext, args)
+    return execContext
+  }, TRUSTED_VALUE_METHOD)
 
 
 
-  _Context.addMethod(function sub(execContext) {
-    const supercontext   = this[$RIND]
-    const newContextName = execContext.name || null
-    const newContext     = this.Context.new(newContextName, supercontext)
-    const paramNames     = ExtractParamNames(execContext)
-    const superEntries   = this._knownEntries
-    const markedTypes    = SpawnFrom(null)
-    const visited        = new WeakMap()
-
-    const paramSpecs = ClassifyParams(paramNames, superEntries, markedTypes)
-
-    this._markDependentTypes(markedTypes)
-    newContext._putCopyForEachMarked(markedTypes, superEntries, visited)
-
-    const args = newContext._composedArguments(
-      paramSpecs, markedTypes, visited)
-    execContext.apply(newContext, args)
-    return newContext
-  })
-
-
-  const CONTEXT_PARAM_MATCHER    = /^((\$)|(_))?([\w$]+)(_)?$/
+  const CONTEXT_PARAM_MATCHER    = /^((\$)|(_))?([\w$]*[a-z$])(_)?$/i
   const TYPE_NAME_MATCHER = /^[A-Z][a-z][\w$]*$/
 
 
-  function ClassifyParams(paramNames, knownEntries, markedTypes) {
+  function ClassifyParams(paramNames, marked, knownEntries) {
     return paramNames.map(paramName =>
-      ClassifyParam(paramName, knownEntries, markedTypes))
+      ClassifyParam(paramName, marked, knownEntries))
   }
 
-  function ClassifyParam(paramName, knownEntries, markedTypes) {
+  function ClassifyParam(paramName, marked, knownEntries) {
     var value, _$value, paramSpec, name, isType
     value     = knownEntries[paramName]
     paramSpec = { paramName : paramName }
@@ -155,11 +225,19 @@ ObjectSauce(function (
 
         name    = match[4]
         value   = knownEntries[name]
-        _$value = InterMap.get(_$value)
+        _$value = InterMap.get(value)
         isType  = !!(_$value && _$value[$IS_TYPE])
 
         if (asPermeable && (asInherited || asMutable)) { return null }
-        if (isType && asMutable) { markedTypes[name] = MUTABLE }
+
+        if (asMutable) {
+          marked[MUTABLE] = (value !== undefined)
+          if (isType) {
+            marked[name] = MUTABLE
+            marked[COUNT]++
+          }
+        }
+
 
         paramSpec.asInherited = asInherited
         paramSpec.asMutable   = asMutable
@@ -168,70 +246,70 @@ ObjectSauce(function (
       }
     }
 
-    paramSpec.name   = name
-    paramSpec.$value = value
+    paramSpec.selector       = name
+    paramSpec.inheritedValue = value
 
     return paramSpec
   }
 
-  _Context.addMethod(function _markDependentTypes(markedTypes) {
-    const knowns = this._knownTypes
-    MarkDescendants(knowns, markedTypes)
-    if (markedTypes["Type"]) { MarkAllRemainingType(knowns, markedTypes) }
-  })
-
-  function MarkDescendants(knownTypes, markedTypes) {
-    knownTypes.forEach(type => MarkIfDescendantOfAny(type, markedTypes))
+  function MarkDependentTypes(execContext, marked) {
+    const knownTypes = execContext.knownTypes
+    if (marked["Type"]) { MarkAllUnmarkedTypes(knownTypes, marked) }
+    else { MarkDescendants(knownTypes, marked) }
   }
 
-  function MarkIfDescendantOfAny(type, markedTypes) {
+  function MarkAllUnmarkedTypes(knownTypes, marked) {
+    knownTypes.forEach(type => {
+      const name = type.name
+      if (marked[name] === undefined) { marked[name] = false }
+    })
+  }
+
+  function MarkDescendants(knownTypes, marked) {
+    knownTypes.forEach(type => MarkIfDescendantOfAny(type, marked))
+  }
+
+  function MarkIfDescendantOfAny(type, marked) {
     var next, ancestorName
     const ancestry = type.ancestry
     next = ancestry.length - 1
     while (next--) {
       ancestorName = ancestry[next].name
-      if (markedTypes[ancestorName] !== undefined) {
-        markedTypes[type.name] = INHERITED
+      if (marked[ancestorName] !== undefined) {
+        marked[type.name] = INHERITED
         return
       }
     }
   }
 
-  function MarkAllRemainingType(knownTypes, markedTypes) {
-    knownTypes.forEach(type => {
-      const name = type.name
-      if (markedTypes[name] === undefined) { markedTypes[name] = false }
-    })
-  }
 
-  _Context.addMethod(function _putCopyForEachMarked(markedTypes, sourceTypes, visited) {
-    var typeType, newType, name, sourceType, supertypesPlaceholder
 
-    const newContext = this[$RIND]
-    const newTypes   = []
+  function InPutCopyForEachMarked(execContext, sourceTypes, marked, visited) {
+    var newTypes, Type, newType, name, sourceType, supertypesPlaceholder
 
-    typeType = sourceTypes.Type || Type
+    newTypes = []
+    Type     = sourceTypes.Type || RootContext.Type
 
-    if (markedTypes["Type"]) {
-      newType = typeType.copy(visited)
-      visited.set(typeType, newType)
-      newContext.atPut("Type", newType)
+    if (marked["Type"]) {
+      newType = Type.copy(visited)
+      visited.set(Type, newType)
+      execContext.atPut("Type", newType)
       newTypes.push(newType)
-      typeType = newType
-      delete markedTypes["Type"]
+      Type = newType
+      delete marked["Type"]
     }
 
-    for (name in markedTypes) {
+    for (name in marked) {
       sourceType = sourceTypes[name]
       supertypesPlaceholder = IsSubtypeOfThing(sourceType) ?
-        EMPTY_THING_ANCESTRY : EMPTY_ARRAY
-      newType = typeType.new(sourceType.name, supertypesPlaceholder)
+        EmptyThingAncestry : TheEmptyArray
+      newType = Type.new(sourceType.name, supertypesPlaceholder)
       visited.set(sourceType, newType)
-      newContext.atPut(name, newType)
+      execContext.atPut(name, newType)
       newTypes.push(newType)
     }
 
-    if ((sourceType = markedTypes["Definition"])) {
+    if ((sourceType = marked["Definition"])) {
       const newType   = visited.get(sourceType)
       const _$newType = InterMap.get(newType)
       _$newType._blanker.$root$inner._init = Definition_init
@@ -243,50 +321,56 @@ ObjectSauce(function (
       const _newType   = InterMap.get(newType)[$PULP]
       const name       = _newType.name
       const sourceType = sourceTypes[name]
-      const asMutable  = (markedTypes[name] === MUTABLE)
-      _newType._reconcileFrom(sourceType, asMutable, visited, this[$RIND])
+      const asMutable  = (marked[name] === MUTABLE)
+      _newType._reconcileFrom(sourceType, asMutable, visited, execContext)
     })
-  })
+  }
 
-  _Context.addMethod(function _composeArgs(paramSpecs, markedTypes, visited) {
+  function ComposeArgs(execContext, paramSpecs, marked, visited) {
+    const _$execContext = InterMap.get(execContext)
     return paramSpecs.map(paramSpec =>
-      this._composeArg(paramSpec, this[paramSpec.name], markedTypes, visited))
-  })
+      ComposeArg(_$execContext, paramSpec, marked, visited))
+  }
 
 
-  _Context.addMethod(function _composeArg(paramSpec, value, markedTypes, visited) {
-    var arg, { name, $value, asInherited,
-               asMutable, asPermeable, isType } = paramSpec
+  function ComposeArg(_$execContext, paramSpec, marked, visited) {
+    var Type, arg
+    const { selector : name, inheritedValue, asInherited,
+            asMutable, asPermeable, isType } = paramSpec
+    const entries     = _$execContext._knownEntries
+    const value       = entries[name]
+    const execContext = _$execContext[$RIND]
 
-    if (asInherited)    { return $value }
+    if (asInherited)    { return inheritedValue }
     if (value === null) { return  null  }
     if (value === undefined) {
       if (!(asMutable && name.match(TYPE_NAME_MATCHER))) { return value }
-      arg = this.Type.new(name, this.$)
+      Type = entries.Type || RootContext.Type
+      arg  = Type.new(name)
     }
     else {
       if (asPermeable) {
-        arg = Copy(value, false, visited, this.$)
+        arg = CopyValue(value, 0, visited, execContext)
         return (arg === value) ? arg : BePermeable(arg, value[IS_IMMUTABLE])
       }
       if ( isType  ) { return value  }
       if (asMutable) {
-        arg = Copy(value, false, visited, this.$)
+        arg = CopyValue(value, 0, visited, execContext)
       }
       else {
-        if (!markedTypes[value.typeName]) { return value }
-        arg = Copy(value, false, visited, this.$)
-        if (value[IS_IMMUTABLE]) { BeImmutable(value) }
+        if (!marked[value.typeName]) { return value }
+        arg = CopyValue(value, 0, visited, execContext)
+        if (arg !== value && value[IS_IMMUTABLE]) { BeImmutableValue(arg) }
       }
     }
 
-    this.atPut(name, arg)
+    execContext.atPut(name, arg)
     return arg
-  })
+  }
 
 
 
-function BePermeable(target, beImmutable) {
+  function BePermeable(target, beImmutable) {
     const _$target = InterMap.get(target)
     if (!_$target) { return target }
     if (_$target[$LOCKED]) {
@@ -295,40 +379,11 @@ function BePermeable(target, beImmutable) {
 
     const _target = _$target[$PULP]
     const $target = _$target[$OUTER]
-    DefineProperty($target, "this", InvisibleConfig)
-    $target.this = _target
-    if (_$target[$IS_TYPE]) { AddPermeableNewDefinitionToType(_$target) }
+    SetInvisibly($target, "this", _target)
+    if (_$target[$IS_TYPE]) { AddPermeableNewDefinitionTo(_$target) }
     if (beImmutable) { _target._setImmutable() }
     return target
   }
-
-  function AddPermeableNewDefinitionToType(_$type) {
-    const newHandler    = _$type.new.handler
-    const context       = _$type.context
-    const newDefinition = (newHandler === _BasicNew) ?
-      BasicPermeableNewDef : MakePermeableNewDef(newHandler, context)
-    return _$type[$PULP].addOwnDefinition(newDefinition)
-  }
-
-  function MakePermeableNewDef(NewHandler, context) {
-    const handler = function permeableNew(...args) {
-      const   instance = NewHandler.apply(this, args)
-      const _$instance = InterMap.get(instance)
-      const  $instance = _$instance[$OUTER]
-      const  _instance = _$instance[$PULP]
-
-      DefineProperty($instance, "this", InvisibleConfig)
-      $instance.this = _instance
-      return instance
-    }
-    return context.Definition("new", handler, TRUSTED_VALUE_METHOD)
-  }
-
-  const BasicPermeableNewDef = MakePermeableNewDef(_BasicNew, DefaultContext)
-
-
-
-  _OSauce.AddPermeableNewDefinitionToType = AddPermeableNewDefinitionToType
 
 })
 

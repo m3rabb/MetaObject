@@ -1,14 +1,14 @@
 ObjectSauce(function (
-  $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER, $OUTER,
-  $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
+  $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER,
+  $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   DISGUISE_PULP, EMPTY_THING_ANCESTRY, INVISIBLE, IS_IMMUTABLE,
-  ASSIGNER_FUNC, BLANKER_FUNC, _DURABLES,
+  ASSIGNER_FUNC, BLANKER_FUNC, TRUSTED_VALUE_METHOD,
   AsCapitalized, AsDecapitalized, AsName, BasicSetObjectImmutable, Frost,
   Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId, OwnSymbols,
-  RootOf, SetDurables, SpawnFrom,
+  RootOf, SetInvisibly, SpawnFrom,
   DisguisedInnerBarrier, DisguisedOuterBarrier, InnerBarrier,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
-  ImproperDisguiseNameError,
+  ImproperDisguiseNameError, SignalError,
   InterMap, PropertyToSymbolMap,
   OwnNames, OwnVisibleNames,
   DefineProperty, InSetProperty,
@@ -150,7 +150,7 @@ ObjectSauce(function (
 
       $inner = this
       $outer = new CompanionOuterMaker()
-      name = arg.name || arg
+      name = arg && arg.name || arg
 
       if (!name) {
         uid  = NewUniqueId()
@@ -175,10 +175,7 @@ ObjectSauce(function (
       $inner[$RIND]     = $rind
       $outer[$RIND]     = $rind
 
-      if (uid) {
-        DefineProperty($inner, "uid", InvisibleConfig)
-        $outer.uid = $inner.uid = uid
-      }
+      if (uid) { SetInvisibly($inner, "uid", uid, $OUTER) }
 
       InterMap.set($pulp, DISGUISE_PULP)
       InterMap.set($rind, $inner)
@@ -187,6 +184,34 @@ ObjectSauce(function (
   }
 
 
+
+  function Context_apply(disguiseFunc, receiver, args) {
+    return this._target.exec(...args).beImmutable
+  }
+
+  function Type_apply(disguiseFunc, receiver, args) {
+    // return this._target.newAsFact(...args)
+
+    // This is the same code as in newAsFact(...args)
+    const   instance = this._target.new(...args)
+    const _$instance = InterMap.get(instance)
+    const _instance  = _$instance[$PULP]
+
+    if (_instance.id == null) { _$instance._setImmutable.call(_instance) }
+    return instance
+  }
+
+
+  // function Type_apply(disguiseFunc, receiver, args) {
+  //   // return this._target.newImmutable(...args)
+  //
+  //   // This is the same code as in newAsFact(...args)
+  //   const   instance = this._target.new(...args)
+  //   const _$instance = InterMap.get(instance)
+  //   const _instance  =
+  //   _$instance._setImmutable.call(_$instance[$PULP])
+  //   return instance
+  // }
 
 
 
@@ -236,6 +261,7 @@ ObjectSauce(function (
     next  = symbols.length
     while (next--) {
       symbol = symbols[next]
+      // Consider using a stash of forbidden selectors, instead!!!
       if (symbol.toString()[7] !== "$") { selectors[index++] = symbol }
     }
     return selectors
@@ -285,23 +311,6 @@ ObjectSauce(function (
   }
 
 
-
-  function Context_apply(disguiseFunc, receiver, args) {
-    return this._target.sub(...args).beImmutable
-  }
-
-  function Type_apply(disguiseFunc, receiver, args) {
-    // return this._target.newAsFact(...args)
-
-    // This is the same code as in newAsFact(...args)
-    const   instance = this._target.new(...args)
-    const _$instance = InterMap.get(instance)
-    const _instance  = _$instance[$PULP]
-    if (_instance.id == null) { _$instance._setImmutable.call(_instance) }
-    return instance
-  }
-
-
   function OwnSelectorsSorted(target) {
     const selectors = OwnSelectors(target, true) // Do ignore declarations
     selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
@@ -337,31 +346,55 @@ ObjectSauce(function (
 
     const value = _$target[selector]
     return (value == null) ? null :
-      (value[$OUTER_WRAPPER] ? value.method : value)
+      ((value[$OUTER_WRAPPER] && InterMap.get(value)) ? value.method : value)
+  }
+
+
+  function ExtractDefinitionFrom(args, context) {
+    var def, tag, _$def
+    const Def = context.entryAt("Definition", true)
+
+    switch (args.length) {
+      case 1 :
+          def = args[0]
+        _$def = InterMap.get(def)
+        if (_$def && _$def[$IS_DEFINITION]) { return def } else { break }
+
+      case 2 :
+        [tag, def] = args
+        _$def      = InterMap.get(def)
+        if (_$def && _$def[$IS_DEFINITION]) {
+          return (tag === def.tag) ? def : Def(tag, def.handler, def.mode)
+        }
+        // break omitted
+      case 3 : return Def(...args) // selector, value, mode
+    }
+    return SignalError("Improper arguments to make a Definition!!")
   }
 
 
 
-  OSauce.ownSelectors = OwnSelectors
+  OSauce.ownSelectors = MarkFunc(OwnSelectors)
 
-  _OSauce.AsPropertySymbol              = AsPropertySymbol
-  _OSauce.AsMembershipSelector          = AsMembershipSelector
-  _OSauce.AsPropertyFromSetter          = AsPropertyFromSetter
-  _OSauce.AsSetterFromProperty          = AsSetterFromProperty
-  _OSauce.NewAssignmentErrorHandler     = NewAssignmentErrorHandler
-  _OSauce.NewVacuousConstructor         = NewVacuousConstructor
-  _OSauce.MakeDefinitionsInfrastructure = MakeDefinitionsInfrastructure
-  _OSauce.NewBlanker                    = NewBlanker
-  _OSauce.NewInner                      = NewInner
-  _OSauce.BuildAncestryOf               = BuildAncestryOf
-  _OSauce.DeleteSelectorsIn             = DeleteSelectorsIn
-  _OSauce.CompletelyDeleteProperty      = CompletelyDeleteProperty
-  _OSauce.SetAsymmetricProperty         = SetAsymmetricProperty
-  _OSauce.Context_apply                 = Context_apply
-  _OSauce.Type_apply                    = Type_apply
-  _OSauce.OwnSelectorsSorted            = OwnSelectorsSorted
-  _OSauce.KnownSelectorsSorted          = KnownSelectorsSorted
-  _OSauce.PropertyAt                    = PropertyAt
+  _OSauce.AsPropertySymbol                = AsPropertySymbol
+  _OSauce.AsMembershipSelector            = AsMembershipSelector
+  _OSauce.AsPropertyFromSetter            = AsPropertyFromSetter
+  _OSauce.AsSetterFromProperty            = AsSetterFromProperty
+  _OSauce.NewAssignmentErrorHandler       = NewAssignmentErrorHandler
+  _OSauce.NewVacuousConstructor           = NewVacuousConstructor
+  _OSauce.MakeDefinitionsInfrastructure   = MakeDefinitionsInfrastructure
+  _OSauce.NewBlanker                      = NewBlanker
+  _OSauce.NewInner                        = NewInner
+  _OSauce.Context_apply                   = Context_apply
+  _OSauce.Type_apply                      = Type_apply
+  _OSauce.BuildAncestryOf                 = BuildAncestryOf
+  _OSauce.DeleteSelectorsIn               = DeleteSelectorsIn
+  _OSauce.CompletelyDeleteProperty        = CompletelyDeleteProperty
+  _OSauce.SetAsymmetricProperty           = SetAsymmetricProperty
+  _OSauce.OwnSelectorsSorted              = OwnSelectorsSorted
+  _OSauce.KnownSelectorsSorted            = KnownSelectorsSorted
+  _OSauce.PropertyAt                      = PropertyAt
+  _OSauce.ExtractDefinitionFrom           = ExtractDefinitionFrom
 
 })
 

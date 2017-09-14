@@ -1,39 +1,56 @@
 (function (globals) {
   "use strict"
 
-  const Object_prototype    = Object.prototype
-  const Frost               = Object.freeze
-  const SpawnFrom           = Object.create
+  const  Object_prototype    = Object.prototype
+  const  Frost               = Object.freeze
+  const  SpawnFrom           = Object.create
+  const  DefineProperty      = Object.defineProperty
+  const _HasOwn              = Object_prototype.hasOwnProperty
 
   const OSauce  = SpawnFrom(null)
   const _OSauce = SpawnFrom(OSauce)
 
-  OSauce.OSauce   = OSauce
-  _OSauce._OSauce = _OSauce
+  const _DURABLES    = Symbol("_DURABLES")
+  const IS_IMMUTABLE = Symbol("IS_IMMUTABLE")
+  const SAFE_FUNC    = Frost({ id : "SAFE_FUNC"   , [IS_IMMUTABLE] : true })
+  const InterMap     = new WeakMap()
+
+  OSauce.IS_IMMUTABLE = IS_IMMUTABLE
+  OSauce.DURABLES     = _DURABLES
+  _OSauce._DURABLES   = _DURABLES
 
 
-  OSauce.spawnFrom           = SpawnFrom
-  OSauce.frost               = Frost
-  OSauce.isFrosted           = Object.isFrozen
-  OSauce.isArray             = Array.isArray
-  OSauce.rootOf              = Object.getPrototypeOf
-  OSauce.roundUp             = Math.ceil
-  OSauce.roundDown           = Math.floor
-  OSauce.randomUnitValue     = Math.random
-  OSauce.defineProperty      = Object.defineProperty
-  OSauce.ownKeys             = Reflect.ownKeys
-  OSauce.ownSymbols          = Object.getOwnPropertySymbols
-  OSauce.ownNames            = Object.getOwnPropertyNames
-  OSauce.ownVisibleNames     = Object.keys
-  OSauce.propertyDescriptor  = Object.getOwnPropertyDescriptor
-  OSauce.propertyDescriptors = Object.getOwnPropertyDescriptors
-  // OSauce.apply               = Reflect.apply
+  function MarkFunc(func, marker = SAFE_FUNC) {
+    if (InterMap.get(func)) { return func }
+    InterMap.set(func, marker)
+    return func
+  }
 
 
-  const   _HasOwn = Object_prototype.hasOwnProperty  // ._hasOwn
-  _OSauce._HasOwn = _HasOwn
+  _OSauce.InterMap            = InterMap
+  _OSauce.PropertyToSymbolMap = SpawnFrom(null)
+  // OSauce.SymbolPropertyMap  = SpawnFrom(null)
 
-  OSauce.HasOwn = function (target, selector) {
+
+  OSauce.spawnFrom           = MarkFunc(SpawnFrom)
+  OSauce.frost               = MarkFunc(Frost)
+  OSauce.isFrosted           = MarkFunc(Object.isFrozen)
+  OSauce.isArray             = MarkFunc(Array.isArray)
+  OSauce.rootOf              = MarkFunc(Object.getPrototypeOf)
+  OSauce.roundUp             = MarkFunc(Math.ceil)
+  OSauce.roundDown           = MarkFunc(Math.floor)
+  OSauce.randomUnitValue     = MarkFunc(Math.random)
+  OSauce.ownKeys             = MarkFunc(Reflect.ownKeys)
+  OSauce.ownSymbols          = MarkFunc(Object.getOwnPropertySymbols)
+  OSauce.ownNames            = MarkFunc(Object.getOwnPropertyNames)
+  OSauce.ownVisibleNames     = MarkFunc(Object.keys)
+
+  _OSauce._HasOwn            = _HasOwn  // ._hasOwn
+  _OSauce.defineProperty     = DefineProperty
+  _OSauce.INSTANCEOF         = Symbol.hasInstance
+
+
+  OSauce.hasOwn = function (target, selector) {
     return (target == null) ? false : _HasOwn.call(target, selector)
   }
 
@@ -44,42 +61,25 @@
 
   // symbols for publicly knowable properties
 
-  const IS_IMMUTABLE            = Symbol("IS_IMMUTABLE")
 
-  OSauce.IS_IMMUTABLE           = IS_IMMUTABLE
-  OSauce._DURABLES              = Symbol("_DURABLES")
-  OSauce.INSTANCEOF             = Symbol.hasInstance
+  const  InvisibleConfig = {
+    configurable : true,
+    writable     : true,
+    enumerable   : false,
+  }
+  OSauce.invisibleConfig = InvisibleConfig
 
-  OSauce.VisibleConfig = {
+  OSauce.visibleConfig = {
     configurable : true,
     writable     : true,
     enumerable   : true,
   }
 
-  OSauce.InvisibleConfig = {
-    configurable : true,
-    writable     : true,
-    enumerable   : false,
-  }
 
-
-  const InterMap              = new WeakMap()
-  _OSauce.InterMap            = InterMap
-  // OSauce.SymbolPropertyMap  = SpawnFrom(null)
-  _OSauce.PropertyToSymbolMap = SpawnFrom(null)
   // Safe functions are stored in here so that the diguised Types function are
   // automatically recognized as safe functions too
 
-
-  function MarkFunc(func, marker) {
-    if (InterMap.get(func)) { return func }
-    InterMap.set(func, marker)
-    return func
-  }
-
   // Document these!!!
-  const SAFE_FUNC       = Frost({ id : "SAFE_FUNC"   , [IS_IMMUTABLE] : true })
-
   _OSauce.SAFE_FUNC     = SAFE_FUNC
   _OSauce.BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC", [IS_IMMUTABLE] : true })
   _OSauce.TAMED_FUNC    = Frost({ id : "TAMED_FUNC"  , [IS_IMMUTABLE] : true })
@@ -93,10 +93,11 @@
   _OSauce.MarkFunc      = MarkFunc
 
   // Simpleton function
-  OSauce.ALWAYS_FALSE     = MarkFunc(          () => false       , SAFE_FUNC)
-  OSauce.ALWAYS_NULL      = MarkFunc(          () => null        , SAFE_FUNC)
-  OSauce.ALWAYS_UNDEFINED = MarkFunc(          () => undefined   , SAFE_FUNC)
-  OSauce.ALWAYS_SELF      = MarkFunc( function () { return this }, SAFE_FUNC)
+  OSauce.alwaysTrue     = MarkFunc(          () => true        )
+  OSauce.alwaysFalse    = MarkFunc(          () => false       )
+  OSauce.alwaysNull     = MarkFunc(          () => null        )
+  OSauce.alwayUndefined = MarkFunc(          () => undefined   )
+  OSauce.alwaysSelf     = MarkFunc( function () { return this })
 
 
 
@@ -105,7 +106,8 @@
   // to discourage tampering!!!
   _OSauce.$INNER                 = Symbol("$INNER")
   _OSauce.$PULP                  = Symbol("$PULP")
-  _OSauce.$OUTER                 = Symbol("$OUTER")
+  const   $OUTER                 = Symbol("$OUTER")
+  _OSauce.$OUTER                 = $OUTER
   _OSauce.$RIND                  = Symbol("$RIND")  // Consider simply using $ !!!
 
   _OSauce.$DISGUISE              = Symbol("$DISGUISE")
@@ -134,6 +136,7 @@
 
   // Sentinels
   _OSauce.PROOF                  = Symbol("PROOF")
+  _OSauce.COUNT                  = Symbol("COUNT")
 
   _OSauce.ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
   // _OSauce.CONSTRUCTOR         = Symbol("CONSTRUCTOR")
@@ -179,18 +182,31 @@
     return Frost(target)
   }
 
+  function SetInvisibly(target, selector, value, setOuter_) {
+    DefineProperty(target, selector, InvisibleConfig)
+    if (setOuter_ === $OUTER) { target[$OUTER][selector] = value }
+    return target[selector] = value
+  }
+
+
 
 
   _OSauce.ExtractParamListing     = ExtractParamListing
   _OSauce.ExtractParamNames       = ExtractParamNames
   _OSauce.BasicSetObjectImmutable = BasicSetObjectImmutable
+  _OSauce.SetInvisibly            = SetInvisibly
 
-  OSauce.asCapitalized            = AsCapitalized
-  OSauce.asDecapitalized          = AsDecapitalized
+  OSauce.asCapitalized            = MarkFunc(AsCapitalized)
+  OSauce.asDecapitalized          = MarkFunc(AsDecapitalized)
 
-  OSauce.EMPTY_OBJECT             = BasicSetObjectImmutable(SpawnFrom(null))
-  OSauce.EMPTY_ARRAY              = BasicSetObjectImmutable([])
-  OSauce.EMPTY_THING_ANCESTRY     = BasicSetObjectImmutable([])
+  OSauce.theEmptyObject           = BasicSetObjectImmutable(SpawnFrom(null))
+  OSauce.theEmptyArray            = BasicSetObjectImmutable([])
+  _OSauce.EMPTY_THING_ANCESTRY    = BasicSetObjectImmutable([])
+
+
+  _OSauce._OSauce = _OSauce
+  _OSauce.OSauce  =  OSauce
+
 
   function MakeSauce(TargetContext) {
     return function (execContext) {

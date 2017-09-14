@@ -1,4 +1,4 @@
-ObjectSauce(function (Type, $RIND) {
+ObjectSauce.exec(function (Type) {
   "use strict"
 
   describe("Impermeable outer", function() {
@@ -133,12 +133,12 @@ ObjectSauce(function (Type, $RIND) {
 
       describe("a symbol property", function () {
         describe("When present", function () {
-          describe("When the receive is immutable", function () {
-            it("Throws a TypeError", function () {
-              expect( this.iCat.isImmutable ).toBe ( true )
-              expect(() => $RIND in this.iCat ).toThrowError(TypeError)
-            })
-          })
+          // describe("When the receive is immutable", function () {
+          //   it("Throws a TypeError", function () {
+          //     expect( this.iCat.isImmutable ).toBe ( true )
+          //     expect(() => $RIND in this.iCat ).toThrowError(TypeError)
+          //   })
+          // })
 
           describe("When the receive is mutable", function () {
             it("Answers false", function () {

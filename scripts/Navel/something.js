@@ -1,8 +1,9 @@
 ObjectSauce(function (
   $INNER, $RIND, IDEMPOT_VALUE_METHOD, IS_IMMUTABLE, TRUSTED_VALUE_METHOD,
-  AsName, DefineProperty, InvisibleConfig, _$Something, _Super
+  AsName, SetInvisibly, SignalError, _$Something, _Super
 ) {
   "use strict"
+
 
   _$Something.addRetroactiveProperty(function $() {
     return this[$RIND]
@@ -12,8 +13,7 @@ ObjectSauce(function (
 
   _$Something.addMethod(function _super() { // RetroactiveProperty
     const $inner = this[$INNER]
-    DefineProperty($inner, "_super", InvisibleConfig)
-    return ($inner._super = new Proxy($inner, _Super))
+    return SetInvisibly($inner, "_super", new Proxy($inner, _Super))
   }, IDEMPOT_VALUE_METHOD)
 
 
@@ -33,17 +33,29 @@ ObjectSauce(function (
   // }, IDEMPOT_VALUE_METHOD)
 
 
+
   _$Something.addSharedProperty("isSauced", true)
+
 
 
   _$Something.addMethod(function isImmutable() {
     return this[IS_IMMUTABLE] || false
   }, IDEMPOT_VALUE_METHOD)
 
+
+  _$Something.addMethod(function isPermeable() {
+    return (this[$INNER].this) ? true : false
+  }, IDEMPOT_VALUE_METHOD)
+
+
+
+  _$Something.addMethod(function _unknownProperty(selector) {
+    return SignalError(this, `Receiver ${this.id} doesn't have a property: ${AsName(selector)}!!`)
+  })
+
+
 })
 
-
-// _$Something._setImmutable()
 
 // $Base
 //

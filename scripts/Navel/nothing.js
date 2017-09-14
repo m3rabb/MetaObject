@@ -1,13 +1,13 @@
 ObjectSauce(function (
-  $PULP, $RIND, _Nothing,
-  AddIntrinsicDeclaration, InterMap, Type, _BasicSetImmutable, OSauce
+  $PULP, $RIND, _Nothing, RootContext,
+  AddIntrinsicDeclaration, InterMap, Type, _BasicSetImmutable
 ) {
   "use strict"
 
-  const Nothing   = _Nothing[$RIND]
-  const _$Nothing = InterMap.get(Nothing)
+  const _$Nothing = InterMap.get(_Nothing[$RIND])
   const _$Void    = new _$Nothing._blanker()
   const _Void     = _$Void[$PULP]
+  const  Void     = _$Void[$RIND]
 
   _Void.id     = "Void,0.Nothing"
   _Void.isVoid = true
@@ -15,8 +15,7 @@ ObjectSauce(function (
   AddIntrinsicDeclaration("isVoid")
   _BasicSetImmutable.call(_$Void)
 
-  OSauce.Nothing = Nothing
-  OSauce.Void    = _$Void[$RIND]
+  RootContext.atPut("void", Void)
 
 })
 
