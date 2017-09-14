@@ -46,7 +46,7 @@ ObjectSauce(function (
 
   const PARAM_FAMILY_MATCHER = /^(\w+(_[a-zA-Z]+))|([a-zA-Z]*[a-z]([A-Z][a-z]+))$/
 
-  function _SortParams(params) {
+  function SortParams(params) {
     var families   = SpawnFrom(null)
     var lines      = []
     var baseFamily = []
@@ -74,7 +74,7 @@ ObjectSauce(function (
     return lines
   }
 
-  ObjectSauce.sortParams = function (paramsListing) {
+  const SortParameters = function sortParameters(paramsListing) {
     var params    = paramsListing.split(/\s*,\s*/)
     var constants = []
     var standards = []
@@ -89,8 +89,8 @@ ObjectSauce(function (
     params.forEach(param => {
       ((param === param.toUpperCase()) ? constants : standards).push(param)
     })
-    constants = _SortParams(constants)
-    standards = _SortParams(standards)
+    constants = SortParams(constants)
+    standards = SortParams(standards)
     osauces   = osauces.join(", ")
     return constants.concat(standards, osauces).join(", \n")
   }
@@ -98,7 +98,9 @@ ObjectSauce(function (
   OSauce.asName                   = AsName
   OSauce.isSauced                 = IsSauced
   OSauce.isImmutable              = IsImmutable
-  // OSauce.isRigid                  = IsRigid
   OSauce.isFact                   = IsFact
+  OSauce.sortParameters           = SortParameters
 
+  ObjectSauce.sortParameters      = SortParameters
+  
 })

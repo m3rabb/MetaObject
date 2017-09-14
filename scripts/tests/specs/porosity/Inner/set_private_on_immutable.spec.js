@@ -1,4 +1,4 @@
-ObjectSauce.TestImplementation(function (
+ObjectSauce.ImplementationTesting(function (
   $BARRIER, $INNER, $OUTER, $RIND,
   BasicSetObjectImmutable, OwnKeys, RootOf,
   Thing, Type

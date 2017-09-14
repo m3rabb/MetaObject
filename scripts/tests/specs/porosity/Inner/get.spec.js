@@ -1,4 +1,4 @@
-ObjectSauce.TestImplementation(function (Type_, AsName) {
+ObjectSauce.ImplementationTesting(function (Type_, AsName) {
   "use strict"
 
   describe("Inner get", function() {

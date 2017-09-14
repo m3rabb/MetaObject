@@ -1,4 +1,4 @@
-ObjectSauce(function (
+ObjectSauce.ImplementationTesting(function (
   $BARRIER, $OUTER, $PULP,
   HasOwn, OwnKeys, RootOf, Type
 ) {

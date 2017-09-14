@@ -47,7 +47,7 @@ ObjectSauce(function (
 
   for (var name in OSauce) { _RootContext._atPut(name, OSauce[name]) }
 
-  const  TestContext = _Context.new("TestImplementation", RootContext)
+  const  TestContext = _Context.new("ImplementationTesting", RootContext)
   const _TestContext = InterMap.get(TestContext)[$PULP]
 
   const selectors = OwnKeys(_OSauce)

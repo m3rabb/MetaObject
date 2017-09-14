@@ -1,4 +1,4 @@
-ObjectSauce.TestImplementation(function (Type) {
+ObjectSauce.ImplementationTesting(function (Type) {
   "use strict"
 
   describe("Impermeable outer", function() {
