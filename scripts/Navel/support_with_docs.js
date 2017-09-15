@@ -672,7 +672,7 @@ function BuildAncestryOf(type, supertypes = type.supertypes) {
     }
   }
   dupFreeAncestry.reverse().push(type)
-  return BasicSetObjectImmutable(dupFreeAncestry)
+  return CrudeBeImmutable(dupFreeAncestry)
 }
 
 
@@ -695,7 +695,7 @@ function OwnSelectors(target, ignoreDeclarations_) {
 function OwnSelectorsSorted(target) {
   const selectors = OwnSelectors(target, true) // Do ignore declarations
   selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
-  return BasicSetObjectImmutable(selectors)
+  return CrudeBeImmutable(selectors)
 }
 
 
@@ -718,7 +718,7 @@ function AllSelectorsSorted(target, selectorPicker) {
     target = RootOf(target)
   }
   selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
-  return BasicSetObjectImmutable(selectors)
+  return CrudeBeImmutable(selectors)
 }
 
 
@@ -924,7 +924,7 @@ function BasicSetImmutable(_target) {
 //  */
 //
 // This method should only be called on a mutable object!!!
-function BasicSetObjectImmutable(target) {
+function CrudeBeImmutable(target) {
   target[IS_IMMUTABLE] = true
   return Frost(target)
 }

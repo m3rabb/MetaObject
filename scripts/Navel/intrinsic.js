@@ -18,7 +18,7 @@ ObjectSauce(function (
   $OWN_DEFINITIONS, $PULP, $RIND,
   DECLARATION, IS_IMMUTABLE, LAZY_INSTALLER, _DURABLES,
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
-  $Intrinsic$root$inner, AsName, BasicSetObjectImmutable, ExtractDefinitionFrom,
+  $Intrinsic$root$inner, AsName, CrudeBeImmutable, ExtractDefinitionFrom,
   FindAndSetDurables, MakeDefinitionsInfrastructure, NewUniqueId, OwnSelectors,
   PropertyAt, SetDefinition, SetInvisibly, SignalError, SpawnFrom, ValueAsFact,
   _HasOwn, _$Copy, _$Intrinsic,
@@ -194,7 +194,7 @@ ObjectSauce(function (
 
   _$Intrinsic.addMethod(function ownSelectors() {
     // Includes placed retroactive|lazy properties, but not symbols
-    return BasicSetObjectImmutable(OwnNames(this[$OUTER]).sort())
+    return CrudeBeImmutable(OwnNames(this[$OUTER]).sort())
   }, IDEMPOT_VALUE_METHOD)
 
 
@@ -351,7 +351,7 @@ ObjectSauce(function (
   _$Intrinsic.addMethod(function _addOwnDurable(selector) {
     var durables = this[_DURABLES] || []
     if (!durables.includes(selector)) {
-      this[$INNER][_DURABLES] = BasicSetObjectImmutable([...durables, selector])
+      this[$INNER][_DURABLES] = CrudeBeImmutable([...durables, selector])
       this.addOwnDeclaration(selector)
     }
   }, TRUSTED_VALUE_METHOD)

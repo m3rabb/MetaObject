@@ -176,9 +176,9 @@
   }
 
   // This method should only be called on a mutable object!!!
-  function BasicSetObjectImmutable(target) {
-    target[IS_IMMUTABLE] = true
-    return Frost(target)
+  function CrudeBeImmutable(object) {
+    object[IS_IMMUTABLE] = true
+    return Frost(object)
   }
 
   function SetInvisibly(target, selector, value, setOuterToo_) {
@@ -191,18 +191,18 @@
 
   _OSauce.ExtractParamListing     = ExtractParamListing
   _OSauce.ExtractParamNames       = ExtractParamNames
-  _OSauce.BasicSetObjectImmutable = BasicSetObjectImmutable
   _OSauce.SetInvisibly            = SetInvisibly
 
   OSauce.asCapitalized            = MarkFunc(AsCapitalized)
   OSauce.asDecapitalized          = MarkFunc(AsDecapitalized)
+  OSauce.crudeBeImmutable         = MarkFunc(CrudeBeImmutable)
 
-  OSauce.theEmptyObject           = BasicSetObjectImmutable(SpawnFrom(null))
-  OSauce.theEmptyArray            = BasicSetObjectImmutable([])
-  _OSauce.EMPTY_THING_ANCESTRY    = BasicSetObjectImmutable([])
+  OSauce.theEmptyObject           = CrudeBeImmutable(SpawnFrom(null))
+  OSauce.theEmptyArray            = CrudeBeImmutable([])
+  _OSauce.EMPTY_THING_ANCESTRY    = CrudeBeImmutable([])
 
-  OSauce.invisibleConfig           = BasicSetObjectImmutable(InvisibleConfig)
-  OSauce.visibleConfig            = BasicSetObjectImmutable(VisibleConfig)
+  OSauce.invisibleConfig          = CrudeBeImmutable(InvisibleConfig)
+  OSauce.visibleConfig            = CrudeBeImmutable(VisibleConfig)
 
   _OSauce._OSauce = _OSauce
   _OSauce.OSauce  =  OSauce

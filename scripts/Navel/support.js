@@ -3,7 +3,7 @@ ObjectSauce(function (
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   DISGUISE_PULP, INVISIBLE, IS_IMMUTABLE,
   ASSIGNER_FUNC, BLANKER_FUNC, TRUSTED_VALUE_METHOD,
-  AsCapitalized, AsDecapitalized, AsName, BasicSetObjectImmutable, Frost,
+  AsCapitalized, AsDecapitalized, AsName, CrudeBeImmutable, Frost,
   Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId, OwnSymbols,
   RootOf, SetInvisibly, SpawnFrom,
   DisguisedInnerBarrier, DisguisedOuterBarrier, InnerBarrier,
@@ -278,7 +278,7 @@ ObjectSauce(function (
   function OwnSelectorsSorted(target) {
     const selectors = OwnSelectors(target, true) // Do ignore declarations
     selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
-    return BasicSetObjectImmutable(selectors)
+    return CrudeBeImmutable(selectors)
   }
 
 
@@ -301,7 +301,7 @@ ObjectSauce(function (
       target = RootOf(target)
     }
     selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
-    return BasicSetObjectImmutable(selectors)
+    return CrudeBeImmutable(selectors)
   }
 
   function PropertyAt(_$target, selector) {

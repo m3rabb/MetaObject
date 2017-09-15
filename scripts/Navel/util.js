@@ -12,7 +12,7 @@ ObjectSauce(function (
     return name.slice(7, name.length - 1)
   }
 
-  function IsValueTranya(value) {
+  function ValueIsTranya(value) {
     switch (typeof value) {
       default         : return false
       case "function" : break
@@ -23,7 +23,7 @@ ObjectSauce(function (
     return (InterMap.get(value$)[$IS_INNER] === PROOF)
   }
 
-  function IsValueInner(value) {
+  function ValueIsInner(value) {
     switch (typeof value) {
       default         : return false
       case "function" : break
@@ -32,7 +32,7 @@ ObjectSauce(function (
     return (value[$IS_INNER] === PROOF)
   }
 
-  function IsValueOuter(value) {
+  function ValueIsOuter(value) {
     switch (typeof value) {
       default         : return false
       case "function" : break
@@ -42,7 +42,7 @@ ObjectSauce(function (
     return (_$value[$RIND] === value)
   }
 
-  function IsValueImmutable(value) {
+  function ValueIsImmutable(value) {
     switch (typeof value) {
       case "function" : break
       case "object"   : break
@@ -51,7 +51,7 @@ ObjectSauce(function (
     return value[IS_IMMUTABLE] ? true : false
   }
 
-  function IsValueFact(value) {
+  function ValueIsFact(value) {
     if (typeof value !== "object") { return true }
     if (value === null)            { return true }
     if (value[IS_IMMUTABLE])       { return true }
@@ -112,11 +112,11 @@ ObjectSauce(function (
   }
 
   OSauce.asName           = MarkFunc(AsName)
-  OSauce.isValueTranya    = MarkFunc(IsValueTranya)
-  OSauce.isValueInner     = MarkFunc(IsValueInner)
-  OSauce.isValueOuter     = MarkFunc(IsValueOuter)
-  OSauce.isValueImmutable = MarkFunc(IsValueImmutable)
-  OSauce.valueIsFact      = MarkFunc(IsValueFact)
+  OSauce.valueIsTranya    = MarkFunc(ValueIsTranya)
+  OSauce.valueIsInner     = MarkFunc(ValueIsInner)
+  OSauce.valueIsOuter     = MarkFunc(ValueIsOuter)
+  OSauce.valueIsImmutable = MarkFunc(ValueIsImmutable)
+  OSauce.valueIsFact      = MarkFunc(ValueIsFact)
   OSauce.sortParameters   = MarkFunc(SortParameters)
 
 })

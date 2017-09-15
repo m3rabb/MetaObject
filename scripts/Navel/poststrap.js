@@ -1,6 +1,6 @@
 ObjectSauce(function (
-  $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, VISIBLE,
-  $BaseBlanker, $IntrinsicBlanker, BasicSetObjectImmutable, Frost, InterMap,
+  $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, VISIBLE,
+  $BaseBlanker, $IntrinsicBlanker, CrudeBeImmutable, Frost, InterMap,
   SetAsymmetricProperty,
   DefaultContext, OwnKeys, RootContext, SetInvisibly, SpawnFrom, TheEmptyArray,
   _$DefaultContext, _$Intrinsic, _$Something, _BasicSetImmutable, _RootContext,
@@ -15,15 +15,16 @@ ObjectSauce(function (
   _Context.addDeclaration($OUTER_WRAPPER) // Ensures method wrappers work!!!
 
 
-  const ThingAncestry = BasicSetObjectImmutable([Thing])
+  const ThingAncestry = CrudeBeImmutable([Thing])
   const BasicSet      = $IntrinsicBlanker.$root$inner._basicSet
 
   function BootstrapType(_type, name, isRootType, spawnIntoRoot, isHidden) {
     const supertypes = isRootType ? TheEmptyArray : ThingAncestry
     const ancestry   = _type._buildAncestry(supertypes)
-    _type._setSupertypes(supertypes, ancestry)
-    _type.addSharedProperty("type", _type[$RIND])
+
     _type.setName(name)
+    _type._setSupertypesAndAncestry(supertypes, ancestry, INHERIT)
+    _type.addSharedProperty("type", _type[$RIND])
     BasicSet.call(_type, "context", RootContext)
     if (!isHidden) { _RootContext._atPut(name, _type[$RIND]) }
     if (spawnIntoRoot) { _type.addSharedProperty("context", RootContext) }
@@ -53,7 +54,7 @@ ObjectSauce(function (
   // in the descendent $roots.
   Frost($BaseBlanker.$root$outer)
   Frost($BaseBlanker.$root$inner)
-  BasicSetObjectImmutable($BaseBlanker)
+  CrudeBeImmutable($BaseBlanker)
   // _BasicSetImmutable.call(_$Intrinsic)
   // _BasicSetImmutable.call(_$Something)
 
@@ -68,7 +69,7 @@ ObjectSauce(function (
   const selectors = OwnKeys(_OSauce)
   selectors.forEach(selector => {
     const value = _OSauce[selector]
-    if (!_RootContext.isValueInner(value)) {
+    if (!_RootContext.valueIsInner(value)) {
       _TestContext._atPut(selector, value)
     }
   })

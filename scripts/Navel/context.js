@@ -2,8 +2,8 @@ ObjectSauce(function (
   $INNER, $IS_TYPE, $LOCKED, $OUTER, $PULP, $RIND,
   COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
-  AddPermeableNewDefinitionTo, AsDecapitalized, AsNextValue,
-  BasicSetObjectImmutable, BeImmutableValue, CopyValue, DefaultContext,
+  AddPermeableNewDefinitionTo, AsDecapitalized, ValueAsNext,
+  CrudeBeImmutable, BeImmutableValue, ValueCopy, DefaultContext,
   Definition, Definition_init, EmptyThingAncestry, ExtractParamNames,
   InterMap, IsSauced, IsSubtypeOfThing, OwnKeys, RootContext, SetInvisibly,
   SpawnFrom, TheEmptyArray, Type, ValueAsFact, _BasicNew, _Context
@@ -91,7 +91,7 @@ ObjectSauce(function (
     do {
       contexts.unshift(nextContext)
     } while ((nextContext = nextContext.supercontext))
-    return BasicSetObjectImmutable(contexts)
+    return CrudeBeImmutable(contexts)
   }, TRUSTED_VALUE_METHOD)
 
 
@@ -129,12 +129,12 @@ ObjectSauce(function (
     for (selector in entries) {
       selectors[index++] = selector
     }
-    return BasicSetObjectImmutable(selectors.sort())
+    return CrudeBeImmutable(selectors.sort())
   }, IDEMPOT_VALUE_METHOD)
 
 
   _Context.addMethod(function entrySelectors() {
-    return BasicSetObjectImmutable(OwnKeys(this._knownEntries).sort())
+    return CrudeBeImmutable(OwnKeys(this._knownEntries).sort())
   }, IDEMPOT_VALUE_METHOD)
 
 
@@ -350,16 +350,16 @@ ObjectSauce(function (
     else {
       if (asPermeable) {
         context = (value === inheritedValue) ? null : execContext
-        arg = CopyValue(value, false, visited, context)
+        arg = ValueCopy(value, false, visited, context)
         return (arg === value) ? arg : BePermeable(arg, value[IS_IMMUTABLE])
       }
       if ( isType  ) { return value  }
       if (asMutable) {
-        arg = CopyValue(value, false, visited, execContext)
+        arg = ValueCopy(value, false, visited, execContext)
       }
       else {
         if (!marked[MUTABLE]) { return value }
-        arg = AsNextValue(value, value[IS_IMMUTABLE], visited, execContext)
+        arg = ValueAsNext(value, value[IS_IMMUTABLE], visited, execContext)
       }
     }
 

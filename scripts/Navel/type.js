@@ -8,8 +8,8 @@ ObjectSauce(function (
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, IMMEDIATE_METHOD,
   MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD, TRUSTED_VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
-  AsCapitalized, AsMembershipSelector, AsName, AsNextValue, AsPropertySymbol,
-  BasicSetObjectImmutable,
+  AsCapitalized, AsMembershipSelector, AsName, ValueAsNext, AsPropertySymbol,
+  CrudeAsImmutable, CrudeBeImmutable,
   DefaultContext, DeleteSelectorsIn, ExtractDefinitionFrom,
   ExtractParamListing, Frost, InterMap, IsArray, IsSubtypeOfThing,
   NewAssignmentErrorHandler, NewVacuousConstructor, OwnKeys, OwnSelectors,
@@ -351,7 +351,7 @@ ObjectSauce(function (
     const $root$inner = this._blanker.$root$inner
     const durables    = $root$inner[_DURABLES] || []
     if (!durables.includes(selector)) {
-      $root$inner[_DURABLES] = BasicSetObjectImmutable([...durables, selector])
+      $root$inner[_DURABLES] = CrudeBeImmutable([...durables, selector])
       this.addDeclaration(selector)
     }
   })
@@ -382,8 +382,8 @@ ObjectSauce(function (
 
 
 
-  _Type.addMethod(function _reinheritDefinitions(_) { // eslint-disable-line
-    if (this.name) {
+  _Type.addMethod(function _reinheritDefinitions(inherits) {
+    if (inherits === REINHERIT) {
       // Not a virgin type
       const blanker     = this._blanker
       const $root$inner = blanker.$root$inner
@@ -415,15 +415,15 @@ ObjectSauce(function (
       })
     }
 
-    this._propagateReinheritance
+    this._propagateReinheritance(inherits)
   })
 
 
 
-  _Type.addMethod(function _propagateReinheritance() {
+  _Type.addMethod(function _propagateReinheritance(inherits) {
     this._subordinateTypes.forEach(subtype => {
       var _$subtype = InterMap.get(subtype)
-      _$subtype._reinheritDefinitions.call(_$subtype[$PULP])
+      _$subtype._reinheritDefinitions.call(_$subtype[$PULP], inherits)
     })
   })
 
@@ -443,13 +443,8 @@ ObjectSauce(function (
   })
 
 
-  _Type.addMethod(function ancestry() { return this._ancestry })
 
-  _Type.addMethod(function supertypes() { return this._supertypes })
-
-
-
-  _Type.addMethod("setName", function name(newName) {
+  _Type.addMethod(function setName(newName) {
     const properName = AsCapitalized(newName)
     const priorName = this.name
     if (properName === priorName) { return priorName }
@@ -464,13 +459,13 @@ ObjectSauce(function (
     }
 
     this._setName(properName)
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
   _Type.addMandatorySetter("_setName", function name(properName) {
     this._setDisplayNames(properName)
     return properName
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
   _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
@@ -480,7 +475,7 @@ ObjectSauce(function (
 
     SetAsymmetricProperty(this, "constructor", _name, $name, INVISIBLE)
     this[$DISGUISE].name = outerName
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
 
@@ -500,6 +495,11 @@ ObjectSauce(function (
 
 
 
+  _Type.addMethod(function ancestry() { return this._ancestry })
+
+  _Type.addMethod(function supertypes() { return this._supertypes })
+
+
   _Type.addMethod(function addSupertype(type) {
     this.setSupertypes([...this.supertypes, type])
   }, TRUSTED_VALUE_METHOD)
@@ -510,18 +510,16 @@ ObjectSauce(function (
     if (this._supertypes === supertypes) { return }
     const ancestry = this._buildAncestry(supertypes)
     this._validateNewSupertypes(supertypes, ancestry)
-    this._setSupertypes(supertypes, ancestry)
-  })
+    this._setSupertypesAndAncestry(supertypes, ancestry, REINHERIT)
+  }, TRUSTED_VALUE_METHOD)
 
 
-  _Type.addMandatorySetter("_setSupertypes", function _supertypes(typeList, ancestry_) {
-    const supertypes = typeList[IS_IMMUTABLE] ?
-      typeList : BasicSetObjectImmutable(typeList)
-    this._ancestry = ancestry_ || this._buildAncestry(supertypes)
-    if (ancestry_) { this._reinheritDefinitions() }
+  _Type.addMethod(function _setSupertypesAndAncestry(supertypes, ancestry, inherits_) {
+    this._supertypes = CrudeAsImmutable(supertypes)
+    this._ancestry   = ancestry
+    if (inherits_) { this._reinheritDefinitions(inherits_) }
     this._setAsSubordinateOfSupertypes(supertypes)
-    return supertypes
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
 
@@ -551,7 +549,7 @@ ObjectSauce(function (
     }
 
     return [name, supertypes, context, spec]
-  })
+  }, IDEMPOT_VALUE_METHOD)
 
 
   //  spec
@@ -566,24 +564,25 @@ ObjectSauce(function (
     const ancestry   = this._buildAncestry(supertypes)
     const isRootType = this._validateNewSupertypes(supertypes, ancestry)
 
-    // The ordering of the following is critical to avoid breaking the bootstrapping!!!
     this._initCoreProperties(isRootType)
-    this._setSupertypes(supertypes, ancestry)
-    this.addSharedProperty("type", this[$RIND])
     this.setName(name)
+    this._setSupertypesAndAncestry(supertypes, ancestry, INHERIT)
 
     context && this.setContext(context)
     spec    && this._initDefinitions(spec)
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
   _Type.addMethod(function _initCoreProperties(isRootType_, applyHandler_) {
+    const parentBlanker = isRootType_ ? $SomethingBlanker : $IntrinsicBlanker
+
+    this._blanker          = NewBlanker(parentBlanker, applyHandler_)
     this._iidCount         = 0
     this._definitions      = SpawnFrom(null)
     this._subordinateTypes = new Set()
-    const parentBlanker = isRootType_ ? $SomethingBlanker : $IntrinsicBlanker
-    this._blanker = NewBlanker(parentBlanker, applyHandler_)
-  })
+
+    this.addSharedProperty("type", this[$RIND])
+  }, TRUSTED_VALUE_METHOD)
 
 
 
@@ -599,7 +598,7 @@ ObjectSauce(function (
     shared      && this.addSharedProperties(shared)
     methods     && this.addMethods(methods)
     definitions && this.define(definitions)
-  })
+  }, TRUSTED_VALUE_METHOD)
 
 
   _Type.addMethod(function _validateNewSupertypes(supertypes, ancestry) {
@@ -656,7 +655,7 @@ ObjectSauce(function (
       }
     }
     dupFreeAncestry.reverse().push(this[$RIND])
-    return BasicSetObjectImmutable(dupFreeAncestry)
+    return CrudeBeImmutable(dupFreeAncestry)
   })
 
 
@@ -676,18 +675,18 @@ ObjectSauce(function (
   }
 
 
-  // eslint-disable-next-line
   _Type.addMethod(function _initFrom_(_type, asImmutable, visited, context) {
-    this._notYetImplemented("_initFrom_")
-    // if (_type[$OUTER].this) { AddPermeableNewDefinitionTo(this) }
-    //
-    // const beThing       = IsSubtypeOfThing(_type)
-    // const parentBlanker = beThing ? $IntrinsicBlanker : $SomethingBlanker
-    // const applyHandler = (_type._blanker.length) ? _type[$BARRIER].apply : null
-    // const blanker       = NewBlanker(parentBlanker, applyHandler)
-    //
-    // this._init(_type.name, _type.supertypes, null, blanker)
-    // this._initDefinitionsFrom_(_type, visited, context)
+    const isRootType   = _type.isRootType
+    const applyHandler = (_type._blanker.length) ? _type[$BARRIER].apply : null
+    const supertypes   = _type.supertypes.map(type => visited.get(type) || type)
+    const ancestry     = _type.ancestry.map(  type => visited.get(type) || type)
+
+    if (_type[$OUTER].this) { AddPermeableNewDefinitionTo(this) }
+
+    this._initCoreProperties(isRootType, applyHandler)
+    this._setName(_type.name)
+    this._setSupertypesAndAncestry(supertypes, ancestry)
+    this._initDefinitionsFrom_(_type, visited, context)
   }, TRUSTED_VALUE_METHOD)
 
 
@@ -698,18 +697,17 @@ ObjectSauce(function (
     tags        = OwnKeys(definitions)
 
     tags.forEach(tag => {
-      if (tag !== "type") {
-        value     = definitions[tag]
-        nextValue = AsNextValue(value, false, visited, context)
-        this._setDefinitionAt(tag, nextValue)
-      }
+      if (tag === "type") { return }
+      value       = definitions[tag]
+      nextValue   = ValueAsNext(value, undefined, visited, context)
+      this._setDefinitionAt(tag, nextValue)
     })
 
     if ((definitions = _type[$INNER][$OWN_DEFINITIONS])) {
       tags = OwnKeys(definitions)
       tags.forEach(tag => {
-        value     = definitions[tag]
-        nextValue = AsNextValue(value, undefined, visited, context)
+        value       = definitions[tag]
+        nextValue   = ValueAsNext(value, undefined, visited, context)
         this.addOwnDefinition(tag, nextValue)
       })
     }
@@ -800,7 +798,7 @@ ObjectSauce(function (
 
 
   _Type.addMethod(function methodAncestry(selector) {
-    return BasicSetObjectImmutable(
+    return CrudeBeImmutable(
       this.ancestry.filter(type => type.hasDefinedMethod(selector)))
   }, TRUSTED_VALUE_METHOD)
 
@@ -922,7 +920,7 @@ ObjectSauce(function (
 //   selectors      = selectorPicker(source)
 //   next           = selectors.length
 //   if (mode_ === "COPY") {
-//     while (next--) { target[selector] = CopyValue(source[selector]) }
+//     while (next--) { target[selector] = ValueCopy(source[selector]) }
 //   }
 //   else {
 //     while (next--) { target[selector] = source[selector] }

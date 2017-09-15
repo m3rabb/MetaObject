@@ -1,6 +1,6 @@
 ObjectSauce.ImplementationTesting(function (
   $BARRIER, $INNER, $OUTER, $RIND,
-  BasicSetObjectImmutable, HasOwn, OwnKeys, RootOf,
+  CrudeBeImmutable, HasOwn, OwnKeys, RootOf,
   Thing, Type
 ) {
   "use strict"
@@ -11,7 +11,7 @@ ObjectSauce.ImplementationTesting(function (
     function mood(newMood) { return `very ${newMood}` }
 
     beforeAll(function () {
-      this.redBall = BasicSetObjectImmutable({color : "red"})
+      this.redBall = CrudeBeImmutable({color : "red"})
 
       this.Cat_ = Type.new_({
         name   : "Cat",

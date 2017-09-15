@@ -1,6 +1,6 @@
 ObjectSauce(function (
   $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, IS_IMMUTABLE,
-  AsName, AsPropertySymbol, CopyObject, _HasOwn, InnerBarrier, InterMap,
+  AsName, AsPropertySymbol, ObjectCopy, _HasOwn, InnerBarrier, InterMap,
   InvisibleConfig, _$Copy,
   DefineProperty, InSetProperty,
   _OSauce
@@ -140,7 +140,7 @@ ObjectSauce(function (
             // if (result === _$receiver[$RIND])               { return result }
             if (result[IS_IMMUTABLE] || result.id != null)  { return result }
             return ((_$result = InterMap.get(result))) ?
-              _$Copy(_$result, true)[$RIND] : CopyObject(result, true)
+              _$Copy(_$result, true)[$RIND] : ObjectCopy(result, true)
         }
       }
     }[name]
@@ -274,7 +274,7 @@ ObjectSauce(function (
         if (typeof result !== "object" || result === null) { return result    }
         if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
         return ((_$result = InterMap.get(result))) ?
-          _$Copy(_$result, true) : CopyObject(result, true)
+          _$Copy(_$result, true) : ObjectCopy(result, true)
       }
     }[name]
   }
@@ -316,7 +316,7 @@ ObjectSauce(function (
         if (typeof result !== "object" || result === null) { return result    }
         if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
         return ((_$result = InterMap.get(result))) ?
-          _$Copy(_$result, true) : CopyObject(result, true)
+          _$Copy(_$result, true) : ObjectCopy(result, true)
       }
     }[name]
   }

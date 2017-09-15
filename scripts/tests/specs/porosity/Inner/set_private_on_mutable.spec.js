@@ -1,6 +1,6 @@
 ObjectSauce.ImplementationTesting(function (
   $BARRIER, $INNER, $OUTER, $RIND,
-  BasicSetObjectImmutable, OwnKeys, RootOf,
+  CrudeBeImmutable, OwnKeys, RootOf,
   Thing, Type
 ) {
   "use strict"
@@ -11,8 +11,8 @@ ObjectSauce.ImplementationTesting(function (
     function mood(newMood) { return `very ${newMood}` }
 
     beforeAll(function () {
-      this.redBall  = BasicSetObjectImmutable({color : "red"})
-      this.blueBall = BasicSetObjectImmutable({color : "blue"})
+      this.redBall  = CrudeBeImmutable({color : "red"})
+      this.blueBall = CrudeBeImmutable({color : "blue"})
 
       this.Cat_ = Type.new_({
         name   : "Cat",
@@ -356,7 +356,7 @@ ObjectSauce.ImplementationTesting(function (
 
       describe("When the value is an immutable JS object", function() {
         beforeEach(function () {
-          this.value      = BasicSetObjectImmutable([1, 2, 3])
+          this.value      = CrudeBeImmutable([1, 2, 3])
           this.$pulp._xyz = this.value
         })
 

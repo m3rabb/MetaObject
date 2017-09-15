@@ -1,6 +1,6 @@
 ObjectSauce(function (
   $BARRIER, $OUTER, $PULP,
-  BasicSetObjectImmutable, IsFrosted, OwnKeys, RootOf, Type
+  CrudeBeImmutable, IsFrosted, OwnKeys, RootOf, Type
 ) {
   "use strict"
 
@@ -10,7 +10,7 @@ ObjectSauce(function (
     function mood(newMood) { return `very ${newMood}` }
 
     beforeAll(function () {
-      this.redBall = BasicSetObjectImmutable({color : "red"})
+      this.redBall = CrudeBeImmutable({color : "red"})
 
       this.CatSpec = {
         name   : "Cat",
