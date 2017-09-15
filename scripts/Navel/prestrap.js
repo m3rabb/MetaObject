@@ -43,37 +43,41 @@ ObjectSauce(function (
   const $SomethingBlanker   = NewBlanker($BaseBlanker)
   const $NothingBlanker     = NewBlanker($SomethingBlanker)
   const   $IntrinsicBlanker = NewBlanker($SomethingBlanker)
-  const     TypeBlanker     = NewBlanker($IntrinsicBlanker, Type_apply)
+  const     TypeBlanker     = NewBlanker($IntrinsicBlanker, Type_apply   )
   const     ContextBlanker  = NewBlanker($IntrinsicBlanker, Context_apply)
 
   const ThingAncestry       = []
 
 
-  function BootstrapType(iid, name, blanker_) {
-    const _$type           = new TypeBlanker([name])
-    const isImplementation = (name[0] === "$")
+  function BootstrapType(iid, count, name, blanker_) {
+    const _$type = new TypeBlanker([name])
 
-    SetInvisibly(_$type, "iid", iid, $OUTER)
+    _$type._iidCount         = count
     _$type._definitions      = SpawnFrom(null)
-    _$type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
     _$type._subordinateTypes = new Set()
+    _$type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
     _$type._supertypes       = TheEmptyArray
-    _$type._ancestry         = isImplementation ? TheEmptyArray : ThingAncestry
+
+    SetInvisibly(_$type, "iid", iid, "SET BOTH INNER & OUTER")
     return _$type[$PULP]
   }
 
+  const _$Something = BootstrapType(-100, 0, "$Something", $SomethingBlanker)
+  const _$Intrinsic = BootstrapType( -11, 0, "$Intrinsic", $IntrinsicBlanker)
+  const _Nothing    = BootstrapType(   0, 0, "Nothing"   , $NothingBlanker  )
+  const _Thing      = BootstrapType(   1, 0, "Thing"     , null             )
+  const _Type       = BootstrapType(   2, 4, "Type"      , TypeBlanker      )
+  const _Context    = BootstrapType(   3, 0, "Context"   , ContextBlanker   )
+  const _Definition = BootstrapType(   4, 0, "Definition", null             )
 
-  const _$Something = BootstrapType(-100, "$Something", $SomethingBlanker)
-  const _$Intrinsic = BootstrapType( -11, "$Intrinsic", $IntrinsicBlanker)
-  const _Nothing    = BootstrapType(   0, "Nothing"   , $NothingBlanker  )
-  const _Thing      = BootstrapType(   1, "Thing"     , null             )
-  const _Type       = BootstrapType(   2, "Type"      , TypeBlanker      )
-  const _Context    = BootstrapType(   3, "Context"   , ContextBlanker   )
-  const _Definition = BootstrapType(   4, "Definition", null             )
+  const Thing      = _Thing[$RIND]
+  const Definition = _Definition[$RIND]
+
+  ThingAncestry[0] = Thing
+
 
   const $Something$root$inner = $SomethingBlanker.$root$inner
   const $Something$root$outer = $SomethingBlanker.$root$outer
-  const $Intrinsic$root$inner = $IntrinsicBlanker.$root$inner
   const Context$root$inner    = _Context._blanker.$root$inner
   const Definition$root$inner = _Definition._blanker.$root$inner
   const Type$root$inner       = TypeBlanker.$root$inner
@@ -87,11 +91,11 @@ ObjectSauce(function (
 
   $Something$root$outer.type             = null
 
-  $Intrinsic$root$inner._retarget        = null
+  $Something$root$inner._retarget        = null
 
   Type$root$inner.new                    = _BasicNew
   Type$root$inner._setDefinitionAt       = _SetDefinitionAt
-  Type$root$inner._propagateDefinition   = AlwaysSelf,
+  Type$root$inner._propagateDefinition   = AlwaysSelf
 
   Definition$root$inner._setImmutable    = _BasicSetImmutable
   Definition$root$inner._init            = Definition_init
@@ -100,10 +104,11 @@ ObjectSauce(function (
   Context$root$inner._atPut              = Context_atPut
 
 
+
   const _$RootContext    = new ContextBlanker("ObjectSauce")
   const  _RootContext    = _$RootContext[$PULP]
-  // const  $RootContext    = _$RootContext[$OUTER]
   const   RootContext    = _$RootContext[$RIND]
+
   const _$DefaultContext = new ContextBlanker("Default")
   const  _DefaultContext = _$DefaultContext[$PULP]
   const   DefaultContext = _$DefaultContext[$RIND]
@@ -111,19 +116,10 @@ ObjectSauce(function (
   _RootContext._init("ObjectSauce")
   _DefaultContext._init("Default", RootContext)
 
-  SetInvisibly(_$RootContext, "iid", 0, $OUTER)
-
-
-  const Thing      = _Thing[$RIND]
-  const Definition = _Definition[$RIND]
-  const Type       = _Type[$RIND]
-
-  ThingAncestry[0] = Thing
-
 
   Context_atPut.call(_RootContext, "Thing"     , Thing     )
   Context_atPut.call(_RootContext, "Definition", Definition)
-  Context_atPut.call(_RootContext, "Type"      , Type      )
+
 
 
   _SetDefinitionAt.call(_$Something, IS_IMMUTABLE  , false      , VISIBLE  )
@@ -192,34 +188,31 @@ ObjectSauce(function (
   }
 
 
-  _OSauce.IsSubtypeOfThing = function (_type) {
-    // return (_type._basicSet !== undefined)
-    // The following fails when testing _$Something
-    return (RootOf(_type._blanker.$root$inner) === $Intrinsic$root$inner)
-  }
-
   _OSauce.AddIntrinsicDeclaration = function (selector) {
     _SetDefinitionAt.call(_$Intrinsic, selector, null, INVISIBLE)
   }
 
 
-  OSauce.rootContext         =   RootContext
-  OSauce.defaultContext      =   DefaultContext
+  OSauce.rootContext            =  RootContext
+  OSauce.defaultContext         =  DefaultContext
 
-  _OSauce.$BaseBlanker       =  $BaseBlanker
-  _OSauce.$SomethingBlanker  =  $SomethingBlanker
-  _OSauce.$IntrinsicBlanker  =  $IntrinsicBlanker
+  _OSauce.$BaseBlanker          =  $BaseBlanker
+  _OSauce.$SomethingBlanker     =  $SomethingBlanker
+  _OSauce.$IntrinsicBlanker     =  $IntrinsicBlanker
+  _OSauce.$Something$root$inner =  $Something$root$inner
 
-  _OSauce._$Something        = _$Something
-  _OSauce._$Intrinsic        = _$Intrinsic
-  _OSauce._Nothing           =  _Nothing
-  _OSauce._Thing             =  _Thing
-  _OSauce._Type              =  _Type
-  _OSauce._Context           =  _Context
-  _OSauce._Definition        =  _Definition
+  _OSauce._$Something           = _$Something
+  _OSauce._$Intrinsic           = _$Intrinsic
+  _OSauce._Nothing              =  _Nothing
+  _OSauce._Thing                =  _Thing
+  _OSauce._Type                 =  _Type
+  _OSauce._Context              =  _Context
+  _OSauce._Definition           =  _Definition
 
-  _OSauce._RootContext       =  _RootContext
+  _OSauce._$DefaultContext      = _$DefaultContext
+  _OSauce._RootContext          =  _RootContext
+  _OSauce.Thing                 =   Thing
 
-  _OSauce._BasicSetImmutable =  _BasicSetImmutable
+  _OSauce._BasicSetImmutable    =  _BasicSetImmutable
 
 })

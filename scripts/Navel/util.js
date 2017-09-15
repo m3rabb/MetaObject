@@ -1,6 +1,6 @@
 ObjectSauce(function (
   $IS_INNER, $RIND, IS_IMMUTABLE, PROOF,
-  InterMap, OwnKeys, SpawnFrom,
+  InterMap, MarkFunc, OwnKeys, SpawnFrom,
   OSauce
 ) {
   "use strict"
@@ -12,8 +12,7 @@ ObjectSauce(function (
     return name.slice(7, name.length - 1)
   }
 
-
-  function IsSauced(value) {
+  function IsValueTranya(value) {
     switch (typeof value) {
       default         : return false
       case "function" : break
@@ -24,8 +23,26 @@ ObjectSauce(function (
     return (InterMap.get(value$)[$IS_INNER] === PROOF)
   }
 
+  function IsValueInner(value) {
+    switch (typeof value) {
+      default         : return false
+      case "function" : break
+      case "object"   : if (value === null) { return false } else { break }
+    }
+    return (value[$IS_INNER] === PROOF)
+  }
 
-  function IsImmutable(value) {
+  function IsValueOuter(value) {
+    switch (typeof value) {
+      default         : return false
+      case "function" : break
+      case "object"   : if (value === null) { return false } else { break }
+    }
+    const _$value = InterMap.get(value)
+    return (_$value[$RIND] === value)
+  }
+
+  function IsValueImmutable(value) {
     switch (typeof value) {
       case "function" : break
       case "object"   : break
@@ -34,8 +51,7 @@ ObjectSauce(function (
     return value[IS_IMMUTABLE] ? true : false
   }
 
-
-  function IsFact(value) {
+  function IsValueFact(value) {
     if (typeof value !== "object") { return true }
     if (value === null)            { return true }
     if (value[IS_IMMUTABLE])       { return true }
@@ -74,7 +90,7 @@ ObjectSauce(function (
     return lines
   }
 
-  const SortParameters = function sortParameters(paramsListing) {
+  function SortParameters(paramsListing) {
     var params    = paramsListing.split(/\s*,\s*/)
     var constants = []
     var standards = []
@@ -95,12 +111,12 @@ ObjectSauce(function (
     return constants.concat(standards, osauces).join(", \n")
   }
 
-  OSauce.asName                   = AsName
-  OSauce.isSauced                 = IsSauced
-  OSauce.isImmutable              = IsImmutable
-  OSauce.isFact                   = IsFact
-  OSauce.sortParameters           = SortParameters
+  OSauce.asName           = MarkFunc(AsName)
+  OSauce.isValueTranya    = MarkFunc(IsValueTranya)
+  OSauce.isValueInner     = MarkFunc(IsValueInner)
+  OSauce.isValueOuter     = MarkFunc(IsValueOuter)
+  OSauce.isValueImmutable = MarkFunc(IsValueImmutable)
+  OSauce.valueIsFact      = MarkFunc(IsValueFact)
+  OSauce.sortParameters   = MarkFunc(SortParameters)
 
-  ObjectSauce.sortParameters      = SortParameters
-  
 })

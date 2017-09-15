@@ -67,7 +67,7 @@
     writable     : true,
     enumerable   : false,
   }
-  
+
   const VisibleConfig = {
     configurable : true,
     writable     : true,
@@ -153,7 +153,7 @@
 
 
   const FUNC_PROLOG_MATCHER =
-    /^(function(\s+([\w$]+))?\s*\(([\w$\s.,]*)\)|(\(([\w$\s.,]*)\)|([\w$.]+))\s*=>)/
+    /^(function(\s+([\w$]+))?\s*\(([\w$\s.,=]*)\)|(\(([\w$\s.,=]*)\)|([\w$.]+))\s*=>)/
   const PARAMS_MATCHER = /[\w$]+/g
 
   function ExtractParamListing(func) {
@@ -181,9 +181,9 @@
     return Frost(target)
   }
 
-  function SetInvisibly(target, selector, value, setOuter_) {
+  function SetInvisibly(target, selector, value, setOuterToo_) {
     DefineProperty(target, selector, InvisibleConfig)
-    if (setOuter_ === $OUTER) { target[$OUTER][selector] = value }
+    if (setOuterToo_) { target[$OUTER][selector] = value }
     return target[selector] = value
   }
 

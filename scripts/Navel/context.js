@@ -300,8 +300,8 @@ ObjectSauce(function (
 
     for (name in marked) {
       sourceType = sourceTypes[name]
-      supertypesPlaceholder = IsSubtypeOfThing(sourceType) ?
-        EmptyThingAncestry : TheEmptyArray
+      supertypesPlaceholder = sourceType.isRootType ?
+        TheEmptyArray : EmptyThingAncestry
       newType = Type.new(sourceType.name, supertypesPlaceholder)
       visited.set(sourceType, newType)
       execContext.atPut(name, newType)

@@ -279,6 +279,7 @@ enduring/perennial/durable
 
 idempot
 
+trillia|trylya
 
 
 passive/active/permeability/diffusion/osmosis/hypotonic/hypertonic/isotonic

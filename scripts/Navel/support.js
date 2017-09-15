@@ -1,7 +1,7 @@
 ObjectSauce(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
-  DISGUISE_PULP, EMPTY_THING_ANCESTRY, INVISIBLE, IS_IMMUTABLE,
+  DISGUISE_PULP, INVISIBLE, IS_IMMUTABLE,
   ASSIGNER_FUNC, BLANKER_FUNC, TRUSTED_VALUE_METHOD,
   AsCapitalized, AsDecapitalized, AsName, BasicSetObjectImmutable, Frost,
   Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId, OwnSymbols,
@@ -175,7 +175,7 @@ ObjectSauce(function (
       $inner[$RIND]     = $rind
       $outer[$RIND]     = $rind
 
-      if (uid) { SetInvisibly($inner, "uid", uid, $OUTER) }
+      if (uid) { SetInvisibly($inner, "uid", uid, "SET BOTH INNER & OUTER") }
 
       InterMap.set($pulp, DISGUISE_PULP)
       InterMap.set($rind, $inner)
@@ -213,42 +213,6 @@ ObjectSauce(function (
   //   return instance
   // }
 
-
-
-  function BuildRoughAncestryOf(supertypes, originalTypes_) {
-    const roughAncestry = []
-    const originalTypes = originalTypes_ || new Set(supertypes)
-
-    supertypes.forEach(nextType => {
-      if (originalTypes_ && originalTypes_.has(nextType)) { /* continue */ }
-      else {
-        var nextAncestry =
-          BuildRoughAncestryOf(nextType.supertypes, originalTypes)
-        roughAncestry.push(...nextAncestry, nextType)
-      }
-    })
-    return roughAncestry
-  }
-
-
-  function BuildAncestryOf(type, supertypes = type.supertypes) {
-    if (supertypes === EMPTY_THING_ANCESTRY) { return supertypes }
-    const roughAncestry   = BuildRoughAncestryOf(supertypes)
-    const visited         = new Set()
-    const dupFreeAncestry = []
-    var next, nextType
-
-    next = roughAncestry.length
-    while (next--) {
-      nextType = roughAncestry[next]
-      if (!visited.has(nextType)) {
-        dupFreeAncestry.push(nextType)
-        visited.add(nextType)
-      }
-    }
-    dupFreeAncestry.reverse().push(type)
-    return BasicSetObjectImmutable(dupFreeAncestry)
-  }
 
 
   function OwnSelectors(target, ignoreDeclarations_) {
@@ -387,7 +351,6 @@ ObjectSauce(function (
   _OSauce.NewInner                        = NewInner
   _OSauce.Context_apply                   = Context_apply
   _OSauce.Type_apply                      = Type_apply
-  _OSauce.BuildAncestryOf                 = BuildAncestryOf
   _OSauce.DeleteSelectorsIn               = DeleteSelectorsIn
   _OSauce.CompletelyDeleteProperty        = CompletelyDeleteProperty
   _OSauce.SetAsymmetricProperty           = SetAsymmetricProperty

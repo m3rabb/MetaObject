@@ -7,13 +7,13 @@ ObjectSauce(function (
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, IMMEDIATE_METHOD,
   MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD, TRUSTED_VALUE_METHOD,
-  AddIntrinsicDeclaration, AddPermeableNewDefinitionTo, AsCapitalized,
-  AsMembershipSelector, AsName, AsNextValue, AsPropertySymbol,
-  BasicSetObjectImmutable, BuildAncestryOf,
+  $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
+  AsCapitalized, AsMembershipSelector, AsName, AsNextValue, AsPropertySymbol,
+  BasicSetObjectImmutable,
   DefaultContext, DeleteSelectorsIn, ExtractDefinitionFrom,
   ExtractParamListing, Frost, InterMap, IsArray, IsSubtypeOfThing,
   NewAssignmentErrorHandler, NewVacuousConstructor, OwnKeys, OwnSelectors,
-  PropertyAt, RootContext, SetDefinition, SetInvisibly, SpawnFrom,
+  PropertyAt, RootContext, RootOf, SetDefinition, SetInvisibly, SpawnFrom,
   TheEmptyArray, TheEmptyObject, Type_apply, _HasOwn, _Type,
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AttemptedChangeOfAncestryOfPermeableTypeError, DuplicateSupertypeError,
@@ -449,81 +449,7 @@ ObjectSauce(function (
 
 
 
-  _Type.addMandatorySetter("_setContext", function context(context) {
-    if (_HasOwn.call(this, "context")) {
-      return this._attemptToReassignContextError
-    }
-    this.addSharedProperty("context", context)
-    return context
-  })
-
-  _Type.addMethod(function setContext(context) {
-    this._setContext(context)
-    context.atPut(this.name, this[$RIND])
-  }, TRUSTED_VALUE_METHOD)
-
-
-
-  function AncestryIncludesThing(ancestry) {
-    for (var index = 0, count = ancestry.length - 1; index < count; index++) {
-      var _$type = InterMap.get(ancestry[index])
-      if (IsSubtypeOfThing(_$type)) { return true }
-    }
-    return false
-  }
-
-  _Type.addMethod(function setSupertypes(nextSupertypes) {
-    this._setSupertypes(nextSupertypes, true)
-  })
-
-
-  _Type.addMandatorySetter("_setSupertypes", function _supertypes(
-    types, reinherit_, blanker__
-  ) {
-    if (this._supertypes === types) { return types }
-
-    if (types.length !== new Set(types).size) {
-      return DuplicateSupertypeError(this)
-    }
-    const nextAncestry = BuildAncestryOf(this[$RIND], types)
-    const beThing      = AncestryIncludesThing(nextAncestry)
-
-    if (this._blanker) {
-      if (this.isPermeable) {
-        // This is a security measure. Keep someone from merge a protect type
-        // into a programmer controller type in order to access aspects of the
-        // merged type.
-        return AttemptedChangeOfAncestryOfPermeableTypeError(this)
-      }
-      const isThing = IsSubtypeOfThing(this)
-      if (beThing !== isThing) { return ImproperChangeToAncestryError(this) }
-      // Perhaps not. Might be able to redirect the _blanker of an existing type???
-    }
-    else {
-      const parentBlanker    = beThing ? $IntrinsicBlanker : $SomethingBlanker
-      this._blanker          = blanker__ || new NewBlanker(parentBlanker)
-      this._definitions      = SpawnFrom(null)
-      this._subordinateTypes = new Set()
-    }
-
-    this._ancestry = nextAncestry
-    this._setAsSubordinateOfSupertypes(types)
-    if (reinherit_) { this._reinheritDefinitions() }
-    return types[IS_IMMUTABLE] ? types : BasicSetObjectImmutable(types)
-  })
-
-
-
-  _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
-    const innerName     = innerName_ || ("_" + outerName)
-    const _name = NewVacuousConstructor(innerName)
-    const $name = NewVacuousConstructor(outerName)
-
-    SetAsymmetricProperty(this, "constructor", _name, $name, INVISIBLE)
-  })
-
-
-  _Type.addMandatorySetter("setName", function name(newName) {
+  _Type.addMethod("setName", function name(newName) {
     const properName = AsCapitalized(newName)
     const priorName = this.name
     if (properName === priorName) { return priorName }
@@ -537,18 +463,67 @@ ObjectSauce(function (
       AddIntrinsicDeclaration(selector)
     }
 
+    this._setName(properName)
+  })
+
+
+  _Type.addMandatorySetter("_setName", function name(properName) {
     this._setDisplayNames(properName)
-    this[$DISGUISE].name = properName
     return properName
   })
 
 
+  _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
+    const innerName = innerName_ || ("_" + outerName)
+    const _name     = NewVacuousConstructor(innerName)
+    const $name     = NewVacuousConstructor(outerName)
 
-  //  spec
-  //    name
-  //    supertype|supertypes
-  //    shared|sharedProperties
-  //    methods|instanceMethods
+    SetAsymmetricProperty(this, "constructor", _name, $name, INVISIBLE)
+    this[$DISGUISE].name = outerName
+  })
+
+
+
+  _Type.addMethod(function setContext(context) {
+    this._setContext(context)
+    context.atPut(this.name, this[$RIND])
+  }, TRUSTED_VALUE_METHOD)
+
+
+  _Type.addMandatorySetter("_setContext", function context(context) {
+    if (_HasOwn.call(this, "context")) {
+      return this._attemptToReassignContextError
+    }
+    this.addSharedProperty("context", context)
+    return context
+  })
+
+
+
+  _Type.addMethod(function addSupertype(type) {
+    this.setSupertypes([...this.supertypes, type])
+  }, TRUSTED_VALUE_METHOD)
+
+
+
+  _Type.addMethod(function setSupertypes(supertypes) {
+    if (this._supertypes === supertypes) { return }
+    const ancestry = this._buildAncestry(supertypes)
+    this._validateNewSupertypes(supertypes, ancestry)
+    this._setSupertypes(supertypes, ancestry)
+  })
+
+
+  _Type.addMandatorySetter("_setSupertypes", function _supertypes(typeList, ancestry_) {
+    const supertypes = typeList[IS_IMMUTABLE] ?
+      typeList : BasicSetObjectImmutable(typeList)
+    this._ancestry = ancestry_ || this._buildAncestry(supertypes)
+    if (ancestry_) { this._reinheritDefinitions() }
+    this._setAsSubordinateOfSupertypes(supertypes)
+    return supertypes
+  })
+
+
 
   _Type.addMethod(function _extractArgs(spec_name, supertypes_context_, context__) {
     var spec, name, supertypes, context, _$arg2
@@ -575,28 +550,50 @@ ObjectSauce(function (
       context = _$arg2[$IS_CONTEXT] ? supertypes_context_ : null
     }
 
-    return [spec, name, supertypes, context]
+    return [name, supertypes, context, spec]
   })
 
-  _Type.addMethod(function _init(
-    spec_name, supertypes_context_, context__, blanker___
-  ) {
-    const [spec, name, supertypes, context] =
-      this._extractArgs(spec_name, supertypes_context_, context__)
-    const declared    = spec_name.declare || spec_name.declared
-    const durables    = spec_name.durable || spec_name.durables
-    const shared      = spec_name.shared  || spec_name.sharedProperties
-    const methods     = spec_name.methods || spec_name.instanceMethods
-    const definitions = spec_name.define  || spec_name.defines
 
-    this._iidCount = 0
+  //  spec
+  //    name
+  //    supertype|supertypes
+  //    shared|sharedProperties
+  //    methods|instanceMethods
+
+  _Type.addMethod(function _init(spec_name, supertypes_context_, context__) {
+    const [name, supertypes, context, spec] =
+      this._extractArgs(spec_name, supertypes_context_, context__)
+    const ancestry   = this._buildAncestry(supertypes)
+    const isRootType = this._validateNewSupertypes(supertypes, ancestry)
 
     // The ordering of the following is critical to avoid breaking the bootstrapping!!!
-    this._setSupertypes(supertypes, REINHERIT, blanker___)
+    this._initCoreProperties(isRootType)
+    this._setSupertypes(supertypes, ancestry)
     this.addSharedProperty("type", this[$RIND])
     this.setName(name)
 
-    context     && this.setContext(context)
+    context && this.setContext(context)
+    spec    && this._initDefinitions(spec)
+  })
+
+
+  _Type.addMethod(function _initCoreProperties(isRootType_, applyHandler_) {
+    this._iidCount         = 0
+    this._definitions      = SpawnFrom(null)
+    this._subordinateTypes = new Set()
+    const parentBlanker = isRootType_ ? $SomethingBlanker : $IntrinsicBlanker
+    this._blanker = NewBlanker(parentBlanker, applyHandler_)
+  })
+
+
+
+  _Type.addMethod(function _initDefinitions(spec) {
+    const declared    = spec.declare || spec.declared
+    const durables    = spec.durable || spec.durables
+    const shared      = spec.shared  || spec.sharedProperties
+    const methods     = spec.methods || spec.instanceMethods
+    const definitions = spec.define  || spec.defines
+
     declared    && this.addDeclarations(declared)
     durables    && this.addDurables(durables) // This needs to be for the root!!!
     shared      && this.addSharedProperties(shared)
@@ -605,17 +602,92 @@ ObjectSauce(function (
   })
 
 
+  _Type.addMethod(function _validateNewSupertypes(supertypes, ancestry) {
+    if (supertypes.length !== new Set(supertypes).size) {
+      return DuplicateSupertypeError(this) || null
+    }
+    const beRootType = !AncestryIncludesThing(ancestry)
+    if (this._blanker) {
+      if (this.isPermeable) {
+        // This is a security measure. Keep someone from merge a protect type
+        // into a programmer controller type in order to access aspects of the
+        // merged type.
+        return AttemptedChangeOfAncestryOfPermeableTypeError(this) || null
+      }
 
+      const isRootType = this.isRootType
+      if (beRootType !== isRootType) {
+        return ImproperChangeToAncestryError(this) || null
+      }
+      // Perhaps not. Might be able to redirect the _blanker of an existing type???
+    }
+    return beRootType
+  }, IDEMPOT_VALUE_METHOD)
+
+
+
+  _Type.addMethod(function isRootType() {
+    return (RootOf(this._blanker.$root$inner) === $Something$root$inner)
+  })
+
+
+  function AncestryIncludesThing(ancestry) {
+    for (var index = 0, count = ancestry.length - 1; index < count; index++) {
+      var _$type = InterMap.get(ancestry[index])
+      if (!_$type.isRootType) { return true }
+    }
+    return false
+  }
+
+
+  _Type.addMethod(function _buildAncestry(supertypes = this.supertypes) {
+    // if (supertypes === EMPTY_THING_ANCESTRY) { return supertypes }
+    const roughAncestry   = BuildRoughAncestryOf(supertypes)
+    const visited         = new Set()
+    const dupFreeAncestry = []
+    var next, nextType
+
+    next = roughAncestry.length
+    while (next--) {
+      nextType = roughAncestry[next]
+      if (!visited.has(nextType)) {
+        dupFreeAncestry.push(nextType)
+        visited.add(nextType)
+      }
+    }
+    dupFreeAncestry.reverse().push(this[$RIND])
+    return BasicSetObjectImmutable(dupFreeAncestry)
+  })
+
+
+  function BuildRoughAncestryOf(supertypes, originalTypes_) {
+    const roughAncestry = []
+    const originalTypes = originalTypes_ || new Set(supertypes)
+
+    supertypes.forEach(nextType => {
+      if (originalTypes_ && originalTypes_.has(nextType)) { /* continue */ }
+      else {
+        var nextAncestry =
+          BuildRoughAncestryOf(nextType.supertypes, originalTypes)
+        roughAncestry.push(...nextAncestry, nextType)
+      }
+    })
+    return roughAncestry
+  }
+
+
+  // eslint-disable-next-line
   _Type.addMethod(function _initFrom_(_type, asImmutable, visited, context) {
-    if (_type[$OUTER].this) { AddPermeableNewDefinitionTo(this) }
-
-    const beThing       = IsSubtypeOfThing(_type)
-    const parentBlanker = beThing ? $IntrinsicBlanker : $SomethingBlanker
-    const applyHandler = (_type._blanker.length) ? _type[$BARRIER].apply : null
-    const blanker       = NewBlanker(parentBlanker, applyHandler)
-
-    this._init(_type.name, _type.supertypes, null, blanker)
-    this._initDefinitionsFrom_(_type, visited, context)
+    this._notYetImplemented("_initFrom_")
+    // if (_type[$OUTER].this) { AddPermeableNewDefinitionTo(this) }
+    //
+    // const beThing       = IsSubtypeOfThing(_type)
+    // const parentBlanker = beThing ? $IntrinsicBlanker : $SomethingBlanker
+    // const applyHandler = (_type._blanker.length) ? _type[$BARRIER].apply : null
+    // const blanker       = NewBlanker(parentBlanker, applyHandler)
+    //
+    // this._init(_type.name, _type.supertypes, null, blanker)
+    // this._initDefinitionsFrom_(_type, visited, context)
   }, TRUSTED_VALUE_METHOD)
 
 
@@ -684,7 +756,7 @@ ObjectSauce(function (
   _Type.addMethod(function id() { // Conditionally lazy property
     const newId = `${this.formalName},${this.basicId}`
     if (this.context === DefaultContext) { return newId }
-    return SetInvisibly(this[$INNER], "id", newId, $OUTER)
+    return SetInvisibly(this[$INNER], "id", newId, "SET BOTH INNER & OUTER")
   }, TRUSTED_VALUE_METHOD)
 
 
@@ -699,10 +771,6 @@ ObjectSauce(function (
   }, TRUSTED_VALUE_METHOD)
 
 
-
-  _Type.addMethod(function addSupertype(type) {
-    this.setSupertypes([...this.supertypes, type])
-  }, TRUSTED_VALUE_METHOD)
 
   _Type.addMethod(function inheritsFrom(type) {
     var self, ancestry, next
