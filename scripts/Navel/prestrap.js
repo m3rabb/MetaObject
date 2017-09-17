@@ -130,8 +130,7 @@ ObjectSauce(function (
   // if implemented this way.  These properties are read very frequently.
   _SetDefinitionAt.call(_$Something, "id"          , null       , INVISIBLE)
   _SetDefinitionAt.call(_$Something, _DURABLES     , null       , INVISIBLE)
-
-  _SetDefinitionAt.call(_Type      , "context"     , RootContext, VISIBLE  )
+  _SetDefinitionAt.call(_$Something, "context"     , RootContext, VISIBLE  )
 
   _SetDefinitionAt.call(_Type      , $IS_TYPE      , true       , VISIBLE  )
   _SetDefinitionAt.call(_Context   , $IS_CONTEXT   , true       , VISIBLE  )
@@ -177,7 +176,7 @@ ObjectSauce(function (
     return Definition("new", handler, TRUSTED_VALUE_METHOD)
   }
 
-  _OSauce.AddPermeableNewDefinitionTo = function (_$type) {
+  function AddPermeableNewDefinitionTo(_$type) {
     const _type         = _$type[$PULP]
     const newHandler    = _$type.new.method.handler
     const context       = _$type.context
@@ -188,7 +187,7 @@ ObjectSauce(function (
   }
 
 
-  _OSauce.AddIntrinsicDeclaration = function (selector) {
+  function AddIntrinsicDeclaration(selector) {
     _SetDefinitionAt.call(_$Intrinsic, selector, null, INVISIBLE)
   }
 
@@ -213,6 +212,7 @@ ObjectSauce(function (
   _OSauce._RootContext          =  _RootContext
   _OSauce.Thing                 =   Thing
 
-  _OSauce._BasicSetImmutable    =  _BasicSetImmutable
+  _OSauce.AddPermeableNewDefinitionTo = AddPermeableNewDefinitionTo
+  _OSauce.AddIntrinsicDeclaration     = AddIntrinsicDeclaration
 
 })

@@ -18,8 +18,7 @@ ObjectSauce(function (
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AttemptedChangeOfAncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
-  AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
-  CompletelyDeleteProperty, InSetProperty,
+  AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty, InSetProperty,
   SetAsymmetricProperty,
   AsAssignmentSetter, AsBasicSetter, AsPropertyFromSetter,
   KnownSelectorsSorted, OwnSelectorsSorted
@@ -27,18 +26,12 @@ ObjectSauce(function (
   "use strict"
 
 
-  _Type.addMethod(function newAsFact(...args) {
+  _Type.addMethod(function newImmutable(...args) {
+    // Note: this is the same implementation as in Type_apply
     const   instance = this.new(...args)
     const _$instance = InterMap.get(instance)
-    const  _instance = _$instance[$PULP]
-    if (_instance.id == null) { _$instance._setImmutable.call(_instance) }
-    return instance
-  }, IDEMPOT_VALUE_METHOD)
 
-
-  _Type.addMethod(function newImmutable(...args) {
-    // Note: same as implementation in TypeOuter and TypeInner
-    return this.new(...args)._setImmutable(true)
+    return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]
   }, IDEMPOT_VALUE_METHOD)
 
 
@@ -52,42 +45,6 @@ ObjectSauce(function (
     }
     return _$instance[$RIND]
   }, IDEMPOT_VALUE_METHOD)
-
-
-
-
-
-    // _Type.addMethod(_BasicNew_, IDEMPOT_VALUE_METHOD)  // Remove later!!!
-    //
-    // // _basicNew_
-    // _Type.addOwnMethod(function new_(...args) {
-    //   const instance = this._super.new_(...args)
-    //   instance.addOwnAlias("new"      , "new_"      )
-    //   instance.addOwnAlias("newAsFact", "newAsFact_")
-    //   return instance
-    // })
-    //
-    // _Type.addMethod(function newAsFact_(...args) {
-    //   // Note: same as implementation in TypeOuter and TypeInner
-    //   const instance_  = this.new_(...args)
-    //   const _$instance = InterMap.get(instance_)
-    //   const _instance  = _$instance[$PULP]
-    //   if (_instance.id == null) { _$instance._setImmutable.call(_instance) }
-    //   return instance_
-    // }, IDEMPOT_VALUE_METHOD)
-    //
-    //
-    // Once Context is complete delete this method!!!
-    // eslint-disable-next-line
-      // const PermeableNewErrorMethod = Definition(function new_(...args) {
-      //   this._signalError("Method 'new_' cannot be called on immutable type objects!!")
-      // })
-      // // Once Context is complete delete this method!!!
-      // // eslint-disable-next-line
-      // const PermeableNewAsFactErrorMethod = Definition(function newAsFact_(...args) {
-      //   this._signalError("Method 'newAsFact_' cannot be called on immutable type objects!!")
-      // })
-
 
 
 
@@ -225,7 +182,7 @@ ObjectSauce(function (
 
     var ancestry, next, _$nextType, value
 
-    ancestry = this.ancestry
+    ancestry = this._ancestry
     next     = ancestry.length - 1
     while (next--) {
       _$nextType = InterMap.get(ancestry[next])
@@ -380,10 +337,11 @@ ObjectSauce(function (
 
 
 
+  _Type.addMethod(function _inheritAllDefinitions(inheritSpec) {
+    var next, _$nextType, nextDefinitions, tags, value, nextValue
+    var asImmutable, visited, context, noCopy
 
-
-  _Type.addMethod(function _reinheritDefinitions(inherits) {
-    if (inherits === REINHERIT) {
+    if (inheritSpec === REINHERIT) {
       // Not a virgin type
       const blanker     = this._blanker
       const $root$inner = blanker.$root$inner
@@ -392,13 +350,15 @@ ObjectSauce(function (
 
       DeleteSelectorsIn([$root$inner, $root$outer, supers])
       DeleteSelectorsIn(
-        [$root$inner[$IMMEDIATES], $root$outer[$IMMEDIATES], supers[$IMMEDIATES]])
+        [$root$inner[$IMMEDIATES],$root$outer[$IMMEDIATES],supers[$IMMEDIATES]])
       DeleteSelectorsIn([$root$inner[$ASSIGNERS]])
+      noCopy = true
     }
+    else if (inheritSpec === INHERIT) { noCopy = true }
+    else { ({asImmutable, visited, context} = inheritSpec) }
 
-    const ancestry = this.ancestry
+    const ancestry = this._ancestry
     const knowns   = SpawnFrom(null)
-    var   next, _$nextType, nextDefinitions, tags, value
 
     next = ancestry.length
     while (next--) {
@@ -410,20 +370,22 @@ ObjectSauce(function (
         if (!knowns[tag]) {
           knowns[tag] = true
           value       = nextDefinitions[tag]
-          this._setDefinitionAt(tag, value, REINHERIT)
+          nextValue   = noCopy ? value :
+            ValueAsNext(value, asImmutable, visited, context)
+          this._setDefinitionAt(tag, nextValue, REINHERIT)
         }
       })
     }
 
-    this._propagateReinheritance(inherits)
+    this._propagateReinheritance(inheritSpec)
   })
 
 
 
-  _Type.addMethod(function _propagateReinheritance(inherits) {
+  _Type.addMethod(function _propagateReinheritance(inheritSpec) {
     this._subordinateTypes.forEach(subtype => {
       var _$subtype = InterMap.get(subtype)
-      _$subtype._reinheritDefinitions.call(_$subtype[$PULP], inherits)
+      _$subtype._inheritAllDefinitions.call(_$subtype[$PULP], inheritSpec)
     })
   })
 
@@ -514,16 +476,18 @@ ObjectSauce(function (
   }, TRUSTED_VALUE_METHOD)
 
 
-  _Type.addMethod(function _setSupertypesAndAncestry(supertypes, ancestry, inherits_) {
+  _Type.addMethod(function _setSupertypesAndAncestry(
+                                      supertypes, ancestry, inheritSpec_) {
     this._supertypes = CrudeAsImmutable(supertypes)
-    this._ancestry   = ancestry
-    if (inherits_) { this._reinheritDefinitions(inherits_) }
+    this._ancestry   = CrudeBeImmutable(ancestry)
+    if (inheritSpec_) { this._inheritAllDefinitions(inheritSpec_) }
     this._setAsSubordinateOfSupertypes(supertypes)
   }, TRUSTED_VALUE_METHOD)
 
 
 
-  _Type.addMethod(function _extractArgs(spec_name, supertypes_context_, context__) {
+  _Type.addMethod(function _extractArgs(
+                              spec_name, supertypes_context_, context__) {
     var spec, name, supertypes, context, _$arg2
     ;[name, spec] = (typeof spec_name === "string") ?
       [spec_name, null] : [spec_name.name, spec_name]
@@ -564,9 +528,11 @@ ObjectSauce(function (
     const ancestry   = this._buildAncestry(supertypes)
     const isRootType = this._validateNewSupertypes(supertypes, ancestry)
 
+    // The order of the following is intentional.
     this._initCoreProperties(isRootType)
-    this.setName(name)
     this._setSupertypesAndAncestry(supertypes, ancestry, INHERIT)
+    this.setName(name)
+    this.addSharedProperty("type", this[$RIND])
 
     context && this.setContext(context)
     spec    && this._initDefinitions(spec)
@@ -580,8 +546,6 @@ ObjectSauce(function (
     this._iidCount         = 0
     this._definitions      = SpawnFrom(null)
     this._subordinateTypes = new Set()
-
-    this.addSharedProperty("type", this[$RIND])
   }, TRUSTED_VALUE_METHOD)
 
 
@@ -655,7 +619,7 @@ ObjectSauce(function (
       }
     }
     dupFreeAncestry.reverse().push(this[$RIND])
-    return CrudeBeImmutable(dupFreeAncestry)
+    return dupFreeAncestry
   })
 
 
@@ -676,47 +640,50 @@ ObjectSauce(function (
 
 
   _Type.addMethod(function _initFrom_(_type, asImmutable, visited, context) {
+    const inheritSpec  = {asImmutable, visited, context}
     const isRootType   = _type.isRootType
     const applyHandler = (_type._blanker.length) ? _type[$BARRIER].apply : null
-    const supertypes   = _type.supertypes.map(type => visited.get(type) || type)
-    const ancestry     = _type.ancestry.map(  type => visited.get(type) || type)
+
+    const supertypes = _type._supertypes.map(type => visited.get(type) || type)
+    const ancestry   = _type._ancestry.map(  type => visited.get(type) || type)
+
+    // The order of the following is intentional.
+    this._initCoreProperties(isRootType, applyHandler)
+    this._setSupertypesAndAncestry(supertypes, ancestry, inheritSpec)
+    this.setName(_type.name)
+    // this.addSharedProperty("type", this[$RIND])
+    this._copyDefinitions(_type._definitions             , inheritSpec, false)
+    this._copyDefinitions(_type[$INNER][$OWN_DEFINITIONS], inheritSpec, true )
+
+    // Note: the context is used for building the new type, but in general
+    // when instantiating a new object, it doesn't typically assign the new
+    // object to a context. Such is the case here.
+    //   this.setContext(context)
 
     if (_type[$OUTER].this) { AddPermeableNewDefinitionTo(this) }
-
-    this._initCoreProperties(isRootType, applyHandler)
-    this._setName(_type.name)
-    this._setSupertypesAndAncestry(supertypes, ancestry)
-    this._initDefinitionsFrom_(_type, visited, context)
   }, TRUSTED_VALUE_METHOD)
 
 
-  _Type.addMethod(function _initDefinitionsFrom_(_type, visited, context) {
-    var definitions, tags, value, nextValue
-
-    definitions = _type._definitions
-    tags        = OwnKeys(definitions)
+  _Type.addMethod(function _copyDefinitions(definitions, inheritSpec, isOwn) {
+    if (!definitions) { return }
+    const {asImmutable, visited, context} = inheritSpec
+    const selector = isOwn ? "addOwnDefinition" : "addSharedProperty"
+    const adder    = this[selector]
+    const tags     = OwnKeys(definitions)
 
     tags.forEach(tag => {
-      if (tag === "type") { return }
-      value       = definitions[tag]
-      nextValue   = ValueAsNext(value, undefined, visited, context)
-      this._setDefinitionAt(tag, nextValue)
+      const value       = definitions[tag]
+      const nextValue   = ValueAsNext(value, asImmutable, visited, context)
+      adder.call(this, tag, nextValue)
     })
-
-    if ((definitions = _type[$INNER][$OWN_DEFINITIONS])) {
-      tags = OwnKeys(definitions)
-      tags.forEach(tag => {
-        value       = definitions[tag]
-        nextValue   = ValueAsNext(value, undefined, visited, context)
-        this.addOwnDefinition(tag, nextValue)
-      })
-    }
   }, TRUSTED_VALUE_METHOD)
 
 
   // This method should only be called on a mutable object!!!
   _Type.addMethod(function _setImmutable(inPlace, visited) { // eslint-disable-line
     this.id // Lazyily sets the id (& uid) befoe it's too late.
+    this._subordinateTypes = TheEmptyArray
+    // return this._super._setImmutable(inPlace, visited)
     return this._basicSetImmutable()
   }, IDEMPOT_SELF_METHOD)
 
@@ -799,7 +766,7 @@ ObjectSauce(function (
 
   _Type.addMethod(function methodAncestry(selector) {
     return CrudeBeImmutable(
-      this.ancestry.filter(type => type.hasDefinedMethod(selector)))
+      this._ancestry.filter(type => type.hasDefinedMethod(selector)))
   }, TRUSTED_VALUE_METHOD)
 
   _Type.addMethod(function methodAncestryListing(selector) {
@@ -876,58 +843,6 @@ ObjectSauce(function (
 })
 
 
-
-
-// //===
-// _Type.addMethod(function _initFrom_(_type) {
-//   this$                  = this[$RIND]
-//   this.context           = null
-//   this._iidCount         = 0
-//   this._subordinateTypes = new Set()
-//
-//   this.ancestry = _type.ancestry
-//   this._basicSet("supertypes", supertypes)
-//   this._basicSet("name", name)
-//
-//   const isThing       = IsSubtypeOfThing(_type)
-//   const parentBlanker = isThing ? $IntrinsicBlanker : $SomethingBlanker
-//   const blanker       = new NewBlanker(parentBlanker)
-//
-//   this._definitions   = CopyInto(SpawnFrom(null), _type._definitions, "COPY")
-//
-//   const sourceBlanker = _type._blanker
-//   const _$source      = sourceBlanker.$root$inner
-//   const  $source      = sourceBlanker.$root$outer
-//   const _$root        = this.blanker.$root$inner
-//   const  $root        = this.blanker.$root$outer
-//
-//   AssignInto(_$root, _$source, "AVOID$SELECTORS")
-//   AssignInto( $root,  $source) // Warning, copies $RIND (and $IMMEDIATES) too!
-//   $root = this$
-//   AssignInto(_$root[$IMMEDIATES]         , _$source[$IMMEDIATES])
-//   AssignInto( $root[$IMMEDIATES]         ,  $source[$IMMEDIATES])
-//   AssignInto(_$root[$ASSIGNERS]          , _$source[$ASSIGNERS])
-//   AssignInto(_$root[$SUPERS]             , _$source[$SUPERS])
-//   AssignInto(_$root[$SUPERS][$IMMEDIATES], _$source[$SUPERS][$IMMEDIATES])
-//
-//   this.addSharedProperty("type", this$)
-//   this._setAsSubordinateOfSupertypes(supertypes)
-// }
-//
-// function AssignInto(target, source, mode_) {
-//   var next, selector, selectors
-//   selectorPicker = (mode_ === "AVOID$SELECTORS") ? OwnSelectors : OwnKeys
-//   selectors      = selectorPicker(source)
-//   next           = selectors.length
-//   if (mode_ === "COPY") {
-//     while (next--) { target[selector] = ValueCopy(source[selector]) }
-//   }
-//   else {
-//     while (next--) { target[selector] = source[selector] }
-//   }
-//   return target
-// }
-// //===
 
 
 // Type.addMethod(INSTANCEOF, (instance) => instance[this.membershipSelector])

@@ -63,12 +63,14 @@
 
 
   const  InvisibleConfig = {
+    id           : "InvisibleConfig",
     configurable : true,
     writable     : true,
     enumerable   : false,
   }
 
   const VisibleConfig = {
+    id           : "VisibleConfig",
     configurable : true,
     writable     : true,
     enumerable   : true,
@@ -103,10 +105,12 @@
   // private symbols for implementation usage, $ means non-ya-bizness!!!
   // Once everything is working, consider removing the names from the symbols
   // to discourage tampering!!!
-  _OSauce.$INNER                 = Symbol("$INNER")
-  _OSauce.$PULP                  = Symbol("$PULP")
+  const   $INNER                 = Symbol("$INNER")
   const   $OUTER                 = Symbol("$OUTER")
+
+  _OSauce.$INNER                 = $INNER
   _OSauce.$OUTER                 = $OUTER
+  _OSauce.$PULP                  = Symbol("$PULP")
   _OSauce.$RIND                  = Symbol("$RIND")  // Consider simply using $ !!!
 
   _OSauce.$DISGUISE              = Symbol("$DISGUISE")
@@ -175,11 +179,6 @@
     return `${word[0].toLowerCase()}${word.slice(1)}`
   }
 
-  // This method should only be called on a mutable object!!!
-  function CrudeBeImmutable(object) {
-    object[IS_IMMUTABLE] = true
-    return Frost(object)
-  }
 
   function SetInvisibly(target, selector, value, setOuterToo_) {
     DefineProperty(target, selector, InvisibleConfig)
@@ -188,10 +187,30 @@
   }
 
 
+  // This method should only be called on a mutable object!!!
+  function CrudeBeImmutable(object) {
+    object[IS_IMMUTABLE] = true
+    return Frost(object)
+  }
+
+  // This method should only be called on a mutable object!!!
+  // eslint-disable-next-line
+  function _basicSetImmutable(inPlace_, visited__) {
+    const _$target = this[$INNER] //
+    const  $target = _$target[$OUTER]
+
+    delete _$target._retarget
+    $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
+    Frost($target)
+    return this
+  } // IDEMPOT_SELF_METHOD
+
+
 
   _OSauce.ExtractParamListing     = ExtractParamListing
   _OSauce.ExtractParamNames       = ExtractParamNames
   _OSauce.SetInvisibly            = SetInvisibly
+  _OSauce._BasicSetImmutable      = _basicSetImmutable
 
   OSauce.asCapitalized            = MarkFunc(AsCapitalized)
   OSauce.asDecapitalized          = MarkFunc(AsDecapitalized)

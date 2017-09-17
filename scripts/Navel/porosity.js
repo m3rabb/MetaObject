@@ -25,7 +25,6 @@ ObjectSauce(function (
 
   const OuterBarrier_prototype = OuterBarrier.prototype = SpawnFrom(DefaultBarrier)
   const Impermeable = new OuterBarrier()
-  Impermeable.id = "Impermeable"
 
 
   // Setting on things in not allowed because the setting semantics are broken.
@@ -87,38 +86,8 @@ ObjectSauce(function (
   }
 
 
-
-  // const Permeable = new OuterBarrier()
-  //
-  // Permeable.id = "Permeable"
-  //
-  // Permeable.get = function get($target, selector, target) {
-  //   var value = $target[selector]
-  //   if (value !== undefined) { return value }
-  //
-  //   const _$target = InterMap.get(target)
-  //
-  //   value = _$target[selector]
-  //
-  //   switch (typeof value) {
-  //     case "undefined" : break
-  //     case "function"  : return value[$OUTER_WRAPPER] || value
-  //     default          : return value
-  //   }
-  //
-  //   const $method_inner = _$target[$IMMEDIATES][selector]
-  //   if ($method_inner) { return $method_inner[$OUTER_WRAPPER].call(target) }
-  //   if (_$target[$DECLARATIONS][selector] !== undefined) { return null }
-  //
-  //   return _$target._unknownProperty.call(_$target[$PULP], selector)
-  // }
-  //
-  // // REVISIT!!!
-  // Permeable.has = function has($target, selector) {
-  //   const _$target = InterMap.get($target[$RIND])
-  //   return (selector in _$target)
-  // }
-
+  OuterBarrier_prototype.basicGet    = OuterBarrier_prototype.get
+  OuterBarrier_prototype.basicHas    = OuterBarrier_prototype.has
 
 
 
@@ -127,6 +96,7 @@ ObjectSauce(function (
 
   const InnerBarrier_prototype = SpawnFrom(DefaultBarrier)
   InnerBarrier.prototype = InnerBarrier_prototype
+
 
   InnerBarrier_prototype.get = function get(_$target, selector, _target) {
     const value = _$target[selector]
@@ -139,9 +109,10 @@ ObjectSauce(function (
     return _$target._unknownProperty.call(_target, selector)
   }
 
-  // has () {
-  //   // hide symbols from view
-  // }
+
+  InnerBarrier_prototype.has = function has(_$target, selector) {
+    return (selector in _$target)
+  }
 
 
   InnerBarrier_prototype.set = function set(_$source, selector, value, _source) {
@@ -169,11 +140,11 @@ ObjectSauce(function (
         if (value === undefined) {
           return AssignmentOfUndefinedError(_source, selector)
         }
-        if (_HasOwn.call(_$target, selector))        { return true }
+        if (_HasOwn.call(_$target, selector))         { return true }
         if (isImmutable && _$source.type.isImmutable) { return true }
         // Else, target is mutable, and new value matches inherited shared value
       }
-      else if (existing === undefined) {
+      else if (existing === undefined  && !isImmutable) {
         delete _$target[_DURABLES] // Invalidate durables because new property
       }
     }
@@ -285,51 +256,60 @@ ObjectSauce(function (
   }
 
 
+  InnerBarrier_prototype.basicGet    = InnerBarrier_prototype.get
+  InnerBarrier_prototype.basicSet    = InnerBarrier_prototype.set
+  InnerBarrier_prototype.basicDelete = InnerBarrier_prototype.deleteProperty
 
-  function DisguisedOuterBarrier(_target, $target, applyHandler) {
-    this._target = _target
-    this.$target = $target
-    this.apply   = applyHandler
+
+
+  function DisguisedOuterBarrier($target, _target, applyHandler) {
+    this.$outer = $target
+    this.$pulp  = _target
+    this.apply  = applyHandler
   }
 
   const DisguisedOuterBarrier_prototype = SpawnFrom(OuterBarrier_prototype)
   DisguisedOuterBarrier.prototype = DisguisedOuterBarrier_prototype
 
   DisguisedOuterBarrier_prototype.get = function get(func, selector, target) {
-    return Impermeable.get(this.$target, selector, target)
+    return this.basicGet(this.$outer, selector, target)
   }
 
   DisguisedOuterBarrier_prototype.has = function has(func, selector) {
-    return Impermeable.has(this.$target, selector)
+    return this.basicHas(this.$outer, selector)
   }
 
 
 
   // CHECK THAT BARRIER WORK ON TYPE PROXIES, IMMUTABLE AS WELL AS MUTABLE!!!
   function DisguisedInnerBarrier(_$target, applyHandler) {
-    this._$target = _$target
-    this.apply    = applyHandler
-    // this._target  = _target // this is the proxy, which is now set from the outside
+    this.$inner = _$target
+    this.apply  = applyHandler
+    // this.$pulp  = _target // This is impossible to set within this
+    // constructor!!! Thsi barrier must be made before the proxy is
+    // instantiated with this barrier. Therefore, _target must be set from
+    // outside.  This occurs during the blanker created by NewDisguisedInner.
   }
 
   const DisguisedInnerBarrier_prototype = SpawnFrom(InnerBarrier_prototype)
   DisguisedInnerBarrier.prototype = DisguisedInnerBarrier_prototype
 
+
   DisguisedInnerBarrier_prototype.get = function get(func, selector, _target) {
     // Note: Could reimplement it here is following call is too slow.
-    return InnerBarrier_prototype.get(this._$target, selector, _target)
+    return this.basicGet(this.$inner, selector, _target)
   }
 
   DisguisedInnerBarrier_prototype.set = function set(func, selector, value, _target) {
-    return InnerBarrier_prototype.set(this._$target, selector, value, _target)
+    return this.basicSet(this.$inner, selector, value, _target)
   }
 
   DisguisedInnerBarrier_prototype.has = function has(func, selector) {
-    return (selector in this._$target)
+    return (selector in this.$inner)
   }
 
   DisguisedInnerBarrier_prototype.deleteProperty = function deleteProperty(func, selector) {
-    return InnerBarrier_prototype.deleteProperty(this._$target, selector)
+    return this.basicDelete(this.$inner, selector)
   }
 
 

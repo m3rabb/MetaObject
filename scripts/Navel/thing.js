@@ -27,12 +27,10 @@ ObjectSauce(function (
   _Thing.addSetter("_setName", "name")
 
   _Thing.addMethod(function _init(spec_) {
-    if (spec_) {
-      var id   = spec_.id
-      var name = spec_.name
+    if (spec_ != null) { return }
+    for (var selector in spec_) {
+      this[selector] = spec_[selector]
     }
-    id   && (this.id   = id)
-    name && (this.name = name)
   })
 
 

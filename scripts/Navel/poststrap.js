@@ -22,8 +22,9 @@ ObjectSauce(function (
     const supertypes = isRootType ? TheEmptyArray : ThingAncestry
     const ancestry   = _type._buildAncestry(supertypes)
 
-    _type.setName(name)
+    // The order of the following is intentional.
     _type._setSupertypesAndAncestry(supertypes, ancestry, INHERIT)
+    _type.setName(name)
     _type.addSharedProperty("type", _type[$RIND])
     BasicSet.call(_type, "context", RootContext)
     if (!isHidden) { _RootContext._atPut(name, _type[$RIND]) }

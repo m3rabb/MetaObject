@@ -4,6 +4,7 @@ ObjectSauce(function (
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   SAFE_FUNC, TAMED_FUNC,
   Frost, InterMap, IsFact, MarkFunc, OwnNames, SetInvisibly, SpawnFrom, RootOf,
+  _BasicSetImmutable,
   AssignmentOfUndefinedError, AttemptInvertedFuncCopyError, DetectedInnerError,
   OSauce, _OSauce
 ) {
@@ -381,11 +382,27 @@ ObjectSauce(function (
       case "object"   : if (value === null) { return null  } else { break }
     }
 
-    if ((traversed = visited.get(value))) { return traversed }
-    if (!context && value[IS_IMMUTABLE])  { return value     }
-    if (value.id != null)                 { return value     }
+    if ((traversed = visited.get(value)))              { return traversed }
+    if (value[IS_IMMUTABLE]) {
+      if (!context)                                      { return value }
+      if (value.id != null)                              { return value }
 
-    return ((_$value = InterMap.get(value))) ?
+      // If we're copying properties to a new object in a new context, but
+      // the context is the same...
+      if ((_$value = InterMap.get(value)) && context === _$value.context) {
+        // ... and the tranya value is already in that context ...
+            // ... and the value is simple in that it only references primitive
+            // values, such that it only needs to use _BasicSetImmutable
+            // (e.g. Definitions), then simply answer the immutable value.
+        if (_$value._setImmutable === _BasicSetImmutable) { return value }
+      }
+    }
+    else {
+      if (value.id != null)                               { return value }
+      _$value = InterMap.get(value)
+    }
+
+    return (_$value) ?
       _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
       ObjectCopy(value, asImmutable, visited, context)
   }

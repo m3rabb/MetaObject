@@ -56,7 +56,7 @@ ObjectSauce(function (
 
   function NewVacuousConstructor(name) {
     const funcBody = `
-      return function ${name}() {
+      return function ${name || ""}() {
         const message = "This constructor is only used for naming!!"
         return ObjectSauce.signalError(${name}, message)
       }
@@ -157,23 +157,21 @@ ObjectSauce(function (
         name = `${AsDecapitalized($inner.type.name)}__${uid}`
       }
 
-      // const func = (name) ? NewVacuousConstructor(name) : DefaultDisguiseFunc
       const func       = NewVacuousConstructor(name)
       const mutability = new DisguisedInnerBarrier($inner, applyHandler)
-      // const barrier    = new InnerBarrier()
       const $pulp      = new Proxy(func, mutability)
-      // mutability._target = $pulp
-      const porosity   = new DisguisedOuterBarrier($pulp, $outer, applyHandler)
+      const porosity   = new DisguisedOuterBarrier($outer, $pulp, applyHandler)
       const $rind      = new Proxy(func, porosity)
-      // const $rind           = new Proxy(NewAsFact, privacyPorosity)
 
-      $inner[$DISGUISE] = func
-      $inner[$BARRIER]  = mutability // barrier
-      $inner[$INNER]    = $inner
-      $inner[$OUTER]    = $outer
-      $inner[$PULP]     = $pulp
-      $inner[$RIND]     = $rind
-      $outer[$RIND]     = $rind
+      mutability.$pulp = $pulp  // Full circle connection to inner barrier
+
+      $inner[$DISGUISE]  = func
+      $inner[$BARRIER]   = mutability // barrier
+      $inner[$INNER]     = $inner
+      $inner[$OUTER]     = $outer
+      $inner[$PULP]      = $pulp
+      $inner[$RIND]      = $rind
+      $outer[$RIND]      = $rind
 
       if (uid) { SetInvisibly($inner, "uid", uid, "SET BOTH INNER & OUTER") }
 
@@ -186,32 +184,18 @@ ObjectSauce(function (
 
 
   function Context_apply(disguiseFunc, receiver, args) {
-    return this._target.exec(...args).beImmutable
+    return this.$pulp.exec(...args).beImmutable
   }
+
 
   function Type_apply(disguiseFunc, receiver, args) {
-    // return this._target.newAsFact(...args)
+    // return this._target.newImmutable(...args)
 
-    // This is the same code as in newAsFact(...args)
-    const   instance = this._target.new(...args)
+    const   instance = this.$pulp.new(...args)
     const _$instance = InterMap.get(instance)
-    const _instance  = _$instance[$PULP]
 
-    if (_instance.id == null) { _$instance._setImmutable.call(_instance) }
-    return instance
+    return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]
   }
-
-
-  // function Type_apply(disguiseFunc, receiver, args) {
-  //   // return this._target.newImmutable(...args)
-  //
-  //   // This is the same code as in newAsFact(...args)
-  //   const   instance = this._target.new(...args)
-  //   const _$instance = InterMap.get(instance)
-  //   const _instance  =
-  //   _$instance._setImmutable.call(_$instance[$PULP])
-  //   return instance
-  // }
 
 
 

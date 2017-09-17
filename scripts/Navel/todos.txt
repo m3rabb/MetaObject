@@ -175,7 +175,7 @@ Add jasmineToString property
 
 
 ==
-Create an option for unknownProperty to return undefined
+Create an option for unknownProperty to return undefined??? or null
 
 
 
@@ -189,6 +189,48 @@ Think about how to manage $Intrinsic type NOT being copied!
 
 
 Symbols are known but not visible
+
+
+==
+Consider putting declaration as null in $IMMEDIATES
+
+==
+addGetter
+add reader assigner error
+
+Is there any real difference between retro and lazy?
+
+==
+Immutables on Set doesnt work!!!
+
+==
+fix addDurables -- make it a Definition
+
+Add tests re: _DURABLES for InSetProperty
+
+Test to ensure _DURABLES are retroactively added to immutables
+
+==
+Simplify AsRetroactiveProperty and AsLazyProperty
+
+
+==
+Change root vars to use _$ style naming too
+
+==
+Consider using name computed vs immediate (Not likely)
+
+==
+change NewDisguisedInner and porosity to have separate barrier (classes)
+for Contexts and Types, so Contexts can have their own get method.
+
+==
+const firstChar = (selector.charAt) ? selector[0] : selector.toString()[7]
+Add an implementation selector stash
+
+==
+Make better name the 'As' method names in wrapping.js!!!!
+
 
 ==========
 

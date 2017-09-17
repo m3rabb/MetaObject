@@ -1,6 +1,8 @@
 ObjectSauce.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
   "use strict"
 
+  const LISTING_DELIMITER_MATCHER = /\s*[ ,]\s*/;
+
   const modeNames = `DECLARE DECLARATION STANDARD SHARED ALIAS METHOD
                      LAZY RETRO RETROACTIVE DURABLE
                      FOR_ASSIGN FOR_SETTER FOR_MANDATORY SETTER MANDATORY`
@@ -46,10 +48,10 @@ ObjectSauce.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
 
   PropertyLoader.addMethod(function _load(item, mode) {
     switch (item.constructor) {
-      case Array    : this._loadFromArray(item, mode) ; break
-      case Object   : this._loadFromSpec (item, mode) ; break
-      case Function : this._loadFunc     (item, mode) ; break
-      case String   : this._loadFromName (item, mode) ; break
+      case Array    : this._loadFromArray (item, mode) ; break
+      case Object   : this._loadFromSpec  (item, mode) ; break
+      case Function : this._loadFunc      (item, mode) ; break
+      case String   : this._loadFromString(item, mode) ; break
 
       default : this._signalError("Definitions must be in a list|spec|func!!")
     }
@@ -71,7 +73,7 @@ ObjectSauce.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
         case Function : this._loadFunc     (item, mode)             ; break
         case String   :
           if (this.isMode(item)) { this._load(items[index++], item) }
-          else                   { this._loadFromName(item, mode)   } break
+          else                   { this._loadFromString(item, mode) } break
       }
     }
   })
@@ -127,6 +129,11 @@ ObjectSauce.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
 
       default : return this._signalError(`Invalid definition mode: ${mode}!!`)
     }
+  })
+
+  PropertyLoader.addMethod(function _loadFromString(string, mode) {
+    const names = string.split(LISTING_DELIMITER_MATCHER)
+    names.forEach(name => this._loadFromName(name, mode))
   })
 
   PropertyLoader.addMethod(function _loadFromName(name, mode) {

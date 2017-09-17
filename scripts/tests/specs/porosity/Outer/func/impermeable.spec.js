@@ -6,7 +6,7 @@ ObjectSauce.ImplementationTesting(function (Type_) {
     const QRS = Symbol("QRS")
 
     beforeEach(function () {
-      this.Bat = Type_({
+      this.Bat = Type_.new({
         name: "Bat",
         defines: [
           "name, kind",
@@ -23,7 +23,8 @@ ObjectSauce.ImplementationTesting(function (Type_) {
     describe("When accessing an existing", function() {
       describe("public property", function () {
         it("Answers the property value", function () {
-          expect( this.Bat.name ).toBe( "Bat" )
+          var result = this.Bat.name
+          expect( result ).toBe( "Bat" )
         })
       })
 

@@ -6,6 +6,7 @@ ObjectSauce(function (
   IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD,
   AsName, AsPropertySymbol, ExtractParamListing, Frost, InterMap, MarkFunc,
   SetInvisibly, SpawnFrom, MarkAndSetFuncImmutable, NewAssignmentErrorHandler,
+  _BasicSetImmutable,
   CompletelyDeleteProperty, InSetProperty,
   DefineProperty, InvisibleConfig,
   _OSauce
@@ -40,18 +41,6 @@ ObjectSauce(function (
     return instance
   }
 
-
-  // This method should only be called on a mutable object!!!
-  // eslint-disable-next-line
-  const _BasicSetImmutable = function _basicSetImmutable(inPlace_, visited__) {
-    const _$target = this[$INNER] //
-    const  $target = _$target[$OUTER]
-
-    delete _$target._retarget
-    $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
-    Frost($target)
-    return this
-  } // IDEMPOT_SELF_METHOD
 
 
   function SetDefinition(_$target, definition) {
@@ -243,7 +232,6 @@ ObjectSauce(function (
 
 
   _OSauce._BasicNew          = _BasicNew
-  _OSauce._BasicSetImmutable = _BasicSetImmutable
   _OSauce.SetDefinition      = SetDefinition
   _OSauce._SetDefinitionAt   = _SetDefinitionAt
 
