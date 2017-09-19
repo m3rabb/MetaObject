@@ -1,6 +1,6 @@
 ObjectSauce(function (
-  $ASSIGNERS, $BARRIER, $IMMEDIATES, $IS_CONTEXT, $IS_DEFINITION, $IS_INNER,
-  $IS_TYPE, $LOCKED, $OUTER, $PULP, $RIND, $SUPERS,
+  $ASSIGNERS, $BARRIER, $IMMEDIATES, $IS_CONTEXT, $IS_DEFINITION,
+  $IS_IMPENETRABLE, $IS_INNER, $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
   IMPLEMENTATION, INVISIBLE, IS_IMMUTABLE, PROOF,
   VISIBLE, _DURABLES,
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
@@ -192,7 +192,7 @@ ObjectSauce(function (
   function BePermeable(target, beImmutable) {
     const _$target = InterMap.get(target)
     if (!_$target) { return target }
-    if (_$target[$LOCKED]) {
+    if (_$target[$IS_IMPENETRABLE]) {
       return target._signalError("Can't make permeable copies of locked objects!!")
     }
 

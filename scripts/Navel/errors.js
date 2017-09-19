@@ -1,8 +1,11 @@
-ObjectSauce(function ($LOCKED, $RIND, AsName, MarkFunc, OSauce, _OSauce) {
+ObjectSauce(function (
+  $IS_IMPENETRABLE, $RIND, AsName, MarkFunc, OSauce, _OSauce
+) {
   "use strict"
 
   const ErrorLog = []
 
+  // eslint-disable-next-line
   var HandleErrorsQuietly = true
   var LogErrors           = false
 
@@ -35,12 +38,12 @@ ObjectSauce(function ($LOCKED, $RIND, AsName, MarkFunc, OSauce, _OSauce) {
   OSauce.signalError = MarkFunc(SignalError)
 
   OSauce.setLogErrors = MarkFunc(function (bool) {
-    if (!this[$LOCKED]) { LogErrors = !!bool }
+    if (!this[$IS_IMPENETRABLE]) { LogErrors = !!bool }
     return this[$RIND]
   })
 
   OSauce.setHandleErrorsQuietly = MarkFunc(function (bool) {
-    if (!this[$LOCKED]) { HandleErrorsQuietly = !!bool }
+    if (!this[$IS_IMPENETRABLE]) { HandleErrorsQuietly = !!bool }
     return this[$RIND]
   })
 

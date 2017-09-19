@@ -1,5 +1,5 @@
 ObjectSauce(function (
-  $INNER, $IS_TYPE, $LOCKED, $OUTER, $PULP, $RIND,
+  $INNER, $IS_TYPE, $OUTER, $PULP, $RIND,
   COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
   AsDecapitalized, BePermeable, ValueAsNext,
@@ -61,15 +61,15 @@ ObjectSauce(function (
 
 
 
-  _Context.addMethod(function lock() {
+  _Context.addMethod(function beImpenetrable() {
     var selector, entry
-    if (this.isLocked) { return this }
+    if (this.isImpenetrable) { return this }
     const entries = this._knownEntries
     for (selector in entries) {
       entry = entries[selector]
-      if (IsSauced(entry)) { entry.lock }
+      if (IsSauced(entry)) { entry.beImpenetrable }
     }
-    this._super.lock
+    this._super.beImpenetrable
   }, TRUSTED_VALUE_METHOD)
 
 

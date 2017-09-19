@@ -129,7 +129,7 @@
   _OSauce.$DECLARATIONS          = Symbol("$DECLARATIONS")
   _OSauce.$SUPERS                = Symbol("$SUPERS")
   _OSauce.$OWN_DEFINITIONS       = Symbol("$OWN_DEFINITIONS")
-  _OSauce.$LOCKED                = Symbol("$LOCKED")
+  _OSauce.$IS_IMPENETRABLE       = Symbol("$IS_IMPENETRABLE")
 
   _OSauce.$OUTER_WRAPPER         = Symbol("$OUTER_WRAPPER")
 

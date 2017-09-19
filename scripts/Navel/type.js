@@ -1,6 +1,6 @@
 ObjectSauce(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER, $IS_CONTEXT,
-  $IS_DEFINITION, $IS_TYPE, $LOCKED, $OUTER, $OWN_DEFINITIONS,
+  $IS_DEFINITION, $IS_IMPENETRABLE, $IS_TYPE, $OUTER, $OWN_DEFINITIONS,
   $PULP, $RIND, $SUPERS,
   ASSIGNER, DECLARATION, INHERIT, INVISIBLE, IS_IMMUTABLE, REINHERIT, VISIBLE,
    _DURABLES,
@@ -810,8 +810,9 @@ ObjectSauce(function (
 
 
 
-  _Type.addMethod(function lock() {
-    this._blanker.$root$inner[$LOCKED] = this[$INNER][$LOCKED] = true
+  _Type.addMethod(function beImpenetrable() {
+    this[$INNER][$IS_IMPENETRABLE]              = true
+    this._blanker.$root$inner[$IS_IMPENETRABLE] = true
     return this
   }, IDEMPOT_SELF_METHOD)
 

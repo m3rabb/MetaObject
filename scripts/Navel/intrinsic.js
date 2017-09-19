@@ -14,8 +14,8 @@
 // USER CAN/SHOULD NEVER REDEFINE INATE METHODS
 
 ObjectSauce(function (
-  $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $LOCKED, $OUTER,
-  $OWN_DEFINITIONS, $PULP, $RIND,
+  $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
+  $OUTER, $OWN_DEFINITIONS, $PULP, $RIND,
   DECLARATION, IS_IMMUTABLE, LAZY_INSTALLER, _DURABLES,
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
   $Intrinsic$root$inner, AsName, CrudeBeImmutable, ExtractDefinitionFrom,
@@ -299,12 +299,13 @@ ObjectSauce(function (
 
 
 
-  _$Intrinsic.addMethod(function lock() {
-    this[$INNER][$LOCKED] = true
+  _$Intrinsic.addMethod(function beImpenetrable() {
+    this[$INNER][$IS_IMPENETRABLE] = true
   }, IDEMPOT_VALUE_METHOD)
 
-  _$Intrinsic.addMethod(function isLocked() {
-    return this[$LOCKED] || false
+
+  _$Intrinsic.addMethod(function isImpenetrable() {
+    return this[$IS_IMPENETRABLE] || false
   }, IDEMPOT_VALUE_METHOD)
 
 
