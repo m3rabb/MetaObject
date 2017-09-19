@@ -1,4 +1,4 @@
-ObjectSauce(function (
+Tranya(function (
   $ASSIGNERS, $BARRIER, $IMMEDIATES, $IS_CONTEXT, $IS_DEFINITION,
   $IS_IMPENETRABLE, $IS_INNER, $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
   IMPLEMENTATION, INVISIBLE, IS_IMMUTABLE, PROOF,
@@ -11,7 +11,7 @@ ObjectSauce(function (
 
   AddMethod, Context_atPut, Context_init, Definition_init,
   _BasicNew, _BasicSetImmutable, SetDefinition, _SetDefinitionAt,
-  OSauce, _OSauce
+  Shared, _Shared
 ) {
   "use strict"
 
@@ -105,7 +105,7 @@ ObjectSauce(function (
 
 
 
-  const _$RootContext    = new ContextBlanker("ObjectSauce")
+  const _$RootContext    = new ContextBlanker("Tranya")
   const  _RootContext    = _$RootContext[$PULP]
   const   RootContext    = _$RootContext[$RIND]
 
@@ -113,7 +113,7 @@ ObjectSauce(function (
   const  _DefaultContext = _$DefaultContext[$PULP]
   const   DefaultContext = _$DefaultContext[$RIND]
 
-  _RootContext._init("ObjectSauce")
+  _RootContext._init("Tranya")
   _DefaultContext._init("Default", RootContext)
 
 
@@ -210,28 +210,28 @@ ObjectSauce(function (
   }
 
 
-  OSauce.rootContext            =  RootContext
-  OSauce.defaultContext         =  DefaultContext
+  Shared.rootContext            =  RootContext
+  Shared.defaultContext         =  DefaultContext
 
-  _OSauce.$BaseBlanker          =  $BaseBlanker
-  _OSauce.$SomethingBlanker     =  $SomethingBlanker
-  _OSauce.$IntrinsicBlanker     =  $IntrinsicBlanker
-  _OSauce.$Something$root$inner =  $Something$root$inner
+  _Shared.$BaseBlanker          =  $BaseBlanker
+  _Shared.$SomethingBlanker     =  $SomethingBlanker
+  _Shared.$IntrinsicBlanker     =  $IntrinsicBlanker
+  _Shared.$Something$root$inner =  $Something$root$inner
 
-  _OSauce._$Something           = _$Something
-  _OSauce._$Intrinsic           = _$Intrinsic
-  _OSauce._Nothing              =  _Nothing
-  _OSauce._Thing                =  _Thing
-  _OSauce._Type                 =  _Type
-  _OSauce._Context              =  _Context
-  _OSauce._Definition           =  _Definition
+  _Shared._$Something           = _$Something
+  _Shared._$Intrinsic           = _$Intrinsic
+  _Shared._Nothing              =  _Nothing
+  _Shared._Thing                =  _Thing
+  _Shared._Type                 =  _Type
+  _Shared._Context              =  _Context
+  _Shared._Definition           =  _Definition
 
-  _OSauce._$DefaultContext      = _$DefaultContext
-  _OSauce._RootContext          =  _RootContext
-  _OSauce.Thing                 =   Thing
+  _Shared._$DefaultContext      = _$DefaultContext
+  _Shared._RootContext          =  _RootContext
+  _Shared.Thing                 =   Thing
 
-  _OSauce.AddPermeableNewDefinitionTo = AddPermeableNewDefinitionTo
-  _OSauce.BePermeable                 = BePermeable
-  _OSauce.AddIntrinsicDeclaration     = AddIntrinsicDeclaration
+  _Shared.AddPermeableNewDefinitionTo = AddPermeableNewDefinitionTo
+  _Shared.BePermeable                 = BePermeable
+  _Shared.AddIntrinsicDeclaration     = AddIntrinsicDeclaration
 
 })

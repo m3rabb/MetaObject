@@ -1,9 +1,9 @@
-ObjectSauce(function (
+Tranya(function (
   $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, IS_IMMUTABLE,
   AsName, AsPropertySymbol, ObjectCopy, _HasOwn, InnerBarrier, InterMap,
   InvisibleConfig, _$Copy,
   DefineProperty, InSetProperty,
-  _OSauce
+  _Shared
 ) {
   "use strict"
 
@@ -358,11 +358,11 @@ ObjectSauce(function (
   }
 
 
-  _OSauce.AsRetroactiveProperty = AsRetroactiveProperty
-  _OSauce.AsLazyProperty        = AsLazyProperty
+  _Shared.AsRetroactiveProperty = AsRetroactiveProperty
+  _Shared.AsLazyProperty        = AsLazyProperty
 
 
-  _OSauce.TRUSTED_VALUE_METHOD = {
+  _Shared.TRUSTED_VALUE_METHOD = {
     id    : "TRUSTED_VALUE_METHOD",
     outer : AsOuterValue,
     inner : AsInnerValue,
@@ -372,14 +372,14 @@ ObjectSauce(function (
   // IDEMPOT_VALUE_METHOD and IDEMPOT_SELF_METHOD must be methods that can
   // NEVER can any change to the receiver and
   // that call no other methods, except other idempot methods.
-  _OSauce.IDEMPOT_VALUE_METHOD = {
+  _Shared.IDEMPOT_VALUE_METHOD = {
     id    : "IDEMPOT_VALUE_METHOD",
     outer : AsOuterBasicValue,
     inner : PassThru,
     super : AsSuperBasic,
   }
 
-  _OSauce.IDEMPOT_SELF_METHOD = {
+  _Shared.IDEMPOT_SELF_METHOD = {
     id    : "IDEMPOT_SELF_METHOD",
     outer : AsOuterBasicSelf,
     inner : PassThru,
@@ -387,27 +387,27 @@ ObjectSauce(function (
   }
 
 
-  _OSauce.STANDARD_METHOD = {
+  _Shared.STANDARD_METHOD = {
     id    : "STANDARD_METHOD",
     outer : AsOuterStandard,
     inner : AsInnerStandard,
     super : AsSuperStandard,
   }
 
-  _OSauce.IMMEDIATE_METHOD = {
-    __proto__ : _OSauce.STANDARD_METHOD,
+  _Shared.IMMEDIATE_METHOD = {
+    __proto__ : _Shared.STANDARD_METHOD,
     id        : "IMMEDIATE_METHOD",
   }
 
-  _OSauce.DECLARATION = {
+  _Shared.DECLARATION = {
     id    : "DECLARATION",
   }
 
-  _OSauce.ASSIGNER = {
+  _Shared.ASSIGNER = {
     id    : "ASSIGNER",
   }
 
-  _OSauce.SETTER_METHOD = {
+  _Shared.SETTER_METHOD = {
     id    : "SETTER_METHOD",
     outer : AsOuterSelf,
     inner : AsInnerSelf,
@@ -415,13 +415,13 @@ ObjectSauce(function (
   }
 
   const MANDATORY_SETTER_METHOD = {
-    __proto__ : _OSauce.SETTER_METHOD,
+    __proto__ : _Shared.SETTER_METHOD,
     id        : "MANDATORY_SETTER_METHOD",
   }
 
-  _OSauce.MANDATORY_SETTER_METHOD = MANDATORY_SETTER_METHOD
+  _Shared.MANDATORY_SETTER_METHOD = MANDATORY_SETTER_METHOD
 
-  _OSauce.AsBasicSetter = function (propertyName, setterName, mode) {
+  _Shared.AsBasicSetter = function (propertyName, setterName, mode) {
     const name = `${AsName(setterName)}_$set_${propertyName}`
     const PropertyName = (mode === MANDATORY_SETTER_METHOD) ?
        AsPropertySymbol(propertyName) : propertyName
@@ -431,7 +431,7 @@ ObjectSauce(function (
   }
 
 
-  _OSauce.AsAssignmentSetter = function (propertyName, setterName, Assigner) {
+  _Shared.AsAssignmentSetter = function (propertyName, setterName, Assigner) {
     const name = `${AsName(setterName)}_$assignSet_${propertyName}`
     const PropertyName = AsPropertySymbol(propertyName)
     return {

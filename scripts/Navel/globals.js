@@ -7,17 +7,17 @@
   const  DefineProperty      = Object.defineProperty
   const _HasOwn              = Object_prototype.hasOwnProperty
 
-  const OSauce  = SpawnFrom(null)
-  const _OSauce = SpawnFrom(OSauce)
+  const Shared  = SpawnFrom(null)
+  const _Shared = SpawnFrom(Shared)
 
   const _DURABLES    = Symbol("_DURABLES")
   const IS_IMMUTABLE = Symbol("IS_IMMUTABLE")
   const SAFE_FUNC    = Frost({ id : "SAFE_FUNC"   , [IS_IMMUTABLE] : true })
   const InterMap     = new WeakMap()
 
-  OSauce.IS_IMMUTABLE = IS_IMMUTABLE
-  OSauce.DURABLES     = _DURABLES
-  _OSauce._DURABLES   = _DURABLES
+  Shared.IS_IMMUTABLE = IS_IMMUTABLE
+  Shared.DURABLES     = _DURABLES
+  _Shared._DURABLES   = _DURABLES
 
 
   function MarkFunc(func, marker = SAFE_FUNC) {
@@ -27,30 +27,30 @@
   }
 
 
-  _OSauce.InterMap            = InterMap
-  _OSauce.PropertyToSymbolMap = SpawnFrom(null)
-  // OSauce.SymbolPropertyMap  = SpawnFrom(null)
+  _Shared.InterMap            = InterMap
+  _Shared.PropertyToSymbolMap = SpawnFrom(null)
+  // Shared.SymbolPropertyMap  = SpawnFrom(null)
 
 
-  OSauce.spawnFrom           = MarkFunc(SpawnFrom)
-  OSauce.frost               = MarkFunc(Frost)
-  OSauce.isFrosted           = MarkFunc(Object.isFrozen)
-  OSauce.isArray             = MarkFunc(Array.isArray)
-  OSauce.rootOf              = MarkFunc(Object.getPrototypeOf)
-  OSauce.roundUp             = MarkFunc(Math.ceil)
-  OSauce.roundDown           = MarkFunc(Math.floor)
-  OSauce.randomUnitValue     = MarkFunc(Math.random)
-  OSauce.ownKeys             = MarkFunc(Reflect.ownKeys)
-  OSauce.ownSymbols          = MarkFunc(Object.getOwnPropertySymbols)
-  OSauce.ownNames            = MarkFunc(Object.getOwnPropertyNames)
-  OSauce.ownVisibleNames     = MarkFunc(Object.keys)
+  Shared.spawnFrom           = MarkFunc(SpawnFrom)
+  Shared.frost               = MarkFunc(Frost)
+  Shared.isFrosted           = MarkFunc(Object.isFrozen)
+  Shared.isArray             = MarkFunc(Array.isArray)
+  Shared.rootOf              = MarkFunc(Object.getPrototypeOf)
+  Shared.roundUp             = MarkFunc(Math.ceil)
+  Shared.roundDown           = MarkFunc(Math.floor)
+  Shared.randomUnitValue     = MarkFunc(Math.random)
+  Shared.ownKeys             = MarkFunc(Reflect.ownKeys)
+  Shared.ownSymbols          = MarkFunc(Object.getOwnPropertySymbols)
+  Shared.ownNames            = MarkFunc(Object.getOwnPropertyNames)
+  Shared.ownVisibleNames     = MarkFunc(Object.keys)
 
-  _OSauce._HasOwn            = _HasOwn  // ._hasOwn
-  _OSauce.defineProperty     = DefineProperty
-  _OSauce.INSTANCEOF         = Symbol.hasInstance
+  _Shared._HasOwn            = _HasOwn  // ._hasOwn
+  _Shared.defineProperty     = DefineProperty
+  _Shared.INSTANCEOF         = Symbol.hasInstance
 
 
-  OSauce.hasOwn = function (target, selector) {
+  Shared.hasOwn = function (target, selector) {
     return (target == null) ? false : _HasOwn.call(target, selector)
   }
 
@@ -81,24 +81,24 @@
   // automatically recognized as safe functions too
 
   // Document these!!!
-  _OSauce.SAFE_FUNC     = SAFE_FUNC
-  _OSauce.BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC", [IS_IMMUTABLE] : true })
-  _OSauce.TAMED_FUNC    = Frost({ id : "TAMED_FUNC"  , [IS_IMMUTABLE] : true })
-  _OSauce.OUTER_FUNC    = Frost({ id : "OUTER_FUNC"  , [IS_IMMUTABLE] : true })
-  _OSauce.INNER_FUNC    = Frost({ id : "INNER_FUNC"  , [IS_IMMUTABLE] : true })
+  _Shared.SAFE_FUNC     = SAFE_FUNC
+  _Shared.BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC", [IS_IMMUTABLE] : true })
+  _Shared.TAMED_FUNC    = Frost({ id : "TAMED_FUNC"  , [IS_IMMUTABLE] : true })
+  _Shared.OUTER_FUNC    = Frost({ id : "OUTER_FUNC"  , [IS_IMMUTABLE] : true })
+  _Shared.INNER_FUNC    = Frost({ id : "INNER_FUNC"  , [IS_IMMUTABLE] : true })
 
-  _OSauce.DISGUISE_PULP = Frost({ id : "DISGUISE_PULP" })
-  _OSauce.ASSIGNER_FUNC = Frost({ id : "ASSIGNER_FUNC" })
-  _OSauce.HANDLER_FUNC  = Frost({ id : "HANDLER_FUNC"  })
+  _Shared.DISGUISE_PULP = Frost({ id : "DISGUISE_PULP" })
+  _Shared.ASSIGNER_FUNC = Frost({ id : "ASSIGNER_FUNC" })
+  _Shared.HANDLER_FUNC  = Frost({ id : "HANDLER_FUNC"  })
 
-  _OSauce.MarkFunc      = MarkFunc
+  _Shared.MarkFunc      = MarkFunc
 
   // Simpleton function
-  OSauce.alwaysTrue     = MarkFunc(          () => true        )
-  OSauce.alwaysFalse    = MarkFunc(          () => false       )
-  OSauce.alwaysNull     = MarkFunc(          () => null        )
-  OSauce.alwayUndefined = MarkFunc(          () => undefined   )
-  OSauce.alwaysSelf     = MarkFunc( function () { return this })
+  Shared.alwaysTrue     = MarkFunc(          () => true        )
+  Shared.alwaysFalse    = MarkFunc(          () => false       )
+  Shared.alwaysNull     = MarkFunc(          () => null        )
+  Shared.alwayUndefined = MarkFunc(          () => undefined   )
+  Shared.alwaysSelf     = MarkFunc( function () { return this })
 
 
 
@@ -108,52 +108,52 @@
   const   $INNER                 = Symbol("$INNER")
   const   $OUTER                 = Symbol("$OUTER")
 
-  _OSauce.$INNER                 = $INNER
-  _OSauce.$OUTER                 = $OUTER
-  _OSauce.$PULP                  = Symbol("$PULP")
-  _OSauce.$RIND                  = Symbol("$RIND")  // Consider simply using $ !!!
+  _Shared.$INNER                 = $INNER
+  _Shared.$OUTER                 = $OUTER
+  _Shared.$PULP                  = Symbol("$PULP")
+  _Shared.$RIND                  = Symbol("$RIND")  // Consider simply using $ !!!
 
-  _OSauce.$DISGUISE              = Symbol("$DISGUISE")
-  _OSauce.$BARRIER               = Symbol("$BARRIER")
-  //_OSauce.$IID                   = Symbol("$instanceId")
-  _OSauce.$PRIOR_IDS             = Symbol("$PRIOR_IDS")
-  _OSauce.$IS_INNER              = Symbol("$IS_INNER")
-  _OSauce.$IS_DEFINITION         = Symbol("$IS_DEFINITION")
-  _OSauce.$IS_TYPE               = Symbol("$IS_TYPE")
-  _OSauce.$IS_CONTEXT            = Symbol("$IS_CONTEXT")
+  _Shared.$DISGUISE              = Symbol("$DISGUISE")
+  _Shared.$BARRIER               = Symbol("$BARRIER")
+  //_Shared.$IID                   = Symbol("$instanceId")
+  _Shared.$PRIOR_IDS             = Symbol("$PRIOR_IDS")
+  _Shared.$IS_INNER              = Symbol("$IS_INNER")
+  _Shared.$IS_DEFINITION         = Symbol("$IS_DEFINITION")
+  _Shared.$IS_TYPE               = Symbol("$IS_TYPE")
+  _Shared.$IS_CONTEXT            = Symbol("$IS_CONTEXT")
 
-  _OSauce.$ROOT                  = Symbol("$ROOT")
-  _OSauce.$BLANKER               = Symbol("$BLANKER")
-  _OSauce.$ASSIGNERS             = Symbol("$ASSIGNERS")
-  _OSauce.$IMMEDIATES            = Symbol("$IMMEDIATES")
-  _OSauce.$DECLARATIONS          = Symbol("$DECLARATIONS")
-  _OSauce.$SUPERS                = Symbol("$SUPERS")
-  _OSauce.$OWN_DEFINITIONS       = Symbol("$OWN_DEFINITIONS")
-  _OSauce.$IS_IMPENETRABLE       = Symbol("$IS_IMPENETRABLE")
+  _Shared.$ROOT                  = Symbol("$ROOT")
+  _Shared.$BLANKER               = Symbol("$BLANKER")
+  _Shared.$ASSIGNERS             = Symbol("$ASSIGNERS")
+  _Shared.$IMMEDIATES            = Symbol("$IMMEDIATES")
+  _Shared.$DECLARATIONS          = Symbol("$DECLARATIONS")
+  _Shared.$SUPERS                = Symbol("$SUPERS")
+  _Shared.$OWN_DEFINITIONS       = Symbol("$OWN_DEFINITIONS")
+  _Shared.$IS_IMPENETRABLE       = Symbol("$IS_IMPENETRABLE")
 
-  _OSauce.$OUTER_WRAPPER         = Symbol("$OUTER_WRAPPER")
+  _Shared.$OUTER_WRAPPER         = Symbol("$OUTER_WRAPPER")
 
-  _OSauce.$DELETE_IMMUTABILITY   = Symbol("$DELETE_IMMUTABILITY")
-  _OSauce.$DELETE_ALL_PROPERTIES = Symbol("$DELETE_ALL_PROPERTIES")
+  _Shared.$DELETE_IMMUTABILITY   = Symbol("$DELETE_IMMUTABILITY")
+  _Shared.$DELETE_ALL_PROPERTIES = Symbol("$DELETE_ALL_PROPERTIES")
 
 
   // Sentinels
-  _OSauce.PROOF                  = Symbol("PROOF")
-  _OSauce.COUNT                  = Symbol("COUNT")
+  _Shared.PROOF                  = Symbol("PROOF")
+  _Shared.COUNT                  = Symbol("COUNT")
 
-  _OSauce.ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
-  // _OSauce.CONSTRUCTOR         = Symbol("CONSTRUCTOR")
-  _OSauce.NO_SUPER               = Symbol("NO_SUPER")
-  _OSauce.IMMEDIATE              = Symbol("IMMEDIATE")
-  _OSauce.IMPLEMENTATION         = Symbol("IMPLEMENTATION")
+  _Shared.ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
+  // _Shared.CONSTRUCTOR         = Symbol("CONSTRUCTOR")
+  _Shared.NO_SUPER               = Symbol("NO_SUPER")
+  _Shared.IMMEDIATE              = Symbol("IMMEDIATE")
+  _Shared.IMPLEMENTATION         = Symbol("IMPLEMENTATION")
 
-  _OSauce.VISIBLE                = Symbol("VISIBLE")
-  _OSauce.INVISIBLE              = Symbol("INVISIBLE")
-  _OSauce.REINHERIT              = Symbol("REINHERIT")
-  _OSauce.INHERIT                = Symbol("INHERIT")
+  _Shared.VISIBLE                = Symbol("VISIBLE")
+  _Shared.INVISIBLE              = Symbol("INVISIBLE")
+  _Shared.REINHERIT              = Symbol("REINHERIT")
+  _Shared.INHERIT                = Symbol("INHERIT")
 
-  _OSauce.MUTABLE                = Symbol("MUTABLE")
-  _OSauce.INHERITED              = Symbol("INHERITED")
+  _Shared.MUTABLE                = Symbol("MUTABLE")
+  _Shared.INHERITED              = Symbol("INHERITED")
 
 
   const FUNC_PROLOG_MATCHER =
@@ -188,22 +188,22 @@
 
 
 
-  _OSauce.ExtractParamListing     = ExtractParamListing
-  _OSauce.ExtractParamNames       = ExtractParamNames
+  _Shared.ExtractParamListing     = ExtractParamListing
+  _Shared.ExtractParamNames       = ExtractParamNames
 
-  OSauce.asCapitalized            = MarkFunc(AsCapitalized)
-  OSauce.asDecapitalized          = MarkFunc(AsDecapitalized)
-  OSauce.crudeBeImmutable         = MarkFunc(CrudeBeImmutable)
+  Shared.asCapitalized            = MarkFunc(AsCapitalized)
+  Shared.asDecapitalized          = MarkFunc(AsDecapitalized)
+  Shared.crudeBeImmutable         = MarkFunc(CrudeBeImmutable)
 
-  OSauce.theEmptyObject           = CrudeBeImmutable(SpawnFrom(null))
-  OSauce.theEmptyArray            = CrudeBeImmutable([])
-  _OSauce.EMPTY_THING_ANCESTRY    = CrudeBeImmutable([])
+  Shared.theEmptyObject           = CrudeBeImmutable(SpawnFrom(null))
+  Shared.theEmptyArray            = CrudeBeImmutable([])
+  _Shared.EMPTY_THING_ANCESTRY    = CrudeBeImmutable([])
 
-  OSauce.invisibleConfig          = CrudeBeImmutable(InvisibleConfig)
-  OSauce.visibleConfig            = CrudeBeImmutable(VisibleConfig)
+  Shared.invisibleConfig          = CrudeBeImmutable(InvisibleConfig)
+  Shared.visibleConfig            = CrudeBeImmutable(VisibleConfig)
 
-  _OSauce._OSauce = _OSauce
-  _OSauce.OSauce  =  OSauce
+  _Shared._Shared = _Shared
+  _Shared.Shared  =  Shared
 
 
   function MakeSauce(TargetContext) {
@@ -215,7 +215,7 @@
     }
   }
 
-  globals.ObjectSauce = MakeSauce(_OSauce)
+  globals.Tranya = MakeSauce(_Shared)
 
 })(this)
 

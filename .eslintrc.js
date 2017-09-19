@@ -10,7 +10,7 @@ module.exports = {
         "sourceType": "module"
     },
     "globals": {
-      "ObjectSauce" : true,
+      "Tranya" : true,
     },
     "rules": {
         // "indent"         : ["error", 2],

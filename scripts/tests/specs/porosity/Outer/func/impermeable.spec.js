@@ -1,4 +1,4 @@
-ObjectSauce.ImplementationTesting(function (Type_) {
+Tranya.ImplementationTesting(function (Type_) {
   "use strict"
 
   describe("Type impermeable outer", function() {

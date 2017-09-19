@@ -1,8 +1,8 @@
-ObjectSauce(function (
+Tranya(function (
   $INNER, $IS_INNER, $OUTER, $RIND, IS_IMMUTABLE, PROOF, _DURABLES,
   DefineProperty, Frost, InterMap, InvisibleConfig, MarkFunc, OwnKeys,
   OwnNames, SpawnFrom,
-  OSauce, _OSauce
+  Shared, _Shared
 ) {
   "use strict"
 
@@ -139,7 +139,7 @@ ObjectSauce(function (
     var constants = []
     var standards = []
 
-    var osauces   = ["OSauce", "_OSauce"].filter(name => {
+    var osauces   = ["Shared", "_Shared"].filter(name => {
       var index = params.indexOf(name)
       var found = (index >= 0)
       if (found) { params.splice(index, 1) }
@@ -155,18 +155,18 @@ ObjectSauce(function (
     return constants.concat(standards, osauces).join(", \n")
   }
 
-  OSauce.asName                   = MarkFunc(AsName)
-  OSauce.valueIsTranya            = MarkFunc(ValueIsTranya)
-  OSauce.valueIsInner             = MarkFunc(ValueIsInner)
-  OSauce.valueIsOuter             = MarkFunc(ValueIsOuter)
-  OSauce.valueIsImmutable         = MarkFunc(ValueIsImmutable)
-  OSauce.valueIsFact              = MarkFunc(ValueIsFact)
-  OSauce.sortParameters           = MarkFunc(SortParameters)
+  Shared.asName                   = MarkFunc(AsName)
+  Shared.valueIsTranya            = MarkFunc(ValueIsTranya)
+  Shared.valueIsInner             = MarkFunc(ValueIsInner)
+  Shared.valueIsOuter             = MarkFunc(ValueIsOuter)
+  Shared.valueIsImmutable         = MarkFunc(ValueIsImmutable)
+  Shared.valueIsFact              = MarkFunc(ValueIsFact)
+  Shared.sortParameters           = MarkFunc(SortParameters)
 
-  _OSauce.FindAndSetDurables      = FindAndSetDurables
-  _OSauce.SetInvisibly            = SetInvisibly
-  _OSauce._BasicSetImmutable      = _basicSetImmutable
-  _OSauce.MarkAndSetFuncImmutable = MarkAndSetFuncImmutable
-  _OSauce.SetFuncImmutable        = SetFuncImmutable
+  _Shared.FindAndSetDurables      = FindAndSetDurables
+  _Shared.SetInvisibly            = SetInvisibly
+  _Shared._BasicSetImmutable      = _basicSetImmutable
+  _Shared.MarkAndSetFuncImmutable = MarkAndSetFuncImmutable
+  _Shared.SetFuncImmutable        = SetFuncImmutable
 
 })

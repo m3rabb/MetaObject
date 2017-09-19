@@ -1,11 +1,11 @@
-ObjectSauce(function (
+Tranya(function (
   $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, VISIBLE,
   $BaseBlanker, $IntrinsicBlanker, CrudeBeImmutable, Frost, InterMap,
   SetAsymmetricProperty,
   DefaultContext, OwnKeys, RootContext, SetInvisibly, SpawnFrom, TheEmptyArray,
   _$DefaultContext, _$Intrinsic, _$Something, _BasicSetImmutable, _RootContext,
   _Context, _Definition, _Nothing, Thing, _Thing, _Type,
-  OSauce, _OSauce
+  Shared, _Shared
 ) {
   "use strict"
 
@@ -62,14 +62,14 @@ ObjectSauce(function (
   SetInvisibly(_$DefaultContext, "iid", 0, "SET BOTH INNER & OUTER")
   RootContext.iid
 
-  for (var name in OSauce) { _RootContext._atPut(name, OSauce[name]) }
+  for (var name in Shared) { _RootContext._atPut(name, Shared[name]) }
 
   const  TestContext = _Context.new("ImplementationTesting", RootContext)
   const _TestContext = InterMap.get(TestContext)[$PULP]
 
-  const selectors = OwnKeys(_OSauce)
+  const selectors = OwnKeys(_Shared)
   selectors.forEach(selector => {
-    const value = _OSauce[selector]
+    const value = _Shared[selector]
     if (!_RootContext.valueIsInner(value)) {
       _TestContext._atPut(selector, value)
     }
@@ -77,7 +77,7 @@ ObjectSauce(function (
 
   _RootContext.add(TestContext)
 
-  ObjectSauce = RootContext
+  Tranya = RootContext
 })
 
 

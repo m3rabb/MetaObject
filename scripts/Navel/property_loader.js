@@ -1,4 +1,4 @@
-ObjectSauce.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
+Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
   "use strict"
 
   const LISTING_DELIMITER_MATCHER = /\s*[ ,]\s*/;

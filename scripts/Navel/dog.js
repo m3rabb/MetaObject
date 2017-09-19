@@ -1,4 +1,4 @@
-ObjectSauce(function (Thing, Type, OSauce) {
+Tranya(function (Thing, Type, Shared) {
   "use strict"
 
   const Dog = Type({
@@ -50,6 +50,6 @@ ObjectSauce(function (Thing, Type, OSauce) {
     ]
   })
 
-  OSauce.Dog = Dog
+  Shared.Dog = Dog
 
 })

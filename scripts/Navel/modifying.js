@@ -1,4 +1,4 @@
-ObjectSauce(function (
+Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND,
   DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
@@ -7,7 +7,7 @@ ObjectSauce(function (
   MarkFunc, OwnNames,
   SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, AttemptInvertedFuncCopyError,
-  OSauce, _OSauce
+  Shared, _Shared
 ) {
   "use strict"
 
@@ -372,18 +372,18 @@ ObjectSauce(function (
   }
 
 
-  _OSauce._$Copy                  = _$Copy
-  _OSauce.ObjectCopy              = ObjectCopy
-  _OSauce.ObjectSetImmutable      = ObjectSetImmutable  // Necessary???s
+  _Shared._$Copy                  = _$Copy
+  _Shared.ObjectCopy              = ObjectCopy
+  _Shared.ObjectSetImmutable      = ObjectSetImmutable  // Necessary???s
 
-  OSauce.findAndSetDurables       = MarkFunc(FindAndSetDurables)
-  OSauce.reliableObjectCopy       = MarkFunc(ReliableObjectCopy)
-  OSauce.valueAsNext              = MarkFunc(ValueAsNext)
-  OSauce.valueAsFact              = MarkFunc(ValueAsFact)
-  OSauce.valueCopy                = MarkFunc(ValueCopy)
-  OSauce.valueAsImmutable         = MarkFunc(ValueAsImmutable)
-  OSauce.valueBeImmutable         = MarkFunc(ValueBeImmutable)
-  OSauce.CrudeAsImmutable         = MarkFunc(CrudeAsImmutable)
+  Shared.findAndSetDurables       = MarkFunc(FindAndSetDurables)
+  Shared.reliableObjectCopy       = MarkFunc(ReliableObjectCopy)
+  Shared.valueAsNext              = MarkFunc(ValueAsNext)
+  Shared.valueAsFact              = MarkFunc(ValueAsFact)
+  Shared.valueCopy                = MarkFunc(ValueCopy)
+  Shared.valueAsImmutable         = MarkFunc(ValueAsImmutable)
+  Shared.valueBeImmutable         = MarkFunc(ValueBeImmutable)
+  Shared.CrudeAsImmutable         = MarkFunc(CrudeAsImmutable)
 
 })
 

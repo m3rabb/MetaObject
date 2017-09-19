@@ -1,4 +1,4 @@
-ObjectSauce(function (
+Tranya(function (
   $ASSIGNERS, $DISGUISE, $IMMEDIATES, $INNER, $IS_DEFINITION, $OUTER,
   $OUTER_WRAPPER, $PULP, $RIND,
   ASSIGNER, DECLARATION, INHERIT, INVISIBLE, IS_IMMUTABLE, REINHERIT, VISIBLE,
@@ -9,7 +9,7 @@ ObjectSauce(function (
   _BasicSetImmutable,
   CompletelyDeleteProperty, InSetProperty,
   DefineProperty, InvisibleConfig,
-  _OSauce
+  _Shared
 ) {
   "use strict"
 
@@ -231,13 +231,13 @@ ObjectSauce(function (
 
 
 
-  _OSauce._BasicNew          = _BasicNew
-  _OSauce.SetDefinition      = SetDefinition
-  _OSauce._SetDefinitionAt   = _SetDefinitionAt
+  _Shared._BasicNew          = _BasicNew
+  _Shared.SetDefinition      = SetDefinition
+  _Shared._SetDefinitionAt   = _SetDefinitionAt
 
-  _OSauce.Definition_init    = Definition_init
-  _OSauce.Context_init       = Context_init
-  _OSauce.Context_atPut      = Context_atPut
-  _OSauce.AddMethod          = AddMethod
+  _Shared.Definition_init    = Definition_init
+  _Shared.Context_init       = Context_init
+  _Shared.Context_atPut      = Context_atPut
+  _Shared.AddMethod          = AddMethod
 
 })

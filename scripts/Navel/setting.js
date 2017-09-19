@@ -1,4 +1,4 @@
-ObjectSauce(function (
+Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND,
   DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
@@ -7,7 +7,7 @@ ObjectSauce(function (
   OwnNames, SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf,
   _BasicSetImmutable, _$Copy,
   AssignmentOfUndefinedError, AttemptInvertedFuncCopyError, DetectedInnerError,
-  OSauce, _OSauce
+  _Shared
 ) {
   "use strict"
 
@@ -100,6 +100,6 @@ ObjectSauce(function (
   }
 
 
-  _OSauce.InSetProperty = InSetProperty
+  _Shared.InSetProperty = InSetProperty
 
 })

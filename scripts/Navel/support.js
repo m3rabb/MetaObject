@@ -1,4 +1,4 @@
-ObjectSauce(function (
+Tranya(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   DISGUISE_PULP, INVISIBLE, IS_IMMUTABLE,
@@ -11,7 +11,7 @@ ObjectSauce(function (
   ImproperDisguiseNameError, SignalError,
   InterMap, PropertyToSymbolMap,
   OwnNames, OwnVisibleNames,
-  OSauce, _OSauce
+  Shared, _Shared
 ) {
   "use strict"
 
@@ -57,7 +57,7 @@ ObjectSauce(function (
     const funcBody = `
       return function ${name || ""}() {
         const message = "This constructor is only used for naming!!"
-        return ObjectSauce.signalError(${name}, message)
+        return Tranya.signalError(${name}, message)
       }
     `
     const func = Function(funcBody)()
@@ -319,26 +319,26 @@ ObjectSauce(function (
 
 
 
-  OSauce.ownSelectors = MarkFunc(OwnSelectors)
+  Shared.ownSelectors = MarkFunc(OwnSelectors)
 
-  _OSauce.AsPropertySymbol                = AsPropertySymbol
-  _OSauce.AsMembershipSelector            = AsMembershipSelector
-  _OSauce.AsPropertyFromSetter            = AsPropertyFromSetter
-  _OSauce.AsSetterFromProperty            = AsSetterFromProperty
-  _OSauce.NewAssignmentErrorHandler       = NewAssignmentErrorHandler
-  _OSauce.NewVacuousConstructor           = NewVacuousConstructor
-  _OSauce.MakeDefinitionsInfrastructure   = MakeDefinitionsInfrastructure
-  _OSauce.NewBlanker                      = NewBlanker
-  _OSauce.NewInner                        = NewInner
-  _OSauce.Context_apply                   = Context_apply
-  _OSauce.Type_apply                      = Type_apply
-  _OSauce.DeleteSelectorsIn               = DeleteSelectorsIn
-  _OSauce.CompletelyDeleteProperty        = CompletelyDeleteProperty
-  _OSauce.SetAsymmetricProperty           = SetAsymmetricProperty
-  _OSauce.OwnSelectorsSorted              = OwnSelectorsSorted
-  _OSauce.KnownSelectorsSorted            = KnownSelectorsSorted
-  _OSauce.PropertyAt                      = PropertyAt
-  _OSauce.ExtractDefinitionFrom           = ExtractDefinitionFrom
+  _Shared.AsPropertySymbol                = AsPropertySymbol
+  _Shared.AsMembershipSelector            = AsMembershipSelector
+  _Shared.AsPropertyFromSetter            = AsPropertyFromSetter
+  _Shared.AsSetterFromProperty            = AsSetterFromProperty
+  _Shared.NewAssignmentErrorHandler       = NewAssignmentErrorHandler
+  _Shared.NewVacuousConstructor           = NewVacuousConstructor
+  _Shared.MakeDefinitionsInfrastructure   = MakeDefinitionsInfrastructure
+  _Shared.NewBlanker                      = NewBlanker
+  _Shared.NewInner                        = NewInner
+  _Shared.Context_apply                   = Context_apply
+  _Shared.Type_apply                      = Type_apply
+  _Shared.DeleteSelectorsIn               = DeleteSelectorsIn
+  _Shared.CompletelyDeleteProperty        = CompletelyDeleteProperty
+  _Shared.SetAsymmetricProperty           = SetAsymmetricProperty
+  _Shared.OwnSelectorsSorted              = OwnSelectorsSorted
+  _Shared.KnownSelectorsSorted            = KnownSelectorsSorted
+  _Shared.PropertyAt                      = PropertyAt
+  _Shared.ExtractDefinitionFrom           = ExtractDefinitionFrom
 
 })
 

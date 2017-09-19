@@ -1,4 +1,4 @@
-ObjectSauce(function (
+Tranya(function (
   $INNER, $RIND, IDEMPOT_VALUE_METHOD, IS_IMMUTABLE, TRUSTED_VALUE_METHOD,
   AsName, SetInvisibly, SignalError, _$Something, _Super
 ) {

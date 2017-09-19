@@ -1,5 +1,5 @@
-ObjectSauce(function (
-  $IS_IMPENETRABLE, $RIND, AsName, MarkFunc, OSauce, _OSauce
+Tranya(function (
+  $IS_IMPENETRABLE, $RIND, AsName, MarkFunc, Shared, _Shared
 ) {
   "use strict"
 
@@ -34,85 +34,85 @@ ObjectSauce(function (
   //   return null
   // }
 
-  OSauce.errorLog    = ErrorLog
-  OSauce.signalError = MarkFunc(SignalError)
+  Shared.errorLog    = ErrorLog
+  Shared.signalError = MarkFunc(SignalError)
 
-  OSauce.setLogErrors = MarkFunc(function (bool) {
+  Shared.setLogErrors = MarkFunc(function (bool) {
     if (!this[$IS_IMPENETRABLE]) { LogErrors = !!bool }
     return this[$RIND]
   })
 
-  OSauce.setHandleErrorsQuietly = MarkFunc(function (bool) {
+  Shared.setHandleErrorsQuietly = MarkFunc(function (bool) {
     if (!this[$IS_IMPENETRABLE]) { HandleErrorsQuietly = !!bool }
     return this[$RIND]
   })
 
 
-  // _OSauce.ImproperMethodHandlerError = function (target) {
+  // _Shared.ImproperMethodHandlerError = function (target) {
   //   SignalError(target[$RIND], "Can't reuse same handler function for different types of methods!!")
   // }
 
 
-  _OSauce.DetectedInnerError = function (target, value) {
+  _Shared.DetectedInnerError = function (target, value) {
     SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value.name}#${value.oid}!!`)
   }
 
 
-  _OSauce.DirectAssignmentFromOutsideError = function (target) {
+  _Shared.DirectAssignmentFromOutsideError = function (target) {
     SignalError(target[$RIND], "Direct assignment is not allowed from the outside of an object, use a method instead!!")
   }
 
-  _OSauce.AttemptSetOnSuperError = function (target) {
+  _Shared.AttemptSetOnSuperError = function (target) {
     SignalError(target[$RIND], "Setting properties via _super in forbidden!!")
   }
 
-  _OSauce.PrivateAccessFromOutsideError = function (target, selector) {
+  _Shared.PrivateAccessFromOutsideError = function (target, selector) {
     SignalError(target[$RIND], `Access to private property '${AsName(selector)}' from outside of an object is forbidden!!`)
   }
 
-  _OSauce.DisallowedDeleteError = function (target, selector) {
+  _Shared.DisallowedDeleteError = function (target, selector) {
     SignalError(target[$RIND], `Delete of property '${AsName(selector)}' is not allowed!!`)
   }
 
-  _OSauce.DisallowedAssignmentError = function (target, selector, setter) {
+  _Shared.DisallowedAssignmentError = function (target, selector, setter) {
     SignalError(target[$RIND], `Assignment of property '${AsName(selector)}' is not allowed, use '${setter}' method instead!!`)
   }
 
-  _OSauce.UnnamedFuncError = function (target, func) {
+  _Shared.UnnamedFuncError = function (target, func) {
     SignalError(target[$RIND], `${func} function must be named!!`)
   }
 
-  _OSauce.AssignmentOfUndefinedError = function (target, selector) {
+  _Shared.AssignmentOfUndefinedError = function (target, selector) {
     SignalError(target[$RIND], `Assignment of undefined to property '${AsName(selector)}' is forbidden, use null instead!!`)
   }
 
-  _OSauce.InvalidCopyTypeError = function (target) {
+  _Shared.InvalidCopyTypeError = function (target) {
     SignalError(target, `Cannot use InAtPut with ${target.constructor.name}!!`)
   }
 
 
 
-  _OSauce.ImproperChangeToAncestryError = function (target) {
+  _Shared.ImproperChangeToAncestryError = function (target) {
     SignalError(target[$RIND], "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
   }
 
-  _OSauce.AttemptedChangeOfAncestryOfPermeableTypeError = function (target) {
+  _Shared.AttemptedChangeOfAncestryOfPermeableTypeError = function (target) {
     SignalError(target[$RIND], `Cannot change supertypes of permeable Type '${target.name}', change impermeable version instead!!`)
   }
 
-  _OSauce.DuplicateSupertypeError = function (target) {
+  _Shared.DuplicateSupertypeError = function (target) {
     SignalError(target[$RIND], "Duplicate supertypes are not allowed!!")
   }
 
-  _OSauce.AssignerSetterError = function (target) {
+  _Shared.AssignerSetterError = function (target) {
     SignalError(target[$RIND], "Cannot define setter and assigner functions for the same property!!")
   }
 
-  _OSauce.AttemptInvertedFuncCopyError = function (func) {
+  _Shared.AttemptInvertedFuncCopyError = function (func) {
     SignalError(func, "Cannot make a copy of a function with different mutability! Try AsRigid, AsFact, BeImmutable instead!!")
   }
 
-  _OSauce.AttemptToMakeLockedObjectPermeableError = function (target) {
+  _Shared.AttemptToMakeLockedObjectPermeableError = function (target) {
     SignalError(target[$RIND], "Cannot make a locked object ${target} permeable!!")
   }
 

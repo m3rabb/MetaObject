@@ -1,4 +1,4 @@
-ObjectSauce(function (
+Tranya(function (
   $INNER,
   ASSIGNER, DECLARATION, IDEMPOT_VALUE_METHOD, LAZY_INSTALLER, SAFE_FUNC,
   AddIntrinsicDeclaration, Definition, MarkAndSetFuncImmutable, SignalError,

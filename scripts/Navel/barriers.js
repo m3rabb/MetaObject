@@ -1,4 +1,4 @@
-ObjectSauce(function (
+Tranya(function (
   $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,$IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE, NO_SUPER, _DURABLES,
@@ -6,7 +6,7 @@ ObjectSauce(function (
   AssignmentOfUndefinedError, AttemptSetOnSuperError,
   DirectAssignmentFromOutsideError, DisallowedDeleteError,
   PrivateAccessFromOutsideError,
-  _OSauce
+  _Shared
 ) {
   "use strict"
 
@@ -367,13 +367,13 @@ ObjectSauce(function (
   //   }
   // }
 
-  _OSauce._Super                = new SuperBarrier()
-  _OSauce.Impermeable           = Impermeable
-  _OSauce.InnerBarrier          = InnerBarrier
-  _OSauce.DisguisedOuterBarrier = DisguisedOuterBarrier
-  _OSauce.DisguisedInnerBarrier = DisguisedInnerBarrier
-  _OSauce.SuperBarrier          = SuperBarrier
-  _OSauce.Permeable             = Permeable
+  _Shared._Super                = new SuperBarrier()
+  _Shared.Impermeable           = Impermeable
+  _Shared.InnerBarrier          = InnerBarrier
+  _Shared.DisguisedOuterBarrier = DisguisedOuterBarrier
+  _Shared.DisguisedInnerBarrier = DisguisedInnerBarrier
+  _Shared.SuperBarrier          = SuperBarrier
+  _Shared.Permeable             = Permeable
 
 })
 

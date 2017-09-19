@@ -3,6 +3,6 @@ describe("ExtractParamNames", function () {
     // eslint-disable-next-line
     function tester($Dog, Cat, _Bird, Mouse_, names, __moreNames) {}
     var names = "$Dog Cat _Bird Mouse_ names __moreNames".split(" ")
-    expect( ObjectSauce.ExtractParamNames(tester) ).toEqual( names )
+    expect( Tranya.ExtractParamNames(tester) ).toEqual( names )
   })
 })

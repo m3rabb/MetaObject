@@ -1,4 +1,4 @@
-ObjectSauce(function (
+Tranya(function (
   $PULP, $RIND, _Nothing, RootContext,
   AddIntrinsicDeclaration, InterMap, Type, _BasicSetImmutable
 ) {

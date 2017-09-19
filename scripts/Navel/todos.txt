@@ -237,7 +237,7 @@ Make better name the 'As' method names in wrapping.js!!!!
 ikigai
 ponzu
 enjoyment
-ObjectSauce
+ObjectSauce|Tranya
 osauce
 isSauced
 

@@ -1,4 +1,4 @@
-ObjectSauce.ImplementationTesting(function (
+Tranya.ImplementationTesting(function (
   $ASSIGNERS, $BARRIER, $OUTER, $PULP,
   HasOwn, OwnKeys, RootOf, Type
 ) {

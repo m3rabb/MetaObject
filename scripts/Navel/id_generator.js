@@ -1,4 +1,4 @@
-ObjectSauce(function (MarkFunc, RoundDown, RandomUnitValue, OSauce) {
+Tranya(function (MarkFunc, RoundDown, RandomUnitValue, Shared) {
   "use strict"
 
   // #### Random Number Generation
@@ -39,7 +39,7 @@ ObjectSauce(function (MarkFunc, RoundDown, RandomUnitValue, OSauce) {
     }
   }
 
-  OSauce.randomInt   = MarkFunc(RandomInt)
-  OSauce.newUniqueId = MarkFunc(NewUniqueId)
+  Shared.randomInt   = MarkFunc(RandomInt)
+  Shared.newUniqueId = MarkFunc(NewUniqueId)
 
 })
