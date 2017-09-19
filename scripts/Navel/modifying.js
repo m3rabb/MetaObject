@@ -6,7 +6,7 @@ ObjectSauce(function (
   FindAndSetDurables, Frost, InterMap, IsFact, MarkAndSetFuncImmutable,
   MarkFunc, OwnNames,
   SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
-  AssignmentOfUndefinedError, AttemptInvertedFuncCopyError, DetectedInnerError,
+  AssignmentOfUndefinedError, AttemptInvertedFuncCopyError,
   OSauce, _OSauce
 ) {
   "use strict"

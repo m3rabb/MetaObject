@@ -31,7 +31,7 @@ ObjectSauce(function (
         // if (Property[0] !== "_") {
         //   DefineProperty(_$receiver[$OUTER], Property, InvisibleConfig)
         // }
-        return InSetProperty(_$receiver, Property, Assigner.call(this), this)
+        return InSetProperty(_$receiver, Property, Assigner.call(this))
       }
     }[name]
   }
@@ -49,7 +49,7 @@ ObjectSauce(function (
         // if (Property[0] !== "_") {
         //   DefineProperty(_$receiver[$OUTER], Property, InvisibleConfig)
         // }
-        return InSetProperty(_$receiver, Property, Assigner.call(this), this)
+        return InSetProperty(_$receiver, Property, Assigner.call(this))
       }
     }[name]
   }

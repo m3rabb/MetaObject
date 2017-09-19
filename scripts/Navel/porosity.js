@@ -168,7 +168,7 @@ ObjectSauce(function (
         value = _$target[$RIND]
       }
     }
-    InSetProperty(_$target, selector, value, _$target[$PULP])
+    InSetProperty(_$target, selector, value)
     return true
   }
 

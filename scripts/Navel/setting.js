@@ -35,7 +35,8 @@ ObjectSauce(function (
   }
 
 
-  function InSetProperty(_$target, selector, value, _target) {
+
+  function InSetProperty(_$target, selector, value) {
     if (selector[0] !== "_") {    // Public selector
       var _$value, writeOuter
       const $target = _$target[$OUTER]
@@ -45,14 +46,14 @@ ObjectSauce(function (
       switch (typeof value) {
         case "undefined" :
           // Storing undefined is prohibited!
-          return AssignmentOfUndefinedError(_target, selector)
+          return AssignmentOfUndefinedError(_$target, selector)
 
         case "object" :
                if (value === null)                 {        /* NOP */        }
           else if (value[$IS_INNER] === PROOF)     {
-            if (value === _target)                 { value = _$target[$RIND] }
+            if (value === _$target[$PULP])         { value = _$target[$RIND] }
            // Safety check: detect failure to use 'this.$' elsewhere.
-            else                 { return DetectedInnerError(_target, value) }
+            else { return DetectedInnerError(_$target, value) }
           }
           else if (value[IS_IMMUTABLE])            {        /* NOP */        }
           else if (value.id != null)               {        /* NOP */        }
@@ -66,7 +67,7 @@ ObjectSauce(function (
           switch (InterMap.get(value)) {
             case DISGUISE_PULP :
               // Safety check: detect failure to a type's 'this.$' elsewhere.
-              return DetectedInnerError(_target, value)
+              return DetectedInnerError(_$target, value)
 
             case INNER_FUNC    :
               if (writeOuter) { $target[selector] = value[$OUTER_WRAPPER] }
@@ -90,9 +91,9 @@ ObjectSauce(function (
       }
       if (writeOuter) { $target[selector] = value }
     }
-    else if (value && value[$IS_INNER] === PROOF && value[$PULP] !== _target) {
+    else if (value && value[$IS_INNER] === PROOF && value !== _$target[$PULP]) {
       // Safety check: detect failure to use 'this.$' elsewhere.
-      return DetectedInnerError(_target, value)
+      return DetectedInnerError(_$target, value)
     }
 
     return (_$target[selector] = value)

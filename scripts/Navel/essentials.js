@@ -116,7 +116,7 @@ ObjectSauce(function (
       if (mode === INVISIBLE) {
         DefineProperty(_$root, selector, InvisibleConfig)
       }
-      InSetProperty(_$root, selector, value, this)
+      InSetProperty(_$root, selector, value)
     }
 
     switch (mode) {

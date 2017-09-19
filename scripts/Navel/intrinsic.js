@@ -455,7 +455,7 @@ ObjectSauce(function (
 //   }
 //   else {
 //    DefineProperty($inner, "_retarget", InvisibleConfig)
-//    InSetProperty($inner, "_retarget", this, this)
+//    InSetProperty($inner, "_retarget", this)
 //   }
 //   return this
 // }, BASIC_SELF_METHOD)
