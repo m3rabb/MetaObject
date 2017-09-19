@@ -55,17 +55,15 @@ ObjectSauce.ImplementationTesting(function (
         expect( this.$outer.name ).toBe( "Rufus" )
       })
 
+      it("Retargets the receiver's barrier", function () {
+        expect( this.$barrier._$target ).not.toBe( this.$inner )
+      })
+
       it("Sets its barrier to the inner of a copy of the target, lest the property", function () {
         expect( this.$barrier._$target.isInner ).toBe( true )
         expect( this.$barrier._$target.name ).toBe( undefined )
         expect( this.$barrier._$target[BREED] ).toBe( undefined )
         expect( this.$barrier._$target._age ).toBe( 18 )
-      })
-
-      it("Retargets the handlers in the receiver's barrier", function () {
-        expect( this.$barrier.get ).toBe( this.$barrier$root.retargetedGet )
-        expect( this.$barrier.set ).toBe( this.$barrier$root.retargetedSet )
-        expect( this.$barrier.deleteProperty ).toBe( this.$barrier$root.retargetedDelete )
       })
 
       describe("In the new target", function () {
@@ -93,18 +91,16 @@ ObjectSauce.ImplementationTesting(function (
         expect( this.$outer.mood ).toBe( "very happy" )
       })
 
+      it("Retargets the receiver's barrier", function () {
+        expect( this.$barrier._$target ).not.toBe( this.$inner )
+      })
+
       it("Sets its barrier to the inner of a copy of the target, lest the property", function () {
         expect( this.$barrier._$target.isInner ).toBe( true )
         expect( this.$barrier._$target.name ).toBe( "Rufus" )
         expect( this.$barrier._$target[BREED] ).toBe( undefined )
         expect( this.$barrier._$target._age ).toBe( 18 )
         expect( this.$barrier._$target.mood ).toBe( undefined )
-      })
-
-      it("Retargets the handlers in the receiver's barrier", function () {
-        expect( this.$barrier.get ).toBe( this.$barrier$root.retargetedGet )
-        expect( this.$barrier.set ).toBe( this.$barrier$root.retargetedSet )
-        expect( this.$barrier.deleteProperty ).toBe( this.$barrier$root.retargetedDelete )
       })
 
       describe("In the new target", function () {
@@ -144,6 +140,10 @@ ObjectSauce.ImplementationTesting(function (
         expect( this.$outer.ball ).toBe( this.redBall )
       })
 
+      it("Retargets the receiver's barrier", function () {
+        expect( this.$barrier._$target ).not.toBe( this.$inner )
+      })
+
       it("Sets its barrier to the inner of a copy of the target, lest the property", function () {
         expect( this.$barrier._$target.isInner ).toBe( true )
         expect( this.$barrier._$target.name ).toBe( "Rufus" )
@@ -151,12 +151,6 @@ ObjectSauce.ImplementationTesting(function (
         expect( this.$barrier._$target._age ).toBe( 18 )
         expect( this.$barrier._$target.ball ).toBe( this.redBall )
         expect( HasOwn(this.$barrier._$target, "ball") ).toBe( false )
-      })
-
-      it("Retargets the handlers in the receiver's barrier", function () {
-        expect( this.$barrier.get ).toBe( this.$barrier$root.retargetedGet )
-        expect( this.$barrier.set ).toBe( this.$barrier$root.retargetedSet )
-        expect( this.$barrier.deleteProperty ).toBe( this.$barrier$root.retargetedDelete )
       })
 
       describe("In the new target", function () {
@@ -178,8 +172,8 @@ ObjectSauce.ImplementationTesting(function (
         delete this.$pulp.ball
       })
 
-      it("Has no impact on the receiver's barrier", function () {
-        expect( OwnKeys(this.$barrier).length ).toBe( 0 )
+      it("The receiver's barrier's target is unchanged", function () {
+        expect( this.$barrier._$target ).toBe( this.$inner )
       })
 
       it("Makes no change", function () {
@@ -194,8 +188,8 @@ ObjectSauce.ImplementationTesting(function (
         delete this.$pulp.xyz
       })
 
-      it("Has no impact on the receiver's barrier", function () {
-        expect( OwnKeys(this.$barrier).length ).toBe( 0 )
+      it("The receiver's barrier's target is unchanged", function () {
+        expect( this.$barrier._$target ).toBe( this.$inner )
       })
 
       it("Makes no change", function () {

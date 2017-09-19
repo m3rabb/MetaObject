@@ -2,7 +2,7 @@ ObjectSauce(function (
   $INNER, $IS_TYPE, $LOCKED, $OUTER, $PULP, $RIND,
   COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
-  AddPermeableNewDefinitionTo, AsDecapitalized, ValueAsNext,
+  AsDecapitalized, BePermeable, ValueAsNext,
   CrudeBeImmutable, BeImmutableValue, ValueCopy, DefaultContext,
   Definition, Definition_init, EmptyThingAncestry, ExtractParamNames,
   InterMap, IsSauced, IsSubtypeOfThing, OwnKeys, RootContext, SetInvisibly,
@@ -365,23 +365,6 @@ ObjectSauce(function (
 
     if (arg !== value) { execContext.atPut(name, arg) }
     return arg
-  }
-
-
-
-  function BePermeable(target, beImmutable) {
-    const _$target = InterMap.get(target)
-    if (!_$target) { return target }
-    if (_$target[$LOCKED]) {
-      return target._signalError("Can't make permeable copies of locked objects!!")
-    }
-
-    const _target = _$target[$PULP]
-    const $target = _$target[$OUTER]
-    SetInvisibly($target, "this", _target)
-    if (_$target[$IS_TYPE]) { AddPermeableNewDefinitionTo(_$target) }
-    if (beImmutable) { _target._setImmutable() }
-    return target
   }
 
 })

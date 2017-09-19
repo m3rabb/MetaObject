@@ -1,0 +1,104 @@
+ObjectSauce(function (
+  $BLANKER, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND,
+  DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
+  ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
+  SAFE_FUNC, TAMED_FUNC,
+  Frost, InterMap, IsFact, MarkAndSetFuncImmutable, MarkFunc, ObjectCopy,
+  OwnNames, SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf,
+  _BasicSetImmutable, _$Copy,
+  AssignmentOfUndefinedError, AttemptInvertedFuncCopyError, DetectedInnerError,
+  OSauce, _OSauce
+) {
+  "use strict"
+
+
+  const STANDARD_FUNC_MATCHER = /^function/
+
+  function AsTameFunc(Func) {
+    const name = `${Func.name}_$tamed`
+    const func = STANDARD_FUNC_MATCHER.test(Func) ?
+      {
+        [name] : function (...args) {
+          const receiver =
+            (this != null && this[$IS_INNER] === PROOF) ? this[$RIND] : this
+          return Func.apply(receiver, args)
+        }
+      }[name] :
+      {
+        [name] : function (...args) {
+          const result = Func.apply(null, args)
+          return (result != null && result[$IS_INNER] === PROOF) ?
+            result[$RIND] : result
+        }
+      }[name]
+    return MarkAndSetFuncImmutable(func, TAMED_FUNC)
+  }
+
+
+  function InSetProperty(_$target, selector, value, _target) {
+    if (selector[0] !== "_") {    // Public selector
+      var _$value, writeOuter
+      const $target = _$target[$OUTER]
+
+      writeOuter = !_$target[IS_IMMUTABLE]
+
+      switch (typeof value) {
+        case "undefined" :
+          // Storing undefined is prohibited!
+          return AssignmentOfUndefinedError(_target, selector)
+
+        case "object" :
+               if (value === null)                 {        /* NOP */        }
+          else if (value[$IS_INNER] === PROOF)     {
+            if (value === _target)                 { value = _$target[$RIND] }
+           // Safety check: detect failure to use 'this.$' elsewhere.
+            else                 { return DetectedInnerError(_target, value) }
+          }
+          else if (value[IS_IMMUTABLE])            {        /* NOP */        }
+          else if (value.id != null)               {        /* NOP */        }
+          else if (value === _$target[$RIND])      {        /* NOP */        }
+          else {   value = (_$value = InterMap.get(value)) ?
+                     _$Copy(_$value, true)[$RIND] : ObjectCopy(value, true)  }
+          break
+
+        case "function" : // LOOK: will catch Type things!!!
+          // Note: Checking for value.constructor is inadequate to prevent func spoofing
+          switch (InterMap.get(value)) {
+            case DISGUISE_PULP :
+              // Safety check: detect failure to a type's 'this.$' elsewhere.
+              return DetectedInnerError(_target, value)
+
+            case INNER_FUNC    :
+              if (writeOuter) { $target[selector] = value[$OUTER_WRAPPER] }
+              writeOuter = false
+              break
+
+            case undefined     : // New unknown untrusted function to be wrapped.
+            case HANDLER_FUNC  :
+            case ASSIGNER_FUNC :
+              value = AsTameFunc(value)
+              // break omitted
+
+            case OUTER_FUNC    :
+            case TAMED_FUNC    :
+            case SAFE_FUNC     :
+            case BLANKER_FUNC  :
+            default            : // value is a type's $rind, etc
+              break
+          }
+          break
+      }
+      if (writeOuter) { $target[selector] = value }
+    }
+    else if (value && value[$IS_INNER] === PROOF && value[$PULP] !== _target) {
+      // Safety check: detect failure to use 'this.$' elsewhere.
+      return DetectedInnerError(_target, value)
+    }
+
+    return (_$target[selector] = value)
+  }
+
+
+  _OSauce.InSetProperty = InSetProperty
+
+})

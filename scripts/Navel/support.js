@@ -3,15 +3,14 @@ ObjectSauce(function (
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   DISGUISE_PULP, INVISIBLE, IS_IMMUTABLE,
   ASSIGNER_FUNC, BLANKER_FUNC, TRUSTED_VALUE_METHOD,
-  AsCapitalized, AsDecapitalized, AsName, CrudeBeImmutable, Frost,
-  Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId, OwnSymbols,
-  RootOf, SetInvisibly, SpawnFrom,
+  AsCapitalized, AsDecapitalized, AsName, CrudeBeImmutable, DefineProperty,
+  Frost, Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId,
+  OwnSymbols, RootOf, SetInvisibly, SpawnFrom,
   DisguisedInnerBarrier, DisguisedOuterBarrier, InnerBarrier,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
   ImproperDisguiseNameError, SignalError,
   InterMap, PropertyToSymbolMap,
   OwnNames, OwnVisibleNames,
-  DefineProperty, InSetProperty,
   OSauce, _OSauce
 ) {
   "use strict"
@@ -125,7 +124,7 @@ ObjectSauce(function (
       const $inner  = this
       const $outer  = new CompanionOuterMaker()
       const $rind   = new Proxy($outer, Impermeable)
-      const barrier = new InnerBarrier()
+      const barrier = new InnerBarrier($inner)
 
       $inner[$BARRIER] = barrier
       $inner[$INNER]   = $inner
@@ -160,10 +159,8 @@ ObjectSauce(function (
       const func       = NewVacuousConstructor(name)
       const mutability = new DisguisedInnerBarrier($inner, applyHandler)
       const $pulp      = new Proxy(func, mutability)
-      const porosity   = new DisguisedOuterBarrier($outer, $pulp, applyHandler)
+      const porosity   = new DisguisedOuterBarrier($inner, applyHandler)
       const $rind      = new Proxy(func, porosity)
-
-      mutability.$pulp = $pulp  // Full circle connection to inner barrier
 
       $inner[$DISGUISE]  = func
       $inner[$BARRIER]   = mutability // barrier
@@ -184,14 +181,14 @@ ObjectSauce(function (
 
 
   function Context_apply(disguiseFunc, receiver, args) {
-    return this.$pulp.exec(...args).beImmutable
+    return this._$target[$PULP].exec(...args).beImmutable
   }
 
 
   function Type_apply(disguiseFunc, receiver, args) {
-    // return this._target.newImmutable(...args)
-
-    const   instance = this.$pulp.new(...args)
+    // return this._$target[$PULP].newImmutable(...args)
+    //
+    const   instance = this._$target[$PULP].new(...args)
     const _$instance = InterMap.get(instance)
 
     return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]

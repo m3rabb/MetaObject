@@ -1,7 +1,8 @@
 ObjectSauce(function (
-  $IS_INNER, $RIND, IS_IMMUTABLE, PROOF,
-  InterMap, MarkFunc, OwnKeys, SpawnFrom,
-  OSauce
+  $INNER, $IS_INNER, $OUTER, $RIND, IS_IMMUTABLE, PROOF, _DURABLES,
+  DefineProperty, Frost, InterMap, InvisibleConfig, MarkFunc, OwnKeys,
+  OwnNames, SpawnFrom,
+  OSauce, _OSauce
 ) {
   "use strict"
 
@@ -60,6 +61,49 @@ ObjectSauce(function (
   }
 
 
+  function FindAndSetDurables(_$target) {
+    const durables = OwnNames(_$target)
+    durables[IS_IMMUTABLE] = true
+    return (_$target[_DURABLES] = Frost(durables))
+  }
+
+
+  function SetInvisibly(target, selector, value, setOuterToo_) {
+    DefineProperty(target, selector, InvisibleConfig)
+    if (setOuterToo_) { target[$OUTER][selector] = value }
+    return target[selector] = value
+  }
+
+
+  // This method should only be called on a mutable object!!!
+  // eslint-disable-next-line
+  function _basicSetImmutable(inPlace_, visited__) {
+    const _$target = this[$INNER] //
+    const  $target = _$target[$OUTER]
+
+    delete _$target._retarget
+    $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
+    Frost($target)
+    return this
+  } // IDEMPOT_SELF_METHOD
+
+
+  function MarkAndSetFuncImmutable(func, marker) {
+    if (InterMap.get(func)) { return func }
+    func[IS_IMMUTABLE] = true
+    InterMap.set(func, marker)
+    Frost(func.prototype)
+    return Frost(func)
+  }
+
+  function SetFuncImmutable(func) {
+    func[IS_IMMUTABLE] = true
+    Frost(func.prototype)
+    return Frost(func)
+  }
+
+
+
   const PARAM_FAMILY_MATCHER = /^(\w+(_[a-zA-Z]+))|([a-zA-Z]*[a-z]([A-Z][a-z]+))$/
 
   function SortParams(params) {
@@ -111,12 +155,18 @@ ObjectSauce(function (
     return constants.concat(standards, osauces).join(", \n")
   }
 
-  OSauce.asName           = MarkFunc(AsName)
-  OSauce.valueIsTranya    = MarkFunc(ValueIsTranya)
-  OSauce.valueIsInner     = MarkFunc(ValueIsInner)
-  OSauce.valueIsOuter     = MarkFunc(ValueIsOuter)
-  OSauce.valueIsImmutable = MarkFunc(ValueIsImmutable)
-  OSauce.valueIsFact      = MarkFunc(ValueIsFact)
-  OSauce.sortParameters   = MarkFunc(SortParameters)
+  OSauce.asName                   = MarkFunc(AsName)
+  OSauce.valueIsTranya            = MarkFunc(ValueIsTranya)
+  OSauce.valueIsInner             = MarkFunc(ValueIsInner)
+  OSauce.valueIsOuter             = MarkFunc(ValueIsOuter)
+  OSauce.valueIsImmutable         = MarkFunc(ValueIsImmutable)
+  OSauce.valueIsFact              = MarkFunc(ValueIsFact)
+  OSauce.sortParameters           = MarkFunc(SortParameters)
+
+  _OSauce.FindAndSetDurables      = FindAndSetDurables
+  _OSauce.SetInvisibly            = SetInvisibly
+  _OSauce._BasicSetImmutable      = _basicSetImmutable
+  _OSauce.MarkAndSetFuncImmutable = MarkAndSetFuncImmutable
+  _OSauce.SetFuncImmutable        = SetFuncImmutable
 
 })

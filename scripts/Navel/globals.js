@@ -180,37 +180,16 @@
   }
 
 
-  function SetInvisibly(target, selector, value, setOuterToo_) {
-    DefineProperty(target, selector, InvisibleConfig)
-    if (setOuterToo_) { target[$OUTER][selector] = value }
-    return target[selector] = value
-  }
-
-
   // This method should only be called on a mutable object!!!
   function CrudeBeImmutable(object) {
     object[IS_IMMUTABLE] = true
     return Frost(object)
   }
 
-  // This method should only be called on a mutable object!!!
-  // eslint-disable-next-line
-  function _basicSetImmutable(inPlace_, visited__) {
-    const _$target = this[$INNER] //
-    const  $target = _$target[$OUTER]
-
-    delete _$target._retarget
-    $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
-    Frost($target)
-    return this
-  } // IDEMPOT_SELF_METHOD
-
 
 
   _OSauce.ExtractParamListing     = ExtractParamListing
   _OSauce.ExtractParamNames       = ExtractParamNames
-  _OSauce.SetInvisibly            = SetInvisibly
-  _OSauce._BasicSetImmutable      = _basicSetImmutable
 
   OSauce.asCapitalized            = MarkFunc(AsCapitalized)
   OSauce.asDecapitalized          = MarkFunc(AsDecapitalized)

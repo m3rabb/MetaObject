@@ -1,4 +1,4 @@
-ObjectSauce(function (
+ObjectSauce.ImplementationTesting(function (
   $BARRIER, $OUTER, $PULP,
   CrudeBeImmutable, IsFrosted, OwnKeys, RootOf, Type
 ) {
@@ -52,7 +52,7 @@ ObjectSauce(function (
           })
 
           it("has the same supertypes", function () {
-            expect( this.Cat2.supertypes ).toBe( this.Cat.supertypes )
+            expect( this.Cat2.supertypes ).toEqual( this.Cat.supertypes )
             expect( IsFrosted(this.Cat2.supertypes) ).toBe( true )
           })
 

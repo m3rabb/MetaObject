@@ -9,7 +9,7 @@ ObjectSauce(function (
   MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD, TRUSTED_VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
   AsCapitalized, AsMembershipSelector, AsName, ValueAsNext, AsPropertySymbol,
-  CrudeAsImmutable, CrudeBeImmutable,
+  BePermeable, CrudeAsImmutable, CrudeBeImmutable,
   DefaultContext, DeleteSelectorsIn, ExtractDefinitionFrom,
   ExtractParamListing, Frost, InterMap, IsArray, IsSubtypeOfThing,
   NewAssignmentErrorHandler, NewVacuousConstructor, OwnKeys, OwnSelectors,
@@ -18,7 +18,7 @@ ObjectSauce(function (
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AttemptedChangeOfAncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
-  AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty, InSetProperty,
+  AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
   SetAsymmetricProperty,
   AsAssignmentSetter, AsBasicSetter, AsPropertyFromSetter,
   KnownSelectorsSorted, OwnSelectorsSorted
@@ -32,6 +32,16 @@ ObjectSauce(function (
     const _$instance = InterMap.get(instance)
 
     return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]
+  }, IDEMPOT_VALUE_METHOD)
+
+
+  _Type.addMethod(function newPermeable(...args) {
+    return BePermeable(this.new(...args), false)
+  }, IDEMPOT_VALUE_METHOD)
+
+
+  _Type.addMethod(function newPermeableImmutable(...args) {
+    return BePermeable(this.new(...args), true)
   }, IDEMPOT_VALUE_METHOD)
 
 
@@ -834,6 +844,11 @@ ObjectSauce(function (
 
 
   _Type.addAlias("_basicNew"        , "new"                  )
+  _Type.addAlias("new_"             , "newPermeable"         )
+  _Type.addAlias("newImmutable_"    , "newPermeableImmutable")
+
+
+
   _Type.addAlias("declare"          , "addDeclaration"       )
   _Type.addAlias("removeMethod"     , "removeSharedProperty" )
   _Type.addAlias("defines"          , "define"               )

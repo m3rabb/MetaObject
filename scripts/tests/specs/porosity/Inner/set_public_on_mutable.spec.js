@@ -56,17 +56,15 @@ ObjectSauce.ImplementationTesting(function (
       this.$outer   = this.$inner[$OUTER]
     })
 
-    it("Before setting it's barrier, has no properties", function () {
-      expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+    it("Before setting, it's barrier's target is itself", function () {
+      expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
     })
 
 
     describe("When the value is undefined", function() {
       it("Throws an assignment of undefined error", function () {
-        expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
         var execution =  () => { this.$pulp.xyz = undefined }
         expect( execution ).toThrowError( /Assignment of undefined/ )
-        expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
       })
     })
 
@@ -84,8 +82,8 @@ ObjectSauce.ImplementationTesting(function (
         expect( this.$outer.xyz ).toBe( this.value )
       })
 
-      it("Has no impact on the receiver's barrier", function () {
-        expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+      it("The receiver's barrier's target is unchanged", function () {
+        expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
       })
 
       it("Remains mutable", function () {
@@ -107,8 +105,8 @@ ObjectSauce.ImplementationTesting(function (
         expect( this.$outer.xyz ).toBe( this.value )
       })
 
-      it("Has no impact on the receiver's barrier", function () {
-        expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+      it("The receiver's barrier's target is unchanged", function () {
+        expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
       })
 
       it("Remains mutable", function () {
@@ -130,8 +128,8 @@ ObjectSauce.ImplementationTesting(function (
         expect( this.$outer.xyz ).toBe( this.value )
       })
 
-      it("Has no impact on the receiver's barrier", function () {
-        expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+      it("The receiver's barrier's target is unchanged", function () {
+        expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
       })
 
       it("Remains mutable", function () {
@@ -161,8 +159,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$inner.xyz ).toBe( this.$outer.xyz )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -190,8 +188,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$inner.xyz ).toBe( this.$outer.xyz )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -219,8 +217,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$inner.xyz ).toBe( this.$outer.xyz )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -244,8 +242,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( outerWrapper )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -267,8 +265,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.value )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -294,8 +292,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz.name ).toBe( "danger_$tamed" )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -317,8 +315,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.value )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -343,8 +341,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.value )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -366,8 +364,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.value )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -389,8 +387,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.value )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -417,8 +415,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.value )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -439,8 +437,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.$rind )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -461,8 +459,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.$rind )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -490,8 +488,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$inner.xyz ).toBe( this.$outer.xyz )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -519,8 +517,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$inner.xyz ).toBe( this.$outer.xyz )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -557,8 +555,8 @@ ObjectSauce.ImplementationTesting(function (
         expect( this.$rind.isMutable ).toBe( true )
       })
 
-      it("Has no impact on the receiver's barrier", function () {
-        expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+      it("The receiver's barrier's target is unchanged", function () {
+        expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
       })
 
       it("Remains mutable", function () {
@@ -581,8 +579,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.name ).toBe( this.value )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -600,8 +598,8 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.name ).toBe( "Rufus" )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+        it("The receiver's barrier's target is unchanged", function () {
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -621,10 +619,10 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.blueBall )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
+        it("The receiver's barrier's target is unchanged", function () {
           this.$pulp.xyz = this.redBall
           this.$pulp.xyz = this.blueBall
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -644,10 +642,10 @@ ObjectSauce.ImplementationTesting(function (
           expect( this.$outer.xyz ).toBe( this.redBall )
         })
 
-        it("Has no impact on the receiver's barrier", function () {
+        it("The receiver's barrier's target is unchanged", function () {
           this.$pulp.xyz = this.redBall
           this.$pulp.xyz = this.redBall
-          expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
         })
 
         it("Remains mutable", function () {
@@ -676,8 +674,8 @@ ObjectSauce.ImplementationTesting(function (
               expect( this.$pulp.hasOwn("ball") ).toBe( true )
             })
 
-            it("Has no impact on the receiver's barrier", function () {
-              expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+            it("The receiver's barrier's target is unchanged", function () {
+              expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
             })
 
             it("Remains mutable", function () {
@@ -696,8 +694,8 @@ ObjectSauce.ImplementationTesting(function (
               expect( this.$pulp.hasOwn("ball") ).toBe( true )
             })
 
-            it("Has no impact on the receiver's barrier", function () {
-              expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+            it("The receiver's barrier's target is unchanged", function () {
+              expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
             })
 
             it("Remains mutable", function () {
@@ -733,8 +731,8 @@ ObjectSauce.ImplementationTesting(function (
               expect( this.$pulp.hasOwn("ball") ).toBe( true )
             })
 
-            it("Has no impact on the receiver's barrier", function () {
-              expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+            it("The receiver's barrier's target is unchanged", function () {
+              expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
             })
 
             it("Remains mutable", function () {
@@ -753,8 +751,8 @@ ObjectSauce.ImplementationTesting(function (
               expect( this.$pulp.hasOwn("ball") ).toBe( true )
             })
 
-            it("Has no impact on the receiver's barrier", function () {
-              expect( OwnKeys(this.$inner[$BARRIER]).length ).toBe( 0 )
+            it("The receiver's barrier's target is unchanged", function () {
+              expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
             })
 
             it("Remains mutable", function () {

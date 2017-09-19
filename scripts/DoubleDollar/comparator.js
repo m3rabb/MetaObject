@@ -157,6 +157,8 @@ IsEquivEqual     .add("_compareJSObjects_nth", AreJSObjectsEqual)
 IsIdentical      .addInstanceProperty("_equalitySelector", "isIdentical")
 
 
+// Add CompareIdentity  --->>>   { return a !== 0 || 1 / a === 1 / b } // check 0 vs -0
+
 
 function CompareEquality(a, b) {
   if (a === b) { return true }

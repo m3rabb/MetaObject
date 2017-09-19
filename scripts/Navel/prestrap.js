@@ -1,6 +1,6 @@
 ObjectSauce(function (
   $ASSIGNERS, $BARRIER, $IMMEDIATES, $IS_CONTEXT, $IS_DEFINITION, $IS_INNER,
-  $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
+  $IS_TYPE, $LOCKED, $OUTER, $PULP, $RIND, $SUPERS,
   IMPLEMENTATION, INVISIBLE, IS_IMMUTABLE, PROOF,
   VISIBLE, _DURABLES,
   IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
@@ -120,21 +120,23 @@ ObjectSauce(function (
   Context_atPut.call(_RootContext, "Thing"     , Thing     )
   Context_atPut.call(_RootContext, "Definition", Definition)
 
+  // Necessary to prevent breaking Jasmine testing framework
+  _SetDefinitionAt.call(_$Something, "asymmetricMatch", null       , INVISIBLE)
 
 
-  _SetDefinitionAt.call(_$Something, IS_IMMUTABLE  , false      , VISIBLE  )
-  _SetDefinitionAt.call(_$Something, "isSomething" , true       , VISIBLE  )
+  _SetDefinitionAt.call(_$Something, IS_IMMUTABLE     , false      , VISIBLE  )
+  _SetDefinitionAt.call(_$Something, "isSomething"    , true       , VISIBLE  )
 
   // Could have defined the follow properties later, after addDeclaration has
   // been defined, however it is fast execution within each objects' barrier#get
   // if implemented this way.  These properties are read very frequently.
-  _SetDefinitionAt.call(_$Something, "id"          , null       , INVISIBLE)
-  _SetDefinitionAt.call(_$Something, _DURABLES     , null       , INVISIBLE)
-  _SetDefinitionAt.call(_$Something, "context"     , RootContext, VISIBLE  )
+  _SetDefinitionAt.call(_$Something, "id"             , null       , INVISIBLE)
+  _SetDefinitionAt.call(_$Something, _DURABLES        , null       , INVISIBLE)
+  _SetDefinitionAt.call(_$Something, "context"        , RootContext, VISIBLE  )
 
-  _SetDefinitionAt.call(_Type      , $IS_TYPE      , true       , VISIBLE  )
-  _SetDefinitionAt.call(_Context   , $IS_CONTEXT   , true       , VISIBLE  )
-  _SetDefinitionAt.call(_Definition, $IS_DEFINITION, true       , VISIBLE  )
+  _SetDefinitionAt.call(_Type      , $IS_TYPE         , true       , VISIBLE  )
+  _SetDefinitionAt.call(_Context   , $IS_CONTEXT      , true       , VISIBLE  )
+  _SetDefinitionAt.call(_Definition, $IS_DEFINITION   , true       , VISIBLE  )
 
 
   AddMethod.call(_Type, AddMethod)
@@ -187,6 +189,22 @@ ObjectSauce(function (
   }
 
 
+  function BePermeable(target, beImmutable) {
+    const _$target = InterMap.get(target)
+    if (!_$target) { return target }
+    if (_$target[$LOCKED]) {
+      return target._signalError("Can't make permeable copies of locked objects!!")
+    }
+
+    const _target = _$target[$PULP]
+    const $target = _$target[$OUTER]
+    SetInvisibly($target, "this", _target)
+    if (_$target[$IS_TYPE]) { AddPermeableNewDefinitionTo(_$target) }
+    if (beImmutable) { _target._setImmutable() }
+    return target
+  }
+
+
   function AddIntrinsicDeclaration(selector) {
     _SetDefinitionAt.call(_$Intrinsic, selector, null, INVISIBLE)
   }
@@ -213,6 +231,7 @@ ObjectSauce(function (
   _OSauce.Thing                 =   Thing
 
   _OSauce.AddPermeableNewDefinitionTo = AddPermeableNewDefinitionTo
+  _OSauce.BePermeable                 = BePermeable
   _OSauce.AddIntrinsicDeclaration     = AddIntrinsicDeclaration
 
 })

@@ -1,5 +1,5 @@
 ObjectSauce.ImplementationTesting(function (
-  $BARRIER, $OUTER, $PULP,
+  $BARRIER, $INNER, $OUTER, $PULP,
   HasOwn, OwnKeys, RootOf, Type
 ) {
   "use strict"
@@ -29,7 +29,7 @@ ObjectSauce.ImplementationTesting(function (
     describe("When the receiver is mutable", function () {
       beforeEach(function () {
         this.cat_     = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-        this._cat     = this.cat_.this[$PULP]
+        this._cat     = this.cat_.this
         this.$barrier = this._cat[$BARRIER]
       })
 
@@ -37,9 +37,9 @@ ObjectSauce.ImplementationTesting(function (
         expect( this._cat._retarget ).toBe( this._cat )
       })
 
-      it("Has no impact on the receiver's barrier", function () {
+      it("The receiver's barrier's target is unchanged", function () {
         this._cat._retarget
-        expect( OwnKeys(this.$barrier).length ).toBe( 0 )
+        expect( this.$barrier._$target ).toBe( this._cat[$INNER] )
       })
 
       it("Adds _retarget as retroactive property", function () {
@@ -52,7 +52,7 @@ ObjectSauce.ImplementationTesting(function (
     describe("When the receiver is immutable", function () {
       beforeEach(function () {
         this.cat_          = this.Cat_("Rufus", "Siamese-tabby", 18)
-        this._cat          = this.cat_.this[$PULP]
+        this._cat          = this.cat_.this
         this.$barrier      = this._cat[$BARRIER]
         this.$barrier$root = RootOf(this.$barrier)
 
@@ -67,17 +67,16 @@ ObjectSauce.ImplementationTesting(function (
         expect( HasOwn(this._cat, "_retarget") ).toBe( false )
       })
 
+      it("The receiver's barrier's target is unchanged", function () {
+        this._cat._retarget
+        expect( this.$barrier._$target ).toBe( this._cat[$INNER] )
+      })
+
       it("Sets its barrier to the inner of a copy of the target", function () {
         expect( this.$barrier._$target.isInner ).toBe( true )
         expect( this.$barrier._$target.name ).toBe( "Rufus" )
         expect( this.$barrier._$target[BREED] ).toBe( undefined )
         expect( this.$barrier._$target._age ).toBe( 18 )
-      })
-
-      it("Retargets the handlers in the receiver's barrier", function () {
-        expect( this.$barrier.get ).toBe( this.$barrier$root.retargetedGet )
-        expect( this.$barrier.set ).toBe( this.$barrier$root.retargetedSet )
-        expect( this.$barrier.deleteProperty ).toBe( this.$barrier$root.retargetedDelete )
       })
 
       describe("In the new target", function () {

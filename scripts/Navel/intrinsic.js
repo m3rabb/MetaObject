@@ -134,8 +134,6 @@ ObjectSauce(function (
     const $rind                   = $inner[$RIND]
     const _setPropertiesImmutable = $inner._setPropertiesImmutable
 
-    delete $inner._retarget
-
     visited = visited || new WeakMap()
     visited.set($rind, $rind)
 

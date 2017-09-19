@@ -82,17 +82,16 @@ ObjectSauce(function (
     const name = `${AsName(property)}_$outer$fact`
     return {
       [name] : function (...args) {
-        var barrier, useNewBarrier, _receiver, changedTarget,
-            _$target, result, _$result
+        var barrier, _receiver, _$target, result, _$result
         const _$receiver = InterMap.get(this)
 
         if (_$receiver[IS_IMMUTABLE]) {
           barrier = _$receiver[$BARRIER]
 
-          if ((useNewBarrier = barrier._$target)) {
+          if (barrier.isInUse) {
             // Existing barrier is already in use, must generate another barrier and
             // _receiver, and then discard them.
-            barrier   = new InnerBarrier()
+            barrier   = new InnerBarrier(_$receiver)
             _receiver = new Proxy(_$receiver, barrier)
           }
           else {
@@ -100,23 +99,14 @@ ObjectSauce(function (
             _receiver = _$receiver[$PULP]
           }
 
-          barrier._$target = _$receiver // Marks barrier as in use
+          barrier.isInUse  = true
           result           = Handler.apply(_receiver, args) // <<----------
           _$target         = barrier._$target
-          barrier._$target = null       // Marks barrier as not in use
-
-          changedTarget = (_$target !== _$receiver)
-          if (changedTarget && !useNewBarrier) { // Reset existing barrier
-
-            delete barrier.get
-            delete barrier.set
-            delete barrier.deleteProperty
-          }
-          // Else, if didn't change targets handlers were not set. Or if new
-          // barrier, it will be garbage collected, so no need to clean it up.
+          barrier.isInUse  = false
+          barrier._$target = _$receiver
 
           if (result === undefined || result === _receiver) {
-            return (changedTarget) ?
+            return (_$target !== _$receiver) ?
               _$target._setImmutable.call(_$target[$PULP])[$RIND] :
               _$receiver[$RIND]
           }
@@ -151,15 +141,15 @@ ObjectSauce(function (
     return {
       [name] : function (...args) {
         const _$receiver = InterMap.get(this)
-        var   barrier, useNewBarrier, changedTarget, _receiver, result, _$target
+        var   barrier, _receiver, result, _$target
 
         if (_$receiver[IS_IMMUTABLE]) {
           barrier = _$receiver[$BARRIER]
 
-          if ((useNewBarrier = barrier._$target)) {
+          if (barrier.isInUse) {
             // Existing barrier is already in use, must generate another barrier and
             // _receiver, and then discard them.
-            barrier   = new InnerBarrier()
+            barrier   = new InnerBarrier(_$receiver)
             _receiver = new Proxy(_$receiver, barrier)
           }
           else {
@@ -167,21 +157,16 @@ ObjectSauce(function (
             _receiver = _$receiver[$PULP]
           }
 
-          barrier._$target = _$receiver
+          barrier.isInUse  = true
           result           = Handler.apply(_receiver, args) // <<----------
           _$target         = barrier._$target
-          barrier._$target = null
-
-          changedTarget = (_$target !== _$receiver)
-          if (changedTarget && !useNewBarrier) {
-            delete barrier.get
-            delete barrier.set
-            delete barrier.deleteProperty
-          }
+          barrier.isInUse  = false
+          barrier._$target = _$receiver
 
           if (result === undefined || result === _receiver) {
-            if (changedTarget) { _$target._setImmutable.call(_$target[$PULP]) }
-            return _$target[$RIND]
+            return (_$target !== _$receiver) ?
+              _$target._setImmutable.call(_$target[$PULP])[$RIND] :
+              _$receiver[$RIND]
           }
         }
         else {
@@ -201,15 +186,15 @@ ObjectSauce(function (
     return {
       [name] : function (...args) {
         const _$receiver = InterMap.get(this)
-        var   barrier, useNewBarrier, changedTarget, _receiver, _$target
+        var   barrier, _receiver, _$target
 
         if (_$receiver[IS_IMMUTABLE]) {
           barrier = _$receiver[$BARRIER]
 
-          if ((useNewBarrier = barrier._$target)) {
+          if (barrier.isInUse) {
             // Existing barrier is already in use, must generate another barrier and
             // _receiver, and then discard them.
-            barrier   = new InnerBarrier()
+            barrier   = new InnerBarrier(_$receiver)
             _receiver = new Proxy(_$receiver, barrier)
           }
           else {
@@ -217,20 +202,15 @@ ObjectSauce(function (
             _receiver = _$receiver[$PULP]
           }
 
-          barrier._$target = _$receiver
+          barrier.isInUse  = true
           Handler.apply(_receiver, args) // <<----------
           _$target         = barrier._$target
-          barrier._$target = null
+          barrier.isInUse  = false
+          barrier._$target = _$receiver
 
-          changedTarget = (_$target !== _$receiver)
-          if (changedTarget && !useNewBarrier) {
-            delete barrier.get
-            delete barrier.set
-            delete barrier.deleteProperty
-          }
-
-          if (changedTarget) { _$target._setImmutable.call(_$target[$PULP]) }
-          return _$target[$RIND]
+          return (_$target !== _$receiver) ?
+            _$target._setImmutable.call(_$target[$PULP])[$RIND] :
+            _$receiver[$RIND]
         }
 
         Handler.apply(_$receiver[$PULP], args) // <<----------
