@@ -71,6 +71,7 @@ Tranya(function (
 
             case INNER_FUNC    :
               if (writeOuter) { $target[selector] = value[$OUTER_WRAPPER] }
+              // Revisit this if $OUTER_WRAPPER can hold NONE instead
               writeOuter = false
               break
 

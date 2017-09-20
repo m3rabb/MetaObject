@@ -173,7 +173,7 @@ Tranya.ImplementationTesting(function (
       })
 
       it("The receiver's barrier's target is unchanged", function () {
-        expect( this.$barrier._$target ).toBe( this.$inner )
+        expect( this.$barrier._$target ).toBe( undefined )
       })
 
       it("Makes no change", function () {
@@ -189,7 +189,7 @@ Tranya.ImplementationTesting(function (
       })
 
       it("The receiver's barrier's target is unchanged", function () {
-        expect( this.$barrier._$target ).toBe( this.$inner )
+        expect( this.$barrier._$target ).toBe( undefined )
       })
 
       it("Makes no change", function () {

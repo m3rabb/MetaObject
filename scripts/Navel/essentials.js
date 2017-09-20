@@ -194,7 +194,7 @@ Tranya(function (
     }
     // Else this is an aliased definition to a basic method and the
     // inner === handler, and has already had $OUTER_WRAPPER and method set.
-    outer.method = inner.method // this[$RIND]
+    outer && (outer.method = inner.method) // this[$RIND]
 
     // Need to subvert function assignment to enable raw functions to be stored.
     $outer.outer   = $inner.outer   = MarkAndSetFuncImmutable(outer, OUTER_FUNC)

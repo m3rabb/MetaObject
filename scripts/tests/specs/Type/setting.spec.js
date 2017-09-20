@@ -211,7 +211,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
+          expect( this._$root.setMood.name ).toBe( "setMood_inner_self" )
         })
 
         it("Doesn't put an assigner func in the root", function () {
@@ -268,7 +268,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setXyz.name ).toBe( "setXyz_$inner$self" )
+          expect( this._$root.setXyz.name ).toBe( "setXyz_inner_self" )
         })
 
         it("Doesn't put an assigner func in the root", function () {
@@ -311,7 +311,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
+          expect( this._$root.setMood.name ).toBe( "setMood_inner_self" )
         })
 
         it("Doesn't put an assigner func in the root", function () {
@@ -366,7 +366,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
+          expect( this._$root.setMood.name ).toBe( "setMood_inner_self" )
         })
 
         it("Put an assigner func in the root", function () {
@@ -499,7 +499,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setXyz.name ).toBe( "setXyz_$inner$self" )
+          expect( this._$root.setXyz.name ).toBe( "setXyz_inner_self" )
         })
 
         it("Doesn't put an assigner func in the root", function () {
@@ -610,7 +610,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
+          expect( this._$root.setMood.name ).toBe( "setMood_inner_self" )
         })
 
         it("Puts an assigner func in the root", function () {
@@ -667,7 +667,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setXyz.name ).toBe( "setXyz_$inner$self" )
+          expect( this._$root.setXyz.name ).toBe( "setXyz_inner_self" )
         })
 
         it("Puts an assigner func in the root", function () {
@@ -709,7 +709,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
+          expect( this._$root.setMood.name ).toBe( "setMood_inner_self" )
         })
 
         it("Puts an assigner func in the root", function () {
@@ -768,7 +768,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
+          expect( this._$root.setMood.name ).toBe( "setMood_inner_self" )
         })
 
         it("Put an assigner func in the root", function () {
@@ -890,7 +890,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setXyz.name ).toBe( "setXyz_$inner$self" )
+          expect( this._$root.setXyz.name ).toBe( "setXyz_inner_self" )
         })
 
         it("Puts an assigner func in the root", function () {
@@ -932,7 +932,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Puts a basic setter property in the root", function () {
-          expect( this._$root.setMood.name ).toBe( "setMood_$inner$self" )
+          expect( this._$root.setMood.name ).toBe( "setMood_inner_self" )
         })
 
         it("Put an assigner func in the root", function () {

@@ -59,7 +59,7 @@ Tranya.ImplementationTesting(function (
     })
 
     it("Before setting, it's barrier's target is itself", function () {
-      expect( this.$barrier._$target ).toBe( this.$inner )
+      expect( this.$barrier._$target ).toBe( undefined )
     })
 
 
@@ -399,7 +399,7 @@ Tranya.ImplementationTesting(function (
         beforeEach(function () {
           this.danger    = function danger() { return this }
           this.$pulp.qrs = this.danger
-          this.tamed     = this.$pulp.qrs
+          this.tamed     = this.$barrier._$target.qrs
           this.$pulp.xyz = this.tamed
         })
 
@@ -897,7 +897,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$barrier._$target ).toBe( this.$inner )
+          expect( this.$barrier._$target ).toBe( undefined )
         })
       })
     })
@@ -1119,7 +1119,7 @@ Tranya.ImplementationTesting(function (
               })
 
               it("The receiver's barrier's target is unchanged", function () {
-                expect( this.$barrier._$target ).toBe( this.$inner )
+                expect( this.$barrier._$target ).toBe( undefined )
               })
             })
           })

@@ -27,7 +27,7 @@ Tranya(function (
   _Thing.addSetter("_setName", "name")
 
   _Thing.addMethod(function _init(spec_) {
-    if (spec_ != null) { return }
+    if (spec_ == null) { return }
     for (var selector in spec_) {
       this[selector] = spec_[selector]
     }

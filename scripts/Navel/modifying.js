@@ -1,10 +1,9 @@
 Tranya(function (
-  $BLANKER, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND,
+  $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND,
   DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   SAFE_FUNC, TAMED_FUNC,
-  FindAndSetDurables, Frost, InterMap, IsFact, MarkAndSetFuncImmutable,
-  MarkFunc, OwnNames,
+  FindAndSetDurables, Frost, InterMap, IsFact, MarkFunc, OwnNames,
   SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, AttemptInvertedFuncCopyError,
   Shared, _Shared

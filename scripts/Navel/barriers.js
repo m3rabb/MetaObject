@@ -3,14 +3,14 @@ Tranya(function (
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE, NO_SUPER, _DURABLES,
   AlwaysFalse, AlwaysNull, InSetProperty, InterMap, SpawnFrom, _$Copy, _HasOwn,
-  AssignmentOfUndefinedError, AttemptSetOnSuperError,
+  AssignmentOfUndefinedError, AttemptSetOnSuperError, DeleteFromOutsideError,
   DirectAssignmentFromOutsideError, DisallowedDeleteError,
   PrivateAccessFromOutsideError,
   _Shared
 ) {
   "use strict"
 
-  // UNTESTED
+
   const DefaultBarrier = {
     __proto__      : null       ,
     getPrototypeOf : AlwaysNull ,
@@ -39,6 +39,11 @@ Tranya(function (
     return DirectAssignmentFromOutsideError(self) || false
   }
 
+  // eslint-disable-next-line
+  OuterBarrier_prototype.deleteProperty = function deleteProperty($self, selector) {
+    return DeleteFromOutsideError(self) || false
+  }
+
 
   // getOwnPropertyDescriptor ($self, selector) {
   //   switch (selector[0]) {
@@ -61,7 +66,7 @@ Tranya(function (
     if (selector in $self) { return null }
 
     const firstChar = (selector.charAt) ? selector[0] : selector.toString()[7]
-    const _$self  = InterMap.get(self)
+    const _$self    = InterMap.get(self)
 
     if (firstChar === "_") {
       const _privateAccessFromOutside = _$self._privateAccessFromOutside
@@ -92,9 +97,8 @@ Tranya(function (
 
 
 
-  // UNTESTED
   function InnerBarrier(_$self) {
-    this._$target = _$self
+    this._$self = _$self
   }
 
   const InnerBarrier_prototype = SpawnFrom(DefaultBarrier)
@@ -102,34 +106,35 @@ Tranya(function (
 
 
   // eslint-disable-next-line
-  InnerBarrier_prototype.get = function get(_$self, selector, _self) {
-    const _$target = this._$target
-    const value    = _$target[selector]
+  InnerBarrier_prototype.get = function get(_$self_func, selector, _self) {
+    const _$self = this._$self
+    const value = _$self[selector]
     if (value !== undefined) { return value }
 
-    const $method_inner = _$target[$IMMEDIATES][selector]
-    if ($method_inner) { return $method_inner.call(_$target[$PULP]) }
-    if (selector in _$target) { return null }
+    const $method_inner = _$self[$IMMEDIATES][selector]
+    if ($method_inner) { return $method_inner.call(_self) }
+    if (selector in _$self) { return null }
 
-    return _$target._unknownProperty.call(_$target[$PULP], selector)
+    return _$self._unknownProperty.call(_self, selector)
   }
 
 
-  InnerBarrier_prototype.has = function has(_$self, selector) {
-    return (selector in this._$target)
+  InnerBarrier_prototype.has = function has(_$self_func, selector) {
+    return (selector in this._$self)
   }
 
 
-  InnerBarrier_prototype.set = function set(_$self, selector, value, _self) {
-    var   _$target = this._$target
-    const assigner = _$target[$ASSIGNERS][selector]
+  InnerBarrier_prototype.set = function set(_$self_func, selector, value, _self) {
+    var _$target, assigner
+    const _$self   = this._$self
 
-    if (assigner) {
+    _$target = _$self
+    if ((assigner = _$self[$ASSIGNERS][selector])) {
       if (typeof assigner !== "function") { selector = assigner } // symbol
       else {                                                      // handler
         // The assigner might cause a write, invalidating the target $inner.
-        value    = assigner.call(_$target[$PULP], value)
-        _$target = this._$target  // reload target since assigner caused new copy
+        value    = assigner.call(_self, value)
+        _$target = this._$target || _$self // assigner might have made new copy
       }
     }
 
@@ -162,22 +167,19 @@ Tranya(function (
       this._$target = (_$target = _$Copy(_$target, false, null, null, selector))
     }
 
-    if (_$target !== _$self) {
+    if (_$target !== _$self && (value === _self || value === _$self[$RIND])) {
       // If going to assigning property to self, instead assign it to the copy
-      if (value === _self || value === _$self[$RIND]) {
-        value = _$target[$RIND]
-      }
+      value = _$target[$RIND]
     }
     InSetProperty(_$target, selector, value)
     return true
   }
 
 
-  InnerBarrier_prototype.deleteProperty = function deleteProperty(_$self, selector) {
-    var _$copy, value, value$root
-
-    var   _$target = this._$target
-    const assigner = _$target[$ASSIGNERS][selector]
+  InnerBarrier_prototype.deleteProperty = function deleteProperty(_$self_func, selector) {
+    var _$target, value, value$root
+    const _$self   = this._$self
+    const assigner = _$self[$ASSIGNERS][selector]
 
     if (assigner && assigner.name === "$assignmentError") {
       return DisallowedDeleteError(_$self, selector) || true
@@ -185,31 +187,31 @@ Tranya(function (
 
     switch (selector) {
       case $DELETE_IMMUTABILITY   :  // Only called on immutable objects!!!
-        _$copy = _$Copy(_$target, false)
+        _$target = _$Copy(_$self, false)
         break
 
       case $DELETE_ALL_PROPERTIES :  // Only called on immutable objects!!!
-        _$copy = InterMap.get(new _$target._newBlank())
+        _$target = InterMap.get(new _$self._newBlank())
         break
 
       default :
-        value$root = _$target[$ROOT][selector]
-        value      = _$target[selector]
+        value$root = _$self[$ROOT][selector]
+        value      = _$self[selector]
 
         if (value === value$root) {
-          if (value === undefined || !_HasOwn.call(_$target, selector)) {
+          if (value === undefined || !_HasOwn.call(_$self, selector)) {
             return true // Doesn't have the property, but inherits it from root.
           }
         }
     }
 
-    if (_$target[IS_IMMUTABLE]) {
-      this._$target = _$copy || _$Copy(_$target, false, null, null, selector)
+    if (_$self[IS_IMMUTABLE]) {
+      this._$target = _$target || _$Copy(_$self, false, null, null, selector)
     }
     else {
-      delete _$target[selector]
-      delete _$target[$OUTER][selector]
-      delete _$target[_DURABLES]
+      delete _$self[selector]
+      delete _$self[$OUTER][selector]
+      delete _$self[_DURABLES]
     }
 
     return true
@@ -217,32 +219,34 @@ Tranya(function (
 
 
 
-  function DisguisedOuterBarrier(_$self, applyHandler) {
-    this._$target = _$self
-    this.apply    = applyHandler
+
+  function DisguisedOuterBarrier($self, applyHandler) {
+    this.$self = $self
+    this.apply = applyHandler
   }
 
   const DisguisedOuterBarrier_prototype = SpawnFrom(OuterBarrier_prototype)
   DisguisedOuterBarrier.prototype = DisguisedOuterBarrier_prototype
 
-  DisguisedOuterBarrier_prototype.get = function get(func, selector, target) {
-    return this.basicGet(this._$target[$OUTER], selector, target)
+
+  DisguisedOuterBarrier_prototype.get = function get(func, selector, self) {
+    return this.basicGet(this.$self, selector, self)
   }
 
   DisguisedOuterBarrier_prototype.has = function has(func, selector) {
-    return this.basicHas(this._$target[$OUTER], selector)
+    return this.basicHas(this.$self, selector)
   }
 
 
-  // CHECK THAT BARRIER WORK ON TYPE PROXIES, IMMUTABLE AS WELL AS MUTABLE!!!
+
+
   function DisguisedInnerBarrier(_$self, applyHandler) {
-    this._$target = _$self
-    this.apply    = applyHandler
+    this._$self = _$self
+    this.apply  = applyHandler
   }
 
   const DisguisedInnerBarrier_prototype = SpawnFrom(InnerBarrier_prototype)
   DisguisedInnerBarrier.prototype = DisguisedInnerBarrier_prototype
-
 
 
 

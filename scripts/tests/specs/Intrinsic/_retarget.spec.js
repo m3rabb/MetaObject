@@ -39,7 +39,7 @@ Tranya.ImplementationTesting(function (
 
       it("The receiver's barrier's target is unchanged", function () {
         this._cat._retarget
-        expect( this.$barrier._$target ).toBe( this._cat[$INNER] )
+        expect( this.$barrier._$target ).toBe( undefined )
       })
 
       it("Adds _retarget as retroactive property", function () {
@@ -64,12 +64,7 @@ Tranya.ImplementationTesting(function (
       })
 
       it("Doesn't add a _retarget property to the receiver", function () {
-        expect( HasOwn(this._cat, "_retarget") ).toBe( false )
-      })
-
-      it("The receiver's barrier's target is unchanged", function () {
-        this._cat._retarget
-        expect( this.$barrier._$target ).toBe( this._cat[$INNER] )
+        expect( HasOwn(this._cat[$INNER], "_retarget") ).toBe( false )
       })
 
       it("Sets its barrier to the inner of a copy of the target", function () {

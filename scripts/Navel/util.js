@@ -89,7 +89,7 @@ Tranya(function (
 
 
   function MarkAndSetFuncImmutable(func, marker) {
-    if (InterMap.get(func)) { return func }
+    if (func == null || InterMap.get(func)) { return func }
     func[IS_IMMUTABLE] = true
     InterMap.set(func, marker)
     Frost(func.prototype)

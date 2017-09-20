@@ -63,7 +63,7 @@ Tranya.ImplementationTesting(function (Type) {
 
       describe("public method", function () {
         it("Answers the outer method handler", function () {
-          expect( this.iCat.setAge.method.outer.name ).toBe( "setAge_$outer$fact" )
+          expect( this.iCat.setAge.method.outer.name ).toBe( "setAge_$outer_targeting_fact" )
         })
       })
     })

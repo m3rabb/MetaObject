@@ -57,7 +57,7 @@ Tranya.ImplementationTesting(function (
     })
 
     it("Before setting, it's barrier's target is itself", function () {
-      expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+      expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
     })
 
 
@@ -83,7 +83,7 @@ Tranya.ImplementationTesting(function (
       })
 
       it("The receiver's barrier's target is unchanged", function () {
-        expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+        expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
       })
 
       it("Remains mutable", function () {
@@ -106,7 +106,7 @@ Tranya.ImplementationTesting(function (
       })
 
       it("The receiver's barrier's target is unchanged", function () {
-        expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+        expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
       })
 
       it("Remains mutable", function () {
@@ -129,7 +129,7 @@ Tranya.ImplementationTesting(function (
       })
 
       it("The receiver's barrier's target is unchanged", function () {
-        expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+        expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
       })
 
       it("Remains mutable", function () {
@@ -160,7 +160,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -189,7 +189,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -218,7 +218,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -243,7 +243,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -266,7 +266,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -293,7 +293,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -316,7 +316,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -342,7 +342,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -365,7 +365,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -388,7 +388,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -416,7 +416,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -438,7 +438,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -460,7 +460,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -489,7 +489,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -518,7 +518,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -556,7 +556,7 @@ Tranya.ImplementationTesting(function (
       })
 
       it("The receiver's barrier's target is unchanged", function () {
-        expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+        expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
       })
 
       it("Remains mutable", function () {
@@ -580,7 +580,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -599,7 +599,7 @@ Tranya.ImplementationTesting(function (
         })
 
         it("The receiver's barrier's target is unchanged", function () {
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -622,7 +622,7 @@ Tranya.ImplementationTesting(function (
         it("The receiver's barrier's target is unchanged", function () {
           this.$pulp.xyz = this.redBall
           this.$pulp.xyz = this.blueBall
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -645,7 +645,7 @@ Tranya.ImplementationTesting(function (
         it("The receiver's barrier's target is unchanged", function () {
           this.$pulp.xyz = this.redBall
           this.$pulp.xyz = this.redBall
-          expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+          expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
         })
 
         it("Remains mutable", function () {
@@ -675,7 +675,7 @@ Tranya.ImplementationTesting(function (
             })
 
             it("The receiver's barrier's target is unchanged", function () {
-              expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+              expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
             })
 
             it("Remains mutable", function () {
@@ -695,7 +695,7 @@ Tranya.ImplementationTesting(function (
             })
 
             it("The receiver's barrier's target is unchanged", function () {
-              expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+              expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
             })
 
             it("Remains mutable", function () {
@@ -732,7 +732,7 @@ Tranya.ImplementationTesting(function (
             })
 
             it("The receiver's barrier's target is unchanged", function () {
-              expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+              expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
             })
 
             it("Remains mutable", function () {
@@ -752,7 +752,7 @@ Tranya.ImplementationTesting(function (
             })
 
             it("The receiver's barrier's target is unchanged", function () {
-              expect( this.$inner[$BARRIER]._$target ).toBe( this.$inner )
+              expect( this.$inner[$BARRIER]._$target ).toBe( undefined )
             })
 
             it("Remains mutable", function () {

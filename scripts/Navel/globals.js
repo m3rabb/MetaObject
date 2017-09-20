@@ -140,6 +140,8 @@
   // Sentinels
   _Shared.PROOF                  = Symbol("PROOF")
   _Shared.COUNT                  = Symbol("COUNT")
+  _Shared.NONE                   = Symbol("NONE")
+
 
   _Shared.ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
   // _Shared.CONSTRUCTOR         = Symbol("CONSTRUCTOR")

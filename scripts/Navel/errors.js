@@ -62,6 +62,10 @@ Tranya(function (
     SignalError(target[$RIND], "Direct assignment is not allowed from the outside of an object, use a method instead!!")
   }
 
+  _Shared.DirectAssignmentFromOutsideError = function (target) {
+    SignalError(target[$RIND], "Deleting is not allowed from the outside of an object, use a method instead!!")
+  }
+
   _Shared.AttemptSetOnSuperError = function (target) {
     SignalError(target[$RIND], "Setting properties via _super in forbidden!!")
   }
