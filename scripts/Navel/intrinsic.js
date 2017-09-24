@@ -49,29 +49,35 @@ Tranya(function (
 
 
 
-  _$Intrinsic.addMethod(function copy(visited_asImmutable_, visited_, context__) {
+  _$Intrinsic.addMethod(function copy(
+    visited_asImmutable_, visited_, context__, exceptSelector___
+  ) {
     const $inner = this[$INNER]
-    const [asImmutable, visited, context] =
+    const [asImmutable, visited, context, selector] =
       (typeof visited_asImmutable_ === "object") ?
-        [undefined           , visited_asImmutable_, visited_ ] :
-        [visited_asImmutable_, visited_            , context__]
+        [undefined, visited_asImmutable_, visited_, context__] :
+        [visited_asImmutable_, visited_, context__, exceptSelector___]
 
-    return (($inner[IS_IMMUTABLE] && asImmutable !== false) ? // true or undefined
-      $inner : _$Copy($inner, asImmutable, visited, context))[$RIND]
+    if ($inner[IS_IMMUTABLE] && asImmutable !== false) {
+      if (!context || $inner.context === context) { return $inner[$RIND] }
+    }
+    return _$Copy($inner, asImmutable, visited, context, selector)[$RIND]
   }, IDEMPOT_VALUE_METHOD)
 
-  _$Intrinsic.addMethod(function immutableCopy(visited_) {
+  _$Intrinsic.addMethod(function immutableCopy(visited_, context__) {
     const $inner = this[$INNER]
-    return ($inner[IS_IMMUTABLE] ?
-      $inner : _$Copy($inner, true, visited_))[$RIND]
+    if ($inner[IS_IMMUTABLE]) {
+      if (!context__ || $inner.context === context__) { return $inner[$RIND] }
+    }
+    return _$Copy($inner, true, visited_, context__)[$RIND]
   }, IDEMPOT_VALUE_METHOD)
 
-  _$Intrinsic.addMethod(function mutableCopy(visited_) {
-    return _$Copy(this[$INNER], false, visited_)[$RIND]
+  _$Intrinsic.addMethod(function mutableCopy(visited_, context__) {
+    return _$Copy(this[$INNER], false, visited_, context__)[$RIND]
   }, IDEMPOT_VALUE_METHOD)
 
-  _$Intrinsic.addMethod(function mutableCopyExcept(selector) {
-    return _$Copy(this[$INNER], false, null, null, selector)[$RIND]
+  _$Intrinsic.addMethod(function mutableCopyExcept(selector, visited_, context__) {
+    return _$Copy(this[$INNER], false, visited_, context__, selector)[$RIND]
   }, IDEMPOT_VALUE_METHOD)
 
   // Thing.add(function _nonCopy() {
@@ -81,20 +87,14 @@ Tranya(function (
 
   _$Intrinsic.addMethod(function asCopy() {
     const $inner = this[$INNER]
-    return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner, false))[$RIND]
+    return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner))[$RIND]
   }, IDEMPOT_VALUE_METHOD)
 
   _$Intrinsic.addMethod(function asMutableCopy() {
     return _$Copy(this[$INNER], false)[$RIND]
   }, IDEMPOT_VALUE_METHOD)
 
-  _$Intrinsic.addMethod(function asFact() {
-    const $inner = this[$INNER]
-    return ($inner[IS_IMMUTABLE] || ($inner.id != null)) ?
-      $inner : _$Copy($inner, true)[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
-
-  _$Intrinsic.addMethod(function asImmutable() {
+  _$Intrinsic.addMethod(function asImmutableCopy() {
     const $inner = this[$INNER]
     return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner, true))[$RIND]
   }, IDEMPOT_VALUE_METHOD)
@@ -104,7 +104,13 @@ Tranya(function (
     return ($inner[IS_IMMUTABLE] ? _$Copy($inner, false) : $inner)[$RIND]
   }, IDEMPOT_VALUE_METHOD)
 
+  _$Intrinsic.addMethod(function asFact() {
+    const $inner = this[$INNER]
+    return ($inner[IS_IMMUTABLE] || ($inner.id != null)) ?
+      $inner : _$Copy($inner, true)[$RIND]
+  }, IDEMPOT_VALUE_METHOD)
 
+  _$Intrinsic.addAlias("asImmutable", "asImmutableCopy")
 
 
 
@@ -427,7 +433,7 @@ Tranya(function (
 
 
   _$Intrinsic.addMethod(function _unknownProperty(selector) {
-    return this._signalError(`Receiver ${this.basicId} doesn't have a property '${AsName(selector)}'!!`)
+    return this._signalError(`Receiver ${this.oid} doesn't have a property '${AsName(selector)}'!!`)
   })
 
   //_$Intrinsic.addMethod("_basicUnknownProperty", $Intrinsic$root$inner._unknownProperty)

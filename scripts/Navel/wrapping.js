@@ -41,7 +41,7 @@ Tranya(function (
         if (_$receiver[IS_IMMUTABLE]) {
           barrier = _$receiver[$BARRIER]
 
-          if (barrier._$target) {
+          if (barrier.isInUse) {
             // Existing barrier is already in use, must generate another barrier and
             // _receiver, and then discard them.
             barrier   = new InnerBarrier(_$receiver)
@@ -52,10 +52,11 @@ Tranya(function (
             _receiver = _$receiver[$PULP]
           }
 
-          barrier._$target = _$receiver
+          barrier.isInUse  = true
           result           = Handler.apply(_receiver, args) // <<----------
           _$target         = barrier._$target
-          barrier._$target = null
+          barrier._$target = _$receiver
+          barrier.isInUse  = false
 
           if (result === undefined || result === _receiver) {
             return (_$target !== _$receiver) ?
@@ -99,7 +100,7 @@ Tranya(function (
         if (_$receiver[IS_IMMUTABLE]) {
           barrier = _$receiver[$BARRIER]
 
-          if (barrier._$target) {
+          if (barrier.isInUse) {
             // Existing barrier is already in use, must generate another barrier and
             // _receiver, and then discard them.
             barrier   = new InnerBarrier(_$receiver)
@@ -110,10 +111,11 @@ Tranya(function (
             _receiver = _$receiver[$PULP]
           }
 
-          barrier._$target = _$receiver
+          barrier.isInUse  = true
           result           = Handler.apply(_receiver, args) // <<----------
           _$target         = barrier._$target
-          barrier._$target = null
+          barrier._$target = _$receiver
+          barrier.isInUse  = false
 
           if (result === undefined || result === _receiver) {
             return (_$target !== _$receiver) ?
@@ -143,7 +145,7 @@ Tranya(function (
         if (_$receiver[IS_IMMUTABLE]) {
           barrier = _$receiver[$BARRIER]
 
-          if (barrier._$target) {
+          if (barrier.isInUse) {
             // Existing barrier is already in use, must generate another barrier and
             // _receiver, and then discard them.
             barrier   = new InnerBarrier(_$receiver)
@@ -154,10 +156,11 @@ Tranya(function (
             _receiver = _$receiver[$PULP]
           }
 
-          barrier._$target = _$receiver
+          barrier.isInUse  = true
           Handler.apply(_receiver, args) // <<----------
           _$target         = barrier._$target
-          barrier._$target = null
+          barrier._$target = _$receiver
+          barrier.isInUse  = false
 
           return (_$target !== _$receiver) ?
             _$target._setImmutable.call(_$target[$PULP])[$RIND] :

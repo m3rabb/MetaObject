@@ -26,6 +26,20 @@ Tranya.ImplementationTesting(function (
 
           function asString() { return `${this.name}:${this.age}` },
 
+          function setMood(value) { this.mood = value },
+
+          function setBall(value) { this.ball = value },
+
+          function deleteBall() { delete this.ball },
+
+          function deleteName() { delete this.name },
+
+          function deleteMood() { delete this.mood },
+
+          function deleteStick() { delete this.stick },
+
+          function deleteXyz() { delete this.xyz },
+
           {
             FOR_ASSIGN    : { mood : mood },
             SHARED        : { ball : this.redBall },
@@ -47,7 +61,7 @@ Tranya.ImplementationTesting(function (
     describe("When the property exists", function() {
       beforeEach(function () {
         this.$rind.beImmutable
-        delete this.$pulp.name
+        this.result = this.$rind.deleteName
       })
 
       it("Doesn't delete the property in the receiver, itself", function () {
@@ -55,35 +69,43 @@ Tranya.ImplementationTesting(function (
         expect( this.$outer.name ).toBe( "Rufus" )
       })
 
-      it("Retargets the receiver's barrier", function () {
-        expect( this.$barrier._$target ).not.toBe( this.$inner )
+      it("The receiver's barrier is no longer in use", function () {
+        expect( this.$barrier.isInUse ).toBe( false )
       })
 
-      it("Sets its barrier to the inner of a copy of the target, lest the property", function () {
-        expect( this.$barrier._$target.isInner ).toBe( true )
-        expect( this.$barrier._$target.name ).toBe( undefined )
-        expect( this.$barrier._$target[BREED] ).toBe( undefined )
-        expect( this.$barrier._$target._age ).toBe( 18 )
+      it("The receiver's barrier's target is restored", function () {
+        expect( this.$barrier._$target ).toBe( this.$inner )
       })
 
-      describe("In the new target", function () {
+      it("Creates an immutable copy lest the property", function () {
+        expect( this.result.isImmutable ).toBe( true )
+        expect( this.result.this._hasOwn(BREED) ).toBe( false )
+        expect( this.result.this._age ).toBe( 18 )
+        expect( this.result.this._hasOwn("name") ).toBe( false )
+        expect( this.result.this.name ).toBe( null )
+      })
+
+      describe("In the copy", function () {
         beforeEach(function () {
-          this.$target$inner = this.$barrier._$target
-          this.$target$outer = this.$barrier._$target[$OUTER]
+          this.result$inner = this.result.this[$INNER]
+          this.result$outer = this.result.this[$OUTER]
         })
 
-        it("Deletes the property", function () {
-          expect( HasOwn(this.$target$inner, "name") ).toBe( false )
-          expect( HasOwn(this.$target$outer, "name") ).toBe( false )
+        it("Sets the $inner property to the value", function () {
+          expect( HasOwn(this.result$inner, "_xyz") ).toBe( false )
+        })
+
+        it("Doesn't set the $outer property", function () {
+          expect( HasOwn(this.result$outer, "_xyz") ).toBe( false )
         })
       })
     })
 
     describe("When the property has an assigner", function() {
       beforeEach(function () {
-        this.$pulp.mood = "happy"
+        this.$rind.setMood("happy")
         this.$rind.beImmutable
-        delete this.$pulp.mood
+        this.result = this.$rind.deleteMood
       })
 
       it("Doesn't delete the property in the receiver, itself", function () {
@@ -91,48 +113,56 @@ Tranya.ImplementationTesting(function (
         expect( this.$outer.mood ).toBe( "very happy" )
       })
 
-      it("Retargets the receiver's barrier", function () {
-        expect( this.$barrier._$target ).not.toBe( this.$inner )
+      it("The receiver's barrier is no longer in use", function () {
+        expect( this.$barrier.isInUse ).toBe( false )
       })
 
-      it("Sets its barrier to the inner of a copy of the target, lest the property", function () {
-        expect( this.$barrier._$target.isInner ).toBe( true )
-        expect( this.$barrier._$target.name ).toBe( "Rufus" )
-        expect( this.$barrier._$target[BREED] ).toBe( undefined )
-        expect( this.$barrier._$target._age ).toBe( 18 )
-        expect( this.$barrier._$target.mood ).toBe( undefined )
+      it("The receiver's barrier's target is restored", function () {
+        expect( this.$barrier._$target ).toBe( this.$inner )
       })
 
-      describe("In the new target", function () {
+      it("Creates an immutable copy lest the property", function () {
+        expect( this.result.isImmutable ).toBe( true )
+        expect( this.result.this.name ).toBe( "Rufus" )
+        expect( this.result.this._hasOwn(BREED) ).toBe( false )
+        expect( this.result.this._age ).toBe( 18 )
+        expect( this.result.hasOwn("mood") ).toBe( false )
+        expect( this.result.this.mood ).toBe( null )
+      })
+
+      describe("In the copy", function () {
         beforeEach(function () {
-          this.$target$inner = this.$barrier._$target
-          this.$target$outer = this.$barrier._$target[$OUTER]
+          this.result$inner = this.result.this[$INNER]
+          this.result$outer = this.result.this[$OUTER]
         })
 
-        it("Deletes the property", function () {
-          expect( HasOwn(this.$target$inner, "mood") ).toBe( false )
-          expect( HasOwn(this.$target$outer, "mood") ).toBe( false )
+        it("Sets the $inner property to the value", function () {
+          expect( HasOwn(this.result$inner, "mood") ).toBe( false )
+        })
+
+        it("Doesn't set the $outer property", function () {
+          expect( HasOwn(this.result$outer, "mood") ).toBe( false )
         })
       })
     })
 
     describe("When the property is mandatory", function() {
       beforeEach(function () {
-        this.$pulp.setStick("big stick")
+        this.$rind.setStick("big stick")
         this.$rind.beImmutable
       })
 
       it("Throws and disallowed delete error", function () {
-        var execution =  () => { delete this.$pulp.stick }
+        var execution =  () => { this.$rind.deleteStick }
         expect( execution ).toThrowError( /Delete of property 'stick'/ )
       })
     })
 
     describe("When the property value matches an inherited shared property", function() {
       beforeEach(function () {
-        this.$pulp.ball = this.redBall
+        this.$rind.setBall(this.redBall)
         this.$rind.beImmutable
-        delete this.$pulp.ball
+        this.result = this.$rind.deleteBall
       })
 
       it("Doesn't delete the property in the receiver, itself", function () {
@@ -140,28 +170,35 @@ Tranya.ImplementationTesting(function (
         expect( this.$outer.ball ).toBe( this.redBall )
       })
 
-      it("Retargets the receiver's barrier", function () {
-        expect( this.$barrier._$target ).not.toBe( this.$inner )
+      it("The receiver's barrier is no longer in use", function () {
+        expect( this.$barrier.isInUse ).toBe( false )
       })
 
-      it("Sets its barrier to the inner of a copy of the target, lest the property", function () {
-        expect( this.$barrier._$target.isInner ).toBe( true )
-        expect( this.$barrier._$target.name ).toBe( "Rufus" )
-        expect( this.$barrier._$target[BREED] ).toBe( undefined )
-        expect( this.$barrier._$target._age ).toBe( 18 )
-        expect( this.$barrier._$target.ball ).toBe( this.redBall )
-        expect( HasOwn(this.$barrier._$target, "ball") ).toBe( false )
+      it("The receiver's barrier's target is restored", function () {
+        expect( this.$barrier._$target ).toBe( this.$inner )
       })
 
-      describe("In the new target", function () {
+      it("Creates an immutable copy lest the property", function () {
+        expect( this.result.isImmutable ).toBe( true )
+        expect( this.result.this.name ).toBe( "Rufus" )
+        expect( this.result.this._hasOwn(BREED) ).toBe( false )
+        expect( this.result.this._age ).toBe( 18 )
+        expect( this.result.this.ball ).toBe( this.redBall )
+        expect( this.result.this._hasOwn("ball") ).toBe( false )
+      })
+
+      describe("In the copy", function () {
         beforeEach(function () {
-          this.$target$inner = this.$barrier._$target
-          this.$target$outer = this.$barrier._$target[$OUTER]
+          this.result$inner = this.result.this[$INNER]
+          this.result$outer = this.result.this[$OUTER]
         })
 
-        it("Deletes the property", function () {
-          expect( HasOwn(this.$target$inner, "ball") ).toBe( false )
-          expect( HasOwn(this.$target$outer, "ball") ).toBe( false )
+        it("Sets the $inner property to the value", function () {
+          expect( HasOwn(this.result$inner, "ball") ).toBe( false )
+        })
+
+        it("Doesn't set the $outer property", function () {
+          expect( HasOwn(this.result$outer, "ball") ).toBe( false )
         })
       })
     })
@@ -169,11 +206,23 @@ Tranya.ImplementationTesting(function (
     describe("When the property exists only from the inherited shared property", function() {
       beforeEach(function () {
         this.$rind.beImmutable
-        delete this.$pulp.ball
+        this.result = this.$rind.deleteBall
+      })
+
+      it("The receiver remains immutable", function () {
+        expect( this.$rind.isImmutable ).toBe( true )
+      })
+
+      it("The receiver's barrier is no longer in use", function () {
+        expect( this.$barrier.isInUse ).toBe( false )
       })
 
       it("The receiver's barrier's target is unchanged", function () {
-        expect( this.$barrier._$target ).toBe( undefined )
+        expect( this.$barrier._$target ).toBe( this.$inner )
+      })
+
+      it("The result to be the receiver", function () {
+        expect( this.result ).toBe( this.$rind )
       })
 
       it("Makes no change", function () {
@@ -185,11 +234,23 @@ Tranya.ImplementationTesting(function (
     describe("When the property is nonexistent", function() {
       beforeEach(function () {
         this.$rind.beImmutable
-        delete this.$pulp.xyz
+        this.result = this.$rind.deleteXyz
+      })
+
+      it("The receiver remains immutable", function () {
+        expect( this.$rind.isImmutable ).toBe( true )
+      })
+
+      it("The receiver's barrier is no longer in use", function () {
+        expect( this.$barrier.isInUse ).toBe( false )
       })
 
       it("The receiver's barrier's target is unchanged", function () {
-        expect( this.$barrier._$target ).toBe( undefined )
+        expect( this.$barrier._$target ).toBe( this.$inner )
+      })
+
+      it("The result to be the receiver", function () {
+        expect( this.result ).toBe( this.$rind )
       })
 
       it("Makes no change", function () {

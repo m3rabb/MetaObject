@@ -729,7 +729,7 @@ Tranya(function (
   }, IDEMPOT_VALUE_METHOD)
 
   _Type.addMethod(function id() { // Conditionally lazy property
-    const newId = `${this.formalName},${this.basicId}`
+    const newId = `${this.formalName},${this.oid}`
     if (this.context === DefaultContext) { return newId }
     return SetInvisibly(this[$INNER], "id", newId, "SET BOTH INNER & OUTER")
   }, TRUSTED_VALUE_METHOD)

@@ -54,7 +54,7 @@ Tranya(function (
 
 
   _Shared.DetectedInnerError = function (target, value) {
-    SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value.name}#${value.oid}!!`)
+    SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value}!!`)
   }
 
 
@@ -100,8 +100,8 @@ Tranya(function (
     SignalError(target[$RIND], "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
   }
 
-  _Shared.AttemptedChangeOfAncestryOfPermeableTypeError = function (target) {
-    SignalError(target[$RIND], `Cannot change supertypes of permeable Type '${target.name}', change impermeable version instead!!`)
+  _Shared.AttemptedChangeOfAncestryOfPermeableTypeError = function (type) {
+    SignalError(type[$RIND], `Cannot change supertypes of permeable Type '${type.name}', change impermeable version instead!!`)
   }
 
   _Shared.DuplicateSupertypeError = function (target) {
@@ -118,6 +118,10 @@ Tranya(function (
 
   _Shared.AttemptToMakeLockedObjectPermeableError = function (target) {
     SignalError(target[$RIND], "Cannot make a locked object ${target} permeable!!")
+  }
+
+  _Shared.ChangeToImmutableThisError = function (target) {
+    SignalError(target[$RIND], "Changes to an immutable object via 'this' is forbidden!!")
   }
 
 })

@@ -3,7 +3,7 @@ Tranya(function (
   DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   SAFE_FUNC, TAMED_FUNC,
-  FindAndSetDurables, Frost, InterMap, IsFact, MarkFunc, OwnNames,
+  FindAndSetDurables, FindDurables, Frost, InterMap, IsFact, MarkFunc, OwnNames,
   SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, AttemptInvertedFuncCopyError,
   Shared, _Shared
@@ -123,8 +123,10 @@ Tranya(function (
       case Object :
         visited.set(source, (target = target || {})) // Handles cyclic objects
 
-        properties = source[_DURABLES] || FindAndSetDurables(source)
-        if (!target[_DURABLES]) { target[_DURABLES] = properties }
+        properties = source[_DURABLES] || FindDurables(source)
+        if (immutability && !target[_DURABLES]) {
+          target[_DURABLES] = properties
+        }
         next = properties.length
 
         while (next--) {
@@ -272,27 +274,23 @@ Tranya(function (
 
     switch(typeof value) {
       default         : return value
-      case "function" : if (!value[$RIND])  { return value } else { break }
-      case "object"   : if (value === null) { return null  } else { break }
+      case "function" : if (value[$RIND])   { break } else { return value     }
+      case "object"   : if (value !== null) { break } else { return null      }
     }
 
-    if ((traversed = visited.get(value)))              { return traversed }
+    if ((traversed = visited.get(value)))                  { return traversed }
     if (value[IS_IMMUTABLE]) {
-      if (!context)                                      { return value }
-      if (value.id != null)                              { return value }
-
-      // If we're copying properties to a new object in a new context, but
-      // the context is the same...
-      if ((_$value = InterMap.get(value)) && context === _$value.context) {
-        // ... and the tranya value is already in that context ...
-            // ... and the value is simple in that it only references primitive
-            // values, such that it only needs to use _BasicSetImmutable
-            // (e.g. Definitions), then simply answer the immutable value.
-        if (_$value._setImmutable === _BasicSetImmutable) { return value }
+      if (!context || value.context === context)           { return value     }
+      if (value.id != null)                                { return value     }
+      // If the value is simple in that it only references primitive
+      // values, such that it only needs to use _BasicSetImmutable
+      // (e.g. Definitions), then simply answer the immutable value.
+      if ((_$value = InterMap.get(value))) {
+        if (_$value._setImmutable === _BasicSetImmutable)  { return value     }
       }
     }
     else {
-      if (value.id != null)                               { return value }
+      if (value.id != null)                                { return value     }
       _$value = InterMap.get(value)
     }
 
@@ -393,6 +391,39 @@ Tranya(function (
 */
 
 
+// function ValueAsNext(value, asImmutable, visited, context) {
+//   var traversed, _$value
+//
+//   switch(typeof value) {
+//     default         : return value
+//     case "function" : if (!value[$RIND])  { return value } else { break }
+//     case "object"   : if (value === null) { return null  } else { break }
+//   }
+//
+//   if ((traversed = visited.get(value)))              { return traversed }
+//   if (value[IS_IMMUTABLE]) {
+//     if (!context)                                      { return value }
+//     if (value.id != null)                              { return value }
+//
+//     // If we're copying properties to a new object in a new context, but
+//     // the context is the same...
+//     if ((_$value = InterMap.get(value)) && context === _$value.context) {
+//       // ... and the tranya value is already in that context ...
+//           // ... and the value is simple in that it only references primitive
+//           // values, such that it only needs to use _BasicSetImmutable
+//           // (e.g. Definitions), then simply answer the immutable value.
+//       if (_$value._setImmutable === _BasicSetImmutable) { return value }
+//     }
+//   }
+//   else {
+//     if (value.id != null)                               { return value }
+//     _$value = InterMap.get(value)
+//   }
+//
+//   return (_$value) ?
+//     _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
+//     ObjectCopy(value, asImmutable, visited, context)
+// }
 
 
 // function InAtPut(source, property, value) {

@@ -1,7 +1,7 @@
 Tranya(function (
   $INNER, $IS_INNER, $OUTER, $RIND, IS_IMMUTABLE, PROOF, _DURABLES,
   DefineProperty, Frost, InterMap, InvisibleConfig, MarkFunc, OwnKeys,
-  OwnNames, SpawnFrom,
+  OwnNames, SpawnFrom, _HasOwn,
   Shared, _Shared
 ) {
   "use strict"
@@ -60,6 +60,18 @@ Tranya(function (
     return false
   }
 
+
+  function HasOwn(target, selector) {
+    return (target == null) ? false : _HasOwn.call(target, selector)
+  }
+
+
+
+  function FindDurables(_$target) {
+    const durables = OwnNames(_$target)
+    durables[IS_IMMUTABLE] = true
+    return Frost(durables)
+  }
 
   function FindAndSetDurables(_$target) {
     const durables = OwnNames(_$target)
@@ -161,8 +173,10 @@ Tranya(function (
   Shared.valueIsOuter             = MarkFunc(ValueIsOuter)
   Shared.valueIsImmutable         = MarkFunc(ValueIsImmutable)
   Shared.valueIsFact              = MarkFunc(ValueIsFact)
+  Shared.hasOwn                   = MarkFunc(HasOwn)
   Shared.sortParameters           = MarkFunc(SortParameters)
 
+  _Shared.FindDurables            = FindDurables
   _Shared.FindAndSetDurables      = FindAndSetDurables
   _Shared.SetInvisibly            = SetInvisibly
   _Shared._BasicSetImmutable      = _basicSetImmutable

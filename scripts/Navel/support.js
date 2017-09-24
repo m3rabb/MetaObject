@@ -159,11 +159,11 @@ Tranya(function (
       const func       = NewVacuousConstructor(name)
       const mutability = new DisguisedInnerBarrier($inner, applyHandler)
       const $pulp      = new Proxy(func, mutability)
-      const porosity   = new DisguisedOuterBarrier($outer, applyHandler)
+      const porosity   = new DisguisedOuterBarrier($inner, $outer, applyHandler)
       const $rind      = new Proxy(func, porosity)
 
-      mutability._self = $pulp
-      porosity._self   = $pulp
+      // mutability._self = $pulp
+      // porosity._self   = $pulp
 
       $inner[$DISGUISE]  = func
       $inner[$BARRIER]   = mutability // barrier
@@ -184,16 +184,15 @@ Tranya(function (
 
 
   function Context_apply(disguiseFunc, receiver, args) {
-    return this._self._exec(args[0], false).beImmutable
+    return this._$target[$PULP]._exec(args[0], false).beImmutable
   }
 
 
   function Type_apply(disguiseFunc, receiver, args) {
-    // return this._self.newImmutable(...args)
+    // return this._$target[$PULP].newImmutable(...args)
 
-    const   instance = this._self.new(...args)
+    const   instance = this._$target[$PULP].new(...args)
     const _$instance = InterMap.get(instance)
-
     return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]
   }
 

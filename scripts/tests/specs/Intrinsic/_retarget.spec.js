@@ -1,6 +1,6 @@
 Tranya.ImplementationTesting(function (
   $BARRIER, $INNER, $OUTER, $PULP,
-  HasOwn, OwnKeys, RootOf, Type
+  CrudeBeImmutable, HasOwn, OwnKeys, RootOf, Type
 ) {
   "use strict"
 
@@ -20,26 +20,45 @@ Tranya.ImplementationTesting(function (
           function age() { return this._age },
 
           function asString() { return `${this.name}:${this.age}` },
+
+          function test_retarget() {
+            var results = [
+              this._retarget,
+              this[$BARRIER].isInUse,
+              this[$BARRIER]._$target,
+            ]
+            return CrudeBeImmutable(results)
+          },
+
+          function tester() {
+            this._retarget
+            this.xyz = 123
+          },
         ]
       }
 
-      this.Cat_   = Type.new_(this.CatSpec)
+      this.Cat_ = Type.new_(this.CatSpec)
     })
 
     describe("When the receiver is mutable", function () {
       beforeEach(function () {
-        this.cat_     = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-        this._cat     = this.cat_.this
-        this.$barrier = this._cat[$BARRIER]
+        this.cat      = this.Cat_.new("Rufus", "Siamese-tabby", 18)
+        this._cat     = this.cat.this
+        this._$cat    = this._cat[$INNER]
+        this.$barrier = this._$cat[$BARRIER]
       })
 
       it("Answers the receiver", function () {
         expect( this._cat._retarget ).toBe( this._cat )
       })
 
+      it("The receiver's barrier is unuse", function () {
+        expect( this.$barrier.isInUse ).toBe( undefined )
+      })
+
       it("The receiver's barrier's target is unchanged", function () {
         this._cat._retarget
-        expect( this.$barrier._$target ).toBe( undefined )
+        expect( this.$barrier._$target ).toBe( this._$cat )
       })
 
       it("Adds _retarget as retroactive property", function () {
@@ -51,44 +70,52 @@ Tranya.ImplementationTesting(function (
 
     describe("When the receiver is immutable", function () {
       beforeEach(function () {
-        this.cat_          = this.Cat_("Rufus", "Siamese-tabby", 18)
-        this._cat          = this.cat_.this
-        this.$barrier      = this._cat[$BARRIER]
-        this.$barrier$root = RootOf(this.$barrier)
-
-        this.answer        = this._cat._retarget
+        this.cat      = this.Cat_("Rufus", "Siamese-tabby", 18)
+        this._cat     = this.cat.this
+        this.$barrier = this._cat[$BARRIER]
+        this.results  = this.cat.test_retarget
       })
 
       it("Answers the receiver", function () {
-        expect( this.answer ).toBe( this._cat )
+        var answer = this.results[0]
+        expect( answer ).toBe( this._cat )
       })
 
-      it("Doesn't add a _retarget property to the receiver", function () {
-        expect( HasOwn(this._cat[$INNER], "_retarget") ).toBe( false )
+      it("The created barrier is unused", function () {
+        var isInUse = this.results[1]
+        expect( isInUse ).toBe( undefined )
       })
 
-      it("Sets its barrier to the inner of a copy of the target", function () {
-        expect( this.$barrier._$target.isInner ).toBe( true )
-        expect( this.$barrier._$target.name ).toBe( "Rufus" )
-        expect( this.$barrier._$target[BREED] ).toBe( undefined )
-        expect( this.$barrier._$target._age ).toBe( 18 )
+      it("The created barrier targets a new mutable copy", function () {
+        var _target = this.results[2][$PULP]
+        expect( _target.isMutable ).toBe( true )
+        expect( _target._hasOwn(BREED) ).toBe( false )
+        expect( _target._age ).toBe( 18 )
+        expect( _target.name ).toBe( "Rufus" )
       })
 
-      describe("In the new target", function () {
+      it("The receiver has no '_retarget' property", function () {
+        expect( HasOwn(this._cat, "_retarget") ).toBe( false )
+      })
+
+      describe("When _retarget is called within a method", function () {
         beforeEach(function () {
-          this.$target$inner = this.$barrier._$target
-          this.$target$outer = this.$barrier._$target[$OUTER]
+          this.answer = this.cat.tester
         })
 
-        it("Is mutable", function () {
-          expect( this.$barrier._$target[$PULP].isImmutable ).toBe( false )
+        it("Causes a new immutable copy to be created", function () {
+          expect( this.answer.isImmutable ).toBe( true )
+          expect( this.answer.this._hasOwn(BREED) ).toBe( false )
+          expect( this.answer.this._age ).toBe( 18 )
+          expect( this.answer.name ).toBe( "Rufus" )
+          expect( this.answer.xyz ).toBe( 123 )
         })
 
-        it("Has no '_retarget' property", function () {
-          expect( HasOwn(this._cat, "_retarget") ).toBe( false )
+        it("The receiver remains unchanged", function () {
+          expect( this.cat.isImmutable ).toBe( true )
+          expect( this.cat.hasOwn("xyz") ).toBe( false )
         })
       })
-
     })
   })
 })

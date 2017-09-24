@@ -1,5 +1,6 @@
 Tranya(function (
-  $INNER, $RIND, IDEMPOT_VALUE_METHOD, IS_IMMUTABLE, TRUSTED_VALUE_METHOD,
+  $BARRIER, $OUTER, $RIND, IDEMPOT_VALUE_METHOD, IS_IMMUTABLE,
+  TRUSTED_VALUE_METHOD,
   AsName, SetInvisibly, SignalError, _$Something, _Super
 ) {
   "use strict"
@@ -12,8 +13,8 @@ Tranya(function (
 
 
   _$Something.addMethod(function _super() { // RetroactiveProperty
-    const $inner = this[$INNER]
-    return SetInvisibly($inner, "_super", new Proxy($inner, _Super))
+    const _$target = this[$BARRIER]._$target
+    return SetInvisibly(_$target, "_super", new Proxy(_$target, _Super))
   }, IDEMPOT_VALUE_METHOD)
 
 
@@ -44,7 +45,7 @@ Tranya(function (
 
 
   _$Something.addMethod(function isPermeable() {
-    return (this[$INNER].this) ? true : false
+    return (this[$OUTER].this) ? true : false
   }, IDEMPOT_VALUE_METHOD)
 
 

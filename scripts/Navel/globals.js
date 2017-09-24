@@ -50,10 +50,6 @@
   _Shared.INSTANCEOF         = Symbol.hasInstance
 
 
-  Shared.hasOwn = function (target, selector) {
-    return (target == null) ? false : _HasOwn.call(target, selector)
-  }
-
   // Reflect.ownKeys === Object.getOwnPropertyNames(target).concat(Object.getOwnPropertySymbols(target)
 
   // Protected Implementation properties (so no namespace clashing)

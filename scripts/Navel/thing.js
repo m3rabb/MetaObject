@@ -1,12 +1,13 @@
 Tranya(function (
-  $INNER, $OUTER, $PRIOR_IDS, $RIND, _DURABLES,
+  $INNER, $PRIOR_IDS, $PULP, $RIND, _DURABLES,
   AsName, _Thing
 ) {
   "use strict"
 
 
-  _Thing.addSetter("_setId", function id(newId_) {
-    const existingId = this[$INNER].id
+  _Thing.addSetter("setId", function id(newId_) {
+    const $inner     = this[$INNER]
+    const existingId = $inner.id
     var   newId, priorIds
 
     if (newId_ === undefined) {
@@ -17,8 +18,8 @@ Tranya(function (
     else { newId = newId_ }
 
     if (existingId != null) {
-      priorIds = this[$PRIOR_IDS] || []
-      this[$PRIOR_IDS] = [...priorIds, existingId]
+      priorIds = $inner[$PRIOR_IDS] || []
+      $inner[$PRIOR_IDS] = [...priorIds, existingId]
     }
     return newId
   })
@@ -35,11 +36,22 @@ Tranya(function (
 
 
 
-
+  // Note: explicitly ensuring $pulp prevents printing
+  // inaccuracies in Jasmine, when it has access to the $inner object instead.
   _Thing.addMethod(function toString(_) { // eslint-disable-line
-    const name = this.name
-    return `${name}${(name) ? "," : ""}${this.basicId}`
+    const _this = this[$PULP]
+    const name = _this.name
+    return `${name}${(name) ? "," : ""}${_this.oid}`
   })
+
+  _Thing.addAlias("jasmineToString", "toString")
+  
+
+  // _Thing.addMethod(function toString(_) { // eslint-disable-line
+  //   const name       = this.name
+  //   const namePrefix = `${name}${(name) ? "," : ""}`
+  //   return `${namePrefix}${this.oid}`
+  // })
 
 
   _Thing.addMethod(function _notYetImplemented(selector) {

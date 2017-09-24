@@ -75,7 +75,7 @@ Tranya(function (
 
 
   _Context.addRetroactiveProperty(function id() {
-    return `${this.formalName},${this.basicId}`
+    return `${this.formalName},${this.oid}`
   })
 
   _Context.addMethod(function formalName() {
@@ -345,7 +345,7 @@ Tranya(function (
     if (value === undefined) {
       if (!(asMutable && name.match(TYPE_NAME_MATCHER))) { return value }
       Type = entries.Type || RootContext.Type
-      arg  = Type.new(name)
+      arg  = Type.new(name, execContext)
     }
     else {
       if (asPermeable) {

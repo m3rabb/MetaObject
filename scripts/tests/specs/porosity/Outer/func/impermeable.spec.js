@@ -181,7 +181,7 @@ Tranya.ImplementationTesting(function (Type_) {
         expect( bat.name ).toBe( "Spooky" )
         expect( bat.kind ).toBe( "Fruit" )
         expect( bat.isImmutable ).toBe( true )
-        expect( bat.oid ).toBe( "1.Bat" )
+        expect( bat.oid ).toBe( "1.Bat_" )
       })
 
       xit("Answers an instance that's the exactly same as when executing .newAsFact", function () {
