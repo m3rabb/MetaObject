@@ -160,12 +160,32 @@ IsIdentical      .addInstanceProperty("_equalitySelector", "isIdentical")
 // Add CompareIdentity  --->>>   { return a !== 0 || 1 / a === 1 / b } // check 0 vs -0
 
 
+function CompareExactly(a, b) {
+  switch (typeof a) {
+    default :
+      return (a === b) // Easy out
+
+    case "object"   :
+      if (a === null || b === null) { return false }
+      // break omitted
+    case "function" :
+      if (a !== b)   { break } else { return true  }
+
+    case "number"   :
+      return (a === b) ?
+        (a !== 0 || 1 / a === 1 / b) :  // Check for 0 vs -0
+        (a !== a) && (b !== b)          // Check for NaN
+  }
+
+  return this._compareObjects(a, b)
+}
+
 function CompareEquality(a, b) {
   if (a === b) { return true }
   // Weed out undefined and null to avoid primitives that can't has properties.
   if (a == null || b == null) { return false }
 
-  switch (typeof ) {
+  switch (typeof a) {
     case "boolean": case "symbol": case "string": return false  // Easy out
     case "number": return (a !== a) && (b !== b) // Check for NaN
   }
@@ -179,7 +199,7 @@ function CompareEquivalence(a, b) {
 
   switch (typeof a) {
     case "symbol":
-      strA = (a.slice(7, a.length - 1)
+      strA = a.slice(7, a.length - 1)
       switch (typeof b) {
         case "symbol" : return (strA === b.slice(7, a.length - 1))
         case "string" : return (strA === b)
@@ -489,11 +509,12 @@ Comparator.add(function _haveEqualPaths(idA, idB) {
 //
 
                            mutable                       immutable
-is                               the exact same object
-isIdentical (forever)      same object                   exact same structure
-isExactly                  same structure/mutablility
+is(Same)                          the exact same object
+isExactly                         same structure/mutablility
+isIdentical (forever)      same object                   same values
 isInterchangeable (W|R)    same structure/submutability  same values
 isEqual  -   (for R)       same values (ignore mutability)
+isAlike  -   (for R)       same values (ignore mutability, type)
 isEquivEqual (for R)       equivalent root, equal children
 isEquivalent (for R)       same values (ignore mutability, type, case)
   und <=> null
