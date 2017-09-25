@@ -3,10 +3,8 @@ Tranya(function (
   DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   SAFE_FUNC, TAMED_FUNC,
-  Frost, InterMap, IsFact, MarkAndSetFuncImmutable, MarkFunc, ObjectCopy,
-  OwnNames, SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf,
-  _BasicSetImmutable, _$Copy,
-  AssignmentOfUndefinedError, AttemptInvertedFuncCopyError, DetectedInnerError,
+  InterMap, MarkAndSetFuncImmutable, ObjectCopy, _$Copy,
+  AssignmentOfUndefinedError, DetectedInnerError,
   _Shared
 ) {
   "use strict"

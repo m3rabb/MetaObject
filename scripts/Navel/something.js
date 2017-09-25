@@ -1,33 +1,32 @@
 Tranya(function (
-  $BARRIER, $OUTER, $RIND, IDEMPOT_VALUE_METHOD, IS_IMMUTABLE,
-  TRUSTED_VALUE_METHOD,
+  $BARRIER, $OUTER, $RIND, IS_IMMUTABLE, VALUE_METHOD,
   AsName, SetInvisibly, SignalError, _$Something, _Super
 ) {
   "use strict"
 
 
-  _$Something.addRetroactiveProperty(function $() {
+  _$Something.addRetroactiveValue(function $() {
     return this[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
-  _$Something.addMethod(function _super() { // RetroactiveProperty
+  _$Something.addValueMethod(function _super() { // RetroactiveProperty
     const _$target = this[$BARRIER]._$target
     return SetInvisibly(_$target, "_super", new Proxy(_$target, _Super))
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
 
-  _$Something.addMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
+  _$Something.addValueMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
     return this.id
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
-  _$Something.addMethod(function is(value) {
+  _$Something.addValueMethod(function is(value) {
     return (this[$RIND] === value)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
   // _$Something.addMethod(function is(value) {
   //   return (this === value) || (this[$RIND] === value)
@@ -39,14 +38,14 @@ Tranya(function (
 
 
 
-  _$Something.addMethod(function isImmutable() {
+  _$Something.addValueMethod(function isImmutable() {
     return this[IS_IMMUTABLE] || false
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _$Something.addMethod(function isPermeable() {
+  _$Something.addValueMethod(function isPermeable() {
     return (this[$OUTER].this) ? true : false
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 

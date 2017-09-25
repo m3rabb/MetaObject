@@ -2,7 +2,7 @@ Tranya(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   DISGUISE_PULP, INVISIBLE, IS_IMMUTABLE,
-  ASSIGNER_FUNC, BLANKER_FUNC, TRUSTED_VALUE_METHOD,
+  ASSIGNER_FUNC, BLANKER_FUNC,
   AsCapitalized, AsDecapitalized, AsName, CrudeBeImmutable, DefineProperty,
   Frost, Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId,
   OwnSymbols, RootOf, SetInvisibly, SpawnFrom,

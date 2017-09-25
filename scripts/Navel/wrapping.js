@@ -67,8 +67,9 @@ Tranya(function (
         else {
           _receiver = _$receiver[$PULP]
           result    = Handler.apply(_receiver, args) // <<----------
-          if (result === undefined) { return _$receiver[$RIND] }
-          if (result === _receiver) { return _$receiver[$RIND] }
+          if (result === undefined || result === _receiver) {
+            return _$receiver[$RIND]
+          }
         }
 
         switch (typeof result) {
@@ -126,8 +127,9 @@ Tranya(function (
         else {
           _receiver = _$receiver[$PULP]
           result    = Handler.apply(_receiver, args) // <<----------
-          if (result === undefined) { return _$receiver[$RIND] }
-          if (result === _receiver) { return _$receiver[$RIND] }
+          if (result === undefined || result === _receiver) {
+            return _$receiver[$RIND]
+          }
         }
 
         return result
@@ -173,26 +175,6 @@ Tranya(function (
     }[name]
   }
 
-  function AsOuter_noncopying_value(property, Handler) {
-    const name = `${AsName(property)}_$outer_noncopying_value`
-    return {
-      [name] : function (...args) {
-        const result = Handler.apply(InterMap.get(this)[$PULP], args) // <<----------
-        return (result === undefined) ? this : result
-      }
-    }[name]
-  }
-
-  function AsOuter_noncopying_self(property, Handler) {
-    const name = `${AsName(property)}_$outer_noncopying_self`
-    return {
-      [name] : function (...args) {
-        Handler.apply(InterMap.get(this)[$PULP], args) // <<----------
-        return this
-      }
-    }[name]
-  }
-
   function AsOuter_passthru(property, Handler) {
     const name = `${AsName(property)}_$outer_passthru`
     return {
@@ -202,8 +184,8 @@ Tranya(function (
     }[name]
   }
 
-  function AsInner_fact(property, Handler) {
-    const name = `${AsName(property)}_$inner_fact`
+  function AsInner_self_fact(property, Handler) {
+    const name = `${AsName(property)}_$inner_self_fact`
     return {
       [name] : function (...args) {
         const _receiver = this
@@ -220,8 +202,8 @@ Tranya(function (
     }[name]
   }
 
-  function AsInner_value(property, Handler) {
-    const name = `${AsName(property)}_$inner_value`
+  function AsInner_self_value(property, Handler) {
+    const name = `${AsName(property)}_$inner_self_value`
     return {
       [name] : function (...args) {
         const result = Handler.apply(this, args) // <<----------
@@ -245,8 +227,8 @@ Tranya(function (
   }
 
 
-  function AsSuper_fact(property, Handler) {
-    const name = `${AsName(property)}_$super_fact`
+  function AsSuper_self_fact(property, Handler) {
+    const name = `${AsName(property)}_$super_self_fact`
     return {
       [name] : function (...args) {
         var   _$result
@@ -264,8 +246,8 @@ Tranya(function (
     }[name]
   }
 
-  function AsSuper_value(property, Handler) {
-    const name = `${AsName(property)}_$super_value`
+  function AsSuper_self_value(property, Handler) {
+    const name = `${AsName(property)}_$super_self_value`
     return {
       [name] : function (...args) {
         // this is $super. Need to use _receiver instead
@@ -309,14 +291,14 @@ Tranya(function (
 
   function AsInnerStandard(property, handler, isPublic) {
     return isPublic ?
-      AsInner_fact(property, handler) :
-      AsInner_value(property, handler)
+      AsInner_self_fact(property, handler) :
+      AsInner_self_value(property, handler)
   }
 
   function AsSuperStandard(property, handler, isPublic) {
     return isPublic ?
-      AsSuper_fact(property, handler) :
-      AsSuper_value(property, handler)
+      AsSuper_self_fact(property, handler) :
+      AsSuper_self_value(property, handler)
   }
 
 
@@ -336,54 +318,20 @@ Tranya(function (
 
   _Shared.VALUE_METHOD = {
     id    : "VALUE_METHOD",
-    outer : AsOuter_noncopying_value,
-    inner : AsInner_passthru,
-    super : AsSuper_passthru,
-  }
-
-  _Shared.PASS_THRU_METHOD = {
-    id    : "PASS_THRU_METHOD",
     outer : AsOuter_passthru,
     inner : AsInner_passthru,
     super : AsSuper_passthru,
   }
-
-  _Shared.TRUSTED_VALUE_METHOD = _Shared.VALUE_METHOD
-
-
-
-  // IDEMPOT_VALUE_METHOD and IDEMPOT_SELF_METHOD must be methods that can
-  // NEVER can any change to the receiver and
-  // that call no other methods, except other idempot methods.
-  _Shared.IDEMPOT_VALUE_METHOD = {
-    id    : "IDEMPOT_VALUE_METHOD",
-    outer : AsOuter_passthru,
-    inner : AsInner_passthru,
-    super : AsSuper_passthru,
-  }
-
-  _Shared.IDEMPOT_SELF_METHOD = {
-    id    : "IDEMPOT_SELF_METHOD",
-    outer : AsOuter_noncopying_self,
-    inner : AsInner_self,
-    super : AsSuper_self,
-  }
-
 
   _Shared.SETTER_METHOD = {
-    id    : "SETTER_METHOD",
-    outer : AsOuter_targeting_self,
-    inner : AsInner_self,
-    super : AsSuper_self,
+    __proto__ : _Shared.SELF_METHOD,
+    id        : "SETTER_METHOD",
   }
 
-  const MANDATORY_SETTER_METHOD = {
+  const MANDATORY_SETTER_METHOD = _Shared.MANDATORY_SETTER_METHOD = {
     __proto__ : _Shared.SETTER_METHOD,
     id        : "MANDATORY_SETTER_METHOD",
   }
-
-  _Shared.MANDATORY_SETTER_METHOD = MANDATORY_SETTER_METHOD
-
 
   _Shared.IMMEDIATE_METHOD = {
     __proto__ : _Shared.STANDARD_METHOD,
@@ -472,17 +420,3 @@ Tranya(function (
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
-
-
-  // const ANSWERS_PRIMITIVE = VALUE_METHOD
-  // const ANSWERS_NULL      = VALUE_METHOD
-  // const ANSWERS_BOOLEAN   = VALUE_METHOD
-  // const ANSWERS_NUMBER    = VALUE_METHOD
-  // const ANSWERS_STRING    = VALUE_METHOD
-  // const ANSWERS_FUNC      = VALUE_METHOD
-  //
-  // const ANSWERS_SELF      = VALUE_METHOD
-  //
-  // const ANSWERS_MUTABLE   = VALUE_METHOD
-  // const ANSWERS_IMMUTABLE = VALUE_METHOD
-  // const ANSWERS_FACT      = VALUE_METHOD

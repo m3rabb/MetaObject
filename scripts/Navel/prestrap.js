@@ -3,14 +3,14 @@ Tranya(function (
   $IS_IMPENETRABLE, $IS_INNER, $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
   IMPLEMENTATION, INVISIBLE, IS_IMMUTABLE, PROOF,
   VISIBLE, _DURABLES,
-  IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
+  SELF_METHOD, STANDARD_METHOD, VALUE_METHOD,
   AlwaysSelf, DefineProperty, InterMap, InvisibleConfig, MarkFunc, NewBlanker,
   NewInner, NewVacuousConstructor, RootOf, SetInvisibly, TheEmptyArray,
   SpawnFrom,
   Context_apply, Type_apply,
 
-  AddMethod, Context_atPut, Context_init, Definition_init,
-  _BasicNew, _BasicSetImmutable, SetDefinition, _SetDefinitionAt,
+  Context_atPut, Context_init, Definition_init,
+  _AddMethod, _BasicNew, _BasicSetImmutable, SetDefinition, _SetDefinitionAt,
   Shared, _Shared
 ) {
   "use strict"
@@ -139,28 +139,43 @@ Tranya(function (
   _SetDefinitionAt.call(_Definition, $IS_DEFINITION   , true       , VISIBLE  )
 
 
-  AddMethod.call(_Type, AddMethod)
+  _AddMethod.call(_Type, _AddMethod, SELF_METHOD)
+
+  // eslint-disable-next-line
+  _Type._addMethod(function addMethod(func_selector, func_) {
+    this._addMethod(...arguments, STANDARD_METHOD)
+  }, SELF_METHOD)
+
+  // eslint-disable-next-line
+  _Type.addMethod(function addSelfMethod(func_selector, func_) {
+    this._addMethod(...arguments, SELF_METHOD)
+  })
+
+  // eslint-disable-next-line
+  _Type.addMethod(function addValueMethod(func_selector, func_) {
+    this._addMethod(...arguments, VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addMethod("_basicSetImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
+  _$Intrinsic._addMethod(_BasicSetImmutable, VALUE_METHOD)
 
-  _Type.addMethod("new", _BasicNew, IDEMPOT_VALUE_METHOD)
-  _Type.addMethod(_SetDefinitionAt, TRUSTED_VALUE_METHOD)
+  _Type._addMethod("new", _BasicNew, VALUE_METHOD)
+  _Type.addSelfMethod(_SetDefinitionAt)
 
-  _Definition.addMethod(Definition_init, TRUSTED_VALUE_METHOD)
-  _Definition.addMethod("_setImmutable", _BasicSetImmutable, IDEMPOT_SELF_METHOD)
+  _Definition.addSelfMethod(Definition_init)
+  _Definition._addMethod("_setImmutable", _BasicSetImmutable, VALUE_METHOD)
 
-  _Context.addMethod(Context_init   , TRUSTED_VALUE_METHOD)
-  _Context.addMethod(Context_atPut  , TRUSTED_VALUE_METHOD)
+  _Context.addSelfMethod(Context_init)
+  _Context.addSelfMethod(Context_atPut)
 
 
-  _Context.addMethod(function entryAt(selector, asCheckRootContext_) {
+  _Context.addValueMethod(function entryAt(selector, checkRootContext_) {
     var entry = this._knownEntries[selector]
     if (entry !== undefined) { return entry }
-    if (!asCheckRootContext_) { return null }
+    if (!checkRootContext_)  { return null }
     entry = _RootContext._knownEntries[selector]
     return (entry !== undefined) ? entry : null
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
@@ -175,7 +190,7 @@ Tranya(function (
       SetInvisibly(_$instance[$OUTER], "this", _$instance[$PULP])
       return instance
     }
-    return Definition("new", handler, TRUSTED_VALUE_METHOD)
+    return Definition("new", handler, VALUE_METHOD)
   }
 
   function AddPermeableNewDefinitionTo(_$type) {

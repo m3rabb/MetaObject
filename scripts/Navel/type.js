@@ -5,8 +5,7 @@ Tranya(function (
   ASSIGNER, DECLARATION, INHERIT, INVISIBLE, IS_IMMUTABLE, REINHERIT, VISIBLE,
    _DURABLES,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
-  IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, IMMEDIATE_METHOD,
-  MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD, TRUSTED_VALUE_METHOD,
+  IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
   AsCapitalized, AsMembershipSelector, AsName, ValueAsNext, AsPropertySymbol,
   BePermeable, CrudeAsImmutable, CrudeBeImmutable,
@@ -26,26 +25,26 @@ Tranya(function (
   "use strict"
 
 
-  _Type.addMethod(function newImmutable(...args) {
+  _Type.addValueMethod(function newImmutable(...args) {
     // Note: this is the same implementation as in Type_apply
     const   instance = this.new(...args)
     const _$instance = InterMap.get(instance)
 
     return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _Type.addMethod(function newPermeable(...args) {
+  _Type.addValueMethod(function newPermeable(...args) {
     return BePermeable(this.new(...args), false)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _Type.addMethod(function newPermeableImmutable(...args) {
+  _Type.addValueMethod(function newPermeableImmutable(...args) {
     return BePermeable(this.new(...args), true)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _Type.addMethod(function _newBlank() {
+  _Type.addValueMethod(function _newBlank() {
     const  $inner    = this[$INNER]
     const _$instance = new $inner[$BLANKER]("")
     const  $instance = new _$instance[$OUTER]
@@ -54,23 +53,8 @@ Tranya(function (
       SetInvisibly($instance, "this", AddPermeableNewDefinitionTo(_$instance))
     }
     return _$instance[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-
-
-  // _Type.addMethod(function addCertainFactMethod(...namedFunc_name__handler) {
-  //   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
-  // })
-  //
-  // _Type.addMethod(function addSelfMethod(...namedFunc_name__handler) {
-  //   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
-  // })
-  //
-  // _Type.addMethod(function addMutableValueMethod(...namedFunc_name__handler) {
-  //   this.addMethod(...namedFunc_name__handler, VALUE_METHOD)
-  // })
-  //
-  //
 
 
   // addAssigner(function property() {})
@@ -78,7 +62,7 @@ Tranya(function (
   // forAddAssigner(function property() {})
   // forAddAssigner("property", function () {})
 
-  _Type.addMethod(function addAssigner(property_assigner, assigner_) {
+  _Type.addSelfMethod(function addAssigner(property_assigner, assigner_) {
     const [selector, assigner] = (assigner_) ?
       [property_assigner     , assigner_        ] :
       [property_assigner.name, property_assigner]
@@ -90,33 +74,33 @@ Tranya(function (
   })
 
 
-  _Type.addMethod(function addDeclaration(selector) {
+  _Type.addSelfMethod(function addDeclaration(selector) {
     const definition = this.context.Definition(selector, null, DECLARATION)
     this._setDefinitionAt(definition.tag, definition)
   })
 
 
-  _Type.addMethod(function addSharedProperty(selector, value) {
+  _Type.addSelfMethod(function addSharedProperty(selector, value) {
     this._setDefinitionAt(selector, value)
   })
 
 
 
-  _Type.addMethod(function removeAssigner(selector) {
+  _Type.addSelfMethod(function removeAssigner(selector) {
     const tag = `$assigner@${AsName(selector)}`
     if (this._definitions[tag] !== undefined) {
       this._deleteDefinitionAt(tag)
     }
   })
 
-  _Type.addMethod(function removeDeclaration(selector) {
+  _Type.addSelfMethod(function removeDeclaration(selector) {
     const tag = `$declaration@${AsName(selector)}`
   if (this._definitions[tag] !== undefined) {
       this._deleteDefinitionAt(tag)
     }
   })
 
-  _Type.addMethod(function removeSharedProperty(selector) {
+  _Type.addSelfMethod(function removeSharedProperty(selector) {
     if (this._definitions[selector] !== undefined) {
       this._deleteDefinitionAt(selector)
     }
@@ -124,7 +108,7 @@ Tranya(function (
 
 
 
-  _Type.addMethod(function _deleteDefinitionAt(tag) {
+  _Type.addSelfMethod(function _deleteDefinitionAt(tag) {
     var   selectors, nextSelector, next
     const blanker          = this._blanker
     const $root$inner      = blanker.$root$inner
@@ -186,7 +170,8 @@ Tranya(function (
     this._inheritDefinitionAt(tag)
   })
 
-  _Type.addMethod(function _inheritDefinitionAt(tag) {
+
+  _Type.addSelfMethod(function _inheritDefinitionAt(tag) {
     const definitions = this._definitions
     if (definitions[tag] !== undefined) { return }
 
@@ -205,7 +190,7 @@ Tranya(function (
   })
 
 
-  _Type.addMethod(function _propagateDefinition(tag) {
+  _Type.addSelfMethod(function _propagateDefinition(tag) {
     this._subordinateTypes.forEach(subtype => {
       var _$subtype = InterMap.get(subtype)
       _$subtype._inheritDefinitionAt.call(_$subtype[$PULP], tag)
@@ -213,7 +198,7 @@ Tranya(function (
   })
 
 
-  _Type.addMethod(function _addSetter(name_setter, property_setter_, mode) {
+  _Type.addSelfMethod(function _addSetter(name_setter, property_setter_, mode) {
     var propertyName, assigner, setterName, setter
 
     ;[setterName, setter] = (typeof name_setter === "function") ?
@@ -232,7 +217,7 @@ Tranya(function (
           }
           else {
             setter = AsBasicSetter(propertyName, setterName, mode)
-            this.addMethod(propertyName, assigner, ASSIGNER)
+            this._addMethod(propertyName, assigner, ASSIGNER)
           }
         }
         else { setter = property_setter_ }
@@ -246,7 +231,7 @@ Tranya(function (
     }
     if (!setter) { setter = AsBasicSetter(propertyName, setterName, mode) }
 
-    this.addMethod(setterName, setter, mode, propertyName)
+    this._addMethod(setterName, setter, mode, propertyName)
   })
 
 
@@ -256,7 +241,7 @@ Tranya(function (
   // addSetter("setterName", function () {})
   // addSetter("setterName", function propertyAssigner() {})
 
-  _Type.addMethod(function addSetter(name_setter, property_setter_) {
+  _Type.addSelfMethod(function addSetter(name_setter, property_setter_) {
     this._addSetter(name_setter, property_setter_, SETTER_METHOD)
   })
 
@@ -264,7 +249,7 @@ Tranya(function (
   // forAddSetter("propertyName")
   // forAddSetter("propertyName", "setterName")
 
-  _Type.addMethod(function forAddSetter(propertyName, setterName_) {
+  _Type.addSelfMethod(function forAddSetter(propertyName, setterName_) {
     const setterName = setterName_ || AsSetterFromProperty(propertyName) ||
       this._signalError(`Improper property name: ${propertyName}!!`)
     this._addSetter(setterName, propertyName, SETTER_METHOD)
@@ -277,7 +262,7 @@ Tranya(function (
   // addMandatorySetter("setterName", function () {}) // within must call _basicSet
   // addMandatorySetter("setterName", function propertyAssigner() {})
   //
-  _Type.addMethod(function addMandatorySetter(name_setter, property_setter_) {
+  _Type.addSelfMethod(function addMandatorySetter(name_setter, property_setter_) {
     this._addSetter(name_setter, property_setter_, MANDATORY_SETTER_METHOD)
   })
 
@@ -285,7 +270,7 @@ Tranya(function (
   // forAddMandatorySetter("property", "setterName")
   // forAddMandatorySetter("property", function setterName() {}) // within must call _basicSet
 
-  _Type.addMethod(function forAddMandatorySetter(propertyName, setter_) {
+  _Type.addSelfMethod(function forAddMandatorySetter(propertyName, setter_) {
     const setter = setter_ || AsSetterFromProperty(propertyName) ||
       this._signalError(`Improper property name: ${propertyName}!!`)
     this._addSetter(setter, propertyName, MANDATORY_SETTER_METHOD)
@@ -293,28 +278,36 @@ Tranya(function (
 
 
 
-  _Type.addMethod(function addRetroactiveProperty(assigner_selector, assigner_, mode__) {
+  _Type.addSelfMethod(function addRetroactiveValue(assigner_selector, assigner_) {
+    // Will set the $inner selector even on an immutable object!!!
+    const [selector, assigner] = (typeof assigner_selector === "function") ?
+        [assigner_selector.name, assigner_selector] :
+        [assigner_selector     , assigner_        ]
+    const mode = VALUE_METHOD
+    this._addMethod(selector, AsRetroactiveProperty(selector, assigner), mode)
+  })
+
+  _Type.addSelfMethod(function addRetroactiveProperty(assigner_selector, assigner_) {
     // Will set the $inner selector even on an immutable object!!!
     const [selector, assigner, mode] = (typeof assigner_selector === "function") ?
-        [assigner_selector.name, assigner_selector, assigner_] :
-        [assigner_selector     , assigner_        , mode__   ]
-
-    this.addMethod(selector, AsRetroactiveProperty(selector, assigner), mode)
+        [assigner_selector.name, assigner_selector] :
+        [assigner_selector     , assigner_        ]
+    this._addMethod(selector, AsRetroactiveProperty(selector, assigner))
   })
 
 
 
-  _Type.addMethod(function addLazyProperty(assigner_selector, assigner_) {
+  _Type.addSelfMethod(function addLazyProperty(assigner_selector, assigner_) {
     // Will set the $inner AsName( even on) an immutable object!!!
     const [selector, assigner] = (typeof assigner_selector === "function") ?
       [assigner_selector.name, assigner_selector] :
       [assigner_selector     , assigner_        ]
 
-    this.addMethod(selector, AsLazyProperty(selector, assigner))
+    this._addMethod(selector, AsLazyProperty(selector, assigner))
   })
 
   // MAKE THIS use a Definition!!!
-  _Type.addMethod(function addDurable(selector) {
+  _Type.addSelfMethod(function addDurable(selector) {
     const $root$inner = this._blanker.$root$inner
     const durables    = $root$inner[_DURABLES] || []
     if (!durables.includes(selector)) {
@@ -330,24 +323,24 @@ Tranya(function (
   // addDefinition(namedFunc, mode_)
   // addDefinition(selector, func, mode_)
 
-  _Type.addMethod(function addDefinition(...params) {
+  _Type.addSelfMethod(function addDefinition(...params) {
     var definition = ExtractDefinitionFrom(params, this.context)
     this._setDefinitionAt(definition.tag, definition)
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
-  _Type.addMethod(function addAlias(aliasName, selector_definition) {
+  _Type.addSelfMethod(function addAlias(aliasName, selector_definition) {
     const definition = (typeof selector_definition !== "string") ?
       selector_definition :
       (this.methodAt(selector_definition) ||
         this._unknownMethodToAliasError(selector_definition))
 
     this.addDefinition(aliasName, definition)
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
 
-  _Type.addMethod(function _inheritAllDefinitions(inheritSpec) {
+  _Type.addSelfMethod(function _inheritAllDefinitions(inheritSpec) {
     var next, _$nextType, nextDefinitions, tags, value, nextValue
     var asImmutable, visited, context, noCopy
 
@@ -392,7 +385,7 @@ Tranya(function (
 
 
 
-  _Type.addMethod(function _propagateReinheritance(inheritSpec) {
+  _Type.addSelfMethod(function _propagateReinheritance(inheritSpec) {
     this._subordinateTypes.forEach(subtype => {
       var _$subtype = InterMap.get(subtype)
       _$subtype._inheritAllDefinitions.call(_$subtype[$PULP], inheritSpec)
@@ -400,7 +393,7 @@ Tranya(function (
   })
 
 
-  _Type.addMethod(function _setAsSubordinateOfSupertypes(supertypes) {
+  _Type.addSelfMethod(function _setAsSubordinateOfSupertypes(supertypes) {
     // LOOK: add logic to invalidate connected types if supertypes changes!!!
     var next, _$supertype
     const subtype = this[$RIND]
@@ -431,13 +424,13 @@ Tranya(function (
     }
 
     this._setName(properName)
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
   _Type.addMandatorySetter("_setName", function name(properName) {
     this._setDisplayNames(properName)
     return properName
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
   _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
@@ -447,14 +440,14 @@ Tranya(function (
 
     SetAsymmetricProperty(this, "constructor", _name, $name, INVISIBLE)
     this[$DISGUISE].name = outerName
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
 
   _Type.addMethod(function setContext(context) {
     this._setContext(context)
     context.atPut(this.name, this[$RIND])
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
   _Type.addMandatorySetter("_setContext", function context(context) {
@@ -474,7 +467,7 @@ Tranya(function (
 
   _Type.addMethod(function addSupertype(type) {
     this.setSupertypes([...this.supertypes, type])
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
 
@@ -483,7 +476,7 @@ Tranya(function (
     const ancestry = this._buildAncestry(supertypes)
     this._validateNewSupertypes(supertypes, ancestry)
     this._setSupertypesAndAncestry(supertypes, ancestry, REINHERIT)
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
   _Type.addMethod(function _setSupertypesAndAncestry(
@@ -492,11 +485,11 @@ Tranya(function (
     this._ancestry   = CrudeBeImmutable(ancestry)
     if (inheritSpec_) { this._inheritAllDefinitions(inheritSpec_) }
     this._setAsSubordinateOfSupertypes(supertypes)
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
 
-  _Type.addMethod(function _extractArgs(
+  _Type.addValueMethod(function _extractArgs(
                               spec_name, supertypes_context_, context__) {
     var spec, name, supertypes, context, _$arg2
     ;[name, spec] = (typeof spec_name === "string") ?
@@ -523,7 +516,7 @@ Tranya(function (
     }
 
     return [name, supertypes, context, spec]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
   //  spec
@@ -532,7 +525,7 @@ Tranya(function (
   //    shared|sharedProperties
   //    methods|instanceMethods
 
-  _Type.addMethod(function _init(spec_name, supertypes_context_, context__) {
+  _Type.addValueMethod(function _init(spec_name, supertypes_context_, context__) {
     const [name, supertypes, context, spec] =
       this._extractArgs(spec_name, supertypes_context_, context__)
     const ancestry   = this._buildAncestry(supertypes)
@@ -546,21 +539,23 @@ Tranya(function (
 
     context && this.setContext(context)
     spec    && this._initDefinitions(spec)
-  }, TRUSTED_VALUE_METHOD)
+    return this
+  })
 
 
-  _Type.addMethod(function _initCoreProperties(isRootType_, applyHandler_) {
+  _Type.addValueMethod(function _initCoreProperties(isRootType_, applyHandler_) {
     const parentBlanker = isRootType_ ? $SomethingBlanker : $IntrinsicBlanker
 
     this._blanker          = NewBlanker(parentBlanker, applyHandler_)
     this._iidCount         = 0
     this._definitions      = SpawnFrom(null)
     this._subordinateTypes = new Set()
-  }, TRUSTED_VALUE_METHOD)
+    return this
+  })
 
 
 
-  _Type.addMethod(function _initDefinitions(spec) {
+  _Type.addValueMethod(function _initDefinitions(spec) {
     const declared    = spec.declare || spec.declared
     const durables    = spec.durable || spec.durables
     const shared      = spec.shared  || spec.sharedProperties
@@ -572,10 +567,11 @@ Tranya(function (
     shared      && this.addSharedProperties(shared)
     methods     && this.addMethods(methods)
     definitions && this.define(definitions)
-  }, TRUSTED_VALUE_METHOD)
+    return this
+  })
 
 
-  _Type.addMethod(function _validateNewSupertypes(supertypes, ancestry) {
+  _Type.addValueMethod(function _validateNewSupertypes(supertypes, ancestry) {
     if (supertypes.length !== new Set(supertypes).size) {
       return DuplicateSupertypeError(this) || null
     }
@@ -595,11 +591,11 @@ Tranya(function (
       // Perhaps not. Might be able to redirect the _blanker of an existing type???
     }
     return beRootType
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
-  _Type.addMethod(function isRootType() {
+  _Type.addValueMethod(function isRootType() {
     return (RootOf(this._blanker.$root$inner) === $Something$root$inner)
   })
 
@@ -613,7 +609,7 @@ Tranya(function (
   }
 
 
-  _Type.addMethod(function _buildAncestry(supertypes = this.supertypes) {
+  _Type.addValueMethod(function _buildAncestry(supertypes = this.supertypes) {
     // if (supertypes === EMPTY_THING_ANCESTRY) { return supertypes }
     const roughAncestry   = BuildRoughAncestryOf(supertypes)
     const visited         = new Set()
@@ -649,7 +645,7 @@ Tranya(function (
   }
 
 
-  _Type.addMethod(function _initFrom_(_type, asImmutable, visited, context) {
+  _Type.addValueMethod(function _initFrom_(_type, asImmutable, visited, context) {
     const inheritSpec  = {asImmutable, visited, context}
     const isRootType   = _type.isRootType
     const applyHandler = (_type._blanker.length) ? _type[$BARRIER].apply : null
@@ -671,10 +667,11 @@ Tranya(function (
     //   this.setContext(context)
 
     if (_type[$OUTER].this) { AddPermeableNewDefinitionTo(this) }
-  }, TRUSTED_VALUE_METHOD)
+    return this
+  })
 
 
-  _Type.addMethod(function _copyDefinitions(definitions, inheritSpec, isOwn) {
+  _Type.addValueMethod(function _copyDefinitions(definitions, inheritSpec, isOwn) {
     if (!definitions) { return }
     const {asImmutable, visited, context} = inheritSpec
     const selector = isOwn ? "addOwnDefinition" : "addSharedProperty"
@@ -686,135 +683,137 @@ Tranya(function (
       const nextValue   = ValueAsNext(value, asImmutable, visited, context)
       adder.call(this, tag, nextValue)
     })
-  }, TRUSTED_VALUE_METHOD)
+
+    return this
+  })
 
 
   // This method should only be called on a mutable object!!!
-  _Type.addMethod(function _setImmutable(inPlace, visited) { // eslint-disable-line
+  _Type.addValueMethod(function _setImmutable(inPlace, visited) { // eslint-disable-line
     this.id // Lazyily sets the id (& uid) befoe it's too late.
     this._subordinateTypes = TheEmptyArray
     // return this._super._setImmutable(inPlace, visited)
     return this._basicSetImmutable()
-  }, IDEMPOT_SELF_METHOD)
+  })
 
 
 
 
-  _Type.addMethod(function define(items, mode = "STANDARD") {
+  _Type.addSelfMethod(function define(items, mode = "STANDARD") {
     const PropertyLoader = this.context.entryAt("PropertyLoader", true)
     PropertyLoader.new(this.$).load(items, mode)
   })
 
-  _Type.addMethod(function addSharedProperties(items) {
+  _Type.addSelfMethod(function addSharedProperties(items) {
     this.define(items, "SHARED")
   })
 
-  _Type.addMethod(function addMethods(items) {
+  _Type.addSelfMethod(function addMethods(items) {
     this.define(items, "METHOD")
   })
 
-  _Type.addMethod(function addDeclarations(items) {
+  _Type.addSelfMethod(function addDeclarations(items) {
     this.define(items, "DECLARATION")
   })
 
-  _Type.addMethod(function addDurables(items) {
+  _Type.addSelfMethod(function addDurables(items) {
     this.define(items, "DURABLES")
   })
 
 
 
-  _Type.addMethod(function _nextIID() {
+  _Type.addValueMethod(function _nextIID() {
     // This works on an immutable type without creating a new copy.
     return ++this[$INNER]._iidCount
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _Type.addMethod(function id() { // Conditionally lazy property
+  _Type.addValueMethod(function id() { // Conditionally lazy property
     const newId = `${this.formalName},${this.oid}`
     if (this.context === DefaultContext) { return newId }
     return SetInvisibly(this[$INNER], "id", newId, "SET BOTH INNER & OUTER")
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
-  _Type.addMethod(function formalName() {
+  _Type.addValueMethod(function formalName() {
     const context = this.context
     const prefix = (context === DefaultContext) ? "" : context.formalName + "@"
     return `${prefix}${this.name}`
-  }, TRUSTED_VALUE_METHOD)
+  })
 
-  _Type.addMethod(function toString(_) { // eslint-disable-line
+  _Type.addValueMethod(function toString(_) { // eslint-disable-line
     return this.formalName
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _Type.addMethod(function inheritsFrom(type) {
+  _Type.addValueMethod(function inheritsFrom(type) {
     var self, ancestry, next
     self     = this[$RIND]
     ancestry = type.ancestry
     next     = ancestry.length - 1
     while (next--) { if (ancestry[next] === self) { return true } }
     return false
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
-  _Type.addMethod(function hasDefinedMethod(selector) {
+  _Type.addValueMethod(function hasDefinedMethod(selector) {
     const value = this._definitions[selector]
     return (value) ? value.isMethod : false
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _Type.addMethod(function methodAt(selector) {
+  _Type.addValueMethod(function methodAt(selector) {
     const property = PropertyAt(this._blanker.$root$inner, selector)
     return property.isMethod ? property : null
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _Type.addMethod(function definitionAt(selector) {
+  _Type.addValueMethod(function definitionAt(selector) {
     return this._definitions[selector] || null
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _Type.addMethod(function methodAncestry(selector) {
+  _Type.addValueMethod(function methodAncestry(selector) {
     return CrudeBeImmutable(
       this._ancestry.filter(type => type.hasDefinedMethod(selector)))
-  }, TRUSTED_VALUE_METHOD)
+  })
 
-  _Type.addMethod(function methodAncestryListing(selector) {
+  _Type.addValueMethod(function methodAncestryListing(selector) {
     const ancestry = this.methodAncestry(selector)
     return ancestry.map(type => type.name).join(" ")
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _Type.addMethod(function allKnownSelectors() {
+  _Type.addValueMethod(function allKnownSelectors() {
     return KnownSelectorsSorted(this._blanker.$root$inner, OwnSelectors)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _Type.addMethod(function allPublicSelectors() {
+  _Type.addValueMethod(function allPublicSelectors() {
     // All visible public selectors
     return OwnSelectorsSorted(this._blanker.$root$outer)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _Type.addMethod(function allDefinedSelectors() {
+  _Type.addValueMethod(function allDefinedSelectors() {
     // All but intrinsic selectors
     return OwnSelectorsSorted(this._blanker.$root$inner)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _Type.addMethod(function definedSelectors() {
+  _Type.addValueMethod(function definedSelectors() {
     return OwnSelectorsSorted(this._definitions)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _Type.addMethod(function publicSelectors() {
+  _Type.addValueMethod(function publicSelectors() {
     return this.definedSelectors.filter(sel => AsName(sel)[0] !== "_")
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _Type.addMethod(function beImpenetrable() {
+  _Type.addValueMethod(function beImpenetrable() {
     this[$INNER][$IS_IMPENETRABLE]              = true
     this._blanker.$root$inner[$IS_IMPENETRABLE] = true
     return this
-  }, IDEMPOT_SELF_METHOD)
+  })
 
 
   _Type.addMethod(function _reconcileFrom(sourceType, asMutable, visited, context) {

@@ -3,7 +3,7 @@ Tranya(function (
   DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   SAFE_FUNC, TAMED_FUNC,
-  FindAndSetDurables, FindDurables, Frost, InterMap, IsFact, MarkFunc, OwnNames,
+  FindAndSetDurables, FindDurables, Frost, InterMap, MarkFunc, OwnNames,
   SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, AttemptInvertedFuncCopyError,
   Shared, _Shared

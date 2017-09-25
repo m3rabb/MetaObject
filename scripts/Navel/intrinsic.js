@@ -16,8 +16,7 @@
 Tranya(function (
   $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND,
-  DECLARATION, IS_IMMUTABLE, LAZY_INSTALLER, _DURABLES,
-  IDEMPOT_SELF_METHOD, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
+  DECLARATION, IS_IMMUTABLE, LAZY_INSTALLER, _DURABLES, VALUE_METHOD,
   $Intrinsic$root$inner, AsName, CrudeBeImmutable, ExtractDefinitionFrom,
   FindAndSetDurables, MakeDefinitionsInfrastructure, NewUniqueId, OwnSelectors,
   PropertyAt, SetDefinition, SetInvisibly, SignalError, SpawnFrom, ValueAsFact,
@@ -33,23 +32,23 @@ Tranya(function (
 
 
 
-  _$Intrinsic.addMethod(function isMutable() {
+  _$Intrinsic.addValueMethod(function isMutable() {
     return !this[IS_IMMUTABLE]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function isFact() {
+  _$Intrinsic.addValueMethod(function isFact() {
     return this[IS_IMMUTABLE] ? true : (this.id != null)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addMethod(function isA(type) {
+  _$Intrinsic.addValueMethod(function isA(type) {
     return this[type.membershipSelector]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
 
-  _$Intrinsic.addMethod(function copy(
+  _$Intrinsic.addValueMethod(function copy(
     visited_asImmutable_, visited_, context__, exceptSelector___
   ) {
     const $inner = this[$INNER]
@@ -62,53 +61,53 @@ Tranya(function (
       if (!context || $inner.context === context) { return $inner[$RIND] }
     }
     return _$Copy($inner, asImmutable, visited, context, selector)[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function immutableCopy(visited_, context__) {
+  _$Intrinsic.addValueMethod(function immutableCopy(visited_, context__) {
     const $inner = this[$INNER]
     if ($inner[IS_IMMUTABLE]) {
       if (!context__ || $inner.context === context__) { return $inner[$RIND] }
     }
     return _$Copy($inner, true, visited_, context__)[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function mutableCopy(visited_, context__) {
+  _$Intrinsic.addValueMethod(function mutableCopy(visited_, context__) {
     return _$Copy(this[$INNER], false, visited_, context__)[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function mutableCopyExcept(selector, visited_, context__) {
+  _$Intrinsic.addValueMethod(function mutableCopyExcept(selector, visited_, context__) {
     return _$Copy(this[$INNER], false, visited_, context__, selector)[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
   // Thing.add(function _nonCopy() {
   //   return (this[IS_FACT] === IMMUTABLE) ? this._newBlank() : this
   // })
 
 
-  _$Intrinsic.addMethod(function asCopy() {
+  _$Intrinsic.addValueMethod(function asCopy() {
     const $inner = this[$INNER]
     return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner))[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function asMutableCopy() {
+  _$Intrinsic.addValueMethod(function asMutableCopy() {
     return _$Copy(this[$INNER], false)[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function asImmutableCopy() {
+  _$Intrinsic.addValueMethod(function asImmutableCopy() {
     const $inner = this[$INNER]
     return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner, true))[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function asMutable() {
+  _$Intrinsic.addValueMethod(function asMutable() {
     const $inner = this[$INNER]
     return ($inner[IS_IMMUTABLE] ? _$Copy($inner, false) : $inner)[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function asFact() {
+  _$Intrinsic.addValueMethod(function asFact() {
     const $inner = this[$INNER]
     return ($inner[IS_IMMUTABLE] || ($inner.id != null)) ?
       $inner : _$Copy($inner, true)[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
   _$Intrinsic.addAlias("asImmutable", "asImmutableCopy")
 
@@ -119,22 +118,22 @@ Tranya(function (
   // }, BASIC_VALUE_METHOD)
 
 
-  _$Intrinsic.addMethod(function setImmutable(visited_inPlace_, visited_) {
+  _$Intrinsic.addValueMethod(function setImmutable(visited_inPlace_, visited_) {
     if (this[IS_IMMUTABLE]) { return this }
     const [inPlace, visited] = (typeof visited_inPlace_ === "object") ?
       [undefined, visited_inPlace_] : [visited_inPlace_, visited_]
 
     this._setImmutable(inPlace, visited)
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addMethod(function beImmutable() {
+  _$Intrinsic.addValueMethod(function beImmutable() {
     if (!this[IS_IMMUTABLE]) { this._setImmutable() }
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
   // This method should only be called on a mutable object!!!
-  _$Intrinsic.addMethod(function _setImmutable(inPlace, visited) {
+  _$Intrinsic.addValueMethod(function _setImmutable(inPlace, visited) {
     var durables, selector, next, value, nextValue
     const $inner                  = this[$INNER]
     const $rind                   = $inner[$RIND]
@@ -165,7 +164,7 @@ Tranya(function (
 
 
 
-  _$Intrinsic.addMethod(function _newBlank() {
+  _$Intrinsic.addValueMethod(function _newBlank() {
     const $inner     = this[$INNER]
     const _$instance = new $inner[$BLANKER]()
     const $instance  = new _$instance[$OUTER]
@@ -174,59 +173,59 @@ Tranya(function (
       SetInvisibly($instance, "this", _$instance[$PULP])
     }
     return _$instance[$RIND]
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
 
-  _$Intrinsic.addMethod(function _knownSelectors() {
+  _$Intrinsic.addValueMethod(function _knownSelectors() {
     return KnownSelectorsSorted(this[$INNER], OwnSelectors)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function _inheritedSelectors() {
+  _$Intrinsic.addValueMethod(function _inheritedSelectors() {
     return this.type.allKnownSelectors
-  }, TRUSTED_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function visibleSelectors() {
+  _$Intrinsic.addValueMethod(function visibleSelectors() {
     return KnownSelectorsSorted(this[$OUTER], OwnVisibleNames)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function _ownSelectors() {
+  _$Intrinsic.addValueMethod(function _ownSelectors() {
     // All string and symbol properties, includes invisibles
     return OwnSelectorsSorted(this[$INNER])
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function ownSelectors() {
+  _$Intrinsic.addValueMethod(function ownSelectors() {
     // Includes placed retroactive|lazy properties, but not symbols
     return CrudeBeImmutable(OwnNames(this[$OUTER]).sort())
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addMethod("_hasOwn", _HasOwn, IDEMPOT_VALUE_METHOD)
+  _$Intrinsic.addValueMethod("_hasOwn", _HasOwn)
 
-  _$Intrinsic.addMethod(function hasOwn(selector) {
+  _$Intrinsic.addValueMethod(function hasOwn(selector) {
     switch (selector[0]) {
       case undefined : return null  // "Shrug when selector is a symbol
       case "_"       : return false
       default        : return this._hasOwn(selector)
     }
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addMethod(function _has(selector) {
+  _$Intrinsic.addValueMethod(function _has(selector) {
     return (selector in this[$INNER])
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function has(selector) {
+  _$Intrinsic.addValueMethod(function has(selector) {
     return (selector in this[$OUTER])
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
   _$Intrinsic.addMethod(function _basicSet(property, value) {
     const selector = PropertyToSymbolMap[property] || property
     this[selector] = value
-  }, TRUSTED_VALUE_METHOD)
+  }, VALUE_METHOD)
 
 
 
@@ -236,7 +235,7 @@ Tranya(function (
   // Th receiver only references its original barrier, and there may be more than
   // one proxy/barrier associated with the receiver, so we need to invoke the
   // proxy to force the proper change to occur thru it.
-  _$Intrinsic.addMethod(function _retarget() {
+  _$Intrinsic.addValueMethod(function _retarget() {
     const $inner = this[$INNER]
 
     if ($inner[IS_IMMUTABLE]) {
@@ -245,7 +244,7 @@ Tranya(function (
     }
 
     return SetInvisibly($inner, "_retarget", this)
-  }, IDEMPOT_SELF_METHOD)
+  })
 
 
 
@@ -275,44 +274,44 @@ Tranya(function (
 
 
 
-  _$Intrinsic.addMethod(function basicId() {
+  _$Intrinsic.addValueMethod(function basicId() {
     const suffix = this.isPermeable ? "_" : ""
     return `#${this.uid}.${this.type.name}${suffix}`
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addRetroactiveProperty(function uid() {
+  _$Intrinsic.addRetroactiveValue(function uid() {
     return this._hasOwn("guid") ? this.guid : NewUniqueId()
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _$Intrinsic.addMethod(function oid() {
+  _$Intrinsic.addValueMethod(function oid() {
     const suffix = this.isPermeable ? "_" : ""
     return `${this.iid}.${this.type.formalName}${suffix}`
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addRetroactiveProperty(function iid() {
+  _$Intrinsic.addRetroactiveValue(function iid() {
     return InterMap.get(this.type)[$PULP]._nextIID
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
-  _$Intrinsic.addMethod(function typeName() {
+  _$Intrinsic.addValueMethod(function typeName() {
     return this.type.name
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _$Intrinsic.addMethod(function beImpenetrable() {
+  _$Intrinsic.addValueMethod(function beImpenetrable() {
     this[$INNER][$IS_IMPENETRABLE] = true
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addMethod(function isImpenetrable() {
+  _$Intrinsic.addValueMethod(function isImpenetrable() {
     return this[$IS_IMPENETRABLE] || false
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
@@ -327,7 +326,7 @@ Tranya(function (
   // }, BASIC_SELF_METHOD)
   //
 
-  _$Intrinsic.addMethod(function addOwnAlias(aliasSelector, selector_definition) {
+  _$Intrinsic.addSelfMethod(function addOwnAlias(aliasSelector, selector_definition) {
     var value, _$value
     if (typeof selector_definition !== "string") { value = selector_definition }
     else {
@@ -338,33 +337,33 @@ Tranya(function (
       }
     }
     this.addOwnDefinition(aliasSelector, value)
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _$Intrinsic.addMethod(function addOwnDeclaration(selector) {
+  _$Intrinsic.addSelfMethod(function addOwnDeclaration(selector) {
     this.addOwnDefinition(selector, null, DECLARATION)
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _$Intrinsic.addMethod(function addOwnMethod(namedFunc_name, func_, mode__) {
+  _$Intrinsic.addSelfMethod(function addOwnMethod(namedFunc_name, func_, mode__) {
     this.addOwnDefinition(namedFunc_name, func_, mode__)
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addMethod(function _addOwnDurable(selector) {
+  _$Intrinsic.addSelfMethod(function _addOwnDurable(selector) {
     var durables = this[_DURABLES] || []
     if (!durables.includes(selector)) {
       this[$INNER][_DURABLES] = CrudeBeImmutable([...durables, selector])
       this.addOwnDeclaration(selector)
     }
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
-  _$Intrinsic.addMethod(function _addOwnDurables(selectors) {
+  _$Intrinsic.addSelfMethod(function _addOwnDurables(selectors) {
     selectors.forEach(selector => this._addOwnDurable(selector))
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
@@ -373,7 +372,7 @@ Tranya(function (
   // addOwnDefinition(namedFunc, mode_)
   // addOwnDefinition(selector, func, mode_)
 
-  _$Intrinsic.addMethod(function addOwnDefinition(...args) {
+  _$Intrinsic.addSelfMethod(function addOwnDefinition(...args) {
     const definition   = ExtractDefinitionFrom(args, this.context)
     const tag          = definition.tag
     const $inner       = this[$INNER]
@@ -392,20 +391,20 @@ Tranya(function (
 
     SetDefinition($inner, definition)
     definitions[tag] = definition
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _$Intrinsic.addMethod(function _propertyAt(selector) {
+  _$Intrinsic.addValueMethod(function _propertyAt(selector) {
     return PropertyAt(this[$INNER], selector)
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
-  _$Intrinsic.addMethod(function propertyAt(selector) {
+  _$Intrinsic.addValueMethod(function propertyAt(selector) {
     return (selector[0] !== "_") ? PropertyAt(this[$INNER], selector) : null
     // If restoring the following, also add it back to InSetProperty.
     // return ((selector.charAt) ? selector[0] : selector.toString()[7] !== "_") ?
     //   PropertyAt(this[$INNER], selector) : null
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
@@ -426,13 +425,13 @@ Tranya(function (
   // })
 
 
-  _$Intrinsic.addMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
+  _$Intrinsic.addValueMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
     return this.toString()
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _$Intrinsic.addMethod(function _unknownProperty(selector) {
+  _$Intrinsic.addValueMethod(function _unknownProperty(selector) {
     return this._signalError(`Receiver ${this.oid} doesn't have a property '${AsName(selector)}'!!`)
   })
 
@@ -441,7 +440,7 @@ Tranya(function (
 
 
 
-  _$Intrinsic.addMethod(function _signalError(message) {
+  _$Intrinsic.addValueMethod(function _signalError(message) {
     return SignalError(this, message)
   })
 

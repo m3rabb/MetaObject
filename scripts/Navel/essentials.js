@@ -134,11 +134,7 @@ Tranya(function (
     return this._propagateDefinition(tag)
   }
 
-  const Definition_init = function _init(func_selector, func_, mode__, property___) {
-    const [selector, handler, mode = STANDARD_METHOD, property] =
-      (typeof func_selector === "function") ?
-        [func_selector.name, func_selector, func_ , mode__     ] :
-        [func_selector     , func_        , mode__, property___]
+  const Definition_init = function _init(selector, handler, mode, property_) {
     const isPublic = (AsName(selector)[0] !== "_")
     const $inner   = InterMap.get(this[$RIND])
     const $outer   = $inner[$OUTER]
@@ -166,12 +162,12 @@ Tranya(function (
 
       case MANDATORY_SETTER_METHOD :
         $outer.assignmentError = $inner.assignmentError =
-          NewAssignmentErrorHandler(property, selector)
-        this.mappedSymbol = AsPropertySymbol(property)
+          NewAssignmentErrorHandler(property_, selector)
+        this.mappedSymbol = AsPropertySymbol(property_)
         // break omitted
 
       case SETTER_METHOD :
-        this.property = property
+        this.property = property_
         break
 
       default :
@@ -223,10 +219,13 @@ Tranya(function (
 
 
 
-  const AddMethod = function addMethod(func_selector, func_, mode__, property___) {
-    const definition =
-      this.context.Definition(func_selector, func_, mode__, property___)
-    return this._setDefinitionAt(definition.tag, definition)
+  const _AddMethod = function _addMethod(func_selector, func_, mode__, property___) {
+    const [selector, handler, mode = STANDARD_METHOD, property] =
+      (typeof func_selector === "function") ?
+        [func_selector.name, func_selector, func_ , mode__     ] :
+        [func_selector     , func_        , mode__, property___]
+    const def = this.context.Definition(selector, handler, mode, property)
+    return this._setDefinitionAt(def.tag, def)
   }
 
 
@@ -238,6 +237,6 @@ Tranya(function (
   _Shared.Definition_init    = Definition_init
   _Shared.Context_init       = Context_init
   _Shared.Context_atPut      = Context_atPut
-  _Shared.AddMethod          = AddMethod
+  _Shared._AddMethod         = _AddMethod
 
 })

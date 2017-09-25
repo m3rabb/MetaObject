@@ -1,12 +1,11 @@
 Tranya(function (
-  $INNER,
-  ASSIGNER, DECLARATION, IDEMPOT_VALUE_METHOD, LAZY_INSTALLER, SAFE_FUNC,
-  AddIntrinsicDeclaration, Definition, MarkAndSetFuncImmutable, SignalError,
+  $INNER, ASSIGNER, DECLARATION, LAZY_INSTALLER, SAFE_FUNC,
+  AddIntrinsicDeclaration, Definition, MarkAndSetFuncImmutable,
   _Definition
 ) {
   // "use strict"
 
-  _Definition.addRetroactiveProperty("super", {
+  _Definition.addRetroactiveValue("super", {
     super : function () {
       const $inner = this[$INNER]
 
@@ -22,7 +21,7 @@ Tranya(function (
 
       return MarkAndSetFuncImmutable(handler, SAFE_FUNC)
     }
-  }.super, IDEMPOT_VALUE_METHOD)
+  }.super)
 
 
   // _Definition.addLazyProperty(function isLazy() {
@@ -30,10 +29,10 @@ Tranya(function (
   // })
 
 
-  _Definition.addMethod(function toString(_) { // eslint-disable-line
+  _Definition.addValueMethod(function toString(_) { // eslint-disable-line
     var count = this.handler.length
     return `${this.selector}(${count})`
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
   AddIntrinsicDeclaration("isDeclaration")

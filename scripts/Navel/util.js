@@ -97,7 +97,7 @@ Tranya(function (
     $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
     Frost($target)
     return this
-  } // IDEMPOT_SELF_METHOD
+  }
 
 
   function MarkAndSetFuncImmutable(func, marker) {

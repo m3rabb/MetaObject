@@ -27,25 +27,27 @@ Tranya(function (
 
   _Thing.addSetter("_setName", "name")
 
-  _Thing.addMethod(function _init(spec_) {
-    if (spec_ == null) { return }
-    for (var selector in spec_) {
-      this[selector] = spec_[selector]
+  _Thing.addValueMethod(function _init(spec_) {
+    if (spec_ != null) {
+      for (var selector in spec_) {
+        this[selector] = spec_[selector]
+      }
     }
+    return this
   })
 
 
 
   // Note: explicitly ensuring $pulp prevents printing
   // inaccuracies in Jasmine, when it has access to the $inner object instead.
-  _Thing.addMethod(function toString(_) { // eslint-disable-line
+  _Thing.addValueMethod(function toString(_) { // eslint-disable-line
     const _this = this[$PULP]
     const name = _this.name
     return `${name}${(name) ? "," : ""}${_this.oid}`
   })
 
   _Thing.addAlias("jasmineToString", "toString")
-  
+
 
   // _Thing.addMethod(function toString(_) { // eslint-disable-line
   //   const name       = this.name

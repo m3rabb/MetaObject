@@ -1,7 +1,7 @@
 Tranya(function (
   $INNER, $IS_TYPE, $OUTER, $PULP, $RIND,
   COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
-  PERMEABLE, IDEMPOT_VALUE_METHOD, TRUSTED_VALUE_METHOD,
+  PERMEABLE, VALUE_METHOD,
   AsDecapitalized, BePermeable, ValueAsNext,
   CrudeBeImmutable, BeImmutableValue, ValueCopy, DefaultContext,
   Definition, Definition_init, EmptyThingAncestry, ExtractParamNames,
@@ -11,7 +11,7 @@ Tranya(function (
   "use strict"
 
 
-  _Context.addMethod(function atPut(selector, entry) {
+  _Context.addSelfMethod(function atPut(selector, entry) {
     const self = this[$RIND]
     if (self === DefaultContext || this[$INNER][selector] === entry) { return }
     this._atPut(selector, entry)
@@ -20,13 +20,13 @@ Tranya(function (
     if (_$entry && _$entry[$IS_TYPE] && _$entry.context === DefaultContext) {
       _$entry[$PULP]._setContext(this[$RIND])
     }
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _Context.addMethod(function add(object) {
+  _Context.addSelfMethod(function add(object) {
     this.atPut(object.name || object.tag, object)
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
@@ -36,14 +36,14 @@ Tranya(function (
   //     PrivateAccessFromOutsideError(this, selector)
   // })
 
-  _Context.addMethod(function _unknownProperty(selector) {
+  _Context.addValueMethod(function _unknownProperty(selector) {
     const entry = this._knownEntries[selector]
     return (entry !== undefined) ?
       entry : this._super._unknownProperty(selector)
   })
 
 
-  _Context.addMethod(function _setPropertiesImmutable(inPlace, visited) {
+  _Context.addValueMethod(function _setPropertiesImmutable(inPlace, visited) {
     const entries   = this._knownEntries
     const selectors = OwnKeys(entries)
 
@@ -57,11 +57,13 @@ Tranya(function (
         if (fact !== entry) { this[selector] = entries[selector] = fact }
       }
     })
-  }, TRUSTED_VALUE_METHOD)
+
+    return this
+  })
 
 
 
-  _Context.addMethod(function beImpenetrable() {
+  _Context.addValueMethod(function beImpenetrable() {
     var selector, entry
     if (this.isImpenetrable) { return this }
     const entries = this._knownEntries
@@ -70,32 +72,32 @@ Tranya(function (
       if (IsSauced(entry)) { entry.beImpenetrable }
     }
     this._super.beImpenetrable
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
-  _Context.addRetroactiveProperty(function id() {
+  _Context.addRetroactiveValue(function id() {
     return `${this.formalName},${this.oid}`
   })
 
-  _Context.addMethod(function formalName() {
+  _Context.addValueMethod(function formalName() {
     const context = this.supercontext
     const prefix  = context ? context.formalName + "@" : ""
     return `${prefix}${this.name}`
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
-  _Context.addMethod(function ancestry() {
+  _Context.addValueMethod(function ancestry() {
     var nextContext = this[$RIND]
     const contexts = []
     do {
       contexts.unshift(nextContext)
     } while ((nextContext = nextContext.supercontext))
     return CrudeBeImmutable(contexts)
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
-  _Context.addMethod(function _knownTypes() {
+  _Context.addValueMethod(function _knownTypes() {
     var selector, entry, _$entry, index
     const entries = this._knownEntries
     const types   = []
@@ -107,20 +109,20 @@ Tranya(function (
       if (_$entry && _$entry[$IS_TYPE]) { types[index++] = entry }
     }
     return types
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _Context.addMethod(function _ownEntries() {
+  _Context.addValueMethod(function _ownEntries() {
     const known     = this._knownEntries
     const selectors = OwnKeys(known)
     const own       = SpawnFrom(null)
 
     selectors.forEach(selector => own[selector] = known[selector])
     return own
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
-  _Context.addMethod(function allEntrySelectors() {
+  _Context.addValueMethod(function allEntrySelectors() {
     var selectors, selector, index
     const entries = this._knownEntries
 
@@ -130,23 +132,23 @@ Tranya(function (
       selectors[index++] = selector
     }
     return CrudeBeImmutable(selectors.sort())
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
-  _Context.addMethod(function entrySelectors() {
+  _Context.addValueMethod(function entrySelectors() {
     return CrudeBeImmutable(OwnKeys(this._knownEntries).sort())
-  }, IDEMPOT_VALUE_METHOD)
+  })
 
 
 
-  _Context.addMethod(function newSub(execFunc) {
+  _Context.addValueMethod(function newSub(execFunc) {
     return this._exec(execFunc, true)
   })
 
   _Context.addAlias("newSubcontext", "newSub")
 
 
-  _Context.addMethod(function exec(execFunc) {
+  _Context.addValueMethod(function exec(execFunc) {
     return this._exec(execFunc, false)
   })
 
@@ -159,13 +161,13 @@ Tranya(function (
   //   this.
   // })
 
-  _Context.addMethod(function _hasOverwritingParam(marked) {
+  _Context.addValueMethod(function _hasOverwritingParam(marked) {
     const mutability = marked[MUTABLE]
     return mutability ||
       this[IS_IMMUTABLE] && (mutability !== undefined) || false
   })
 
-  _Context.addMethod(function _exec(execFunc, forceAsCopy_) {
+  _Context.addValueMethod(function _exec(execFunc, forceAsCopy_) {
     const sourceContext = this[$RIND]
     const sourceEntries = this._knownEntries
 
@@ -191,7 +193,7 @@ Tranya(function (
     const args = ComposeArgs(execContext, paramSpecs, marked, visited)
     execFunc.apply(execContext, args)
     return execContext
-  }, TRUSTED_VALUE_METHOD)
+  })
 
 
 
@@ -282,7 +284,6 @@ Tranya(function (
   }
 
 
-
   function InPutCopyForEachMarked(execContext, sourceTypes, marked, visited) {
     var newTypes, Type, newType, name, sourceType, supertypesPlaceholder
 
@@ -369,4 +370,4 @@ Tranya(function (
 
 })
 
-  // isAbsolutelyImpermeable
+  // isAbsolutelyImpermeable isImpenetrable
