@@ -232,6 +232,9 @@ Add an implementation selector stash
 Make better name the 'As' method names in wrapping.js!!!!
 
 
+==
+Write tests for checking setId on Immutable.
+
 ==========
 
 ikigai

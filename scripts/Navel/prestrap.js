@@ -183,7 +183,7 @@ Tranya(function (
 
   function MakePermeableNewDef(NewHandler, context) {
     const Definition = context.entryAt("Definition", true)
-    const handler = function permeableNew(...args) {
+    const handler = function $newPermeable(...args) {
       const   instance = NewHandler.apply(this, args)
       const _$instance = InterMap.get(instance)
 
