@@ -3,7 +3,7 @@ Tranya(function (
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE, NO_SUPER, _DURABLES,
   AlwaysFalse, AlwaysNull, InSetProperty, InterMap, SpawnFrom, _$Copy, _HasOwn,
-  AssignmentOfUndefinedError, AttemptSetOnSuperError,
+  AssignmentOfUndefinedError, AssignmentViaSuperError,
   ChangeToImmutableThisError, DeleteFromOutsideError,
   DirectAssignmentFromOutsideError, DisallowedDeleteError,
   PrivateAccessFromOutsideError,
@@ -66,27 +66,17 @@ Tranya(function (
     if (_$method_outer) { return _$method_outer.call(self) }
     if (selector in $self) { return null }
 
-    const firstChar = (selector.charAt) ? selector[0] : selector.toString()[7]
-    const _$self    = InterMap.get(self)
+    const _$self = InterMap.get(self)
 
-    if (firstChar === "_") {
-      const _privateAccessFromOutside = _$self._privateAccessFromOutside
-      return (_privateAccessFromOutside) ?
-        _privateAccessFromOutside.call(_$self[$PULP], selector) :
-        PrivateAccessFromOutsideError(self, selector)
-    }
-    return _$self._unknownProperty.call(_$self[$PULP], selector)
+    return _$self._unknownProperty.call(_$self[$PULP], selector, true)
   }
 
 
   OuterBarrier_prototype.has = function has($self, selector) {
-    // const firstChar = (typeof selector === "symbol") ?
-    //   selector.toString()[7] : selector[0]
-
     switch (selector[0]) {
-      case undefined : return null  // Effectively answers a shrug
       case "_"       :
         return PrivateAccessFromOutsideError($self[$RIND], selector) || false
+      case undefined : return null  // Effectively answers a shrug
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       default        : return (selector in $self)
     }
@@ -116,7 +106,7 @@ Tranya(function (
     if ($method_inner) { return $method_inner.call(_$target[$PULP]) }
     if (selector in _$target) { return null }
 
-    return _$target._unknownProperty.call(_$target[$PULP], selector)
+    return _$target._unknownProperty.call(_$target[$PULP], selector, false)
   }
 
 
@@ -168,7 +158,7 @@ Tranya(function (
       this._$target = (_$target = _$Copy(_$self, false, null, null, selector))
     }
 
-    if (this.isInUse) {
+    if (_$target !== _$self) {
       if (value === _self || value === _$self[$RIND]) {
         // If going to assigning property to self, instead assign it to the copy
         value = _$target[$RIND]
@@ -328,7 +318,8 @@ Tranya(function (
           return supers[$IMMEDIATES][selector].call(_$target[$PULP])
 
         case NO_SUPER :
-          return _$target._unknownProperty.call(_$target[$PULP], selector)
+          return _$target
+            ._unknownProperty.call(_$target[$PULP], selector, false)
 
         default :
           return value
@@ -338,7 +329,7 @@ Tranya(function (
 
   // eslint-disable-next-line
   SuperBarrier_prototype.set = function set(_$target, selector, value, _super) {
-    return AttemptSetOnSuperError(_$target[$RIND]) || false
+    return AssignmentViaSuperError(_$target[$RIND]) || false
   }
 
 
@@ -366,35 +357,6 @@ Tranya(function (
   }
 
 
-
-  // const OwnSuperBarrier = {
-  //   __proto__ : SuperBarrier,
-  //
-  //   get ($inner, selector, target) {
-  //     // const supers = $inner[SUPERS]
-  //     // const value =
-  //     //
-  //     // if (selector in supers) {
-  //     //   let sharedSupers = supers[SUPERS]
-  //     //   if (sharedSupers !== supers) { // instance has its own SUPERS
-  //     //     if (!(selector in sharedSupers)) {
-  //     //
-  //     //     }
-  //     //
-  //     //   }
-  //     //   value = supers[selector]
-  //     // }
-  //     // else {
-  //     //   value = SetSuperPropertyFor($inner, selector)
-  //     // }
-  //     // return (value === NO_SUPER) ?
-  //     //   ($inner._unknownProperty ?
-  //     //     $inner[$PULP]._unknownProperty(selector) : undefined) :
-  //     //   (value && value[$IS_INNER] === PROOF ?
-  //     //     value.handler.call($inner[$PULP]) : value)
-  //   }
-  // }
-
   _Shared._Super                = new SuperBarrier()
   _Shared.Impermeable           = Impermeable
   _Shared.InnerBarrier          = InnerBarrier
@@ -409,3 +371,32 @@ Tranya(function (
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
+
+
+// const OwnSuperBarrier = {
+//   __proto__ : SuperBarrier,
+//
+//   get ($inner, selector, target) {
+//     // const supers = $inner[SUPERS]
+//     // const value =
+//     //
+//     // if (selector in supers) {
+//     //   let sharedSupers = supers[SUPERS]
+//     //   if (sharedSupers !== supers) { // instance has its own SUPERS
+//     //     if (!(selector in sharedSupers)) {
+//     //
+//     //     }
+//     //
+//     //   }
+//     //   value = supers[selector]
+//     // }
+//     // else {
+//     //   value = SetSuperPropertyFor($inner, selector)
+//     // }
+//     // return (value === NO_SUPER) ?
+//     //   ($inner._unknownProperty ?
+//     //     $inner[$PULP]._unknownProperty(selector) : undefined) :
+//     //   (value && value[$IS_INNER] === PROOF ?
+//     //     value.handler.call($inner[$PULP]) : value)
+//   }
+// }

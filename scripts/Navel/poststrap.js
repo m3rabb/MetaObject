@@ -1,10 +1,11 @@
 Tranya(function (
-  $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, VISIBLE,
+  $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, IS_IMMUTABLE, VISIBLE,
+  _DURABLES,
   $BaseBlanker, $IntrinsicBlanker, CrudeBeImmutable, Frost, InterMap,
-  SetAsymmetricProperty,
+  SetAsymmetricProperty, NewAssignmentErrorHandler,
   DefaultContext, OwnKeys, RootContext, SetInvisibly, SpawnFrom, TheEmptyArray,
   _$DefaultContext, _$Intrinsic, _$Something, _BasicSetImmutable, _RootContext,
-  _Context, _Definition, _Nothing, Thing, _Thing, _Type,
+  _Context, _Definition, _Nothing, _Thing, _Type,
   Shared, _Shared
 ) {
   "use strict"
@@ -15,7 +16,7 @@ Tranya(function (
   _Context.addDeclaration($OUTER_WRAPPER) // Ensures method wrappers work!!!
 
 
-  const ThingAncestry = CrudeBeImmutable([Thing])
+  const ThingAncestry = CrudeBeImmutable([_Thing[$RIND]])
   const BasicSet      = $IntrinsicBlanker.$root$inner._basicSet
 
   function BootstrapType(_type, name, isRootType, spawnIntoRoot, isHidden) {
@@ -48,6 +49,12 @@ Tranya(function (
 
   SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true , VISIBLE)
   SetAsymmetricProperty(_$Intrinsic, "isInner", true , false, VISIBLE)
+
+
+  _$Something.forAddAssigner(IS_IMMUTABLE,
+    NewAssignmentErrorHandler(IS_IMMUTABLE, "beImmutable"))
+  _$Something.forAddAssigner(_DURABLES,
+    NewAssignmentErrorHandler(_DURABLES, "addDurables"))
 
 
   // Note: If this was called before the previous declarations,

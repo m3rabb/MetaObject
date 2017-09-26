@@ -1,14 +1,13 @@
 Tranya(function (
   $ASSIGNERS, $DISGUISE, $IMMEDIATES, $INNER, $IS_DEFINITION, $OUTER,
-  $OUTER_WRAPPER, $PULP, $RIND,
-  ASSIGNER, DECLARATION, INHERIT, INVISIBLE, IS_IMMUTABLE, REINHERIT, VISIBLE,
+  $OUTER_WRAPPER, $PULP, $RIND, ASSIGNER, DECLARATION, INHERIT, INVISIBLE,
+  REINHERIT, SYMBOL_1ST_CHAR, VISIBLE,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD,
   AsName, AsPropertySymbol, ExtractParamListing, Frost, InterMap, MarkFunc,
   SetInvisibly, SpawnFrom, MarkAndSetFuncImmutable, NewAssignmentErrorHandler,
-  _BasicSetImmutable,
   CompletelyDeleteProperty, InSetProperty,
-  DefineProperty, InvisibleConfig,
+  DefineProperty, InvisibleConfig, ValueAsFact,
   _Shared
 ) {
   "use strict"
@@ -213,8 +212,10 @@ Tranya(function (
 
 
   const Context_atPut = function _atPut(selector, entry) {
-    this[selector] = entry
-    this._knownEntries[selector] = this[selector]
+    const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
+    const isPublic  = (firstChar !== "_")
+    const value     = isPublic ? ValueAsFact(entry) : entry
+    this._knownEntries[selector] = this[$OUTER][selector] = value
   }
 
 

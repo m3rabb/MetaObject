@@ -15,12 +15,13 @@
 
 Tranya(function (
   $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
-  $OUTER, $OWN_DEFINITIONS, $PULP, $RIND,
-  DECLARATION, IS_IMMUTABLE, LAZY_INSTALLER, _DURABLES, VALUE_METHOD,
+  $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, IS_IMMUTABLE,
+  LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   $Intrinsic$root$inner, AsName, CrudeBeImmutable, ExtractDefinitionFrom,
   FindAndSetDurables, MakeDefinitionsInfrastructure, NewUniqueId, OwnSelectors,
-  PropertyAt, SetDefinition, SetInvisibly, SignalError, SpawnFrom, ValueAsFact,
+  PropertyAt, SetDefinition, SetInvisibly, SpawnFrom, ValueAsFact,
   _HasOwn, _$Copy, _$Intrinsic,
+  PrivateAccessFromOutsideError, SignalError,
   InterMap, PropertyToSymbolMap,
   OwnNames, OwnVisibleNames,
   CompletelyDeleteProperty, DefineProperty,
@@ -37,7 +38,7 @@ Tranya(function (
   })
 
   _$Intrinsic.addValueMethod(function isFact() {
-    return this[IS_IMMUTABLE] ? true : (this.id != null)
+    return this[IS_IMMUTABLE] || (this.id != null)
   })
 
 
@@ -402,7 +403,7 @@ Tranya(function (
   _$Intrinsic.addValueMethod(function propertyAt(selector) {
     return (selector[0] !== "_") ? PropertyAt(this[$INNER], selector) : null
     // If restoring the following, also add it back to InSetProperty.
-    // return ((selector.charAt) ? selector[0] : selector.toString()[7] !== "_") ?
+    // return ((selector[0] || selector.toString()[SYMBOL_1ST_CHAR]) !== "_") ?
     //   PropertyAt(this[$INNER], selector) : null
   })
 
@@ -431,17 +432,36 @@ Tranya(function (
 
 
 
-  _$Intrinsic.addValueMethod(function _unknownProperty(selector) {
-    return this._signalError(`Receiver ${this.oid} doesn't have a property '${AsName(selector)}'!!`)
+  _$Intrinsic.addValueMethod(function _unknownProperty(selector, isFromOutside_) {
+    if (isFromOutside_) {
+      const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
+      if (firstChar === "_") {
+        const _privateAccessFromOutside =
+          this[$INNER]._privateAccessFromOutside
+        return (_privateAccessFromOutside) ?
+          _privateAccessFromOutside.call(this, selector) :
+          this._privateAccessFromOutsideError(selector)
+      }
+    }
+    return this._unknownPropertyError(selector)
   })
 
-  //_$Intrinsic.addMethod("_basicUnknownProperty", $Intrinsic$root$inner._unknownProperty)
+
   _$Intrinsic.addAlias("_basicUnknownProperty", "_unknownProperty")
 
 
 
   _$Intrinsic.addValueMethod(function _signalError(message) {
     return SignalError(this, message)
+  })
+
+
+  _$Intrinsic.addValueMethod(function _privateAccessFromOutsideError(selector) {
+    return this._signalError(`Access to private property '${AsName(selector)}' from outside of an object is forbidden!!`)
+  })
+
+  _$Intrinsic.addValueMethod(function _unknownPropertyError(selector) {
+    return this._signalError(`Unknown property '${AsName(selector)}'!!`)
   })
 
 

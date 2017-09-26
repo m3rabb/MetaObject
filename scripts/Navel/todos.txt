@@ -225,15 +225,26 @@ change NewDisguisedInner and porosity to have separate barrier (classes)
 for Contexts and Types, so Contexts can have their own get method.
 
 ==
-const firstChar = (selector.charAt) ? selector[0] : selector.toString()[7]
+const firstChar = (selector.charAt) ? selector[0] : selector.toString()[SYMBOL_1ST_CHAR]
 Add an implementation selector stash
-
-==
-Make better name the 'As' method names in wrapping.js!!!!
 
 
 ==
 Write tests for checking setId on Immutable.
+
+
+==
+Check if we still need AddPermeableNewDefinitionTo
+(At least rename to OverrideNewDefinition)
+Check _newBlank
+Check calls to BePermeable with $IS_IMPENETRABLE
+
+
+Check this:
+if (useNewContext && marked[COUNT]) {
+      MarkDependentTypes    (execContext, marked)
+      InPutCopyForEachMarked(execContext, sourceEntries, marked, visited)
+    }
 
 ==========
 

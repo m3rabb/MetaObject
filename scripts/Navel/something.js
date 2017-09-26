@@ -1,6 +1,7 @@
 Tranya(function (
-  $BARRIER, $OUTER, $RIND, IS_IMMUTABLE, VALUE_METHOD,
-  AsName, SetInvisibly, SignalError, _$Something, _Super
+  $BARRIER, $OUTER, $RIND, IS_IMMUTABLE, SYMBOL_1ST_CHAR, VALUE_METHOD,
+  AsName, SetInvisibly, SignalError, _$Something, _Super,
+  PrivateAccessFromOutsideError, UnknownPropertyError
 ) {
   "use strict"
 
@@ -49,8 +50,14 @@ Tranya(function (
 
 
 
-  _$Something.addMethod(function _unknownProperty(selector) {
-    return SignalError(this, `Receiver ${this.id} doesn't have a property: ${AsName(selector)}!!`)
+  _$Something.addMethod(function _unknownProperty(selector, isFromOutside_) {
+    if (isFromOutside_) {
+      const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
+      if (firstChar === "_") {
+        return PrivateAccessFromOutsideError(this, selector)
+      }
+    }
+    return UnknownPropertyError(this, selector)
   })
 
 

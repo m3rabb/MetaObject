@@ -12,12 +12,11 @@
 
   const _DURABLES    = Symbol("_DURABLES")
   const IS_IMMUTABLE = Symbol("IS_IMMUTABLE")
-  const SAFE_FUNC    = Frost({ id : "SAFE_FUNC"   , [IS_IMMUTABLE] : true })
+  const SAFE_FUNC    = Frost({ id : "SAFE_FUNC", [IS_IMMUTABLE] : true })
   const InterMap     = new WeakMap()
 
   Shared.IS_IMMUTABLE = IS_IMMUTABLE
-  Shared.DURABLES     = _DURABLES
-  _Shared._DURABLES   = _DURABLES
+  Shared._DURABLES    = _DURABLES
 
 
   function MarkFunc(func, marker = SAFE_FUNC) {
@@ -46,7 +45,7 @@
   Shared.ownVisibleNames     = MarkFunc(Object.keys)
 
   _Shared._HasOwn            = _HasOwn  // ._hasOwn
-  _Shared.defineProperty     = DefineProperty
+  _Shared.DefineProperty     = DefineProperty
   _Shared.INSTANCEOF         = Symbol.hasInstance
 
 
@@ -138,7 +137,6 @@
   _Shared.COUNT                  = Symbol("COUNT")
   _Shared.NONE                   = Symbol("NONE")
 
-
   _Shared.ASYMMETRIC_PROPERTY    = Symbol("ASYMMETRIC_PROPERTY")
   // _Shared.CONSTRUCTOR         = Symbol("CONSTRUCTOR")
   _Shared.NO_SUPER               = Symbol("NO_SUPER")
@@ -152,6 +150,10 @@
 
   _Shared.MUTABLE                = Symbol("MUTABLE")
   _Shared.INHERITED              = Symbol("INHERITED")
+
+
+  // Constants
+  _Shared.SYMBOL_1ST_CHAR        = 7
 
 
   const FUNC_PROLOG_MATCHER =

@@ -1,7 +1,7 @@
 Tranya(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
-  DISGUISE_PULP, INVISIBLE, IS_IMMUTABLE,
+  DISGUISE_PULP, INVISIBLE, SYMBOL_1ST_CHAR,
   ASSIGNER_FUNC, BLANKER_FUNC,
   AsCapitalized, AsDecapitalized, AsName, CrudeBeImmutable, DefineProperty,
   Frost, Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId,
@@ -209,7 +209,9 @@ Tranya(function (
     while (next--) {
       symbol = symbols[next]
       // Consider using a stash of forbidden selectors, instead!!!
-      if (symbol.toString()[7] !== "$") { selectors[index++] = symbol }
+      if (symbol.toString()[SYMBOL_1ST_CHAR] !== "$") {
+        selectors[index++] = symbol
+      }
     }
     return selectors
   }

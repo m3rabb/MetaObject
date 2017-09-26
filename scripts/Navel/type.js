@@ -11,11 +11,11 @@ Tranya(function (
   BePermeable, CrudeAsImmutable, CrudeBeImmutable,
   DefaultContext, DeleteSelectorsIn, ExtractDefinitionFrom,
   ExtractParamListing, Frost, InterMap, IsArray, IsSubtypeOfThing,
-  NewAssignmentErrorHandler, NewVacuousConstructor, OwnKeys, OwnSelectors,
+  NewVacuousConstructor, OwnKeys, OwnSelectors,
   PropertyAt, RootContext, RootOf, SetDefinition, SetInvisibly, SpawnFrom,
   TheEmptyArray, TheEmptyObject, Type_apply, _HasOwn, _Type,
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
-  AttemptedChangeOfAncestryOfPermeableTypeError, DuplicateSupertypeError,
+  AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
   SetAsymmetricProperty,
@@ -581,7 +581,7 @@ Tranya(function (
         // This is a security measure. Keep someone from merge a protect type
         // into a programmer controller type in order to access aspects of the
         // merged type.
-        return AttemptedChangeOfAncestryOfPermeableTypeError(this) || null
+        return AncestryOfPermeableTypeError(this) || null
       }
 
       const isRootType = this.isRootType

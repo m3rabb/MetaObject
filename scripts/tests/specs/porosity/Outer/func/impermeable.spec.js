@@ -62,7 +62,7 @@ Tranya.ImplementationTesting(function (Type_) {
     describe("When accessing a nonexistent", function() {
       describe("public property", function () {
         it("Throws an unknown property error", function () {
-          expect(() => this.Bat.xyz ).toThrowError(/doesn't have a property/)
+          expect(() => this.Bat.xyz ).toThrowError(/Unknown property/)
         })
       })
 
@@ -74,7 +74,7 @@ Tranya.ImplementationTesting(function (Type_) {
 
       describe("symbol property", function () {
         it("Throws an unknown property error", function () {
-          expect(() => this.Bat[QRS] ).toThrowError(/doesn't have a property/)
+          expect(() => this.Bat[QRS] ).toThrowError(/Unknown property/)
         })
       })
     })

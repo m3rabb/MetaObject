@@ -1,12 +1,11 @@
 Tranya(function (
   $ASSIGNERS, $BARRIER, $IMMEDIATES, $IS_CONTEXT, $IS_DEFINITION,
   $IS_IMPENETRABLE, $IS_INNER, $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
-  IMPLEMENTATION, INVISIBLE, IS_IMMUTABLE, PROOF,
-  VISIBLE, _DURABLES,
+  IMPLEMENTATION, INVISIBLE, IS_IMMUTABLE, PROOF, VISIBLE, _DURABLES,
   SELF_METHOD, STANDARD_METHOD, VALUE_METHOD,
-  AlwaysSelf, DefineProperty, InterMap, InvisibleConfig, MarkFunc, NewBlanker,
-  NewInner, NewVacuousConstructor, RootOf, SetInvisibly, TheEmptyArray,
-  SpawnFrom,
+  AlwaysSelf, BecomePermeableError, DefineProperty, InterMap, InvisibleConfig,
+  MarkFunc, NewBlanker, NewInner, NewVacuousConstructor, RootOf, SetInvisibly,
+  TheEmptyArray, SpawnFrom,
   Context_apply, Type_apply,
 
   Context_atPut, Context_init, Definition_init,
@@ -130,7 +129,7 @@ Tranya(function (
   // Could have defined the follow properties later, after addDeclaration has
   // been defined, however it is fast execution within each objects' barrier#get
   // if implemented this way.  These properties are read very frequently.
-  _SetDefinitionAt.call(_$Something, "id"             , null       , INVISIBLE)
+  _SetDefinitionAt.call(_$Something, "id"             , null       , VISIBLE  )
   _SetDefinitionAt.call(_$Something, _DURABLES        , null       , INVISIBLE)
   _SetDefinitionAt.call(_$Something, "context"        , RootContext, VISIBLE  )
 
@@ -207,9 +206,7 @@ Tranya(function (
   function BePermeable(target, beImmutable) {
     const _$target = InterMap.get(target)
     if (!_$target) { return target }
-    if (_$target[$IS_IMPENETRABLE]) {
-      return target._signalError("Can't make permeable copies of locked objects!!")
-    }
+    if (_$target[$IS_IMPENETRABLE]) { return BecomePermeableError(target) }
 
     const _target = _$target[$PULP]
     const $target = _$target[$OUTER]
@@ -243,7 +240,6 @@ Tranya(function (
 
   _Shared._$DefaultContext      = _$DefaultContext
   _Shared._RootContext          =  _RootContext
-  _Shared.Thing                 =   Thing
 
   _Shared.AddPermeableNewDefinitionTo = AddPermeableNewDefinitionTo
   _Shared.BePermeable                 = BePermeable

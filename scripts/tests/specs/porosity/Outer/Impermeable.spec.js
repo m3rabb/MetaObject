@@ -71,7 +71,7 @@ Tranya.ImplementationTesting(function (Type) {
     describe("When accessing a nonexistent", function() {
       describe("public property", function () {
         it("Throws an unknown property error", function () {
-          expect(() => this.iCat.lifestyle ).toThrowError(/doesn't have a property/)
+          expect(() => this.iCat.lifestyle ).toThrowError(/Unknown property/)
         })
       })
 
@@ -83,7 +83,7 @@ Tranya.ImplementationTesting(function (Type) {
 
       describe("symbol property", function () {
         it("Throws an unknown property error", function () {
-          expect(() => this.iCat[TASTE] ).toThrowError(/doesn't have a property/)
+          expect(() => this.iCat[TASTE] ).toThrowError(/Unknown property/)
         })
       })
     })

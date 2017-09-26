@@ -55,20 +55,20 @@ describe("Type permeable outer", function() {
   describe("When accessing a nonexistent", function() {
     describe("public property", function () {
       it("Throws an unknown property error", function () {
-        expect(() => this.Bat_.xyz ).toThrowError(/doesn't have a property/)
+        expect(() => this.Bat_.xyz ).toThrowError(/Unknown property/)
       })
     })
 
     describe("private property", function () {
       it("Throws an unknown property error", function () {
-        expect(() => this.Bat_._xyz).toThrowError(/doesn't have a property/)
+        expect(() => this.Bat_._xyz).toThrowError(/Unknown property/)
       })
     })
 
     describe("symbol property", function () {
       it("Throws an unknown property error", function () {
         var XYZ = Symbol("XYZ")
-        expect(() => this.Bat_[XYZ] ).toThrowError(/doesn't have a property/)
+        expect(() => this.Bat_[XYZ] ).toThrowError(/Unknown property/)
       })
     })
   })
@@ -146,7 +146,7 @@ describe("Type permeable outer", function() {
   describe("When accessing the parent object", function () {
     describe("via the __proto__", function () {
       it("Throws an unknown property error", function () {
-        expect(() => this.Bat_.__proto__).toThrowError(/doesn't have a property/)
+        expect(() => this.Bat_.__proto__).toThrowError(/Unknown property/)
       })
     })
 

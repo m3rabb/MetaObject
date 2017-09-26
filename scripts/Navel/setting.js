@@ -1,10 +1,11 @@
 Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND,
-  DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
+  DISGUISE_PULP, IS_IMMUTABLE, PROOF, SYMBOL_1ST_CHAR, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   SAFE_FUNC, TAMED_FUNC,
   InterMap, MarkAndSetFuncImmutable, ObjectCopy, _$Copy,
-  AssignmentOfUndefinedError, DetectedInnerError,
+  AssignmentOfUndefinedError, AssignmentToPrivateSymbolError,
+  DetectedInnerError,
   _Shared
 ) {
   "use strict"
@@ -35,8 +36,10 @@ Tranya(function (
 
 
   function InSetProperty(_$target, selector, value) {
-    if (selector[0] !== "_") {    // Public selector
-      var _$value, writeOuter
+    var _$value, writeOuter
+    const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
+
+    if (firstChar !== "_") {           // Public selector
       const $target = _$target[$OUTER]
 
       writeOuter = !_$target[IS_IMMUTABLE]
@@ -47,17 +50,17 @@ Tranya(function (
           return AssignmentOfUndefinedError(_$target, selector)
 
         case "object" :
-               if (value === null)                 {        /* NOP */        }
-          else if (value[$IS_INNER] === PROOF)     {
-            if (value === _$target[$PULP])         { value = _$target[$RIND] }
+               if (value === null)                {        /* NOP */        }
+          else if (value[$IS_INNER] === PROOF)    {
+            if (value === _$target[$PULP])        { value = _$target[$RIND] }
            // Safety check: detect failure to use 'this.$' elsewhere.
             else { return DetectedInnerError(_$target, value) }
           }
-          else if (value[IS_IMMUTABLE])            {        /* NOP */        }
-          else if (value.id != null)               {        /* NOP */        }
-          else if (value === _$target[$RIND])      {        /* NOP */        }
+          else if (value[IS_IMMUTABLE])           {        /* NOP */        }
+          else if (value.id != null)              {        /* NOP */        }
+          else if (value === _$target[$RIND])     {        /* NOP */        }
           else {   value = (_$value = InterMap.get(value)) ?
-                     _$Copy(_$value, true)[$RIND] : ObjectCopy(value, true)  }
+                     _$Copy(_$value, true)[$RIND] : ObjectCopy(value, true) }
           break
 
         case "function" : // LOOK: will catch Type things!!!
@@ -68,10 +71,9 @@ Tranya(function (
               return DetectedInnerError(_$target, value)
 
             case INNER_FUNC    :
-              if (writeOuter) { $target[selector] = value[$OUTER_WRAPPER] }
               // Revisit this if $OUTER_WRAPPER can hold NONE instead
-              writeOuter = false
-              break
+              if (writeOuter) { $target[selector] = value[$OUTER_WRAPPER] }
+              return (_$target[selector] = value)
 
             case undefined     : // New unknown untrusted function to be wrapped.
             case HANDLER_FUNC  :

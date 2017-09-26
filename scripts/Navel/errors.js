@@ -62,11 +62,11 @@ Tranya(function (
     SignalError(target[$RIND], "Direct assignment is not allowed from the outside of an object, use a method instead!!")
   }
 
-  _Shared.DirectAssignmentFromOutsideError = function (target) {
+  _Shared.DeleteFromOutsideError = function (target) {
     SignalError(target[$RIND], "Deleting is not allowed from the outside of an object, use a method instead!!")
   }
 
-  _Shared.AttemptSetOnSuperError = function (target) {
+  _Shared.AssignmentViaSuperError = function (target) {
     SignalError(target[$RIND], "Setting properties via _super in forbidden!!")
   }
 
@@ -74,12 +74,16 @@ Tranya(function (
     SignalError(target[$RIND], `Access to private property '${AsName(selector)}' from outside of an object is forbidden!!`)
   }
 
+  _Shared.UnknownPropertyError = function (target, selector) {
+    SignalError(target[$RIND], `Receiver ${this.id} doesn't have a property: ${AsName(selector)}!!`)
+  }
+
   _Shared.DisallowedDeleteError = function (target, selector) {
     SignalError(target[$RIND], `Delete of property '${AsName(selector)}' is not allowed!!`)
   }
 
   _Shared.DisallowedAssignmentError = function (target, selector, setter) {
-    SignalError(target[$RIND], `Assignment of property '${AsName(selector)}' is not allowed, use '${setter}' method instead!!`)
+    SignalError(target[$RIND], `Assignment of property '${AsName(selector)}' is not allowed, try '${setter}' method instead!!`)
   }
 
   _Shared.UnnamedFuncError = function (target, func) {
@@ -100,7 +104,7 @@ Tranya(function (
     SignalError(target[$RIND], "Cannot change supertype ancestry from one including Thing, or vis a versa!!")
   }
 
-  _Shared.AttemptedChangeOfAncestryOfPermeableTypeError = function (type) {
+  _Shared.AncestryOfPermeableTypeError = function (type) {
     SignalError(type[$RIND], `Cannot change supertypes of permeable Type '${type.name}', change impermeable version instead!!`)
   }
 
@@ -112,12 +116,12 @@ Tranya(function (
     SignalError(target[$RIND], "Cannot define setter and assigner functions for the same property!!")
   }
 
-  _Shared.AttemptInvertedFuncCopyError = function (func) {
+  _Shared.InvertedFuncCopyError = function (func) {
     SignalError(func, "Cannot make a copy of a function with different mutability! Try AsRigid, AsFact, BeImmutable instead!!")
   }
 
-  _Shared.AttemptToMakeLockedObjectPermeableError = function (target) {
-    SignalError(target[$RIND], "Cannot make a locked object ${target} permeable!!")
+  _Shared.BecomePermeableError = function (target) {
+    SignalError(target[$RIND], "Cannot make an impenetrable object ${target} permeable!!")
   }
 
   _Shared.ChangeToImmutableThisError = function (target) {

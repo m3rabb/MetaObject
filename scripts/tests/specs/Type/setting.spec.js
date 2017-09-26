@@ -51,7 +51,7 @@ Tranya.ImplementationTesting(function (
 
         it("Throws an error when the property is read", function () {
           var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /doesn't have a property 'mood'/ )
+          expect( execution ).toThrowError( /Unknown property 'mood'/ )
         })
       })
 
@@ -153,7 +153,7 @@ Tranya.ImplementationTesting(function (
 
         it("Throws an error when the property is read", function () {
           var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /doesn't have a property 'mood'/ )
+          expect( execution ).toThrowError( /Unknown property 'mood'/ )
         })
       })
 
@@ -444,7 +444,7 @@ Tranya.ImplementationTesting(function (
 
         it("Throws an error when the property is read", function () {
           var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /doesn't have a property 'mood'/ )
+          expect( execution ).toThrowError( /Unknown property 'mood'/ )
         })
       })
 
@@ -557,7 +557,7 @@ Tranya.ImplementationTesting(function (
 
         it("Throws an error when the property is read", function () {
           var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /doesn't have a property 'mood'/ )
+          expect( execution ).toThrowError( /Unknown property 'mood'/ )
         })
       })
 
@@ -840,7 +840,7 @@ Tranya.ImplementationTesting(function (
 
         it("Throws an error when the property is read", function () {
           var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /doesn't have a property 'mood'/ )
+          expect( execution ).toThrowError( /Unknown property 'mood'/ )
         })
       })
 

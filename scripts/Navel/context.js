@@ -12,8 +12,13 @@ Tranya(function (
 
 
   _Context.addSelfMethod(function atPut(selector, entry) {
-    const self = this[$RIND]
-    if (self === DefaultContext || this[$INNER][selector] === entry) { return }
+    if (this[$RIND] === DefaultContext)         { return }
+    if (this._knownEntries[selector] === entry) { return }
+
+    if (selector in this[$INNER]) {
+      return this._entryOvershadowsPropertyError(selector)
+    }
+
     this._atPut(selector, entry)
 
     const _$entry = InterMap.get(entry)
@@ -28,6 +33,10 @@ Tranya(function (
     this.atPut(object.name || object.tag, object)
   })
 
+  _Context.addSelfMethod(function _entryOvershadowsPropertyError(selector) {
+    return this._signalError(`Entry cannot overshadow existing property '${selector}'!!`)
+  })
+
 
 
   // _Context.addMethod(function _privateAccessFromOutside(selector) {
@@ -36,10 +45,10 @@ Tranya(function (
   //     PrivateAccessFromOutsideError(this, selector)
   // })
 
-  _Context.addValueMethod(function _unknownProperty(selector) {
+  _Context.addValueMethod(function _unknownProperty(selector, isFromOutside_) {
     const entry = this._knownEntries[selector]
     return (entry !== undefined) ?
-      entry : this._super._unknownProperty(selector)
+      entry : this._super._unknownProperty(selector, isFromOutside_)
   })
 
 
@@ -213,7 +222,7 @@ Tranya(function (
 
     if (value !== undefined) {
       name = paramName
-      paramSpec.asInherited = (paramName[0] === "_")
+      // paramSpec.asInherited = (paramName[0] === "_")
     }
     else {
       name  = AsDecapitalized(paramName)

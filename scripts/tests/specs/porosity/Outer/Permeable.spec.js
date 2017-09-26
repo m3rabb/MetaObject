@@ -68,19 +68,19 @@ describe("Permeable outer", function() {
   describe("When accessing a nonexistent", function() {
     describe("public property", function () {
       it("Throws an unknown property error", function () {
-        expect(() => this.iCat.lifestyle ).toThrowError(/doesn't have a property/)
+        expect(() => this.iCat.lifestyle ).toThrowError(/Unknown property/)
       })
     })
 
     describe("private property", function () {
       it("Throws an unknown property error", function () {
-        expect(() => this.iCat._butter).toThrowError(/doesn't have a property/)
+        expect(() => this.iCat._butter).toThrowError(/Unknown property/)
       })
     })
 
     describe("symbol property", function () {
       it("Throws an unknown property error", function () {
-        expect(() => this.iCat[TASTE] ).toThrowError(/doesn't have a property/)
+        expect(() => this.iCat[TASTE] ).toThrowError(/Unknown property/)
       })
     })
   })
@@ -156,7 +156,7 @@ describe("Permeable outer", function() {
   describe("When accessing the parent object", function () {
     describe("via the __proto__", function () {
       it("Throws an unknown property error", function () {
-        expect(() => this.iCat.__proto__).toThrowError(/doesn't have a property/)
+        expect(() => this.iCat.__proto__).toThrowError(/Unknown property/)
       })
     })
 
