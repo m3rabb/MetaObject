@@ -6,7 +6,7 @@ Tranya(function (
   AlwaysSelf, BecomePermeableError, DefineProperty, InterMap, InvisibleConfig,
   MarkFunc, NewBlanker, NewInner, NewVacuousConstructor, RootOf, SetInvisibly,
   TheEmptyArray, SpawnFrom,
-  Context_apply, Type_apply,
+  AsContextDisguise, AsTypeDisguise,
 
   Context_atPut, Context_init, Definition_init,
   _AddMethod, _BasicNew, _BasicSetImmutable, SetDefinition, _SetDefinitionAt,
@@ -42,8 +42,8 @@ Tranya(function (
   const $SomethingBlanker   = NewBlanker($BaseBlanker)
   const $NothingBlanker     = NewBlanker($SomethingBlanker)
   const   $IntrinsicBlanker = NewBlanker($SomethingBlanker)
-  const     TypeBlanker     = NewBlanker($IntrinsicBlanker, Type_apply   )
-  const     ContextBlanker  = NewBlanker($IntrinsicBlanker, Context_apply)
+  const     TypeBlanker     = NewBlanker($IntrinsicBlanker, AsTypeDisguise   )
+  const     ContextBlanker  = NewBlanker($IntrinsicBlanker, AsContextDisguise)
 
   const ThingAncestry       = []
 
@@ -138,20 +138,20 @@ Tranya(function (
   _SetDefinitionAt.call(_Definition, $IS_DEFINITION   , true       , VISIBLE  )
 
 
-  _AddMethod.call(_Type, _AddMethod, SELF_METHOD)
+  _AddMethod.call(_Type, _AddMethod)
 
   // eslint-disable-next-line
-  _Type._addMethod(function addMethod(func_selector, func_) {
-    this._addMethod(...arguments, STANDARD_METHOD)
+  _Type._addMethod(function addSelfMethod(func_selector, func_) {
+    return this._addMethod(...arguments, SELF_METHOD)
   }, SELF_METHOD)
 
   // eslint-disable-next-line
-  _Type.addMethod(function addSelfMethod(func_selector, func_) {
-    this._addMethod(...arguments, SELF_METHOD)
+  _Type.addSelfMethod(function addMethod(func_selector, func_) {
+    this._addMethod(...arguments, STANDARD_METHOD)
   })
 
   // eslint-disable-next-line
-  _Type.addMethod(function addValueMethod(func_selector, func_) {
+  _Type.addSelfMethod(function addValueMethod(func_selector, func_) {
     this._addMethod(...arguments, VALUE_METHOD)
   })
 

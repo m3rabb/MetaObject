@@ -7,13 +7,13 @@ Tranya(function (
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
-  AsCapitalized, AsMembershipSelector, AsName, ValueAsNext, AsPropertySymbol,
+  AsCapitalized, AsMembershipSelector, AsName, AsTypeDisguise, AsPropertySymbol,
   BePermeable, CrudeAsImmutable, CrudeBeImmutable,
   DefaultContext, DeleteSelectorsIn, ExtractDefinitionFrom,
   ExtractParamListing, Frost, InterMap, IsArray, IsSubtypeOfThing,
-  NewVacuousConstructor, OwnKeys, OwnSelectors,
-  PropertyAt, RootContext, RootOf, SetDefinition, SetInvisibly, SpawnFrom,
-  TheEmptyArray, TheEmptyObject, Type_apply, _HasOwn, _Type,
+  NewVacuousConstructor, OwnKeys, OwnSelectors, PropertyAt, RootContext,
+  RootOf, SetDefinition, SetInvisibly, SpawnFrom, ValueAsNext,
+  TheEmptyArray, TheEmptyObject, _HasOwn, _Type,
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
@@ -543,10 +543,10 @@ Tranya(function (
   })
 
 
-  _Type.addValueMethod(function _initCoreProperties(isRootType_, applyHandler_) {
+  _Type.addValueMethod(function _initCoreProperties(isRootType_, disguiser_) {
     const parentBlanker = isRootType_ ? $SomethingBlanker : $IntrinsicBlanker
 
-    this._blanker          = NewBlanker(parentBlanker, applyHandler_)
+    this._blanker          = NewBlanker(parentBlanker, disguiser_)
     this._iidCount         = 0
     this._definitions      = SpawnFrom(null)
     this._subordinateTypes = new Set()
@@ -646,15 +646,14 @@ Tranya(function (
 
 
   _Type.addValueMethod(function _initFrom_(_type, asImmutable, visited, context) {
-    const inheritSpec  = {asImmutable, visited, context}
-    const isRootType   = _type.isRootType
-    const applyHandler = (_type._blanker.length) ? _type[$BARRIER].apply : null
-
-    const supertypes = _type._supertypes.map(type => visited.get(type) || type)
-    const ancestry   = _type._ancestry.map(  type => visited.get(type) || type)
+    const inheritSpec = {asImmutable, visited, context}
+    const isRootType  = _type.isRootType
+    const disguiser   = (_type._blanker.length) ? AsTypeDisguise : null
+    const supertypes  = _type._supertypes.map(type => visited.get(type) || type)
+    const ancestry    = _type._ancestry.map(  type => visited.get(type) || type)
 
     // The order of the following is intentional.
-    this._initCoreProperties(isRootType, applyHandler)
+    this._initCoreProperties(isRootType, disguiser)
     this._setSupertypesAndAncestry(supertypes, ancestry, inheritSpec)
     this.setName(_type.name)
     // this.addSharedProperty("type", this[$RIND])

@@ -6,7 +6,7 @@ Tranya(function (
   AsCapitalized, AsDecapitalized, AsName, CrudeBeImmutable, DefineProperty,
   Frost, Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId,
   OwnSymbols, RootOf, SetInvisibly, SpawnFrom,
-  DisguisedInnerBarrier, DisguisedOuterBarrier, InnerBarrier,
+  DisguisedBarrier, InnerBarrier,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
   ImproperDisguiseNameError, SignalError,
   InterMap, PropertyToSymbolMap,
@@ -83,34 +83,34 @@ Tranya(function (
 
 
 
-  function NewBlanker(rootBlanker, applyHandler_) {
+  function NewBlanker(rootBlanker, disguiser_) {
     const root$root$inner = rootBlanker.$root$inner
     const root$root$outer = rootBlanker.$root$outer
-    const blankerMaker    = applyHandler_ ?
+    const blankerMaker    = disguiser_ ?
       NewDisguisedInner : rootBlanker.innerMaker
     const _$root          = SpawnFrom(root$root$inner)
     const  $root          = SpawnFrom(root$root$outer)
     // Note: The blanker function must be unnamed in order for the debugger to
     // display the type of instances using type name determined by the name of
     // its constructor function property.
-    const OuterMaker      = NewNamelessVacuousFunc()
-    const Blanker         = blankerMaker(OuterMaker, applyHandler_)
+    const outerMaker      = NewNamelessVacuousFunc()
+    const blanker         = blankerMaker(outerMaker, disguiser_)
                            // Should this simply inherit from null!!!???
 
-    OuterMaker.prototype = $root
-    Blanker.$root$outer  = $root
-    Blanker.prototype    = _$root
-    Blanker.$root$inner  = _$root
-    Blanker.innerMaker   = blankerMaker
+    outerMaker.prototype =  $root
+    blanker.$root$outer  =  $root
+    blanker.prototype    = _$root
+    blanker.$root$inner  = _$root
+    blanker.innerMaker   = blankerMaker
 
     _$root[$ROOT]     = _$root
-    _$root[$OUTER]    = $root
-    _$root[$BLANKER]  = Blanker
+    _$root[$OUTER]    =  $root
+    _$root[$BLANKER]  = blanker
 
     MakeDefinitionsInfrastructure(_$root, root$root$inner)
 
-    InterMap.set(Blanker, BLANKER_FUNC)
-    return Frost(Blanker)
+    InterMap.set(blanker, BLANKER_FUNC)
+    return Frost(blanker)
   }
 
 
@@ -138,17 +138,17 @@ Tranya(function (
 
 
 
-  function NewDisguisedInner(CompanionOuterMaker, applyHandler) {
+  function NewDisguisedInner(CompanionOuterMaker, Disguiser) {
     // Note: The blanker function must be unnamed in order for the debugger to
     // display the type of instances using type name determined by the name of
     // its constructor function property.
     return function (name_obj_spec_args) {
-      var $inner, $outer, name, uid
-      const arg  = IsArray(name_obj_spec_args) ?
+      var name, uid
+      const $inner = this
+      const $outer = new CompanionOuterMaker()
+      const arg    = IsArray(name_obj_spec_args) ?
         name_obj_spec_args[0] : name_obj_spec_args
 
-      $inner = this
-      $outer = new CompanionOuterMaker()
       name = arg && arg.name || arg
 
       if (!name) {
@@ -156,17 +156,14 @@ Tranya(function (
         name = `${AsDecapitalized($inner.type.name)}__${uid}`
       }
 
-      const func       = NewVacuousConstructor(name)
-      const mutability = new DisguisedInnerBarrier($inner, applyHandler)
-      const $pulp      = new Proxy(func, mutability)
-      const porosity   = new DisguisedOuterBarrier($inner, $outer, applyHandler)
-      const $rind      = new Proxy(func, porosity)
-
-      // mutability._self = $pulp
-      // porosity._self   = $pulp
+      const innerBarrier = new InnerBarrier($inner)
+      const outerBarrier = new DisguisedBarrier($outer)
+      const func         = Disguiser(name, innerBarrier)
+      const $pulp        = new Proxy(func, innerBarrier)
+      const $rind        = new Proxy(func, outerBarrier)
 
       $inner[$DISGUISE]  = func
-      $inner[$BARRIER]   = mutability // barrier
+      $inner[$BARRIER]   = innerBarrier
       $inner[$INNER]     = $inner
       $inner[$OUTER]     = $outer
       $inner[$PULP]      = $pulp
@@ -175,25 +172,32 @@ Tranya(function (
 
       if (uid) { SetInvisibly($inner, "uid", uid, "SET BOTH INNER & OUTER") }
 
+      Frost(func.prototype)
+      DefineProperty(func, "name", InvisibleConfig)
+
       InterMap.set($pulp, DISGUISE_PULP)
       InterMap.set($rind, $inner)
-      // this[$PULP]  = new Proxy(NewAsFact, mutability)
     }
   }
 
 
 
-  function Context_apply(disguiseFunc, receiver, args) {
-    return this._$target[$PULP]._exec(args[0], false).beImmutable
+  function AsContextDisguise(contextName, Barrier) {
+    return ({
+      [contextName] : (...args) => Barrier._$target[$PULP]._exec(args[0], false)
+    })[contextName]
   }
 
+  function AsTypeDisguise(typeName, Barrier) {
+    return ({
+      [typeName] : function (...args) {
+        // return this._$target[$PULP].newImmutable(...args)
 
-  function Type_apply(disguiseFunc, receiver, args) {
-    // return this._$target[$PULP].newImmutable(...args)
-
-    const   instance = this._$target[$PULP].new(...args)
-    const _$instance = InterMap.get(instance)
-    return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]
+        const   instance = Barrier._$target[$PULP].new(...args)
+        const _$instance = InterMap.get(instance)
+        return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]
+      }
+    })[typeName]
   }
 
 
@@ -334,8 +338,8 @@ Tranya(function (
   _Shared.MakeDefinitionsInfrastructure   = MakeDefinitionsInfrastructure
   _Shared.NewBlanker                      = NewBlanker
   _Shared.NewInner                        = NewInner
-  _Shared.Context_apply                   = Context_apply
-  _Shared.Type_apply                      = Type_apply
+  _Shared.AsContextDisguise               = AsContextDisguise
+  _Shared.AsTypeDisguise                  = AsTypeDisguise
   _Shared.DeleteSelectorsIn               = DeleteSelectorsIn
   _Shared.CompletelyDeleteProperty        = CompletelyDeleteProperty
   _Shared.SetAsymmetricProperty           = SetAsymmetricProperty

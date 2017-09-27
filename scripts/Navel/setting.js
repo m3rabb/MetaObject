@@ -92,9 +92,16 @@ Tranya(function (
       }
       if (writeOuter) { $target[selector] = value }
     }
-    else if (value && value[$IS_INNER] === PROOF && value !== _$target[$PULP]) {
-      // Safety check: detect failure to use 'this.$' elsewhere.
-      return DetectedInnerError(_$target, value)
+    else {
+      if (value == null) {
+        if (value === undefined) {
+          return AssignmentOfUndefinedError(_$target, selector)
+        }
+      }
+      else if (value[$IS_INNER] === PROOF && value !== _$target[$PULP]) {
+        // Safety check: detect failure to use 'this.$' elsewhere.
+        return DetectedInnerError(_$target, value)
+      }
     }
 
     return (_$target[selector] = value)

@@ -40,23 +40,9 @@ Tranya(function (
     return DirectAssignmentFromOutsideError(self) || false
   }
 
-  // eslint-disable-next-line
   OuterBarrier_prototype.deleteProperty = function deleteProperty($self, selector) {
-    return DeleteFromOutsideError(self) || false
+    return DeleteFromOutsideError($self, selector) || false
   }
-
-
-  // getOwnPropertyDescriptor ($self, selector) {
-  //   switch (selector[0]) {
-  //     case "_"       : return $self._externalPrivateRead(selector) || undefined
-  //     // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
-  //     case undefined : return undefined
-  //   }
-  //   return PropertyDescriptor($self, selector)
-  // },
-
-  // ownKeys ($self) { },
-
 
   OuterBarrier_prototype.get = function get($self, selector, self) {
     const value = $self[selector]
@@ -71,7 +57,6 @@ Tranya(function (
     return _$self._unknownProperty.call(_$self[$PULP], selector, true)
   }
 
-
   OuterBarrier_prototype.has = function has($self, selector) {
     switch (selector[0]) {
       case "_"       :
@@ -82,13 +67,43 @@ Tranya(function (
     }
   }
 
+  // getOwnPropertyDescriptor ($self, selector) {
+  //   switch (selector[0]) {
+  //     case "_"       : return $self._externalPrivateRead(selector) || undefined
+  //     // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
+  //     case undefined : return undefined
+  //   }
+  //   return PropertyDescriptor($self, selector)
+  // },
 
-  OuterBarrier_prototype.basicGet    = OuterBarrier_prototype.get
-  OuterBarrier_prototype.basicHas    = OuterBarrier_prototype.has
+  // ownKeys ($self) { },
+
+
+  function DisguisedBarrier($self) {
+    this.$self = $self
+  }
+
+  const DisguisedBarrier_prototype = SpawnFrom(OuterBarrier_prototype)
+  DisguisedBarrier.prototype       = DisguisedBarrier_prototype
+
+  // Below, executing via OuterBarrier_prototype only works
+  // because it doesn't access 'this'.
+  DisguisedBarrier_prototype.get = function get(func, selector, self) {
+    return OuterBarrier_prototype.get(this.$self, selector, self)
+  }
+
+  DisguisedBarrier_prototype.has = function has(func, selector) {
+    return OuterBarrier_prototype.has(this.$self, selector)
+  }
+
+  DisguisedBarrier_prototype.deleteProperty = function deleteProperty(func, selector) {
+    return OuterBarrier_prototype.deleteProperty(this.$self, selector)
+  }
 
 
 
   function InnerBarrier(_$self) {
+    this._$self   = _$self
     this._$target = _$self
   }
 
@@ -109,7 +124,6 @@ Tranya(function (
     return _$target._unknownProperty.call(_$target[$PULP], selector, false)
   }
 
-
   InnerBarrier_prototype.has = function has(_$self, selector) {
     return (selector in this._$target)
   }
@@ -117,6 +131,7 @@ Tranya(function (
 
   InnerBarrier_prototype.set = function set(_$self, selector, value, _self) {
     var _$target, assigner
+    _$self   = this._$self
     _$target = this._$target
 
     if ((assigner = _$target[$ASSIGNERS][selector])) {
@@ -131,25 +146,19 @@ Tranya(function (
     const isImmutable = _$target[IS_IMMUTABLE]
     const existing    = _$target[selector]
 
-    if (existing === _$target[$ROOT][selector]) {
-      // Existing value has either never been set, or the current value has been
-      // set to the same value as its root's value. The 2nd case is less likely.
-
-      if (value === existing) {
-        if (value === undefined) {
-          return AssignmentOfUndefinedError(_$self, selector) || false
+    if (value === existing) {
+      if (value === _$target[$ROOT][selector]) {
+        if (_HasOwn.call(_$target, selector)) { return true }
+        if (isImmutable) {
+          if (_$target.type[IS_IMMUTABLE]) {    return true }
         }
-        if (_HasOwn.call(_$target, selector))           { return true }
-        if (isImmutable && _$target.type[IS_IMMUTABLE]) { return true }
-        // Else, target is mutable, and new value matches inherited shared value
+        else { delete _$target[_DURABLES] }            //  because new property
       }
-      else if (existing === undefined  && !isImmutable) {
-        delete _$target[_DURABLES] // Invalidate durables because new property
-      }
+      else {                                    return true }
     }
-    // Existing value is definitely one that's been set before.
-    // If new value equals existing, then easy out.
-    else if (value === existing) { return true }
+    else if (existing === undefined) {
+      if (!isImmutable) { delete _$target[_DURABLES] } //  because new property
+    }
 
     // Need to double check this as the execution of the assigner might trigger
     // the barrier and cause the object to already be copied as writable!!!
@@ -171,6 +180,7 @@ Tranya(function (
 
   InnerBarrier_prototype.deleteProperty = function deleteProperty(_$self, selector) {
     var _$target, assigner, _$copy, value, value$root
+    _$self   = this._$self
     _$target = this._$target
     assigner = _$target[$ASSIGNERS][selector]
 
@@ -210,57 +220,6 @@ Tranya(function (
 
     return true
   }
-
-  InnerBarrier_prototype.basicSet    = InnerBarrier_prototype.set
-  InnerBarrier_prototype.basicDelete = InnerBarrier_prototype.deleteProperty
-
-
-
-
-
-
-  function DisguisedOuterBarrier(_$self, $self, applyHandler) {
-    this._$target = _$self
-    this.$self    =  $self
-    this.apply    = applyHandler
-  }
-
-  const DisguisedOuterBarrier_prototype = SpawnFrom(OuterBarrier_prototype)
-  DisguisedOuterBarrier.prototype = DisguisedOuterBarrier_prototype
-
-
-  DisguisedOuterBarrier_prototype.get = function get(func, selector, self) {
-    return this.basicGet(this.$self, selector, self)
-  }
-
-  DisguisedOuterBarrier_prototype.has = function has(func, selector) {
-    return this.basicHas(this.$self, selector)
-  }
-
-
-
-
-  function DisguisedInnerBarrier(_$self, applyHandler) {
-    this._$self   = _$self
-    this._$target = _$self
-    this.apply    = applyHandler
-    // For the outer the target always stays set to self.
-    // It's only needs for Type_apply.
-  }
-
-  const DisguisedInnerBarrier_prototype = SpawnFrom(InnerBarrier_prototype)
-  DisguisedInnerBarrier.prototype = DisguisedInnerBarrier_prototype
-
-
-  DisguisedInnerBarrier_prototype.set = function set(func, selector, value, _self) {
-    return this.basicSet(this._$self, selector, value, _self)
-  }
-
-  DisguisedInnerBarrier_prototype.deleteProperty = function deleteProperty(func, selector) {
-    return this.basicDelete(this._$self, selector)
-  }
-
-
 
 
 
@@ -333,37 +292,36 @@ Tranya(function (
   }
 
 
-  // NOTE: Not yet sure if the following is necessary.
-  // Thusly, it's not yet connecting to permeable this.
+  // // Note: Not yet sure if the following is necessary.
+  // // Thusly, it's not yet connecting to permeable this.
+  //
+  // function PermeableBarrier() {}
+  //
+  // const PermeableBarrier_prototype = SpawnFrom(DefaultBarrier)
+  // const Permeable = new PermeableBarrier()
+  // PermeableBarrier.prototype = PermeableBarrier_prototype
+  //
+  // PermeableBarrier_prototype.get = InnerBarrier_prototype.get
+  //
+  // PermeableBarrier_prototype.has = InnerBarrier_prototype.has
+  //
+  // PermeableBarrier_prototype.set = function set(_$self, selector, value, _target) {
+  //   return _$self[IS_IMMUTABLE] ? false :
+  //     InnerBarrier_prototype.set(_$self, selector, value, _target)
+  // }
+  //
+  // PermeableBarrier_prototype.deleteProperty = function deleteProperty(_$self, selector) {
+  //   return _$self[IS_IMMUTABLE] ? false :
+  //     InnerBarrier_prototype.deleteProperty(_$self, selector)
+  // }
 
-  function PermeableBarrier() {}
 
-  const PermeableBarrier_prototype = SpawnFrom(DefaultBarrier)
-  const Permeable = new PermeableBarrier()
-  PermeableBarrier.prototype = PermeableBarrier_prototype
-
-  PermeableBarrier_prototype.get = InnerBarrier_prototype.get
-
-  PermeableBarrier_prototype.has = InnerBarrier_prototype.has
-
-  PermeableBarrier_prototype.set = function set(_$self, selector, value, _target) {
-    return _$self[IS_IMMUTABLE] ? false :
-      InnerBarrier_prototype.set(_$self, selector, value, _target)
-  }
-
-  PermeableBarrier_prototype.deleteProperty = function deleteProperty(_$self, selector) {
-    return _$self[IS_IMMUTABLE] ? false :
-      InnerBarrier_prototype.deleteProperty(_$self, selector)
-  }
-
-
-  _Shared._Super                = new SuperBarrier()
-  _Shared.Impermeable           = Impermeable
-  _Shared.InnerBarrier          = InnerBarrier
-  _Shared.DisguisedOuterBarrier = DisguisedOuterBarrier
-  _Shared.DisguisedInnerBarrier = DisguisedInnerBarrier
-  _Shared.SuperBarrier          = SuperBarrier
-  _Shared.Permeable             = Permeable
+  _Shared._Super           = new SuperBarrier()
+  _Shared.Impermeable      = Impermeable
+  _Shared.InnerBarrier     = InnerBarrier
+  _Shared.DisguisedBarrier = DisguisedBarrier
+  _Shared.SuperBarrier     = SuperBarrier
+  // _Shared.Permeable        = Permeable
 
 })
 

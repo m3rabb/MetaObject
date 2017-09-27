@@ -10,7 +10,7 @@ Tranya(function (
 
   function AsOuter_targeting_fact(property, Handler) {
     const name = `${AsName(property)}_$outer_targeting_fact`
-    return {
+    return ({
       [name] : function (...args) {
         var barrier, _receiver, _$target, result, _$result
         const _$receiver = InterMap.get(this)
@@ -65,12 +65,12 @@ Tranya(function (
               _$Copy(_$result, true)[$RIND] : ObjectCopy(result, true)
         }
       }
-    }[name]
+    })[name]
   }
 
   function AsOuter_targeting_value(property, Handler) {
     const name = `${AsName(property)}_$outer_targeting_value`
-    return {
+    return ({
       [name] : function (...args) {
         var barrier, _receiver, result, _$target
         const _$receiver = InterMap.get(this)
@@ -111,12 +111,12 @@ Tranya(function (
 
         return result
       }
-    }[name]
+    })[name]
   }
 
   function AsOuter_targeting_self(property, Handler) {
     const name = `${AsName(property)}_$outer_targeting_self`
-    return {
+    return ({
       [name] : function (...args) {
         const _$receiver = InterMap.get(this)
         var   barrier, _receiver, _$target
@@ -149,21 +149,21 @@ Tranya(function (
         Handler.apply(_$receiver[$PULP], args) // <<----------
         return _$receiver[$RIND]
       }
-    }[name]
+    })[name]
   }
 
   function AsOuter_passthru(property, Handler) {
     const name = `${AsName(property)}_$outer_passthru`
-    return {
+    return ({
       [name] : function (...args) {
         return Handler.apply(InterMap.get(this)[$PULP], args) // <<----------
       }
-    }[name]
+    })[name]
   }
 
   function AsInner_self_fact(property, Handler) {
     const name = `${AsName(property)}_$inner_self_fact`
-    return {
+    return ({
       [name] : function (...args) {
         const _receiver = this
         const result    = Handler.apply(_receiver, args) // <<----------
@@ -176,27 +176,27 @@ Tranya(function (
         return ((_$result = InterMap.get(result))) ?
           _$Copy(_$result, true) : ObjectCopy(result, true)
       }
-    }[name]
+    })[name]
   }
 
   function AsInner_self_value(property, Handler) {
     const name = `${AsName(property)}_$inner_self_value`
-    return {
+    return ({
       [name] : function (...args) {
         const result = Handler.apply(this, args) // <<----------
         return (result === undefined) ? this : result
       }
-    }[name]
+    })[name]
   }
 
   function AsInner_self(property, Handler) {
     const name = `${AsName(property)}_inner_self`
-    return {
+    return ({
       [name] : function (...args) {
         Handler.apply(this, args) // <<----------
         return this
       }
-    }[name]
+    })[name]
   }
 
   function AsInner_passthru(property, Handler) {
@@ -206,7 +206,7 @@ Tranya(function (
 
   function AsSuper_self_fact(property, Handler) {
     const name = `${AsName(property)}_$super_self_fact`
-    return {
+    return ({
       [name] : function (...args) {
         var   _$result
         // this is $super. Need to use _receiver instead
@@ -220,41 +220,41 @@ Tranya(function (
         return ((_$result = InterMap.get(result))) ?
           _$Copy(_$result, true) : ObjectCopy(result, true)
       }
-    }[name]
+    })[name]
   }
 
   function AsSuper_self_value(property, Handler) {
     const name = `${AsName(property)}_$super_self_value`
-    return {
+    return ({
       [name] : function (...args) {
         // this is $super. Need to use _receiver instead
         const _receiver = this[$PULP]
         const result    = Handler.apply(_receiver, args) // <<----------
         return (result === undefined) ? _receiver : result
       }
-    }[name]
+    })[name]
   }
 
   function AsSuper_self(property, Handler) {
     const name = `${AsName(property)}_$super_self`
-    return {
+    return ({
       [name] : function (...args) {
         // this is $super. Need to use _receiver instead
         const _receiver = this[$PULP]
         Handler.apply(_receiver, args) // <<----------
         return _receiver
       }
-    }[name]
+    })[name]
   }
 
   function AsSuper_passthru(property, Handler) {
     const name = `${AsName(property)}_$super_passthru`
-    return {
+    return ({
       [name] : function (...args) {
         // this is $super. Need to use _receiver instead
         return Handler.apply(this[$PULP], args) // <<----------
       }
-    }[name]
+    })[name]
   }
 
 
