@@ -44,68 +44,23 @@ Tranya(function (
         else {
           _receiver = _$receiver[$PULP]
           result    = Handler.apply(_receiver, args) // <<----------
-          if (result === _receiver) { return _$receiver[$RIND] }
         }
 
         switch (typeof result) {
-          default         :                                  return result
+          default         :                                    return result
           case "function" :
             // Next line properly handlers contexts and types since they always have id.
-                                   return result[$OUTER_WRAPPER] || result
+                                     return result[$OUTER_WRAPPER] || result
               // Note: Revisit this if $OUTER_WRAPPER can hold NONE instead.
               // Note: the following approach was overkill as $OUTER_WRAPPER are
               // never assigned to untrusted external functions.
               // return (outer && InterMap.get(outer) === OUTER_FUNC) ? outer : result
-          case "object"   : if (result === null)           { return result }
-            // if (result === _$receiver[$RIND])               { return result }
-            if (result[IS_IMMUTABLE] || result.id != null) { return result }
+          case "object"   : if (result === null)             { return result }
+          if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+          if (result === _receiver) { return _$Copy(_receiver[$INNER], true) }
             return ((_$result = InterMap.get(result))) ?
               _$Copy(_$result, true)[$RIND] : ObjectCopy(result, true)
         }
-      }
-    })[name]
-  }
-
-  function AsOuter_targeting_value(property, Handler) {
-    const name = `${AsName(property)}_$outer_targeting_value`
-    return ({
-      [name] : function (...args) {
-        var barrier, _receiver, result, _$target
-        const _$receiver = InterMap.get(this)
-
-        if (_$receiver[IS_IMMUTABLE]) {
-          barrier = _$receiver[$BARRIER]
-
-          if (barrier.isInUse) {
-            // Existing barrier is already in use, must generate another barrier and
-            // _receiver, and then discard them.
-            barrier   = new InnerBarrier(_$receiver)
-            _receiver = new Proxy(_$receiver, barrier)
-          }
-          else {
-            // Use the existing barrier, and then reset it.
-            _receiver = _$receiver[$PULP]
-          }
-
-          barrier.isInUse  = true
-          result           = Handler.apply(_receiver, args) // <<----------
-          _$target         = barrier._$target
-          barrier._$target = _$receiver
-          barrier.isInUse  = false
-
-          if (result === _receiver) {
-            return (_$target !== _$receiver) ?
-              _$target._setImmutable.call(_$target[$PULP])[$RIND] :
-              _$receiver[$RIND]
-          }
-        }
-        else {
-          _receiver = _$receiver[$PULP]
-          result    = Handler.apply(_receiver, args) // <<----------
-          if (result === _receiver) { return _$receiver[$RIND] }
-        }
-
-        return result
       }
     })[name]
   }
@@ -152,7 +107,10 @@ Tranya(function (
     const name = `${AsName(property)}_$outer_nontargeting_value`
     return ({
       [name] : function (...args) {
-        return Handler.apply(InterMap.get(this)[$PULP], args) // <<----------
+        const _$receiver = InterMap.get(this)
+        const  _receiver = _$receiver[$PULP]
+        const   result   = Handler.apply(_receiver, args) // <<----------
+        return (result === _receiver) ? _$receiver[$RIND] : result
       }
     })[name]
   }
@@ -161,14 +119,13 @@ Tranya(function (
     const name = `${AsName(property)}_$inner_fact`
     return ({
       [name] : function (...args) {
+        var _$result
         const _receiver = this
         const result    = Handler.apply(_receiver, args) // <<----------
-        var   _$result
 
-        if (result === _receiver)                          { return _receiver }
-        // if (result === _$receiver[$RIND])               { return result    }
-        if (typeof result !== "object" || result === null) { return result    }
-        if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
+        if (typeof result !== "object" || result === null) { return result }
+        if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+        if (result === _receiver) { return _$Copy(_receiver[$INNER], true) }
         return ((_$result = InterMap.get(result))) ?
           _$Copy(_$result, true) : ObjectCopy(result, true)
       }
@@ -194,15 +151,13 @@ Tranya(function (
     const name = `${AsName(property)}_$super_fact`
     return ({
       [name] : function (...args) {
-        var   _$result
-        // this is $super. Need to use _receiver instead
-        const _receiver = this[$PULP]
+        var _$result
+        const _receiver = this[$PULP]  // this is $super
         const result    = Handler.apply(_receiver, args) // <<----------
 
-        if (result === _receiver)                          { return _receiver }
-        // if (result === _$receiver[$RIND])               { return result    }
-        if (typeof result !== "object" || result === null) { return result    }
-        if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
+        if (typeof result !== "object" || result === null) { return result }
+        if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+        if (result === _receiver) { return _$Copy(_receiver[$INNER], true) }
         return ((_$result = InterMap.get(result))) ?
           _$Copy(_$result, true) : ObjectCopy(result, true)
       }
@@ -233,31 +188,11 @@ Tranya(function (
 
 
 
-  function AsOuterStandard(property, handler, isPublic) {
-    return isPublic ?
-      AsOuter_targeting_fact(property, handler) :
-      AsOuter_targeting_value(property, handler)
-      // If !isPublic condition should be NONE instead!!!
-  }
-
-  function AsInnerStandard(property, handler, isPublic) {
-    return isPublic ?
-      AsInner_fact(property, handler) :
-      AsInner_value(property, handler)
-  }
-
-  function AsSuperStandard(property, handler, isPublic) {
-    return isPublic ?
-      AsSuper_fact(property, handler) :
-      AsSuper_value(property, handler)
-  }
-
-
-  _Shared.STANDARD_METHOD = {
-    id    : "STANDARD_METHOD",
-    outer : AsOuterStandard,
-    inner : AsInnerStandard,
-    super : AsSuperStandard,
+  _Shared.FACT_METHOD = {
+    id    : "FACT_METHOD",
+    outer : AsOuter_targeting_fact,
+    inner : AsInner_fact,
+    super : AsSuper_fact,
   }
 
   _Shared.SELF_METHOD = {
@@ -285,7 +220,7 @@ Tranya(function (
   }
 
   _Shared.IMMEDIATE_METHOD = {
-    __proto__ : _Shared.STANDARD_METHOD,
+    __proto__ : _Shared.FACT_METHOD,
     id        : "IMMEDIATE_METHOD",
   }
 

@@ -14,17 +14,17 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
 
   PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
 
-  PropertyLoader.addMethod(function _init(type) {
+  PropertyLoader.addValueMethod(function _init(type) {
     this._type    = type
     this._aliases = SpawnFrom(null)
   })
 
 
-  PropertyLoader.addMethod(function _saveAlias(aliasName, existingName) {
+  PropertyLoader.addValueMethod(function _saveAlias(aliasName, existingName) {
     this._aliases[aliasName] = existingName
   })
 
-  PropertyLoader.addMethod(function _resolveAliases() {
+  PropertyLoader.addValueMethod(function _resolveAliases() {
     const type    = this._type
     const aliases = this._aliases
     for (var aliasName in aliases) {
@@ -35,19 +35,18 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
   })
 
 
-  PropertyLoader.addMethod(function isMode(string) {
+  PropertyLoader.addValueMethod(function isMode(string) {
     return (this.modes.indexOf(string) >= 0)
   })
 
 
-  PropertyLoader.addMethod(function load(item, mode = "STANDARD") {
+  PropertyLoader.addValueMethod(function load(item, mode = "STANDARD") {
     this._load(item, mode)
     this._resolveAliases
-    return this._type
   })
 
 
-  PropertyLoader.addMethod(function _load(item, mode) {
+  PropertyLoader.addValueMethod(function _load(item, mode) {
     switch (item.constructor) {
       case Array    : this._loadFromArray (item, mode) ; break
       case Object   : this._loadFromSpec  (item, mode) ; break
@@ -58,7 +57,7 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
     }
   })
 
-  PropertyLoader.addMethod(function _loadFromArray(items, mode) {
+  PropertyLoader.addValueMethod(function _loadFromArray(items, mode) {
     var index, count, item
 
     index = 0
@@ -80,7 +79,7 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
     }
   })
 
-  PropertyLoader.addMethod(function _loadFromSpec(item, mode) {
+  PropertyLoader.addValueMethod(function _loadFromSpec(item, mode) {
     var keys = OwnVisibleNames(item)
 
     keys.forEach(key => {
@@ -92,7 +91,7 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
   })
 
 
-  PropertyLoader.addMethod(function _loadPair(name, value, mode) {
+  PropertyLoader.addValueMethod(function _loadPair(name, value, mode) {
     switch (mode) {
       case "ALIAS"         : return this._saveAlias(name, value)
       case "SHARED"        : return this._type.addSharedProperty     (name, value)
@@ -122,7 +121,7 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
     }
   })
 
-  PropertyLoader.addMethod(function _loadFunc(func, mode) {
+  PropertyLoader.addValueMethod(function _loadFunc(func, mode) {
     switch (mode) {
       case "STANDARD"      :
       case "METHOD"        : return this._type.addMethod             (func)
@@ -144,12 +143,12 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
     }
   })
 
-  PropertyLoader.addMethod(function _loadFromString(string, mode) {
+  PropertyLoader.addValueMethod(function _loadFromString(string, mode) {
     const names = string.split(LISTING_DELIMITER_MATCHER)
     names.forEach(name => this._loadFromName(name, mode))
   })
 
-  PropertyLoader.addMethod(function _loadFromName(name, mode) {
+  PropertyLoader.addValueMethod(function _loadFromName(name, mode) {
     switch (mode) {
       case "STANDARD"      : return this._type.addDeclaration       (name)
       case "DECLARE"       : return this._type.addDeclaration       (name)

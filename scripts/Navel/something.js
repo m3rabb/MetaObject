@@ -1,7 +1,6 @@
 Tranya(function (
   $BARRIER, $OUTER, $RIND, IS_IMMUTABLE, SYMBOL_1ST_CHAR, VALUE_METHOD,
-  AsName, SetInvisibly, SignalError, _$Something, _Super,
-  PrivateAccessFromOutsideError, UnknownPropertyError
+  AsName, SetInvisibly, SignalError, _$Something, _Super
 ) {
   "use strict"
 
@@ -31,9 +30,9 @@ Tranya(function (
     return (this[$RIND] === value)
   })
 
-  // _$Something.addMethod(function is(value) {
+  // _$Something.addValueMethod(function is(value) {
   //   return (this === value) || (this[$RIND] === value)
-  // }, IDEMPOT_VALUE_METHOD)
+  // })
 
 
 

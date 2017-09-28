@@ -45,7 +45,7 @@ Tranya(function (
   //     PrivateAccessFromOutsideError(this, selector)
   // })
 
-  _Context.addMethod(function _externalPrivateAccess(selector) {
+  _Context.addValueMethod(function _externalPrivateAccess(selector) {
     const entry = this._knownEntries[selector]
     return (entry !== undefined) ? entry :
       this._super._externalPrivateAccess(selector)
@@ -72,7 +72,6 @@ Tranya(function (
         if (fact !== entry) { this[selector] = entries[selector] = fact }
       }
     })
-
     return this
   })
 
@@ -86,7 +85,7 @@ Tranya(function (
       entry = entries[selector]
       if (IsSauced(entry)) { entry.beImpenetrable }
     }
-    this._super.beImpenetrable
+    return this._super.beImpenetrable
   })
 
 

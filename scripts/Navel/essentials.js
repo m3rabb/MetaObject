@@ -3,7 +3,7 @@ Tranya(function (
   $OUTER_WRAPPER, $PULP, $RIND, ASSIGNER, DECLARATION, INHERIT, INVISIBLE,
   REINHERIT, SYMBOL_1ST_CHAR, VISIBLE,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
-  IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, STANDARD_METHOD,
+  FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD,
   AsName, AsPropertySymbol, ExtractParamListing, Frost, InterMap, MarkFunc,
   SetInvisibly, SpawnFrom, MarkAndSetFuncImmutable, NewAssignmentErrorHandler,
   CompletelyDeleteProperty, InSetProperty,
@@ -221,7 +221,7 @@ Tranya(function (
 
 
   const _AddMethod = function _addMethod(func_selector, func_, mode__, property___) {
-    const [selector, handler, mode = STANDARD_METHOD, property] =
+    const [selector, handler, mode = FACT_METHOD, property] =
       (typeof func_selector === "function") ?
         [func_selector.name, func_selector, func_ , mode__     ] :
         [func_selector     , func_        , mode__, property___]

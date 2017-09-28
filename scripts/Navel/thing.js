@@ -46,7 +46,7 @@ Tranya(function (
     return `${name}${(name) ? "," : ""}${_this.oid}`
   })
 
-  _Thing.addAlias("jasmineToString", "toString")
+  _Thing.addAlias("jasmineToString", "toString") // Is this still necessary???
 
 
   // _Thing.addMethod(function toString(_) { // eslint-disable-line
@@ -56,7 +56,7 @@ Tranya(function (
   // })
 
 
-  _Thing.addMethod(function _notYetImplemented(selector) {
+  _Thing.addValueMethod(function _notYetImplemented(selector) {
     this._signalError(`The method ${AsName(selector)} has not been implemented yet!!`)
   })
 

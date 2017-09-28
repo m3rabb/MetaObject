@@ -15,8 +15,8 @@
 
 Tranya(function (
   $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
-  $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, IS_IMMUTABLE,
-  LAZY_INSTALLER, STANDARD_METHOD, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
+  $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD,
+  IS_IMMUTABLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   $Intrinsic$root$inner, AsName, CrudeBeImmutable, ExtractDefinitionFrom,
   FindAndSetDurables, MakeDefinitionsInfrastructure, NewUniqueId, OwnSelectors,
   PropertyAt, SetDefinition, SetInvisibly, SpawnFrom, ValueAsFact,
@@ -124,12 +124,12 @@ Tranya(function (
     const [inPlace, visited] = (typeof visited_inPlace_ === "object") ?
       [undefined, visited_inPlace_] : [visited_inPlace_, visited_]
 
-    this._setImmutable(inPlace, visited)
+    return this._setImmutable(inPlace, visited)
   })
 
 
   _$Intrinsic.addValueMethod(function beImmutable() {
-    if (!this[IS_IMMUTABLE]) { this._setImmutable() }
+    return this[IS_IMMUTABLE] ? this : this._setImmutable()
   })
 
 
@@ -223,10 +223,11 @@ Tranya(function (
 
 
 
-  _$Intrinsic.addMethod(function _basicSet(property, value) {
+  _$Intrinsic.addValueMethod(function _basicSet(property, value) {
     const selector = PropertyToSymbolMap[property] || property
     this[selector] = value
-  }, VALUE_METHOD)
+    return this
+  })
 
 
 
@@ -246,32 +247,6 @@ Tranya(function (
 
     return SetInvisibly($inner, "_retarget", this)
   })
-
-
-
-  // _$Intrinsic.addMethod(function _knowns(propertyName) {
-  //   const properties = this[_DURABLES] || FindAndSetDurables(this)
-  //   return (properties[propertyName] !== undefined)
-  // }, BASIC_VALUE_METHOD)
-
-
-  // const ancestry = this.ancestry
-  // const knowns   = SpawnFrom(null)
-  // var   next, _$nextType, nextDefinitions, tag, value
-  //
-  // next = ancestry.length
-  // while (next--) {
-  //   _$nextType      = InterMap.get(ancestry[next])
-  //   nextDefinitions = _$nextType._definitions
-  //
-  //   for (tag in nextDefinitions) {
-  //     if (!knowns[tag]) {
-  //       knowns[tag] = true
-  //       value       = nextDefinitions[tag]
-  //       this._setDefinitionAt(tag, value, REINHERIT)
-  //     }
-  //   }
-  // }
 
 
 
@@ -307,6 +282,7 @@ Tranya(function (
 
   _$Intrinsic.addValueMethod(function beImpenetrable() {
     this[$INNER][$IS_IMPENETRABLE] = true
+    return this
   })
 
 
@@ -349,7 +325,7 @@ Tranya(function (
 
   // eslint-disable-next-line
   _$Intrinsic.addSelfMethod(function addOwnMethod(func_selector, func_, mode__) {
-    const [selector, handler, mode = STANDARD_METHOD] =
+    const [selector, handler, mode = FACT_METHOD] =
       (typeof func_selector === "function") ?
         [func_selector.name, func_selector, func_ ] :
         [func_selector     , func_        , mode__]
@@ -405,7 +381,7 @@ Tranya(function (
     return PropertyAt(this[$INNER], selector)
   })
 
-  _$Intrinsic.addValueMethod(function propertyAt(selector) {
+  _$Intrinsic.addMethod(function propertyAt(selector) {
     return (selector[0] !== "_") ? PropertyAt(this[$INNER], selector) : null
     // If restoring the following, also add it back to InSetProperty.
     // return ((selector[0] || selector.toString()[SYMBOL_1ST_CHAR]) !== "_") ?
@@ -511,6 +487,33 @@ Tranya(function (
 
 
 
+
+
+  // _$Intrinsic.addMethod(function _knowns(propertyName) {
+  //   const properties = this[_DURABLES] || FindAndSetDurables(this)
+  //   return (properties[propertyName] !== undefined)
+  // }, BASIC_VALUE_METHOD)
+
+
+  // const ancestry = this.ancestry
+  // const knowns   = SpawnFrom(null)
+  // var   next, _$nextType, nextDefinitions, tag, value
+  //
+  // next = ancestry.length
+  // while (next--) {
+  //   _$nextType      = InterMap.get(ancestry[next])
+  //   nextDefinitions = _$nextType._definitions
+  //
+  //   for (tag in nextDefinitions) {
+  //     if (!knowns[tag]) {
+  //       knowns[tag] = true
+  //       value       = nextDefinitions[tag]
+  //       this._setDefinitionAt(tag, value, REINHERIT)
+  //     }
+  //   }
+  // }
+  //
+  // 
 
 
 // AddMethod(_Primordial_root, function hasMethod(selector) {

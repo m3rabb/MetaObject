@@ -108,7 +108,7 @@ Tranya(function (
 
 
 
-  _Type.addSelfMethod(function _deleteDefinitionAt(tag) {
+  _Type.addValueMethod(function _deleteDefinitionAt(tag) {
     var   selectors, nextSelector, next
     const blanker          = this._blanker
     const $root$inner      = blanker.$root$inner
@@ -167,11 +167,11 @@ Tranya(function (
       delete $root$inner[$SUPERS][nextSelector]
       delete defs[tag]
     }
-    this._inheritDefinitionAt(tag)
+    return this._inheritDefinitionAt(tag)
   })
 
 
-  _Type.addSelfMethod(function _inheritDefinitionAt(tag) {
+  _Type.addValueMethod(function _inheritDefinitionAt(tag) {
     const definitions = this._definitions
     if (definitions[tag] !== undefined) { return }
 
@@ -187,18 +187,20 @@ Tranya(function (
         return this._setDefinitionAt(tag, value, INHERIT)
       }
     }
+    return this
   })
 
 
-  _Type.addSelfMethod(function _propagateDefinition(tag) {
+  _Type.addValueMethod(function _propagateDefinition(tag) {
     this._subordinateTypes.forEach(subtype => {
       var _$subtype = InterMap.get(subtype)
       _$subtype._inheritDefinitionAt.call(_$subtype[$PULP], tag)
     })
+    return this
   })
 
 
-  _Type.addSelfMethod(function _addSetter(name_setter, property_setter_, mode) {
+  _Type.addValueMethod(function _addSetter(name_setter, property_setter_, mode) {
     var propertyName, assigner, setterName, setter
 
     ;[setterName, setter] = (typeof name_setter === "function") ?
@@ -231,7 +233,7 @@ Tranya(function (
     }
     if (!setter) { setter = AsBasicSetter(propertyName, setterName, mode) }
 
-    this._addMethod(setterName, setter, mode, propertyName)
+    return this._addMethod(setterName, setter, mode, propertyName)
   })
 
 
@@ -326,7 +328,7 @@ Tranya(function (
   _Type.addSelfMethod(function addDefinition(...params) {
     var definition = ExtractDefinitionFrom(params, this.context)
     this._setDefinitionAt(definition.tag, definition)
-  }, VALUE_METHOD)
+  })
 
 
   _Type.addSelfMethod(function addAlias(aliasName, selector_definition) {
@@ -336,11 +338,11 @@ Tranya(function (
         this._unknownMethodToAliasError(selector_definition))
 
     this.addDefinition(aliasName, definition)
-  }, VALUE_METHOD)
+  })
 
 
 
-  _Type.addSelfMethod(function _inheritAllDefinitions(inheritSpec) {
+  _Type.addValueMethod(function _inheritAllDefinitions(inheritSpec) {
     var next, _$nextType, nextDefinitions, tags, value, nextValue
     var asImmutable, visited, context, noCopy
 
@@ -380,20 +382,21 @@ Tranya(function (
       })
     }
 
-    this._propagateReinheritance(inheritSpec)
+    return this._propagateReinheritance(inheritSpec)
   })
 
 
 
-  _Type.addSelfMethod(function _propagateReinheritance(inheritSpec) {
+  _Type.addValueMethod(function _propagateReinheritance(inheritSpec) {
     this._subordinateTypes.forEach(subtype => {
       var _$subtype = InterMap.get(subtype)
       _$subtype._inheritAllDefinitions.call(_$subtype[$PULP], inheritSpec)
     })
+    return this
   })
 
 
-  _Type.addSelfMethod(function _setAsSubordinateOfSupertypes(supertypes) {
+  _Type.addValueMethod(function _setAsSubordinateOfSupertypes(supertypes) {
     // LOOK: add logic to invalidate connected types if supertypes changes!!!
     var next, _$supertype
     const subtype = this[$RIND]
@@ -405,11 +408,12 @@ Tranya(function (
         _$supertype._subordinateTypes.add(subtype)
       }
     }
+    return this
   })
 
 
 
-  _Type.addMethod(function setName(newName) {
+  _Type.addSelfMethod(function setName(newName) {
     const properName = AsCapitalized(newName)
     const priorName = this.name
     if (properName === priorName) { return priorName }
@@ -424,30 +428,31 @@ Tranya(function (
     }
 
     this._setName(properName)
-  }, VALUE_METHOD)
+  })
 
 
   _Type.addMandatorySetter("_setName", function name(properName) {
     this._setDisplayNames(properName)
     return properName
-  }, VALUE_METHOD)
+  })
 
 
-  _Type.addMethod(function _setDisplayNames(outerName, innerName_) {
+  _Type.addValueMethod(function _setDisplayNames(outerName, innerName_) {
     const innerName = innerName_ || ("_" + outerName)
     const _name     = NewVacuousConstructor(innerName)
     const $name     = NewVacuousConstructor(outerName)
 
     SetAsymmetricProperty(this, "constructor", _name, $name, INVISIBLE)
     this[$DISGUISE].name = outerName
-  }, VALUE_METHOD)
+    return this
+  })
 
 
 
-  _Type.addMethod(function setContext(context) {
+  _Type.addSelfMethod(function setContext(context) {
     this._setContext(context)
     context.atPut(this.name, this[$RIND])
-  }, VALUE_METHOD)
+  })
 
 
   _Type.addMandatorySetter("_setContext", function context(context) {
@@ -465,27 +470,27 @@ Tranya(function (
   _Type.addMethod(function supertypes() { return this._supertypes })
 
 
-  _Type.addMethod(function addSupertype(type) {
+  _Type.addSelfMethod(function addSupertype(type) {
     this.setSupertypes([...this.supertypes, type])
-  }, VALUE_METHOD)
+  })
 
 
 
-  _Type.addMethod(function setSupertypes(supertypes) {
+  _Type.addSelfMethod(function setSupertypes(supertypes) {
     if (this._supertypes === supertypes) { return }
     const ancestry = this._buildAncestry(supertypes)
     this._validateNewSupertypes(supertypes, ancestry)
     this._setSupertypesAndAncestry(supertypes, ancestry, REINHERIT)
-  }, VALUE_METHOD)
+  })
 
 
-  _Type.addMethod(function _setSupertypesAndAncestry(
+  _Type.addValueMethod(function _setSupertypesAndAncestry(
                                       supertypes, ancestry, inheritSpec_) {
     this._supertypes = CrudeAsImmutable(supertypes)
     this._ancestry   = CrudeBeImmutable(ancestry)
     if (inheritSpec_) { this._inheritAllDefinitions(inheritSpec_) }
-    this._setAsSubordinateOfSupertypes(supertypes)
-  }, VALUE_METHOD)
+    return this._setAsSubordinateOfSupertypes(supertypes)
+  })
 
 
 
@@ -682,7 +687,6 @@ Tranya(function (
       const nextValue   = ValueAsNext(value, asImmutable, visited, context)
       adder.call(this, tag, nextValue)
     })
-
     return this
   })
 
@@ -730,7 +734,7 @@ Tranya(function (
     const newId = `${this.formalName},${this.oid}`
     if (this.context === DefaultContext) { return newId }
     return SetInvisibly(this[$INNER], "id", newId, "SET BOTH INNER & OUTER")
-  }, VALUE_METHOD)
+  })
 
 
   _Type.addValueMethod(function formalName() {
@@ -815,7 +819,7 @@ Tranya(function (
   })
 
 
-  _Type.addMethod(function _reconcileFrom(sourceType, asMutable, visited, context) {
+  _Type.addSelfMethod(function _reconcileFrom(sourceType, asMutable, visited, context) {
     const _sourceType = InterMap.get(sourceType)[$PULP]
     const supertypes  = _sourceType._reconciledSupertypes(visited)
 
@@ -825,19 +829,19 @@ Tranya(function (
     if (!asMutable && sourceType.isImmutable) { this.beImmutable }
   })
 
-  _Type.addMethod(function _reconciledSupertypes(visited) {
+  _Type.addSelfMethod(function _reconciledSupertypes(visited) {
     return this._supertypes.map(supertype =>
       visited.get(supertype) || supertype)
   })
 
 
 
-  _Type.addMethod(function _unknownMethodToAliasError(selector) {
-    this._signalError(`Can't find method '${AsName(selector)}' to alias!!`)
+  _Type.addValueMethod(function _unknownMethodToAliasError(selector) {
+    return this._signalError(`Can't find method '${AsName(selector)}' to alias!!`)
   })
 
-  _Type.addMethod(function _attemptToReassignContextError(context) {
-    this._signalError(`Can't reassign context of ${this} from ${this.context} to ${context}!!`)
+  _Type.addValueMethod(function _attemptToReassignContextError(context) {
+    return this._signalError(`Can't reassign context of ${this} from ${this.context} to ${context}!!`)
   })
 
 
@@ -845,8 +849,6 @@ Tranya(function (
   _Type.addAlias("_basicNew"        , "new"                  )
   _Type.addAlias("new_"             , "newPermeable"         )
   _Type.addAlias("newImmutable_"    , "newPermeableImmutable")
-
-
 
   _Type.addAlias("declare"          , "addDeclaration"       )
   _Type.addAlias("removeMethod"     , "removeSharedProperty" )

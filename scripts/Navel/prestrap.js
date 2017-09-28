@@ -2,7 +2,7 @@ Tranya(function (
   $ASSIGNERS, $BARRIER, $IMMEDIATES, $IS_CONTEXT, $IS_DEFINITION,
   $IS_IMPENETRABLE, $IS_INNER, $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
   IMPLEMENTATION, INVISIBLE, IS_IMMUTABLE, PROOF, VISIBLE, _DURABLES,
-  SELF_METHOD, STANDARD_METHOD, VALUE_METHOD,
+  FACT_METHOD, SELF_METHOD, VALUE_METHOD,
   AlwaysSelf, BecomePermeableError, DefineProperty, InterMap, InvisibleConfig,
   MarkFunc, NewBlanker, NewInner, NewVacuousConstructor, RootOf, SetInvisibly,
   TheEmptyArray, SpawnFrom,
@@ -10,7 +10,7 @@ Tranya(function (
 
   Context_atPut, Context_init, Definition_init,
   _AddMethod, _BasicNew, _BasicSetImmutable, SetDefinition, _SetDefinitionAt,
-  Shared, _Shared
+  _Shared
 ) {
   "use strict"
 
@@ -120,6 +120,7 @@ Tranya(function (
   Context_atPut.call(_RootContext, "Definition", Definition)
 
   // Necessary to prevent breaking Jasmine testing framework
+  // Is this still necessary???
   _SetDefinitionAt.call(_$Something, "asymmetricMatch", null       , INVISIBLE)
 
 
@@ -138,7 +139,7 @@ Tranya(function (
   _SetDefinitionAt.call(_Definition, $IS_DEFINITION   , true       , VISIBLE  )
 
 
-  _AddMethod.call(_Type, _AddMethod)
+  _AddMethod.call(_Type, _AddMethod, VALUE_METHOD)
 
   // eslint-disable-next-line
   _Type._addMethod(function addSelfMethod(func_selector, func_) {
@@ -147,7 +148,7 @@ Tranya(function (
 
   // eslint-disable-next-line
   _Type.addSelfMethod(function addMethod(func_selector, func_) {
-    this._addMethod(...arguments, STANDARD_METHOD)
+    this._addMethod(...arguments, FACT_METHOD)
   })
 
   // eslint-disable-next-line
@@ -156,13 +157,13 @@ Tranya(function (
   })
 
 
-  _$Intrinsic._addMethod(_BasicSetImmutable, VALUE_METHOD)
+  _$Intrinsic.addValueMethod(_BasicSetImmutable)
 
-  _Type._addMethod("new", _BasicNew, VALUE_METHOD)
+  _Type.addValueMethod("new", _BasicNew)
   _Type.addSelfMethod(_SetDefinitionAt)
 
   _Definition.addSelfMethod(Definition_init)
-  _Definition._addMethod("_setImmutable", _BasicSetImmutable, VALUE_METHOD)
+  _Definition.addValueMethod("_setImmutable", _BasicSetImmutable)
 
   _Context.addSelfMethod(Context_init)
   _Context.addSelfMethod(Context_atPut)
@@ -222,8 +223,8 @@ Tranya(function (
   }
 
 
-  Shared.rootContext            =  RootContext
-  Shared.defaultContext         =  DefaultContext
+  _Shared.RootContext            =  RootContext
+  _Shared.DefaultContext         =  DefaultContext
 
   _Shared.$BaseBlanker          =  $BaseBlanker
   _Shared.$SomethingBlanker     =  $SomethingBlanker
