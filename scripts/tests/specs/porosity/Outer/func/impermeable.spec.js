@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (Type_) {
+Tranya.ImplementationTesting(function (Type_, AsName) {
   "use strict"
 
   describe("Type impermeable outer", function() {
@@ -14,8 +14,15 @@ Tranya.ImplementationTesting(function (Type_) {
           function _init(name, kind) {
             this.name = name
             this.kind = kind
-          }
+          },
         ]
+      })
+      this.Bat.addOwnMethod(function _unknownProperty(selector) {
+        return `<<${AsName(selector)}>>`
+      })
+
+      this.Bat.addOwnMethod(function _externalPrivateAccess(selector) {
+        return `>>${AsName(selector)}<<`
       })
       this.Bat.this[XYZ] = 123
     })
@@ -29,8 +36,8 @@ Tranya.ImplementationTesting(function (Type_) {
       })
 
       describe("private property", function () {
-        it("Throws an private property error", function () {
-          expect(() => this.Bat._iidCount).toThrowError(/Access to private property/)
+        it("Executes its _externalPrivateAccess method", function () {
+          expect( this.Bat._iidCount ).toBe( ">>_iidCount<<" )
         })
       })
 
@@ -47,8 +54,8 @@ Tranya.ImplementationTesting(function (Type_) {
       })
 
       describe("private immediate method", function () {
-        it("Throws an private property error", function () {
-          expect(() => this.Bat._nextIID).toThrowError(/Access to private property/)
+        it("Executes its _externalPrivateAccess method", function () {
+          expect( this.Bat._nextIID ).toBe( ">>_nextIID<<" )
         })
       })
 
@@ -61,20 +68,20 @@ Tranya.ImplementationTesting(function (Type_) {
 
     describe("When accessing a nonexistent", function() {
       describe("public property", function () {
-        it("Throws an unknown property error", function () {
-          expect(() => this.Bat.xyz ).toThrowError(/Unknown property/)
+        it("Executes its _unknownProperty method", function () {
+          expect( this.Bat.xyz ).toBe( "<<xyz>>" )
         })
       })
 
       describe("private property", function () {
-        it("Throws an private property error", function () {
-          expect(() => this.Bat._xyz).toThrowError(/Access to private property/)
+        it("Executes its _externalPrivateAccess method", function () {
+          expect( this.Bat._xyz ).toBe( ">>_xyz<<" )
         })
       })
 
       describe("symbol property", function () {
-        it("Throws an unknown property error", function () {
-          expect(() => this.Bat[QRS] ).toThrowError(/Unknown property/)
+        it("Executes its _unknownProperty method", function () {
+          expect( this.Bat[QRS] ).toBe( "<<QRS>>" )
         })
       })
     })
@@ -111,13 +118,13 @@ Tranya.ImplementationTesting(function (Type_) {
       describe("a private property", function () {
         describe("When present", function () {
           it("Throws an private property error", function () {
-            expect(() => "_properties" in this.Bat).toThrowError(/Access to private property/)
+            expect(() => "_properties" in this.Bat).toThrowError(/access to private property/)
           })
         })
 
         describe("When absent", function () {
           it("Throws an private property error", function () {
-            expect(() => "_xyz" in this.Bat).toThrowError(/Access to private property/)
+            expect(() => "_xyz" in this.Bat).toThrowError(/access to private property/)
           })
         })
       })
@@ -151,8 +158,8 @@ Tranya.ImplementationTesting(function (Type_) {
 
     describe("When accessing the parent object", function () {
       describe("via the __proto__", function () {
-        it("Throws an private property error", function () {
-          expect(() => this.Bat.__proto__).toThrowError(/Access to private property/)
+        it("Executes its _externalPrivateAccess method", function () {
+          expect( this.Bat.__proto__ ).toBe( ">>__proto__<<" )
         })
       })
 

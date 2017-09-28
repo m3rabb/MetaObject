@@ -45,10 +45,16 @@ Tranya(function (
   //     PrivateAccessFromOutsideError(this, selector)
   // })
 
-  _Context.addValueMethod(function _unknownProperty(selector, isFromOutside_) {
+  _Context.addMethod(function _externalPrivateAccess(selector) {
+    const entry = this._knownEntries[selector]
+    return (entry !== undefined) ? entry :
+      this._super._externalPrivateAccess(selector)
+  })
+
+  _Context.addValueMethod(function _unknownProperty(selector) {
     const entry = this._knownEntries[selector]
     return (entry !== undefined) ?
-      entry : this._super._unknownProperty(selector, isFromOutside_)
+      entry : this._super._unknownProperty(selector)
   })
 
 

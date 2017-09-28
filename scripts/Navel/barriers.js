@@ -1,12 +1,12 @@
 Tranya(function (
   $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,$IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
-  IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE, NO_SUPER, _DURABLES,
+  IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
   AlwaysFalse, AlwaysNull, InSetProperty, InterMap, SpawnFrom, _$Copy, _HasOwn,
   AssignmentOfUndefinedError, AssignmentViaSuperError,
   ChangeToImmutableThisError, DeleteFromOutsideError,
   DirectAssignmentFromOutsideError, DisallowedDeleteError,
-  PrivateAccessFromOutsideError,
+  ExternalPrivateAccessError,
   _Shared
 ) {
   "use strict"
@@ -52,15 +52,23 @@ Tranya(function (
     if (_$method_outer) { return _$method_outer.call(self) }
     if (selector in $self) { return null }
 
-    const _$self = InterMap.get(self)
+    const _$self    = InterMap.get(self)
+    const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
+    if (firstChar === "_") {
+      const _externalPrivateAccess = _$self._externalPrivateAccess
+      return (_externalPrivateAccess) ?
+        _externalPrivateAccess.call(_$self[$PULP], selector) :
+        ExternalPrivateAccessError(_$self, selector)
+    }
 
-    return _$self._unknownProperty.call(_$self[$PULP], selector, true)
+    const _unknownProperty = _$self._unknownProperty
+    return _unknownProperty && _unknownProperty.call(_$self[$PULP], selector)
   }
 
   OuterBarrier_prototype.has = function has($self, selector) {
     switch (selector[0]) {
       case "_"       :
-        return PrivateAccessFromOutsideError($self[$RIND], selector) || false
+        return ExternalPrivateAccessError($self[$RIND], selector) || false
       case undefined : return null  // Effectively answers a shrug
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       default        : return (selector in $self)
@@ -121,7 +129,8 @@ Tranya(function (
     if ($method_inner) { return $method_inner.call(_$target[$PULP]) }
     if (selector in _$target) { return null }
 
-    return _$target._unknownProperty.call(_$target[$PULP], selector, false)
+    const _unknownProperty = _$target._unknownProperty
+    return _unknownProperty && _unknownProperty.call(_$target[$PULP], selector)
   }
 
   InnerBarrier_prototype.has = function has(_$self, selector) {
@@ -261,8 +270,9 @@ Tranya(function (
 
   // eslint-disable-next-line
   SuperBarrier_prototype.get = function get(_$target, selector, _super) {
+    var value, _unknownProperty
     const supers = _$target[$SUPERS]
-    var   value  = supers[selector]
+    value  = supers[selector]
 
     do {
       switch (value) {
@@ -277,8 +287,9 @@ Tranya(function (
           return supers[$IMMEDIATES][selector].call(_$target[$PULP])
 
         case NO_SUPER :
-          return _$target
-            ._unknownProperty.call(_$target[$PULP], selector, false)
+          _unknownProperty = _$target._unknownProperty
+          return _unknownProperty &&
+            _unknownProperty.call(_$target[$PULP], selector)
 
         default :
           return value

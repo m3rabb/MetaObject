@@ -50,19 +50,6 @@ Tranya(function (
     return (this[$OUTER].this) ? true : false
   })
 
-
-
-  _$Something.addMethod(function _unknownProperty(selector, isFromOutside_) {
-    if (isFromOutside_) {
-      const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
-      if (firstChar === "_") {
-        return PrivateAccessFromOutsideError(this, selector)
-      }
-    }
-    return UnknownPropertyError(this, selector)
-  })
-
-
 })
 
 

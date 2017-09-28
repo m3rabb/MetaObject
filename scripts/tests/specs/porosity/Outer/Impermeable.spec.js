@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (Type) {
+Tranya.ImplementationTesting(function (Type, AsName) {
   "use strict"
 
   describe("Impermeable outer", function() {
@@ -19,7 +19,15 @@ Tranya.ImplementationTesting(function (Type) {
 
           function _inc() { this._age++ },
 
-          function setAge(age) { this._age = age }
+          function setAge(age) { this._age = age },
+
+          function _unknownProperty(selector) {
+            return `<<${AsName(selector)}>>`
+          },
+
+          function _externalPrivateAccess(selector) {
+            return `>>${AsName(selector)}<<`
+          },
         ]
       })
     })
@@ -38,8 +46,8 @@ Tranya.ImplementationTesting(function (Type) {
       })
 
       describe("private property", function () {
-        it("Throws an private property error", function () {
-          expect(() => this.iCat._age).toThrowError(/Access to private property/)
+        it("Executes its _externalPrivateAccess method", function () {
+          expect( this.iCat._age ).toBe( ">>_age<<" )
         })
       })
 
@@ -56,8 +64,8 @@ Tranya.ImplementationTesting(function (Type) {
       })
 
       describe("private immediate method", function () {
-        it("Throws an private property error", function () {
-          expect(() => this.iCat._inc).toThrowError(/Access to private property/)
+        it("Executes its _externalPrivateAccess method", function () {
+          expect( this.iCat._age ).toBe( ">>_age<<" )
         })
       })
 
@@ -70,20 +78,20 @@ Tranya.ImplementationTesting(function (Type) {
 
     describe("When accessing a nonexistent", function() {
       describe("public property", function () {
-        it("Throws an unknown property error", function () {
-          expect(() => this.iCat.lifestyle ).toThrowError(/Unknown property/)
+        it("Executes its _unknownProperty method", function () {
+          expect( this.iCat.lifestyle ).toBe( "<<lifestyle>>" )
         })
       })
 
       describe("private property", function () {
-        it("Throws an private property error", function () {
-          expect(() => this.iCat._butter).toThrowError(/Access to private property/)
+        it("Executes its _externalPrivateAccess method", function () {
+          expect( this.iCat._butter ).toBe( ">>_butter<<" )
         })
       })
 
       describe("symbol property", function () {
-        it("Throws an unknown property error", function () {
-          expect(() => this.iCat[TASTE] ).toThrowError(/Unknown property/)
+        it("Executes its _unknownProperty method", function () {
+          expect( this.iCat.lifestyle ).toBe( "<<lifestyle>>" )
         })
       })
     })
@@ -120,13 +128,13 @@ Tranya.ImplementationTesting(function (Type) {
       describe("a private property", function () {
         describe("When present", function () {
           it("Throws an private property error", function () {
-            expect(() => "_inc" in this.iCat).toThrowError(/Access to private property/)
+            expect(() => "_inc" in this.iCat).toThrowError(/access to private property/)
           })
         })
 
         describe("When absent", function () {
           it("Throws an private property error", function () {
-            expect(() => "_xyz" in this.iCat).toThrowError(/Access to private property/)
+            expect(() => "_xyz" in this.iCat).toThrowError(/access to private property/)
           })
         })
       })
@@ -158,8 +166,8 @@ Tranya.ImplementationTesting(function (Type) {
 
     describe("When accessing the parent object", function () {
       describe("via the __proto__", function () {
-        it("Throws an private property error", function () {
-          expect(() => this.iCat.__proto__).toThrowError(/Access to private property/)
+        it("Executes its _externalPrivateAccess method", function () {
+          expect( this.iCat.__proto__ ).toBe( ">>__proto__<<" )
         })
       })
 

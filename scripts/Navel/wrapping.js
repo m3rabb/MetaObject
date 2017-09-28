@@ -237,7 +237,7 @@ Tranya(function (
     return isPublic ?
       AsOuter_targeting_fact(property, handler) :
       AsOuter_targeting_value(property, handler)
-      // If isPublic condition should be NONE instead!!!
+      // If !isPublic condition should be NONE instead!!!
   }
 
   function AsInnerStandard(property, handler, isPublic) {

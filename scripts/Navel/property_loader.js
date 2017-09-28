@@ -3,9 +3,10 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
 
   const LISTING_DELIMITER_MATCHER = /\s*[ ,]\s*/;
 
-  const modeNames = `DECLARE DECLARATION STANDARD SHARED ALIAS METHOD
-                     LAZY RETRO RETROACTIVE DURABLE
-                     FOR_ASSIGN FOR_SETTER FOR_MANDATORY SETTER MANDATORY`
+  const modeNames =
+    `ALIAS DECLARATION DECLARE DURABLE FOR_ASSIGN FOR_MANDATORY FOR_SETTER
+     LAZY MANDATORY METHOD RETRO RETROACTIVE SELF SELF_METHOD SETTER SHARED
+     STANDARD VALUE VALUE_METHOD`
 
   const PropertyLoader = _PropertyLoader // this.Type.new("PropertyLoader")
 
@@ -72,8 +73,9 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
         case Array    : this._loadFromArray(item, mode)             ; break
         case Function : this._loadFunc     (item, mode)             ; break
         case String   :
-          if (this.isMode(item)) { this._load(items[index++], item) }
-          else                   { this._loadFromString(item, mode) } break
+          if (this.isMode(item)) { this._load(items[index++], (mode = item)) }
+          else                   { this._loadFromString(item,  mode        ) }
+          break
       }
     }
   })
@@ -96,6 +98,12 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
       case "SHARED"        : return this._type.addSharedProperty     (name, value)
 
       case "METHOD"        : return this._type.addMethod             (name, value)
+
+      case "SELF"          :
+      case "SELF_METHOD"   : return this._type.addSelfMethod         (name, value)
+      case "VALUE"         :
+      case "VALUE_METHOD"  : return this._type.addValueMethod        (name, value)
+
       case "LAZY"          : return this._type.addLazyProperty       (name, value)
       case "RETRO"         :
       case "RETROACTIVE"   : return this._type.addRetroactiveProperty(name, value)
@@ -116,8 +124,13 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
 
   PropertyLoader.addMethod(function _loadFunc(func, mode) {
     switch (mode) {
-      case "STANDARD"      : return this._type.addMethod             (func)
+      case "STANDARD"      :
       case "METHOD"        : return this._type.addMethod             (func)
+
+      case "SELF"          :
+      case "SELF_METHOD"   : return this._type.addSelfMethod         (func)
+      case "VALUE"         :
+      case "VALUE_METHOD"  : return this._type.addValueMethod        (func)
 
       case "LAZY"          : return this._type.addLazyProperty       (func)
       case "RETRO"         :

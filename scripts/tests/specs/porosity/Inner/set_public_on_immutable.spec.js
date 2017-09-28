@@ -27,6 +27,8 @@ Tranya.ImplementationTesting(function (
 
           function asString() { return `${this.name}:${this.age}` },
 
+          "SELF",
+
           function setXyz(value) { this.xyz = value },
 
           function setMood(value) { this.mood = value },

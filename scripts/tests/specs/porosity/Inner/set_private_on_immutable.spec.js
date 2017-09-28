@@ -28,6 +28,8 @@ Tranya.ImplementationTesting(function (
 
           function asString() { return `${this.name}:${this.age}` },
 
+          "SELF",
+
           function setXyz(value) { this._xyz = value },
 
           function setAbc(value) { this.abc = value },

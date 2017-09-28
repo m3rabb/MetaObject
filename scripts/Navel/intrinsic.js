@@ -16,7 +16,7 @@
 Tranya(function (
   $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, IS_IMMUTABLE,
-  LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
+  LAZY_INSTALLER, STANDARD_METHOD, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   $Intrinsic$root$inner, AsName, CrudeBeImmutable, ExtractDefinitionFrom,
   FindAndSetDurables, MakeDefinitionsInfrastructure, NewUniqueId, OwnSelectors,
   PropertyAt, SetDefinition, SetInvisibly, SpawnFrom, ValueAsFact,
@@ -347,9 +347,14 @@ Tranya(function (
   })
 
 
-
-  _$Intrinsic.addSelfMethod(function addOwnMethod(namedFunc_name, func_, mode__) {
-    this.addOwnDefinition(namedFunc_name, func_, mode__)
+  // eslint-disable-next-line
+  _$Intrinsic.addSelfMethod(function addOwnMethod(func_selector, func_, mode__) {
+    const [selector, handler, mode = STANDARD_METHOD] =
+      (typeof func_selector === "function") ?
+        [func_selector.name, func_selector, func_ ] :
+        [func_selector     , func_        , mode__]
+    const definition = this.context.Definition(selector, handler, mode)
+    this.addOwnDefinition(definition)
   })
 
 
@@ -370,8 +375,8 @@ Tranya(function (
 
   // addOwnDefinition(definition)
   // addOwnDefinition(tag, definition)
-  // addOwnDefinition(namedFunc, mode_)
-  // addOwnDefinition(selector, func, mode_)
+  // addOwnDefinition(namedFunc, mode_)      <<--- This one is broken!!!
+  // addOwnDefinition(selector, func, mode_) <<--- This one is broken!!!
 
   _$Intrinsic.addSelfMethod(function addOwnDefinition(...args) {
     const definition   = ExtractDefinitionFrom(args, this.context)
@@ -431,24 +436,14 @@ Tranya(function (
   })
 
 
-
-  _$Intrinsic.addValueMethod(function _unknownProperty(selector, isFromOutside_) {
-    if (isFromOutside_) {
-      const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
-      if (firstChar === "_") {
-        const _privateAccessFromOutside =
-          this[$INNER]._privateAccessFromOutside
-        return (_privateAccessFromOutside) ?
-          _privateAccessFromOutside.call(this, selector) :
-          this._privateAccessFromOutsideError(selector)
-      }
-    }
-    return this._unknownPropertyError(selector)
+  // eslint-disable-next-line
+  _$Intrinsic.addValueMethod(function _unknownProperty(selector) {
+    return undefined
   })
 
-
-  _$Intrinsic.addAlias("_basicUnknownProperty", "_unknownProperty")
-
+  _$Intrinsic.addValueMethod(function _externalPrivateAccess(selector) {
+    return this._externalPrivateAccessError(selector)
+  })
 
 
   _$Intrinsic.addValueMethod(function _signalError(message) {
@@ -456,8 +451,8 @@ Tranya(function (
   })
 
 
-  _$Intrinsic.addValueMethod(function _privateAccessFromOutsideError(selector) {
-    return this._signalError(`Access to private property '${AsName(selector)}' from outside of an object is forbidden!!`)
+  _$Intrinsic.addValueMethod(function _externalPrivateAccessError(selector) {
+    return this._signalError(`External access to private property '${AsName(selector)}' is forbidden!!`)
   })
 
   _$Intrinsic.addValueMethod(function _unknownPropertyError(selector) {

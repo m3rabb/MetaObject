@@ -30,6 +30,8 @@ Tranya.ImplementationTesting(function (
             return CrudeBeImmutable(results)
           },
 
+          "SELF",
+
           function tester() {
             this._retarget
             this.xyz = 123

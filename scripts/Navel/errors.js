@@ -70,13 +70,13 @@ Tranya(function (
     SignalError(target[$RIND], "Setting properties via _super in forbidden!!")
   }
 
-  _Shared.PrivateAccessFromOutsideError = function (target, selector) {
-    SignalError(target[$RIND], `Access to private property '${AsName(selector)}' from outside of an object is forbidden!!`)
+  _Shared.ExternalPrivateAccessError = function (target, selector) {
+    SignalError(target[$RIND], `External access to private property '${AsName(selector)}' is forbidden!!`)
   }
 
-  _Shared.UnknownPropertyError = function (target, selector) {
-    SignalError(target[$RIND], `Receiver ${this.id} doesn't have a property: ${AsName(selector)}!!`)
-  }
+  // _Shared.UnknownPropertyError = function (target, selector) {
+  //   SignalError(target[$RIND], `Receiver ${this.id} doesn't have a property: ${AsName(selector)}!!`)
+  // }
 
   _Shared.DisallowedDeleteError = function (target, selector) {
     SignalError(target[$RIND], `Delete of property '${AsName(selector)}' is not allowed!!`)

@@ -26,10 +26,10 @@ Tranya.ImplementationTesting(function (
 
     describe("#forAddAssigner", function () {
       beforeEach(function () {
-        this.Cat_   = Type.new_(this.CatSpec)
-        this.cat_   = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-        this._cat   = this.cat_.this
-        this._$root = this.Cat_.this._blanker.$root$inner
+        this.Cat    = Type.new_(this.CatSpec)
+        this.cat    = this.Cat.new("Rufus", "Siamese-tabby", 18)
+        this._cat   = this.cat.this
+        this._$root = this.Cat.this._blanker.$root$inner
       })
 
       describe("Before the method is added", function () {
@@ -46,19 +46,18 @@ Tranya.ImplementationTesting(function (
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn("mood" in this._$root) ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
-        it("Throws an error when the property is read", function () {
-          var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /Unknown property 'mood'/ )
+        it("Has no property", function () {
+          expect( this.cat.has("mood") ).toBe( false )
         })
       })
 
       describe("When called with 1 args: a property named func", function () {
         beforeEach(function () {
           this.assigner = function mood(newMood) { return `very ${newMood}` }
-          this.Cat_.forAddAssigner(this.assigner)
+          this.Cat.forAddAssigner(this.assigner)
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -77,7 +76,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property is assigned", function () {
           it("Executes the assigner", function () {
             this._cat.mood = "happy"
-            expect( this.cat_.mood ).toBe( "very happy" )
+            expect( this.cat.mood ).toBe( "very happy" )
           })
         })
 
@@ -92,7 +91,7 @@ Tranya.ImplementationTesting(function (
       describe("When called with 2 args: a property name and a func", function () {
         beforeEach(function () {
           this.assigner = function (newMood) { return `very ${newMood}` }
-          this.Cat_.forAddAssigner("mood", this.assigner)
+          this.Cat.forAddAssigner("mood", this.assigner)
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -111,7 +110,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property is assigned", function () {
           it("Executes the assigner", function () {
             this._cat.mood = "happy"
-            expect( this.cat_.mood ).toBe( "very happy" )
+            expect( this.cat.mood ).toBe( "very happy" )
           })
         })
 
@@ -128,10 +127,10 @@ Tranya.ImplementationTesting(function (
 
     describe("#addSetter", function () {
       beforeEach(function () {
-        this.Cat_   = Type.new_(this.CatSpec)
-        this.cat_   = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-        this._cat   = this.cat_.this
-        this._$root = this.Cat_.this._blanker.$root$inner
+        this.Cat    = Type.new_(this.CatSpec)
+        this.cat    = this.Cat.new("Rufus", "Siamese-tabby", 18)
+        this._cat   = this.cat.this
+        this._$root = this.Cat.this._blanker.$root$inner
       })
 
       describe("Before the method is added", function () {
@@ -148,18 +147,17 @@ Tranya.ImplementationTesting(function (
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn("mood" in this._$root) ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
-        it("Throws an error when the property is read", function () {
-          var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /Unknown property 'mood'/ )
+        it("The property has no value yet", function () {
+          expect( this.cat.mood ).toBe( undefined )
         })
       })
 
       describe("When called with 1 args: a setter name", function () {
         beforeEach(function () {
-          this.Cat_.addSetter("setMood")
+          this.Cat.addSetter("setMood")
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -178,14 +176,14 @@ Tranya.ImplementationTesting(function (
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
-            expect( this.cat_.mood ).toBe( "happy" )
+            expect( this.cat.mood ).toBe( "happy" )
           })
         })
 
         describe("When the property is assigned", function () {
           it("The property is set", function () {
             this._cat.mood = "happy"
-            expect( this.cat_.mood ).toBe( "happy" )
+            expect( this.cat.mood ).toBe( "happy" )
           })
         })
 
@@ -202,7 +200,7 @@ Tranya.ImplementationTesting(function (
           this.setter = function setMood(newMood) {
             this.mood = `very ${newMood}`
           }
-          this.Cat_.addSetter(this.setter)
+          this.Cat.addSetter(this.setter)
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -221,14 +219,14 @@ Tranya.ImplementationTesting(function (
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
-            expect( this.cat_.mood ).toBe( "very happy" )
+            expect( this.cat.mood ).toBe( "very happy" )
           })
         })
 
         describe("When the property is assigned", function () {
           it("The property is set", function () {
             this._cat.mood = "happy"
-            expect( this.cat_.mood ).toBe( "happy" )
+            expect( this.cat.mood ).toBe( "happy" )
           })
         })
 
@@ -242,7 +240,7 @@ Tranya.ImplementationTesting(function (
         describe("When the setter doesn't even set the property for which it's named", function () {
           beforeEach(function () {
             this.setter = function setMood(newMood) { this.xyz = newMood }
-            this.Cat_.addSetter(this.setter)
+            this.Cat.addSetter(this.setter)
           })
 
           it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -259,7 +257,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with 2 args: a setter name and a property", function () {
         beforeEach(function () {
-          this.Cat_.addSetter("setXyz", "_qrs")
+          this.Cat.addSetter("setXyz", "_qrs")
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -302,7 +300,7 @@ Tranya.ImplementationTesting(function (
           this.func = function (newMood) {
             this.mood = `very ${newMood}`
           }
-          this.Cat_.addSetter("setMood", this.func)
+          this.Cat.addSetter("setMood", this.func)
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -321,14 +319,14 @@ Tranya.ImplementationTesting(function (
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
-            expect( this.cat_.mood ).toBe( "very happy" )
+            expect( this.cat.mood ).toBe( "very happy" )
           })
         })
 
         describe("When the property is assigned", function () {
           it("The property is set", function () {
             this._cat.mood = "happy"
-            expect( this.cat_.mood ).toBe( "happy" )
+            expect( this.cat.mood ).toBe( "happy" )
           })
         })
 
@@ -342,7 +340,7 @@ Tranya.ImplementationTesting(function (
         describe("When the setter doesn't even set the property for which it's named", function () {
           beforeEach(function () {
             this.setter = function setMood(newMood) { this.xyz = newMood }
-            this.Cat_.addSetter(this.setter)
+            this.Cat.addSetter(this.setter)
           })
 
           it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -360,7 +358,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with 2 args: a setter name and an assigner func", function () {
         beforeEach(function () {
-          this.Cat_.addSetter("setMood", function _mood(newMood) {
+          this.Cat.addSetter("setMood", function _mood(newMood) {
             return `very ${newMood}`
           })
         })
@@ -409,7 +407,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with an improper setter name", function () {
         it("Throws an error", function () {
-          var execution =  () => { this.Cat_.addSetter("mood") }
+          var execution =  () => { this.Cat.addSetter("mood") }
           expect( execution ).toThrowError( /Improper setter 'mood'!!/ )
         })
       })
@@ -419,10 +417,10 @@ Tranya.ImplementationTesting(function (
 
     describe("#forAddSetter", function () {
       beforeEach(function () {
-        this.Cat_   = Type.new_(this.CatSpec)
-        this.cat_   = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-        this._cat   = this.cat_.this
-        this._$root = this.Cat_.this._blanker.$root$inner
+        this.Cat    = Type.new_(this.CatSpec)
+        this.cat    = this.Cat.new("Rufus", "Siamese-tabby", 18)
+        this._cat   = this.cat.this
+        this._$root = this.Cat.this._blanker.$root$inner
       })
 
       describe("Before the method is added", function () {
@@ -439,18 +437,17 @@ Tranya.ImplementationTesting(function (
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn("mood" in this._$root) ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
-        it("Throws an error when the property is read", function () {
-          var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /Unknown property 'mood'/ )
+        it("The property has no value yet", function () {
+          expect( this.cat.mood ).toBe( undefined )
         })
       })
 
       describe("When called with 1 args: a property name", function () {
         beforeEach(function () {
-          this.Cat_.forAddSetter("mood")
+          this.Cat.forAddSetter("mood")
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -469,14 +466,14 @@ Tranya.ImplementationTesting(function (
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
-            expect( this.cat_.mood ).toBe( "happy" )
+            expect( this.cat.mood ).toBe( "happy" )
           })
         })
 
         describe("When the property is assigned", function () {
           it("The property is set", function () {
             this._cat.mood = "happy"
-            expect( this.cat_.mood ).toBe( "happy" )
+            expect( this.cat.mood ).toBe( "happy" )
           })
         })
 
@@ -490,7 +487,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with 2 args: a property and a setter name", function () {
         beforeEach(function () {
-          this.Cat_.forAddSetter("_qrs", "setXyz")
+          this.Cat.forAddSetter("_qrs", "setXyz")
         })
 
         it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -532,10 +529,10 @@ Tranya.ImplementationTesting(function (
 
     describe("#addMandatorySetter", function () {
       beforeEach(function () {
-        this.Cat_   = Type.new_(this.CatSpec)
-        this.cat_   = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-        this._cat   = this.cat_.this
-        this._$root = this.Cat_.this._blanker.$root$inner
+        this.Cat    = Type.new_(this.CatSpec)
+        this.cat    = this.Cat.new("Rufus", "Siamese-tabby", 18)
+        this._cat   = this.cat.this
+        this._$root = this.Cat.this._blanker.$root$inner
       })
 
       describe("Before the method is added", function () {
@@ -552,18 +549,17 @@ Tranya.ImplementationTesting(function (
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn("mood" in this._$root) ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
-        it("Throws an error when the property is read", function () {
-          var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /Unknown property 'mood'/ )
+        it("The property has no value yet", function () {
+          expect( this.cat.mood ).toBe( undefined )
         })
       })
 
       describe("When called with 1 args: a setter name", function () {
         beforeEach(function () {
-          this.Cat_.addMandatorySetter("setMood")
+          this.Cat.addMandatorySetter("setMood")
         })
 
         it("Puts as basic setter property in the root", function () {
@@ -582,7 +578,7 @@ Tranya.ImplementationTesting(function (
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
-            expect( this.cat_.mood ).toBe( "happy" )
+            expect( this.cat.mood ).toBe( "happy" )
           })
         })
 
@@ -606,7 +602,7 @@ Tranya.ImplementationTesting(function (
           this.setter = function setMood(newMood) {
             this._basicSet("mood", `very ${newMood}`)
           }
-          this.Cat_.addMandatorySetter(this.setter)
+          this.Cat.addMandatorySetter(this.setter)
         })
 
         it("Puts a basic setter property in the root", function () {
@@ -625,7 +621,7 @@ Tranya.ImplementationTesting(function (
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
-            expect( this.cat_.mood ).toBe( "very happy" )
+            expect( this.cat.mood ).toBe( "very happy" )
           })
         })
 
@@ -646,7 +642,7 @@ Tranya.ImplementationTesting(function (
         describe("When the setter doesn't even set the property for which it's named", function () {
           beforeEach(function () {
             this.setter = function setMood(newMood) { this.xyz = newMood }
-            this.Cat_.addMandatorySetter(this.setter)
+            this.Cat.addMandatorySetter(this.setter)
           })
 
           it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -663,7 +659,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with 2 args: a setter name and a property", function () {
         beforeEach(function () {
-          this.Cat_.addMandatorySetter("setXyz", "_qrs")
+          this.Cat.addMandatorySetter("setXyz", "_qrs")
         })
 
         it("Puts a basic setter property in the root", function () {
@@ -703,7 +699,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with 2 args: a setter name and a func", function () {
         beforeEach(function () {
-          this.Cat_.addMandatorySetter("setMood", function (newMood) {
+          this.Cat.addMandatorySetter("setMood", function (newMood) {
             this._basicSet("mood", `very ${newMood}`)
           })
         })
@@ -724,7 +720,7 @@ Tranya.ImplementationTesting(function (
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
-            expect( this.cat_.mood ).toBe( "very happy" )
+            expect( this.cat.mood ).toBe( "very happy" )
           })
         })
 
@@ -745,7 +741,7 @@ Tranya.ImplementationTesting(function (
         describe("When the setter doesn't even set the property for which it's named", function () {
           beforeEach(function () {
             this.setter = function setMood(newMood) { this.xyz = newMood }
-            this.Cat_.addMandatorySetter(this.setter)
+            this.Cat.addMandatorySetter(this.setter)
           })
 
           it("Sets undefined as a placeholder at the selector in the root", function () {
@@ -762,7 +758,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with 2 args: a setter name and an assigner func", function () {
         beforeEach(function () {
-          this.Cat_.addMandatorySetter("setMood", function _mood(newMood) {
+          this.Cat.addMandatorySetter("setMood", function _mood(newMood) {
             return `very ${newMood}`
           })
         })
@@ -806,7 +802,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with an improper setter name", function () {
         it("Throws an error", function () {
-          var execution =  () => { this.Cat_.addMandatorySetter("mood") }
+          var execution =  () => { this.Cat.addMandatorySetter("mood") }
           expect( execution ).toThrowError( /Improper setter 'mood'!!/ )
         })
       })
@@ -815,10 +811,10 @@ Tranya.ImplementationTesting(function (
 
     describe("#forAddMandatorySetter", function () {
       beforeEach(function () {
-        this.Cat_   = Type.new_(this.CatSpec)
-        this.cat_   = this.Cat_.new("Rufus", "Siamese-tabby", 18)
-        this._cat   = this.cat_.this
-        this._$root = this.Cat_.this._blanker.$root$inner
+        this.Cat    = Type.new_(this.CatSpec)
+        this.cat    = this.Cat.new("Rufus", "Siamese-tabby", 18)
+        this._cat   = this.cat.this
+        this._$root = this.Cat.this._blanker.$root$inner
       })
 
       describe("Before the method is added", function () {
@@ -835,18 +831,17 @@ Tranya.ImplementationTesting(function (
         })
 
         it("There is no set undefined placeholder in the root", function () {
-          expect( HasOwn("mood" in this._$root) ).toBe( false )
+          expect( HasOwn(this._$root, "mood") ).toBe( false )
         })
 
-        it("Throws an error when the property is read", function () {
-          var execution =  () => { return this.cat_.mood }
-          expect( execution ).toThrowError( /Unknown property 'mood'/ )
+        it("The property has no value yet", function () {
+          expect( this.cat.mood ).toBe( undefined )
         })
       })
 
       describe("When called with 1 args: a property name", function () {
         beforeEach(function () {
-          this.Cat_.forAddMandatorySetter("mood")
+          this.Cat.forAddMandatorySetter("mood")
         })
 
         it("Puts as basic setter property in the root", function () {
@@ -865,7 +860,7 @@ Tranya.ImplementationTesting(function (
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
-            expect( this.cat_.mood ).toBe( "happy" )
+            expect( this.cat.mood ).toBe( "happy" )
           })
         })
 
@@ -886,7 +881,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with 2 args: a property and a setter name", function () {
         beforeEach(function () {
-          this.Cat_.forAddMandatorySetter("_qrs", "setXyz")
+          this.Cat.forAddMandatorySetter("_qrs", "setXyz")
         })
 
         it("Puts a basic setter property in the root", function () {
@@ -926,7 +921,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When called with 2 args: a setter name and an assigner func", function () {
         beforeEach(function () {
-          this.Cat_.forAddMandatorySetter("_mood", function setMood(newMood) {
+          this.Cat.forAddMandatorySetter("_mood", function setMood(newMood) {
             this._basicSet("_mood", `very ${newMood}`)
           })
         })
