@@ -191,11 +191,14 @@ Tranya(function (
   function AsTypeDisguise(typeName, Barrier) {
     return ({
       [typeName] : function (...args) {
-        // return this._$target[$PULP].newImmutable(...args)
-
+        // Same as => return Barrier._$target[$PULP].newFact(...args)
         const   instance = Barrier._$target[$PULP].new(...args)
         const _$instance = InterMap.get(instance)
-        return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]
+        const  _instance = _$instance[$PULP]
+        if (_instance.id == null) {
+          _$instance._setImmutable.call(_instance, true)
+        }
+        return instance
       }
     })[typeName]
   }
