@@ -142,7 +142,7 @@ Tranya(function (
 
   // eslint-disable-next-line
   _Type._addMethod(function addSelfMethod(func_selector, func_) {
-    return this._addMethod(...arguments, SELF_METHOD)
+    this._addMethod(...arguments, SELF_METHOD)
   }, SELF_METHOD)
 
   // eslint-disable-next-line

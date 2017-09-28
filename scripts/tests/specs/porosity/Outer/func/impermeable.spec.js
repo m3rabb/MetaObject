@@ -54,7 +54,7 @@ Tranya.ImplementationTesting(function (Type_) {
 
       describe("public method", function () {
         it("Answers the outer method handler", function () {
-          expect( this.Bat.toString.method.outer.name ).toBe( "toString_$outer_passthru" )
+          expect( this.Bat.toString.method.outer.name ).toBe( "toString_$outer_nontargeting_value" )
         })
       })
     })

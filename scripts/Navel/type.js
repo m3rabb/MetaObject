@@ -289,7 +289,7 @@ Tranya(function (
 
   _Type.addSelfMethod(function addRetroactiveProperty(assigner_selector, assigner_) {
     // Will set the $inner selector even on an immutable object!!!
-    const [selector, assigner, mode] = (typeof assigner_selector === "function") ?
+    const [selector, assigner] = (typeof assigner_selector === "function") ?
         [assigner_selector.name, assigner_selector] :
         [assigner_selector     , assigner_        ]
     this._addMethod(selector, AsRetroactiveProperty(selector, assigner))

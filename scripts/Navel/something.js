@@ -6,10 +6,12 @@ Tranya(function (
   "use strict"
 
 
-  _$Something.addRetroactiveValue(function $() {
+  _$Something.addRetroactiveValue(function self() {
     return this[$RIND]
   })
 
+
+  _$Something.addAlias("$", "self")
 
 
   _$Something.addValueMethod(function _super() { // RetroactiveProperty

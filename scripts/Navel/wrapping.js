@@ -35,7 +35,7 @@ Tranya(function (
           barrier._$target = _$receiver
           barrier.isInUse  = false
 
-          if (result === undefined || result === _receiver) {
+          if (result === _receiver) {
             return (_$target !== _$receiver) ?
               _$target._setImmutable.call(_$target[$PULP])[$RIND] :
               _$receiver[$RIND]
@@ -44,9 +44,7 @@ Tranya(function (
         else {
           _receiver = _$receiver[$PULP]
           result    = Handler.apply(_receiver, args) // <<----------
-          if (result === undefined || result === _receiver) {
-            return _$receiver[$RIND]
-          }
+          if (result === _receiver) { return _$receiver[$RIND] }
         }
 
         switch (typeof result) {
@@ -95,7 +93,7 @@ Tranya(function (
           barrier._$target = _$receiver
           barrier.isInUse  = false
 
-          if (result === undefined || result === _receiver) {
+          if (result === _receiver) {
             return (_$target !== _$receiver) ?
               _$target._setImmutable.call(_$target[$PULP])[$RIND] :
               _$receiver[$RIND]
@@ -104,9 +102,7 @@ Tranya(function (
         else {
           _receiver = _$receiver[$PULP]
           result    = Handler.apply(_receiver, args) // <<----------
-          if (result === undefined || result === _receiver) {
-            return _$receiver[$RIND]
-          }
+          if (result === _receiver) { return _$receiver[$RIND] }
         }
 
         return result
@@ -152,8 +148,8 @@ Tranya(function (
     })[name]
   }
 
-  function AsOuter_passthru(property, Handler) {
-    const name = `${AsName(property)}_$outer_passthru`
+  function AsOuter_nontargeting_value(property, Handler) {
+    const name = `${AsName(property)}_$outer_nontargeting_value`
     return ({
       [name] : function (...args) {
         return Handler.apply(InterMap.get(this)[$PULP], args) // <<----------
@@ -161,15 +157,15 @@ Tranya(function (
     })[name]
   }
 
-  function AsInner_self_fact(property, Handler) {
-    const name = `${AsName(property)}_$inner_self_fact`
+  function AsInner_fact(property, Handler) {
+    const name = `${AsName(property)}_$inner_fact`
     return ({
       [name] : function (...args) {
         const _receiver = this
         const result    = Handler.apply(_receiver, args) // <<----------
         var   _$result
 
-        if (result === undefined || result === _receiver)  { return _receiver }
+        if (result === _receiver)                          { return _receiver }
         // if (result === _$receiver[$RIND])               { return result    }
         if (typeof result !== "object" || result === null) { return result    }
         if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
@@ -179,18 +175,8 @@ Tranya(function (
     })[name]
   }
 
-  function AsInner_self_value(property, Handler) {
-    const name = `${AsName(property)}_$inner_self_value`
-    return ({
-      [name] : function (...args) {
-        const result = Handler.apply(this, args) // <<----------
-        return (result === undefined) ? this : result
-      }
-    })[name]
-  }
-
   function AsInner_self(property, Handler) {
-    const name = `${AsName(property)}_inner_self`
+    const name = `${AsName(property)}_$inner_self`
     return ({
       [name] : function (...args) {
         Handler.apply(this, args) // <<----------
@@ -199,13 +185,13 @@ Tranya(function (
     })[name]
   }
 
-  function AsInner_passthru(property, Handler) {
-    return Handler
+  function AsInner_value(property, Handler) {
+    return Handler  // Simply passes thru!!!
   }
 
 
-  function AsSuper_self_fact(property, Handler) {
-    const name = `${AsName(property)}_$super_self_fact`
+  function AsSuper_fact(property, Handler) {
+    const name = `${AsName(property)}_$super_fact`
     return ({
       [name] : function (...args) {
         var   _$result
@@ -213,24 +199,12 @@ Tranya(function (
         const _receiver = this[$PULP]
         const result    = Handler.apply(_receiver, args) // <<----------
 
-        if (result === undefined || result === _receiver)  { return _receiver }
+        if (result === _receiver)                          { return _receiver }
         // if (result === _$receiver[$RIND])               { return result    }
         if (typeof result !== "object" || result === null) { return result    }
         if (result[IS_IMMUTABLE] || result.id != null)     { return result    }
         return ((_$result = InterMap.get(result))) ?
           _$Copy(_$result, true) : ObjectCopy(result, true)
-      }
-    })[name]
-  }
-
-  function AsSuper_self_value(property, Handler) {
-    const name = `${AsName(property)}_$super_self_value`
-    return ({
-      [name] : function (...args) {
-        // this is $super. Need to use _receiver instead
-        const _receiver = this[$PULP]
-        const result    = Handler.apply(_receiver, args) // <<----------
-        return (result === undefined) ? _receiver : result
       }
     })[name]
   }
@@ -247,8 +221,8 @@ Tranya(function (
     })[name]
   }
 
-  function AsSuper_passthru(property, Handler) {
-    const name = `${AsName(property)}_$super_passthru`
+  function AsSuper_value(property, Handler) {
+    const name = `${AsName(property)}_$super_value`
     return ({
       [name] : function (...args) {
         // this is $super. Need to use _receiver instead
@@ -263,19 +237,19 @@ Tranya(function (
     return isPublic ?
       AsOuter_targeting_fact(property, handler) :
       AsOuter_targeting_value(property, handler)
-      // false condition should be NONE instead!!!
+      // If isPublic condition should be NONE instead!!!
   }
 
   function AsInnerStandard(property, handler, isPublic) {
     return isPublic ?
-      AsInner_self_fact(property, handler) :
-      AsInner_self_value(property, handler)
+      AsInner_fact(property, handler) :
+      AsInner_value(property, handler)
   }
 
   function AsSuperStandard(property, handler, isPublic) {
     return isPublic ?
-      AsSuper_self_fact(property, handler) :
-      AsSuper_self_value(property, handler)
+      AsSuper_fact(property, handler) :
+      AsSuper_value(property, handler)
   }
 
 
@@ -295,9 +269,9 @@ Tranya(function (
 
   _Shared.VALUE_METHOD = {
     id    : "VALUE_METHOD",
-    outer : AsOuter_passthru,
-    inner : AsInner_passthru,
-    super : AsSuper_passthru,
+    outer : AsOuter_nontargeting_value,
+    inner : AsInner_value,
+    super : AsSuper_value,
   }
 
   _Shared.SETTER_METHOD = {

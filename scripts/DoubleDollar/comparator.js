@@ -524,6 +524,33 @@ isEqu
 isEqv
 isEquiv
 
+
+
+mutable                       immutable
+is(Same)                          the exact same object
+isExactly                         same type/structure/mutablility
+isIdentical (forever)      same object                   same type/values
+isEqual (W|R)    same type/structure/submutability       same type/values
+isEquivalent (for R)       same values (ignore mutability)
+isAlike      (for R)       same values (ignore mutability, type)
+isSimilar    (for R)       same values (ignore mutability, type, case)
+
+isEquivEqual (for R)       equivalent root, equal children
+isAlikeEqual (for R)       alike root     , equal children
+
+
+is        - the same object
+identical - same in all aspects (forever) perfect interchangeable/indistinguishable substitute
+equal     - same type and values (right now) ignore structure and mutabilty
+equivalent - a satisfactory substitute virtually equal
+alike   -    same is the ways that matter
+similar - close enough
+resembles - lesser
+
+
+
+
+
 function isA(type) {
   const tester = (type.constructor === String) ?
      `is${type[0].toUpperCase()}${type.slice(1)}` : type.tester

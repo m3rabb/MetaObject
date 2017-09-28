@@ -125,7 +125,7 @@ Tranya(function (
   }
 
   _Shared.ChangeToImmutableThisError = function (target) {
-    SignalError(target[$RIND], "Changes to an immutable object via 'this' is forbidden!! Perhaps you're improperly using addValueMethod!!")
+    SignalError(target[$RIND], "Changes to an immutable object via 'this' is forbidden!! Perhaps the result of improperly using addValueMethod!!")
   }
 
 })
