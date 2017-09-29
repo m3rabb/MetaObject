@@ -5,7 +5,7 @@ Tranya(function (
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD,
   AsName, AsPropertySymbol, ExtractParamListing, Frost, InterMap, MarkFunc,
-  SetInvisibly, SpawnFrom, MarkAndSetFuncImmutable, NewAssignmentErrorHandler,
+  SpawnFrom, MarkAndSetFuncImmutable, NewAssignmentErrorHandler,
   CompletelyDeleteProperty, InSetProperty,
   DefineProperty, InvisibleConfig, ValueAsFact,
   _Shared
@@ -21,25 +21,10 @@ Tranya(function (
     _$instance._init.apply(_instance, args) // <<----------
     if (_postInit) {
       const result = _postInit.call(_instance)
-      if (result !== undefined && result !== _instance) { return result }
+      if (result !== _instance && result !== undefined) { return result }
     }
     return _$instance[$RIND]
   }
-
-
-  // Once Context is complete delete this method!!!
-  const _BasicNew_ = function new_(...args) {
-    const $inner     = this[$INNER]
-    const newHandler = $inner.new
-    const instance   = (newHandler === _BasicNew || newHandler === _BasicNew_) ?
-      this._basicNew(...args) : this.new(...args)
-    const _$instance = InterMap.get(instance)
-    const $instance  = _$instance[$OUTER]
-
-    SetInvisibly($instance, "this", _$instance[$PULP])
-    return instance
-  }
-
 
 
   function SetDefinition(_$target, definition) {

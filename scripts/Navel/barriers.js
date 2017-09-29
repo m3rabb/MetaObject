@@ -369,3 +369,35 @@ Tranya(function (
 //     //     value.handler.call($inner[$PULP]) : value)
 //   }
 // }
+
+
+// const Permeable = new OuterBarrier()
+//
+// Permeable.id = "Permeable"
+//
+// Permeable.get = function get($target, selector, target) {
+//   var value = $target[selector]
+//   if (value !== undefined) { return value }
+//
+//   const _$target = InterMap.get(target)
+//
+//   value = _$target[selector]
+//
+//   switch (typeof value) {
+//     case "undefined" : break
+//     case "function"  : return value[$OUTER_WRAPPER] || value
+//     default          : return value
+//   }
+//
+//   const $method_inner = _$target[$IMMEDIATES][selector]
+//   if ($method_inner) { return $method_inner[$OUTER_WRAPPER].call(target) }
+//   if (_$target[$DECLARATIONS][selector] !== undefined) { return null }
+//
+//   return _$target._unknownProperty.call(_$target[$PULP], selector)
+// }
+//
+// // REVISIT!!!
+// Permeable.has = function has($target, selector) {
+//   const _$target = InterMap.get($target[$RIND])
+//   return (selector in _$target)
+// }

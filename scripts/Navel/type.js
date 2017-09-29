@@ -68,6 +68,27 @@ Tranya(function (
   })
 
 
+  _Type.addValueMethod(function newFrom(source) {
+    const blanker   = this._blanker
+    const _initFrom_ = blanker.$root$inner._initFrom_
+
+    if (!_initFrom_) { return this.new(source) }
+
+    const _$source   = InterMap.get(source)
+    const  _source   = _$source ? _$source[$PULP] : source
+    const _$instance = new blanker(_source)
+    const  _instance = _$instance[$PULP]
+    const _postInit  = _$instance[$IMMEDIATES]._postInit
+
+    _initFrom_.call(_instance, _source, false, new WeakMap())
+    if (_postInit) {
+      const result = _postInit.call(_instance)
+      if (result !== _instance && result !== undefined) { return result }
+    }
+    return _$instance[$RIND]
+  })
+
+
 
   // addAssigner(function property() {})
   // addAssigner("property", function () {})

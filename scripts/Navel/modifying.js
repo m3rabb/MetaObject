@@ -58,7 +58,7 @@ Tranya(function (
 
     if (_$target._postInit) {
       const result = _$target._postInit.call(_target)
-      if (result !== undefined && result !== _target) {
+      if (result !== _target && result !== undefined) {
         return immutability ? result.asImmutable : result
       }
     }
@@ -336,7 +336,7 @@ Tranya(function (
   function ValueAsImmutable(value) {
     switch (typeof value) {
       case "function" :
-        return value[_IMMUTABLE] ? value :
+        return value[IS_IMMUTABLE] ? value :
           value.asImmutable || InvertedFuncCopyError(value)
 
       case "object"   :
