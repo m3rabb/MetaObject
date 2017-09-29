@@ -2,11 +2,13 @@ Tranya(function (
   $INNER, $IS_TYPE, $OUTER, $PULP, $RIND,
   COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, VALUE_METHOD,
-  AsDecapitalized, BePermeable, ValueAsNext,
-  CrudeBeImmutable, BeImmutableValue, ValueCopy, DefaultContext,
-  Definition, Definition_init, EmptyThingAncestry, ExtractParamNames,
-  InterMap, IsSauced, IsSubtypeOfThing, OwnKeys, RootContext, SetInvisibly,
-  SpawnFrom, TheEmptyArray, Type, ValueAsFact, _BasicNew, _Context
+  AsDecapitalized, BePermeable, HasOwn, ValueAsNext,
+  CrudeBeImmutable, BeImmutableValue, ValueCopy,
+  DefaultContext, Definition, Definition_init, EmptyThingAncestry,
+  ExtractParamNames, InterMap, IsSauced, IsSubtypeOfThing, OwnKeys,
+  RootContext, SetInvisibly, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
+  ValueBeImmutable,
+  _BasicNew, _Context
 ) {
   "use strict"
 
@@ -28,34 +30,10 @@ Tranya(function (
   })
 
 
-
   _Context.addSelfMethod(function add(object) {
     this.atPut(object.name || object.tag, object)
   })
 
-  _Context.addSelfMethod(function _entryOvershadowsPropertyError(selector) {
-    return this._signalError(`Entry cannot overshadow existing property '${selector}'!!`)
-  })
-
-
-
-  // _Context.addMethod(function _privateAccessFromOutside(selector) {
-  //   const entry = this._knownEntries[selector]
-  //   return (entry !== undefined) ? entry :
-  //     PrivateAccessFromOutsideError(this, selector)
-  // })
-
-  _Context.addValueMethod(function _externalPrivateAccess(selector) {
-    const entry = this._knownEntries[selector]
-    return (entry !== undefined) ? entry :
-      this._super._externalPrivateAccess(selector)
-  })
-
-  _Context.addValueMethod(function _unknownProperty(selector) {
-    const entry = this._knownEntries[selector]
-    return (entry !== undefined) ?
-      entry : this._super._unknownProperty(selector)
-  })
 
 
   _Context.addValueMethod(function _setPropertiesImmutable(inPlace, visited) {
@@ -111,32 +89,40 @@ Tranya(function (
   })
 
 
-  _Context.addValueMethod(function _knownTypes() {
-    var selector, entry, _$entry, index
-    const entries = this._knownEntries
-    const types   = []
 
-    index = 0
-    for (selector in entries) {
-      entry   = entries[selector]
-      _$entry = InterMap.get(entry)
-      if (_$entry && _$entry[$IS_TYPE]) { types[index++] = entry }
-    }
-    return types
+  _Context.addValueMethod(function knownAt(selector) {
+    return this._knownEntries[selector]
+  })
+
+  _Context.addValueMethod(function ownAt(selector) {
+    const entries = this._knownEntries
+    return HasOwn(entries, selector) ? entries[selector] : undefined
   })
 
 
-  _Context.addValueMethod(function _ownEntries() {
+  _Context.addMethod(function knownEntries() {
+    return this._knownEntries
+  })
+
+  _Context.addValueMethod(function ownEntries() {
     const known     = this._knownEntries
     const selectors = OwnKeys(known)
     const own       = SpawnFrom(null)
 
     selectors.forEach(selector => own[selector] = known[selector])
-    return own
+    return ValueBeImmutable(own)
+  })
+
+  _Context.addValueMethod(function knownTypes() {
+    return CrudeBeImmutable(TypesFrom(this._knownEntries))
+  })
+
+  _Context.addValueMethod(function ownTypes() {
+    return CrudeBeImmutable(TypesFrom(this.ownEntries))
   })
 
 
-  _Context.addValueMethod(function allEntrySelectors() {
+  _Context.addValueMethod(function knownKeys() {
     var selectors, selector, index
     const entries = this._knownEntries
 
@@ -148,9 +134,50 @@ Tranya(function (
     return CrudeBeImmutable(selectors.sort())
   })
 
-
-  _Context.addValueMethod(function entrySelectors() {
+  _Context.addValueMethod(function ownKeys() {
     return CrudeBeImmutable(OwnKeys(this._knownEntries).sort())
+  })
+
+  _Context.addValueMethod(function knownTypeNames() {
+    return CrudeBeImmutable(
+      TypesFrom(this._knownEntries).map(type => type.name))
+  })
+
+  _Context.addValueMethod(function ownTypeNames() {
+    return CrudeBeImmutable(TypesFrom(this.ownEntries).map(type => type.name))
+  })
+
+
+  function TypesFrom(entries) {
+    var selector, entry, _$entry, index
+    const types = []
+
+    index = 0
+    for (selector in entries) {
+      entry   = entries[selector]
+      _$entry = InterMap.get(entry)
+      if (_$entry && _$entry[$IS_TYPE]) { types[index++] = entry }
+    }
+    return types.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+
+
+  _Context.addValueMethod(function _externalPrivateAccess(selector) {
+    const entry = this._knownEntries[selector]
+    return (entry !== undefined) ?
+      entry : this._super._externalPrivateAccess(selector)
+  })
+
+  _Context.addValueMethod(function _unknownProperty(selector) {
+    const entry = this._knownEntries[selector]
+    return (entry !== undefined) ?
+      entry : this._super._unknownProperty(selector)
+  })
+
+
+  _Context.addSelfMethod(function _entryOvershadowsPropertyError(selector) {
+    return this._signalError(`Entry cannot overshadow existing property '${selector}'!!`)
   })
 
 
@@ -195,7 +222,7 @@ Tranya(function (
 
     const useNewContext = marked[MUTABLE] =
       !!(forceAsCopy_ || execName || this._hasOverwritingParam(marked))
-    const Context       = this.context.entryAt("Context", true)
+    const Context       = this.context.knownAtOrInRootAt("Context")
     const execContext   = useNewContext ?
       Context.new(execName, sourceContext) : sourceContext
 

@@ -3,9 +3,9 @@ Tranya(function (
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   DISGUISE_PULP, INVISIBLE, SYMBOL_1ST_CHAR,
   ASSIGNER_FUNC, BLANKER_FUNC,
-  AsCapitalized, AsDecapitalized, AsName, CrudeBeImmutable, DefineProperty,
-  Frost, Impermeable, InvisibleConfig, IsArray, MarkFunc, NewUniqueId,
-  OwnSymbols, RootOf, SetInvisibly, SpawnFrom,
+  AsCapitalized, AsDecapitalized, AsName, CompareSelectors, CrudeBeImmutable, 
+  DefineProperty, Frost, Impermeable, InvisibleConfig, IsArray, MarkFunc,
+  NewUniqueId, OwnSymbols, RootOf, SetInvisibly, SpawnFrom,
   DisguisedBarrier, InnerBarrier,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
   ImproperDisguiseNameError, SignalError,
@@ -269,7 +269,7 @@ Tranya(function (
 
   function OwnSelectorsSorted(target) {
     const selectors = OwnSelectors(target, true) // Do ignore declarations
-    selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
+    selectors.sort(CompareSelectors)
     return CrudeBeImmutable(selectors)
   }
 
@@ -292,7 +292,7 @@ Tranya(function (
       }
       target = RootOf(target)
     }
-    selectors.sort((a, b) => AsName(a).localeCompare(AsName(b)))
+    selectors.sort(CompareSelectors)
     return CrudeBeImmutable(selectors)
   }
 
@@ -308,7 +308,7 @@ Tranya(function (
 
   function ExtractDefinitionFrom(args, context) {
     var def, tag, _$def
-    const Def = context.entryAt("Definition", true)
+    const Def = context.knownAtOrInRootAt("Definition")
 
     switch (args.length) {
       case 1 :

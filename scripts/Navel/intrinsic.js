@@ -187,13 +187,13 @@ Tranya(function (
     return this.type.allKnownSelectors
   })
 
-  _$Intrinsic.addValueMethod(function visibleSelectors() {
-    return KnownSelectorsSorted(this[$OUTER], OwnVisibleNames)
-  })
-
   _$Intrinsic.addValueMethod(function _ownSelectors() {
     // All string and symbol properties, includes invisibles
     return OwnSelectorsSorted(this[$INNER])
+  })
+
+  _$Intrinsic.addValueMethod(function visibleSelectors() {
+    return KnownSelectorsSorted(this[$OUTER], OwnVisibleNames)
   })
 
   _$Intrinsic.addValueMethod(function ownSelectors() {
@@ -513,7 +513,7 @@ Tranya(function (
   //   }
   // }
   //
-  // 
+  //
 
 
 // AddMethod(_Primordial_root, function hasMethod(selector) {

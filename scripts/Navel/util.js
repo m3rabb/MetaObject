@@ -66,6 +66,8 @@ Tranya(function (
   }
 
 
+  function CompareSelectors(a, b) { return AsName(a).localeCompare(AsName(b)) }
+
 
   function FindDurables(_$target) {
     const durables = OwnNames(_$target)
@@ -174,6 +176,7 @@ Tranya(function (
   Shared.valueIsImmutable         = MarkFunc(ValueIsImmutable)
   Shared.valueIsFact              = MarkFunc(ValueIsFact)
   Shared.hasOwn                   = MarkFunc(HasOwn)
+  Shared.CompareSelectors         = MarkFunc(CompareSelectors) 
   Shared.sortParameters           = MarkFunc(SortParameters)
 
   _Shared.FindDurables            = FindDurables

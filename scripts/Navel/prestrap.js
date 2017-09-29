@@ -169,12 +169,11 @@ Tranya(function (
   _Context.addSelfMethod(Context_atPut)
 
 
-  _Context.addValueMethod(function entryAt(selector, checkRootContext_) {
+
+  _Context.addValueMethod(function knownAtOrInRootAt(selector) {
     var entry = this._knownEntries[selector]
     if (entry !== undefined) { return entry }
-    if (!checkRootContext_)  { return null }
-    entry = _RootContext._knownEntries[selector]
-    return (entry !== undefined) ? entry : null
+    return _RootContext._knownEntries[selector]
   })
 
 
@@ -182,7 +181,7 @@ Tranya(function (
   const BasicPermeableNewDef = MakePermeableNewDef(_BasicNew, RootContext)
 
   function MakePermeableNewDef(NewHandler, context) {
-    const Definition = context.entryAt("Definition", true)
+    const Definition = context.knownAtOrInRootAt("Definition")
     const handler = function $newPermeable(...args) {
       const   instance = NewHandler.apply(this, args)
       const _$instance = InterMap.get(instance)

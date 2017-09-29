@@ -189,10 +189,11 @@ Tranya(function (
       [null, supercontext_] :
       (supercontext_name_.isContext ?
         [null, supercontext_name_] : [supercontext_name_, supercontext_])
+    const superEntries = context ? InterMap.get(context)._knownEntries : null
+
     this.name          = name    || this[$DISGUISE].name
     this.supercontext  = context || null
-    this._knownEntries =
-      SpawnFrom(context ? InterMap.get(context)._knownEntries : null)
+    this._knownEntries = SpawnFrom(superEntries)
   }
 
 

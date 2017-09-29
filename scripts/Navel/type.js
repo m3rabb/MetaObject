@@ -736,7 +736,7 @@ Tranya(function (
 
 
   _Type.addSelfMethod(function define(items, mode = "STANDARD") {
-    const PropertyLoader = this.context.entryAt("PropertyLoader", true)
+    const PropertyLoader = this.context.knownAtOrInRootAt("PropertyLoader")
     PropertyLoader.new(this.$).load(items, mode)
   })
 
