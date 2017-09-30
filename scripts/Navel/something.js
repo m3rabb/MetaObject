@@ -1,6 +1,6 @@
 Tranya(function (
   $BARRIER, $OUTER, $RIND, IS_IMMUTABLE, SYMBOL_1ST_CHAR, VALUE_METHOD,
-  AsName, SetInvisibly, SignalError, _$Something, _Super
+  SetInvisibly, SignalError, _$Something, _Super
 ) {
   "use strict"
 
@@ -36,7 +36,7 @@ Tranya(function (
 
 
 
-  _$Something.addSharedProperty("isSauced", true)
+  _$Something.addSharedProperty("isTranyan", true)
 
 
 

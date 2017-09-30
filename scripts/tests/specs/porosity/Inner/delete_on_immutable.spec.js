@@ -1,6 +1,5 @@
 Tranya.ImplementationTesting(function (
-  $BARRIER, $INNER, $OUTER, $RIND,
-  CrudeBeImmutable, HasOwn, OwnKeys, RootOf,
+  $BARRIER, $INNER, $OUTER, $RIND, CrudeBeImmutable, RootOf, ValueHasOwn, 
   Thing, Type
 ) {
   "use strict"
@@ -94,11 +93,11 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Sets the $inner property to the value", function () {
-          expect( HasOwn(this.result$inner, "_xyz") ).toBe( false )
+          expect( ValueHasOwn(this.result$inner, "_xyz") ).toBe( false )
         })
 
         it("Doesn't set the $outer property", function () {
-          expect( HasOwn(this.result$outer, "_xyz") ).toBe( false )
+          expect( ValueHasOwn(this.result$outer, "_xyz") ).toBe( false )
         })
       })
     })
@@ -139,11 +138,11 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Sets the $inner property to the value", function () {
-          expect( HasOwn(this.result$inner, "mood") ).toBe( false )
+          expect( ValueHasOwn(this.result$inner, "mood") ).toBe( false )
         })
 
         it("Doesn't set the $outer property", function () {
-          expect( HasOwn(this.result$outer, "mood") ).toBe( false )
+          expect( ValueHasOwn(this.result$outer, "mood") ).toBe( false )
         })
       })
     })
@@ -196,11 +195,11 @@ Tranya.ImplementationTesting(function (
         })
 
         it("Sets the $inner property to the value", function () {
-          expect( HasOwn(this.result$inner, "ball") ).toBe( false )
+          expect( ValueHasOwn(this.result$inner, "ball") ).toBe( false )
         })
 
         it("Doesn't set the $outer property", function () {
-          expect( HasOwn(this.result$outer, "ball") ).toBe( false )
+          expect( ValueHasOwn(this.result$outer, "ball") ).toBe( false )
         })
       })
     })

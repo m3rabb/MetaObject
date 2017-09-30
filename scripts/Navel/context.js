@@ -2,12 +2,13 @@ Tranya(function (
   $INNER, $IS_TYPE, $OUTER, $PULP, $RIND,
   COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, VALUE_METHOD,
-  AsDecapitalized, BePermeable, HasOwn, ValueAsNext,
-  CrudeBeImmutable, BeImmutableValue, ValueCopy,
+  AsDecapitalized, BePermeable, ValueAsNext,
+  CompareSelectors, CrudeBeImmutable, BeImmutableValue, ValueCopy,
   DefaultContext, Definition, Definition_init, EmptyThingAncestry,
-  ExtractParamNames, InterMap, IsSauced, IsSubtypeOfThing, OwnKeys,
+  ExtractParamNames, InterMap, IsSubtypeOfThing,
   RootContext, SetInvisibly, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
-  ValueBeImmutable,
+  ValueBeImmutable, ValueIsTranyan, _HasOwn,
+  OwnKeysOf, _OwnKeysOf,
   _BasicNew, _Context
 ) {
   "use strict"
@@ -38,7 +39,7 @@ Tranya(function (
 
   _Context.addValueMethod(function _setPropertiesImmutable(inPlace, visited) {
     const entries   = this._knownEntries
-    const selectors = OwnKeys(entries)
+    const selectors = _OwnKeysOf(entries)
 
     selectors.forEach(selector => {
       var entry, _$entry, fact
@@ -61,7 +62,7 @@ Tranya(function (
     const entries = this._knownEntries
     for (selector in entries) {
       entry = entries[selector]
-      if (IsSauced(entry)) { entry.beImpenetrable }
+      if (ValueIsTranyan(entry)) { entry.beImpenetrable }
     }
     return this._super.beImpenetrable
   })
@@ -90,13 +91,13 @@ Tranya(function (
 
 
 
-  _Context.addValueMethod(function knownAt(selector) {
+  _Context.addValueMethod(function at(selector) {
     return this._knownEntries[selector]
   })
 
   _Context.addValueMethod(function ownAt(selector) {
     const entries = this._knownEntries
-    return HasOwn(entries, selector) ? entries[selector] : undefined
+    return _HasOwn.call(entries, selector) ? entries[selector] : undefined
   })
 
 
@@ -106,7 +107,7 @@ Tranya(function (
 
   _Context.addValueMethod(function ownEntries() {
     const known     = this._knownEntries
-    const selectors = OwnKeys(known)
+    const selectors = OwnKeysOf(known)
     const own       = SpawnFrom(null)
 
     selectors.forEach(selector => own[selector] = known[selector])
@@ -131,11 +132,11 @@ Tranya(function (
     for (selector in entries) {
       selectors[index++] = selector
     }
-    return CrudeBeImmutable(selectors.sort())
+    return CrudeBeImmutable(selectors.sort(CompareSelectors))
   })
 
   _Context.addValueMethod(function ownKeys() {
-    return CrudeBeImmutable(OwnKeys(this._knownEntries).sort())
+    return OwnKeysOf(this._knownEntries)
   })
 
   _Context.addValueMethod(function knownTypeNames() {
@@ -222,7 +223,7 @@ Tranya(function (
 
     const useNewContext = marked[MUTABLE] =
       !!(forceAsCopy_ || execName || this._hasOverwritingParam(marked))
-    const Context       = this.context.knownAtOrInRootAt("Context")
+    const Context       = this.context.atOrInRootAt("Context")
     const execContext   = useNewContext ?
       Context.new(execName, sourceContext) : sourceContext
 

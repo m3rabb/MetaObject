@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (Type, AsName) {
+Tranya.ImplementationTesting(function (Type, ValueAsName) {
   "use strict"
 
   describe("Impermeable outer", function() {
@@ -22,11 +22,11 @@ Tranya.ImplementationTesting(function (Type, AsName) {
           function setAge(age) { this._age = age },
 
           function _unknownProperty(selector) {
-            return `<<${AsName(selector)}>>`
+            return `<<${ValueAsName(selector)}>>`
           },
 
           function _externalPrivateAccess(selector) {
-            return `>>${AsName(selector)}<<`
+            return `>>${ValueAsName(selector)}<<`
           },
         ]
       })

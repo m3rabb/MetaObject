@@ -1,8 +1,8 @@
 Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND,
   DISGUISE_PULP, IS_IMMUTABLE, PROOF, SYMBOL_1ST_CHAR, _DURABLES,
-  ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
-  SAFE_FUNC, TAMED_FUNC,
+  ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC,
+  OUTER_FUNC, SAFE_FUNC, TAMED_FUNC,
   InterMap, MarkAndSetFuncImmutable, ObjectCopy, _$Copy,
   AssignmentOfUndefinedError, AssignmentToPrivateSymbolError,
   DetectedInnerError,
@@ -35,11 +35,10 @@ Tranya(function (
 
 
 
-  function InSetProperty(_$target, selector, value) {
+  function InSetProperty(_$target, selector, value, isPublic) {
     var _$value, writeOuter
-    const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
 
-    if (firstChar !== "_") {           // Public selector
+    if (isPublic) {
       const $target = _$target[$OUTER]
 
       writeOuter = !_$target[IS_IMMUTABLE]
@@ -84,6 +83,7 @@ Tranya(function (
             case OUTER_FUNC    :
             case TAMED_FUNC    :
             case SAFE_FUNC     :
+            // case DISGUISE_FUNC :
             case BLANKER_FUNC  :
             default            : // value is a type's $rind, etc
               break

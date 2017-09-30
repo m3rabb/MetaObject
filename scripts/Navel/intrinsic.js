@@ -17,15 +17,13 @@ Tranya(function (
   $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD,
   IS_IMMUTABLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
-  $Intrinsic$root$inner, AsName, CrudeBeImmutable, ExtractDefinitionFrom,
-  FindAndSetDurables, MakeDefinitionsInfrastructure, NewUniqueId, OwnSelectors,
-  PropertyAt, SetDefinition, SetInvisibly, SpawnFrom, ValueAsFact,
-  _HasOwn, _$Copy, _$Intrinsic,
+  $Intrinsic$root$inner, CompletelyDeleteProperty, CrudeBeImmutable,
+  ExtractDefinitionFrom, FindAndSetDurables, MakeDefinitionsInfrastructure,
+  NewUniqueId, PropertyAt, SetDefinition, SetInvisibly, SpawnFrom, ValueAsFact,
+  ValueAsName, _HasOwn, _$Copy, _$Intrinsic,
   PrivateAccessFromOutsideError, SignalError,
   InterMap, PropertyToSymbolMap,
-  OwnNames, OwnVisibleNames,
-  CompletelyDeleteProperty, DefineProperty,
-  KnownSelectorsSorted, OwnSelectorsSorted
+  NamesOf, OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf, SelectorsOf, VisiblesOf
 ) {
   // "use strict"
 
@@ -110,8 +108,11 @@ Tranya(function (
       $inner : _$Copy($inner, true)[$RIND]
   })
 
-  _$Intrinsic.addAlias("asImmutable", "asImmutableCopy")
-
+  //_$Intrinsic.addAlias("asImmutable", "asImmutableCopy")
+  _$Intrinsic.addValueMethod(function asImmutable() {
+    const $inner = this[$INNER]
+    return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner, true))[$RIND]
+  })
 
 
   // _$Intrinsic.addMethod(function _basicGet(property) {
@@ -178,36 +179,12 @@ Tranya(function (
 
 
 
-
-  _$Intrinsic.addValueMethod(function _knownSelectors() {
-    return KnownSelectorsSorted(this[$INNER], OwnSelectors)
-  })
-
-  _$Intrinsic.addValueMethod(function _inheritedSelectors() {
-    return this.type.allKnownSelectors
-  })
-
-  _$Intrinsic.addValueMethod(function _ownSelectors() {
-    // All string and symbol properties, includes invisibles
-    return OwnSelectorsSorted(this[$INNER])
-  })
-
-  _$Intrinsic.addValueMethod(function visibleSelectors() {
-    return KnownSelectorsSorted(this[$OUTER], OwnVisibleNames)
-  })
-
-  _$Intrinsic.addValueMethod(function ownSelectors() {
-    // Includes placed retroactive|lazy properties, but not symbols
-    return CrudeBeImmutable(OwnNames(this[$OUTER]).sort())
-  })
-
-
   _$Intrinsic.addValueMethod("_hasOwn", _HasOwn)
 
   _$Intrinsic.addValueMethod(function hasOwn(selector) {
     switch (selector[0]) {
-      case undefined : return null  // "Shrug when selector is a symbol
-      case "_"       : return false
+      case undefined : return undefined  // "Shrug when selector is a symbol
+      case "_"       : return undefined
       default        : return this._hasOwn(selector)
     }
   })
@@ -219,6 +196,48 @@ Tranya(function (
 
   _$Intrinsic.addValueMethod(function has(selector) {
     return (selector in this[$OUTER])
+  })
+
+
+
+  _$Intrinsic.addValueMethod(function _ownVisibleSelectors() {
+    return OwnVisiblesOf(this[$INNER])
+  })
+
+  _$Intrinsic.addValueMethod(function _ownSelectors() {
+    // All string and symbol properties, includes invisibles
+    return OwnSelectorsOf(this[$INNER])
+  })
+
+  // _$Intrinsic.addValueMethod(function _inheritedSelectors() {
+  //   return this.type.allKnownSelectors
+  // })
+
+  _$Intrinsic.addValueMethod(function _visibleSelectors() {
+    return VisiblesOf(this[$INNER])
+  })
+
+  _$Intrinsic.addValueMethod(function _knownSelectors() {
+    return SelectorsOf(this[$INNER])
+  })
+
+
+  _$Intrinsic.addValueMethod(function ownVisibleSelectors() {
+    // Not retroactive|lazy properties or symbols
+    return OwnVisiblesOf(this[$OUTER])
+  })
+
+  _$Intrinsic.addValueMethod(function ownSelectors() {
+    // Includes placed retroactive|lazy properties, but not symbols
+    return OwnNamesOf(this[$OUTER])
+  })
+
+  _$Intrinsic.addValueMethod(function visibleSelectors() {
+    return VisiblesOf(this[$OUTER])
+  })
+
+  _$Intrinsic.addValueMethod(function knownSelectors() {
+    return NamesOf(this[$OUTER])
   })
 
 
@@ -428,11 +447,12 @@ Tranya(function (
 
 
   _$Intrinsic.addValueMethod(function _externalPrivateAccessError(selector) {
-    return this._signalError(`External access to private property '${AsName(selector)}' is forbidden!!`)
+    return this._signalError(
+      `External access to private property '${ValueAsName(selector)}' is forbidden!!`)
   })
 
   _$Intrinsic.addValueMethod(function _unknownPropertyError(selector) {
-    return this._signalError(`Unknown property '${AsName(selector)}'!!`)
+    return this._signalError(`Unknown property '${ValueAsName(selector)}'!!`)
   })
 
 

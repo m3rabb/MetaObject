@@ -1,6 +1,5 @@
 Tranya.ImplementationTesting(function (
-  $BARRIER, $INNER, $OUTER, $RIND,
-  CrudeBeImmutable, HasOwn, OwnKeys, RootOf,
+  $BARRIER, $INNER, $OUTER, $RIND, CrudeBeImmutable, RootOf, ValueHasOwn, 
   Thing, Type
 ) {
   "use strict"
@@ -49,8 +48,8 @@ Tranya.ImplementationTesting(function (
       })
 
       it("Deletes the property", function () {
-        expect( HasOwn(this.$inner, "xyz") ).toBe( false )
-        expect( HasOwn(this.$outer, "xyz") ).toBe( false )
+        expect( ValueHasOwn(this.$inner, "xyz") ).toBe( false )
+        expect( ValueHasOwn(this.$outer, "xyz") ).toBe( false )
       })
     })
 
@@ -61,8 +60,8 @@ Tranya.ImplementationTesting(function (
       })
 
       it("Deletes the property", function () {
-        expect( HasOwn(this.$inner, "mood") ).toBe( false )
-        expect( HasOwn(this.$outer, "mood") ).toBe( false )
+        expect( ValueHasOwn(this.$inner, "mood") ).toBe( false )
+        expect( ValueHasOwn(this.$outer, "mood") ).toBe( false )
       })
     })
 
@@ -84,8 +83,8 @@ Tranya.ImplementationTesting(function (
       })
 
       it("Deletes the property", function () {
-        expect( HasOwn(this.$inner, "ball") ).toBe( false )
-        expect( HasOwn(this.$outer, "ball") ).toBe( false )
+        expect( ValueHasOwn(this.$inner, "ball") ).toBe( false )
+        expect( ValueHasOwn(this.$outer, "ball") ).toBe( false )
       })
     })
 

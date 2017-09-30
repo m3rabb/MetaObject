@@ -1,4 +1,4 @@
-Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
+Tranya.exec(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
   "use strict"
 
   const LISTING_DELIMITER_MATCHER = /\s*[ ,]\s*/;
@@ -80,7 +80,7 @@ Tranya.exec(function (OwnVisibleNames, SpawnFrom, _PropertyLoader) {
   })
 
   PropertyLoader.addValueMethod(function _loadFromSpec(item, mode) {
-    var keys = OwnVisibleNames(item)
+    var keys = _OwnKeysOf(item)
 
     keys.forEach(key => {
       var value = item[key]

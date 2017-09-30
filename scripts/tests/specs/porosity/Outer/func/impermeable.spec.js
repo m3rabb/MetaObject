@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (Type_, AsName) {
+Tranya.ImplementationTesting(function (Type_, ValueAsName) {
   "use strict"
 
   describe("Type impermeable outer", function() {
@@ -18,11 +18,11 @@ Tranya.ImplementationTesting(function (Type_, AsName) {
         ]
       })
       this.Bat.addOwnMethod(function _unknownProperty(selector) {
-        return `<<${AsName(selector)}>>`
+        return `<<${ValueAsName(selector)}>>`
       })
 
       this.Bat.addOwnMethod(function _externalPrivateAccess(selector) {
-        return `>>${AsName(selector)}<<`
+        return `>>${ValueAsName(selector)}<<`
       })
       this.Bat.this[XYZ] = 123
     })

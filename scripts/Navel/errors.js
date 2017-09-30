@@ -1,5 +1,5 @@
 Tranya(function (
-  $IS_IMPENETRABLE, $RIND, AsName, MarkFunc, Shared, _Shared
+  $IS_IMPENETRABLE, $RIND, MarkFunc, ValueAsName, Shared, _Shared
 ) {
   "use strict"
 
@@ -63,7 +63,7 @@ Tranya(function (
   }
 
   _Shared.DeleteFromOutsideError = function (target, selector) {
-    SignalError(target[$RIND], `Attempt to delete '${AsName(selector)}' is not allowed from the outside of an object, use a method instead!!`)
+    SignalError(target[$RIND], `Attempt to delete '${ValueAsName(selector)}' is not allowed from the outside of an object, use a method instead!!`)
   }
 
   _Shared.AssignmentViaSuperError = function (target) {
@@ -71,19 +71,19 @@ Tranya(function (
   }
 
   _Shared.ExternalPrivateAccessError = function (target, selector) {
-    SignalError(target[$RIND], `External access to private property '${AsName(selector)}' is forbidden!!`)
+    SignalError(target[$RIND], `External access to private property '${ValueAsName(selector)}' is forbidden!!`)
   }
 
   // _Shared.UnknownPropertyError = function (target, selector) {
-  //   SignalError(target[$RIND], `Receiver ${this.id} doesn't have a property: ${AsName(selector)}!!`)
+  //   SignalError(target[$RIND], `Receiver ${this.id} doesn't have a property: ${ValueAsName(selector)}!!`)
   // }
 
   _Shared.DisallowedDeleteError = function (target, selector) {
-    SignalError(target[$RIND], `Delete of property '${AsName(selector)}' is not allowed!!`)
+    SignalError(target[$RIND], `Delete of property '${ValueAsName(selector)}' is not allowed!!`)
   }
 
   _Shared.DisallowedAssignmentError = function (target, selector, setter) {
-    SignalError(target[$RIND], `Assignment of property '${AsName(selector)}' is not allowed, try '${setter}' method instead!!`)
+    SignalError(target[$RIND], `Assignment of property '${ValueAsName(selector)}' is not allowed, try '${setter}' method instead!!`)
   }
 
   _Shared.UnnamedFuncError = function (target, func) {
@@ -91,7 +91,7 @@ Tranya(function (
   }
 
   _Shared.AssignmentOfUndefinedError = function (target, selector) {
-    SignalError(target[$RIND], `Assignment of undefined to property '${AsName(selector)}' is forbidden, use null instead!!`)
+    SignalError(target[$RIND], `Assignment of undefined to property '${ValueAsName(selector)}' is forbidden, use null instead!!`)
   }
 
   _Shared.InvalidCopyTypeError = function (target) {

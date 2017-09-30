@@ -1,11 +1,8 @@
 (function (globals) {
   "use strict"
 
-  const  Object_prototype    = Object.prototype
-  const  Frost               = Object.freeze
-  const  SpawnFrom           = Object.create
-  const  DefineProperty      = Object.defineProperty
-  const _HasOwn              = Object_prototype.hasOwnProperty
+  const  Frost       = Object.freeze
+  const  SpawnFrom   = Object.create
 
   const Shared  = SpawnFrom(null)
   const _Shared = SpawnFrom(Shared)
@@ -26,10 +23,10 @@
   }
 
 
-  _Shared.InterMap            = InterMap
-  _Shared.PropertyToSymbolMap = SpawnFrom(null)
-  // Shared.SymbolPropertyMap  = SpawnFrom(null)
-
+  _Shared.InterMap              = InterMap
+  _Shared.PropertyToSymbolMap   = SpawnFrom(null)
+  // _Shared.SymbolPropertyMap  = SpawnFrom(null)
+  _Shared.ImplementationSymbols = SpawnFrom(null)
 
   Shared.spawnFrom           = MarkFunc(SpawnFrom)
   Shared.frost               = MarkFunc(Frost)
@@ -39,13 +36,8 @@
   Shared.roundUp             = MarkFunc(Math.ceil)
   Shared.roundDown           = MarkFunc(Math.floor)
   Shared.randomUnitValue     = MarkFunc(Math.random)
-  Shared.ownKeys             = MarkFunc(Reflect.ownKeys)
-  Shared.ownSymbols          = MarkFunc(Object.getOwnPropertySymbols)
-  Shared.ownNames            = MarkFunc(Object.getOwnPropertyNames)
-  Shared.ownVisibleNames     = MarkFunc(Object.keys)
 
-  _Shared._HasOwn            = _HasOwn  // ._hasOwn
-  _Shared.DefineProperty     = DefineProperty
+  _Shared.DefineProperty     = Object.defineProperty
   _Shared.INSTANCEOF         = Symbol.hasInstance
 
 
@@ -77,14 +69,14 @@
 
   // Document these!!!
   _Shared.SAFE_FUNC     = SAFE_FUNC
-  _Shared.BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC", [IS_IMMUTABLE] : true })
-  _Shared.TAMED_FUNC    = Frost({ id : "TAMED_FUNC"  , [IS_IMMUTABLE] : true })
-  _Shared.OUTER_FUNC    = Frost({ id : "OUTER_FUNC"  , [IS_IMMUTABLE] : true })
-  _Shared.INNER_FUNC    = Frost({ id : "INNER_FUNC"  , [IS_IMMUTABLE] : true })
-
-  _Shared.DISGUISE_PULP = Frost({ id : "DISGUISE_PULP" })
-  _Shared.ASSIGNER_FUNC = Frost({ id : "ASSIGNER_FUNC" })
-  _Shared.HANDLER_FUNC  = Frost({ id : "HANDLER_FUNC"  })
+  _Shared.BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC" , [IS_IMMUTABLE] : true })
+  _Shared.TAMED_FUNC    = Frost({ id : "TAMED_FUNC"   , [IS_IMMUTABLE] : true })
+  _Shared.OUTER_FUNC    = Frost({ id : "OUTER_FUNC"   , [IS_IMMUTABLE] : true })
+  _Shared.INNER_FUNC    = Frost({ id : "INNER_FUNC"   , [IS_IMMUTABLE] : true })
+  _Shared.ASSIGNER_FUNC = Frost({ id : "ASSIGNER_FUNC", [IS_IMMUTABLE] : true })
+  _Shared.HANDLER_FUNC  = Frost({ id : "HANDLER_FUNC" , [IS_IMMUTABLE] : true })
+  // _Shared.DISGUISE_FUNC = Frost({ id : "DISGUISE_FUNC", [IS_IMMUTABLE] : true })
+  _Shared.DISGUISE_PULP = Frost({ id : "DISGUISE_PULP", [IS_IMMUTABLE] : true })
 
   _Shared.MarkFunc      = MarkFunc
 
@@ -158,7 +150,8 @@
 
   const FUNC_PROLOG_MATCHER =
     /^(function(\s+([\w$]+))?\s*\(([\w$\s.,=]*)\)|(\(([\w$\s.,=]*)\)|([\w$.]+))\s*=>)/
-  const PARAMS_MATCHER = /[\w$]+/g
+  const PARAMS_MATCHER      = /[\w$]+/g
+  const CAP_WORD_MATCHER    = /([_$]*)([a-z])([\w$]*)/i
 
   function ExtractParamListing(func) {
     const match = FUNC_PROLOG_MATCHER.exec(func)
@@ -172,11 +165,13 @@
   }
 
   function AsCapitalized(word) {
-    return `${word[0].toUpperCase()}${word.slice(1)}`
+    const match = CAP_WORD_MATCHER.exec(word)
+    return `${match[1]}${match[2].toUpperCase()}${match[3]}`
   }
 
   function AsDecapitalized(word) {
-    return `${word[0].toLowerCase()}${word.slice(1)}`
+    const match = CAP_WORD_MATCHER.exec(word)
+    return `${match[1]}${match[2].toLowerCase()}${match[3]}`
   }
 
 
@@ -206,16 +201,16 @@
   _Shared.Shared  =  Shared
 
 
-  function MakeSauce(TargetContext) {
+  function MakeFauxContext(Entries) {
     return function (execContext) {
       const names = ExtractParamNames(execContext)
       const args  = names.map(name =>
-        TargetContext[name] || TargetContext[AsDecapitalized(name)])
+        Entries[name] || Entries[AsDecapitalized(name)])
       return execContext.apply(null, args)
     }
   }
 
-  globals.Tranya = MakeSauce(_Shared)
+  globals.Tranya = MakeFauxContext(_Shared)
 
 })(this)
 

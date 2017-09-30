@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (Type_, AsName) {
+Tranya.ImplementationTesting(function (Type_, ValueAsName) {
   "use strict"
 
   describe("Inner get", function() {
@@ -21,7 +21,9 @@ Tranya.ImplementationTesting(function (Type_, AsName) {
 
           function setAge(age) { this._age = age },
 
-          function _unknownProperty(property) { return `<${AsName(property)}>` }
+          function _unknownProperty(property) {
+            return `<${ValueAsName(property)}>`
+          },
         ]
       })
     })

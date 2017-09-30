@@ -19,12 +19,12 @@ Tranya(function (
     innerMaker        : NewInner,
     $root$outer : {
       __proto__       : null,
-      constructor     : NewVacuousConstructor("$Something$outer"), // ???
+      constructor     : NewVacuousConstructor("Something"), // ???
       [$IMMEDIATES]   : null, // emptyObject,
     },
     $root$inner : {
       __proto__       : null,
-      constructor     : NewVacuousConstructor("$Something$inner"), // ???
+      constructor     : NewVacuousConstructor("_Something"), // ???
       [$IMMEDIATES]   : null, // emptyObject,
       [$ASSIGNERS]    : null, // emptyObject,
       [$SUPERS]       : {
@@ -121,39 +121,39 @@ Tranya(function (
 
   // Necessary to prevent breaking Jasmine testing framework
   // Is this still necessary???
-  _SetDefinitionAt.call(_$Something, "asymmetricMatch", null       , INVISIBLE)
+  _SetDefinitionAt.call(_$Something, "asymmetricMatch", null       )
 
 
-  _SetDefinitionAt.call(_$Something, IS_IMMUTABLE     , false      , VISIBLE  )
-  _SetDefinitionAt.call(_$Something, "isSomething"    , true       , VISIBLE  )
+  _SetDefinitionAt.call(_$Something, IS_IMMUTABLE     , false      )
+  _SetDefinitionAt.call(_$Something, "isSomething"    , true       )
 
   // Could have defined the follow properties later, after addDeclaration has
   // been defined, however it is fast execution within each objects' barrier#get
   // if implemented this way.  These properties are read very frequently.
-  _SetDefinitionAt.call(_$Something, "id"             , null       , VISIBLE  )
-  _SetDefinitionAt.call(_$Something, _DURABLES        , null       , INVISIBLE)
-  _SetDefinitionAt.call(_$Something, "context"        , RootContext, VISIBLE  )
+  _SetDefinitionAt.call(_$Something, "id"             , null       )
+  _SetDefinitionAt.call(_$Something, _DURABLES        , null       )
+  _SetDefinitionAt.call(_$Something, "context"        , RootContext)
 
-  _SetDefinitionAt.call(_Type      , $IS_TYPE         , true       , VISIBLE  )
-  _SetDefinitionAt.call(_Context   , $IS_CONTEXT      , true       , VISIBLE  )
-  _SetDefinitionAt.call(_Definition, $IS_DEFINITION   , true       , VISIBLE  )
+  _SetDefinitionAt.call(_Type      , $IS_TYPE         , true       , INVISIBLE)
+  _SetDefinitionAt.call(_Context   , $IS_CONTEXT      , true       , INVISIBLE)
+  _SetDefinitionAt.call(_Definition, $IS_DEFINITION   , true       , INVISIBLE)
 
 
   _AddMethod.call(_Type, _AddMethod, VALUE_METHOD)
 
   // eslint-disable-next-line
   _Type._addMethod(function addSelfMethod(func_selector, func_) {
-    this._addMethod(...arguments, SELF_METHOD)
+    this._addMethod(...arguments, SELF_METHOD, VISIBLE)
   }, SELF_METHOD)
 
   // eslint-disable-next-line
   _Type.addSelfMethod(function addMethod(func_selector, func_) {
-    this._addMethod(...arguments, FACT_METHOD)
+    this._addMethod(...arguments, FACT_METHOD, VISIBLE)
   })
 
   // eslint-disable-next-line
   _Type.addSelfMethod(function addValueMethod(func_selector, func_) {
-    this._addMethod(...arguments, VALUE_METHOD)
+    this._addMethod(...arguments, VALUE_METHOD, VISIBLE)
   })
 
 
@@ -170,7 +170,7 @@ Tranya(function (
 
 
 
-  _Context.addValueMethod(function knownAtOrInRootAt(selector) {
+  _Context.addValueMethod(function atOrInRootAt(selector) {
     var entry = this._knownEntries[selector]
     if (entry !== undefined) { return entry }
     return _RootContext._knownEntries[selector]
@@ -181,7 +181,7 @@ Tranya(function (
   const BasicPermeableNewDef = MakePermeableNewDef(_BasicNew, RootContext)
 
   function MakePermeableNewDef(NewHandler, context) {
-    const Definition = context.knownAtOrInRootAt("Definition")
+    const Definition = context.atOrInRootAt("Definition")
     const handler = function $newPermeable(...args) {
       const   instance = NewHandler.apply(this, args)
       const _$instance = InterMap.get(instance)

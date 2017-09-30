@@ -1,6 +1,6 @@
 Tranya.ImplementationTesting(function (
   $BARRIER, $INNER, $OUTER, $PULP,
-  CrudeBeImmutable, HasOwn, OwnKeys, RootOf, Type
+  CrudeBeImmutable, RootOf, Type, ValueHasOwn
 ) {
   "use strict"
 
@@ -64,9 +64,9 @@ Tranya.ImplementationTesting(function (
       })
 
       it("Adds _retarget as retroactive property", function () {
-        expect( HasOwn(this._cat, "_retarget") ).toBe( false )
+        expect( ValueHasOwn(this._cat, "_retarget") ).toBe( false )
         this._cat._retarget
-        expect( HasOwn(this._cat, "_retarget") ).toBe( true )
+        expect( ValueHasOwn(this._cat, "_retarget") ).toBe( true )
       })
     })
 
@@ -97,7 +97,7 @@ Tranya.ImplementationTesting(function (
       })
 
       it("The receiver has no '_retarget' property", function () {
-        expect( HasOwn(this._cat, "_retarget") ).toBe( false )
+        expect( ValueHasOwn(this._cat, "_retarget") ).toBe( false )
       })
 
       describe("When _retarget is called within a method", function () {

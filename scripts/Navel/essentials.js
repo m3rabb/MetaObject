@@ -4,9 +4,9 @@ Tranya(function (
   REINHERIT, SYMBOL_1ST_CHAR, VISIBLE,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD,
-  AsName, AsPropertySymbol, ExtractParamListing, Frost, InterMap, MarkFunc,
-  SpawnFrom, MarkAndSetFuncImmutable, NewAssignmentErrorHandler,
-  CompletelyDeleteProperty, InSetProperty,
+  AsPropertySymbol, ExtractParamListing, Frost, InterMap, IsPublicSelector,
+  MarkFunc, SpawnFrom, MarkAndSetFuncImmutable, NewAssignmentErrorHandler,
+  ValueAsName, CompletelyDeleteProperty, InSetProperty,
   DefineProperty, InvisibleConfig, ValueAsFact,
   _Shared
 ) {
@@ -81,26 +81,35 @@ Tranya(function (
   }
 
 
-  const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode = VISIBLE) {
+  const _SetDefinitionAt = function _setDefinitionAt(tag, value, mode_) {
+    var selector, isPublic
+    const mode        = mode_ || VISIBLE
     const _$root      = this._blanker.$root$inner
     const definitions = this._definitions
 
     if (definitions[tag] === value) { return this }
-    if (mode === VISIBLE || mode === INVISIBLE) { this._retarget }
+    if (mode === INVISIBLE || mode === VISIBLE) { this._retarget }
     // Set retroactively if INHERIT or REINHERIT!!!
 
     const _$value = InterMap.get(value)
 
     if (_$value && _$value[$IS_DEFINITION]) {
       SetDefinition(_$root, value)
+      isPublic = value.isPublic
     }
     else {
-      const selector = tag
+      selector = tag
+      isPublic = IsPublicSelector(selector)
+
       CompletelyDeleteProperty(_$root, selector)
-      if (mode === INVISIBLE) {
-        DefineProperty(_$root, selector, InvisibleConfig)
+      InSetProperty(_$root, selector, value, isPublic)
+    }
+
+    if (mode === INVISIBLE) {
+      if (isPublic) {
+        DefineProperty(_$root[$OUTER], selector, InvisibleConfig)
       }
-      InSetProperty(_$root, selector, value)
+      DefineProperty(_$root, selector, InvisibleConfig)
     }
 
     switch (mode) {
@@ -119,7 +128,7 @@ Tranya(function (
   }
 
   const Definition_init = function _init(selector, handler, mode, property_) {
-    const isPublic = (AsName(selector)[0] !== "_")
+    const isPublic = IsPublicSelector(selector)
     const $inner   = InterMap.get(this[$RIND])
     const $outer   = $inner[$OUTER]
 
@@ -135,12 +144,12 @@ Tranya(function (
     switch(mode) {
       case DECLARATION :
         this.isDeclaration = true
-        this.tag           = `$declaration@${AsName(selector)}`
+        this.tag           = `_$declaration@${ValueAsName(selector)}`
         return
 
       case ASSIGNER :
         this.isAssigner = true
-        this.tag        = `$assigner@${AsName(selector)}`
+        this.tag        = `_$assigner@${ValueAsName(selector)}`
         $outer.handler = $inner.handler = MarkFunc(handler, ASSIGNER_FUNC)
         return
 
@@ -163,7 +172,7 @@ Tranya(function (
     }
 
     this.isMethod = true
-    this.tag      = AsName(selector)
+    this.tag      = ValueAsName(selector)
 
     const outer = mode.outer(selector, handler, isPublic)
     const inner = mode.inner(selector, handler, isPublic)
@@ -190,7 +199,6 @@ Tranya(function (
       (supercontext_name_.isContext ?
         [null, supercontext_name_] : [supercontext_name_, supercontext_])
     const superEntries = context ? InterMap.get(context)._knownEntries : null
-
     this.name          = name    || this[$DISGUISE].name
     this.supercontext  = context || null
     this._knownEntries = SpawnFrom(superEntries)
@@ -206,13 +214,13 @@ Tranya(function (
 
 
 
-  const _AddMethod = function _addMethod(func_selector, func_, mode__, property___) {
-    const [selector, handler, mode = FACT_METHOD, property] =
+  const _AddMethod = function _addMethod(func_selector, ...remaining__) {
+    const [selector, handler, mode = FACT_METHOD, visibility, property] =
       (typeof func_selector === "function") ?
-        [func_selector.name, func_selector, func_ , mode__     ] :
-        [func_selector     , func_        , mode__, property___]
+        [func_selector.name, func_selector, ...remaining__] :
+        [func_selector, ...remaining__]
     const def = this.context.Definition(selector, handler, mode, property)
-    return this._setDefinitionAt(def.tag, def)
+    return this._setDefinitionAt(def.tag, def, visibility || INVISIBLE)
   }
 
 

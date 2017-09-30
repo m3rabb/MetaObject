@@ -2,7 +2,8 @@ Tranya(function (
   $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,$IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
-  AlwaysFalse, AlwaysNull, InSetProperty, InterMap, SpawnFrom, _$Copy, _HasOwn,
+  AlwaysFalse, AlwaysNull, InSetProperty, InterMap, IsPublicSelector, SpawnFrom,
+  _$Copy, _HasOwn,
   AssignmentOfUndefinedError, AssignmentViaSuperError,
   ChangeToImmutableThisError, DeleteFromOutsideError,
   DirectAssignmentFromOutsideError, DisallowedDeleteError,
@@ -182,7 +183,7 @@ Tranya(function (
         value = _$target[$RIND]
       }
     }
-    InSetProperty(_$target, selector, value)
+    InSetProperty(_$target, selector, value, IsPublicSelector(selector))
     return true
   }
 

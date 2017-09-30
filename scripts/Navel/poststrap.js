@@ -1,11 +1,12 @@
 Tranya(function (
-  $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, IS_IMMUTABLE, VISIBLE,
-  _DURABLES,
-  $BaseBlanker, $IntrinsicBlanker, CrudeBeImmutable, Frost, InterMap,
-  SetAsymmetricProperty, NewAssignmentErrorHandler,
-  DefaultContext, OwnKeys, RootContext, SetInvisibly, SpawnFrom, TheEmptyArray,
+  $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, INVISIBLE,
+  IS_IMMUTABLE, _DURABLES,
+  $BaseBlanker, $IntrinsicBlanker, CrudeBeImmutable, Frost,
+  InterMap, ImplementationSymbols, SetAsymmetricProperty,
+  NewAssignmentErrorHandler, SetInvisibly, SpawnFrom, TheEmptyArray,
   _$DefaultContext, _$Intrinsic, _$Something, _BasicSetImmutable, _RootContext,
-  _Context, _Definition, _Nothing, _Thing, _Type,
+  _Context, _Definition, _Nothing, _Thing, _Type, _OwnKeysOf,
+  DefaultContext, RootContext,
   Shared, _Shared
 ) {
   "use strict"
@@ -44,11 +45,11 @@ Tranya(function (
 
 
   // Helps with debugging!!!
-  _$Something._setDisplayNames("$Intrinsic$Outer", "$Intrinsic$Inner")
-  _$Intrinsic._setDisplayNames("$Outer"          , "$Inner"          )
+  _$Something._setDisplayNames("Intrinsic")
+  _$Intrinsic._setDisplayNames("Shared"   )
 
-  SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true , VISIBLE)
-  SetAsymmetricProperty(_$Intrinsic, "isInner", true , false, VISIBLE)
+  SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true )
+  SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)
 
 
   _$Something.forAddAssigner(IS_IMMUTABLE,
@@ -74,11 +75,14 @@ Tranya(function (
   const  TestContext = _Context.new("ImplementationTesting", RootContext)
   const _TestContext = InterMap.get(TestContext)[$PULP]
 
-  const selectors = OwnKeys(_Shared)
+  const selectors = _OwnKeysOf(_Shared)
   selectors.forEach(selector => {
     const value = _Shared[selector]
     if (!_RootContext.valueIsInner(value)) {
       _TestContext._atPut(selector, value)
+      if (selector[0] === "$" && typeof value === "symbol") {
+        ImplementationSymbols[value] = selector
+      }
     }
   })
 

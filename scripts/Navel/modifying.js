@@ -1,9 +1,7 @@
 Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND,
   DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
-  ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
-  SAFE_FUNC, TAMED_FUNC,
-  FindAndSetDurables, FindDurables, Frost, InterMap, MarkFunc, OwnNames,
+  FindAndSetDurables, FindDurables, Frost, InterMap, MarkFunc,
   SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, InvertedFuncCopyError,
   Shared, _Shared
@@ -373,14 +371,13 @@ Tranya(function (
   _Shared.ObjectCopy              = ObjectCopy
   _Shared.ObjectSetImmutable      = ObjectSetImmutable  // Necessary???s
 
-  Shared.findAndSetDurables       = MarkFunc(FindAndSetDurables)
   Shared.reliableObjectCopy       = MarkFunc(ReliableObjectCopy)
   Shared.valueAsNext              = MarkFunc(ValueAsNext)
   Shared.valueAsFact              = MarkFunc(ValueAsFact)
   Shared.valueCopy                = MarkFunc(ValueCopy)
   Shared.valueAsImmutable         = MarkFunc(ValueAsImmutable)
   Shared.valueBeImmutable         = MarkFunc(ValueBeImmutable)
-  Shared.CrudeAsImmutable         = MarkFunc(CrudeAsImmutable)
+  Shared.crudeAsImmutable         = MarkFunc(CrudeAsImmutable)
 
 })
 

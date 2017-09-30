@@ -1,28 +1,144 @@
 Tranya(function (
-  $INNER, $IS_INNER, $OUTER, $RIND, IS_IMMUTABLE, PROOF, _DURABLES,
-  DefineProperty, Frost, InterMap, InvisibleConfig, MarkFunc, OwnKeys,
-  OwnNames, SpawnFrom, _HasOwn,
+  $INNER, $IS_INNER, $OUTER, $RIND, IS_IMMUTABLE, PROOF, SYMBOL_1ST_CHAR,
+  _DURABLES,
+  CrudeBeImmutable, DefineProperty, Frost, ImplementationSymbols, InterMap,
+  InvisibleConfig, MarkFunc, RootOf, SpawnFrom, TheEmptyArray,
   Shared, _Shared
 ) {
   "use strict"
 
 
-  function AsName(string_symbol) {
-    if (string_symbol.charAt) { return string_symbol }
-    const name = string_symbol.toString()
-    return name.slice(7, name.length - 1)
+  function _OwnSortedSelectorsOf(value, picker) {
+    if (value == null) { return TheEmptyArray }
+    var selectors = picker(value)
+    selectors = selectors.filter(selector => !ImplementationSymbols[selector])
+    return CrudeBeImmutable(selectors.sort(CompareSelectors))
   }
 
-  function ValueIsTranya(value) {
-    switch (typeof value) {
-      default         : return false
-      case "function" : break
-      case "object"   : if (value === null) { return false } else { break }
-    }
-    const value$ = value[$RIND]
-    if (value$ === undefined) { return false }
-    return (InterMap.get(value$)[$IS_INNER] === PROOF)
+  function _SortedSelectorsOf(value, picker, sorter_) {
+    var target, selectors, selector, index, next
+    if (value == null) { return TheEmptyArray }
+
+    const known        = SpawnFrom(null)
+    const allSelectors = []
+    target = Object(value)
+    index  = 0
+
+    do {
+      selectors = picker(target)
+      next      = selectors.length
+      while (next--) {
+        selector = selectors[next]
+        if (!known[selector]) {
+          known[selector]       = true
+          allSelectors[index++] = selector
+        }
+      }
+    } while ((target = RootOf(target)))
+
+    return CrudeBeImmutable(allSelectors.sort(sorter_))
   }
+
+
+  const _HasOwn        = Object.prototype.hasOwnProperty // ._hasOwn
+  const _OwnVisiblesOf = Object.keys
+  const _OwnNamesOf    = Object.getOwnPropertyNames
+  const _OwnSymbolsOf  = Object.getOwnPropertySymbols
+  const _OwnKeysOf     = Reflect.ownKeys
+
+
+  function OwnVisiblesOf(value) {
+    return CrudeBeImmutable(_OwnVisiblesOf(value).sort())
+  }
+
+  function OwnNamesOf(value) {
+    return CrudeBeImmutable(_OwnNamesOf(value).sort())
+  }
+
+  function OwnSymbolsOf(value) {
+    if (value == null) { return TheEmptyArray }
+    var symbols = _OwnSymbolsOf(value)
+    symbols = symbols.filter(symbol => !ImplementationSymbols[symbol])
+    return CrudeBeImmutable(symbols.sort(CompareSelectors))
+  }
+
+  function OwnSelectorsOf(value) {
+    if (value == null) { return TheEmptyArray }
+    var nonImpNames     = _OwnVisiblesOf(value)
+    var symbols         = _OwnSymbolsOf(value)
+    var nonImpSymbols   = symbols.filter(sym => !ImplementationSymbols[sym])
+    var nonImpSelectors = nonImpNames.concat(nonImpSymbols)
+    return CrudeBeImmutable(nonImpSelectors.sort(CompareSelectors))
+  }
+
+  function OwnKeysOf(value) {
+    return CrudeBeImmutable(_OwnKeysOf(value).sort(CompareSelectors))
+  }
+
+
+  function VisiblesOf(target) {
+    var index, name
+    const visibles = []
+    index = 0
+    for (name in target) { visibles[index++] = name }
+    return CrudeBeImmutable(visibles.sort())
+  }
+
+  function NamesOf(target) {
+    return _SortedSelectorsOf(target, _OwnNamesOf)
+  }
+
+  function SymbolsOf(target) {
+    return _SortedSelectorsOf(target, OwnSymbolsOf, CompareSelectors)
+  }
+
+  function SelectorsOf(target) {
+    return _SortedSelectorsOf(target, OwnSelectorsOf, CompareSelectors)
+  }
+
+  function KeysOf(target) {
+    return _SortedSelectorsOf(target, _OwnKeysOf, CompareSelectors)
+  }
+
+
+
+  function ValueHasOwn(value, selector) {
+    return (value != null) && _HasOwn.call(value, selector)
+  }
+
+  function ValueHas(value, selector) {
+    return (value != null) && (selector in Object(value))
+  }
+
+
+
+  function ValueAsName(value) {
+    var name
+    switch (typeof value) {
+      case "symbol" :
+        name = value.toString()
+        return name.slice(7, name.length - 1)
+
+      case "function" :
+      case "object"   :
+        return value.name
+    }
+    return value
+  }
+
+  const SYMBOL_PREFIX_MATCHER = /^[_$]/i
+
+  function IsPublicSelector(selector) {
+    var firstChar = selector[0]
+    switch (selector[0]) {
+      default        : return true
+      case "_"       : return false
+      case undefined :
+        firstChar = selector.toString()[SYMBOL_1ST_CHAR]
+        return !SYMBOL_PREFIX_MATCHER.test(firstChar)
+    }
+  }
+
 
   function ValueIsInner(value) {
     switch (typeof value) {
@@ -40,7 +156,18 @@ Tranya(function (
       case "object"   : if (value === null) { return false } else { break }
     }
     const _$value = InterMap.get(value)
-    return (_$value[$RIND] === value)
+    return (_$value !== undefined && _$value[$RIND] === value)
+  }
+
+  function ValueIsTranyan(value) {
+    switch (typeof value) {
+      default         : return false
+      case "function" : break
+      case "object"   : if (value === null) { return false } else { break }
+    }
+    const value$ = value[$RIND]
+    if (value$ === undefined) { return false }
+    return (InterMap.get(value$)[$IS_INNER] === PROOF)
   }
 
   function ValueIsImmutable(value) {
@@ -61,24 +188,28 @@ Tranya(function (
   }
 
 
-  function HasOwn(target, selector) {
-    return (target == null) ? false : _HasOwn.call(target, selector)
+
+  // function CompareSelectors(a, b) {
+  //   return ValueAsName(a).localeCompare(ValueAsName(b))
+  // }
+
+  function CompareSelectors(a, b) {
+    const nameA = ValueAsName(a)
+    const nameB = ValueAsName(b)
+    return (nameA === nameB) ? 0 : (nameA < nameB ? -1 : 1)
   }
 
 
-  function CompareSelectors(a, b) { return AsName(a).localeCompare(AsName(b)) }
 
-
-  function FindDurables(_$target) {
-    const durables = OwnNames(_$target)
+  function FindDurables(target) {
+    const durables = _OwnNamesOf(target)
     durables[IS_IMMUTABLE] = true
     return Frost(durables)
   }
 
-  function FindAndSetDurables(_$target) {
-    const durables = OwnNames(_$target)
-    durables[IS_IMMUTABLE] = true
-    return (_$target[_DURABLES] = Frost(durables))
+  function FindAndSetDurables(target) {
+    const durables = OwnNamesOf(target)
+    return (target[_DURABLES] = Frost(durables))
   }
 
 
@@ -134,7 +265,7 @@ Tranya(function (
       family.push(param)
     })
 
-    var suffixes      = OwnKeys(families).sort()
+    var suffixes      = OwnKeysOf(families).sort()
     var finalSuffixes = []
 
     suffixes.forEach(suffix => {
@@ -153,7 +284,7 @@ Tranya(function (
     var constants = []
     var standards = []
 
-    var osauces   = ["Shared", "_Shared"].filter(name => {
+    var contexts  = ["Shared", "_Shared"].filter(name => {
       var index = params.indexOf(name)
       var found = (index >= 0)
       if (found) { params.splice(index, 1) }
@@ -165,21 +296,44 @@ Tranya(function (
     })
     constants = SortParams(constants)
     standards = SortParams(standards)
-    osauces   = osauces.join(", ")
-    return constants.concat(standards, osauces).join(", \n")
+    contexts   = contexts.join(", ")
+    return constants.concat(standards, contexts).join(", \n")
   }
 
-  Shared.asName                   = MarkFunc(AsName)
-  Shared.valueIsTranya            = MarkFunc(ValueIsTranya)
+  Shared._ownSymbolsOf            = MarkFunc(_OwnSymbolsOf)
+  Shared._ownKeysOf               = MarkFunc(_OwnKeysOf)
+  Shared._ownVisiblesOf           = MarkFunc(_OwnVisiblesOf)
+  Shared._ownNamesOf              = MarkFunc(_OwnNamesOf)
+
+  Shared.ownVisiblesOf            = MarkFunc(OwnVisiblesOf)
+  Shared.ownNamesOf               = MarkFunc(OwnNamesOf)
+  Shared.ownSymbolsOf             = MarkFunc(OwnSymbolsOf)
+  Shared.ownSelectorsOf           = MarkFunc(OwnSelectorsOf)
+  Shared.ownKeysOf                = MarkFunc(OwnKeysOf)
+
+  Shared.visiblesOf               = MarkFunc(VisiblesOf)
+  Shared.namesOf                  = MarkFunc(NamesOf)
+  Shared.symbolsOf                = MarkFunc(SymbolsOf)
+  Shared.selectorsOf              = MarkFunc(SelectorsOf)
+  Shared.keysOf                   = MarkFunc(KeysOf)
+
+  Shared.valueHasOwn              = MarkFunc(ValueHasOwn)
+  Shared.valueHas                 = MarkFunc(ValueHas)
+
+
+  Shared.isPublicSelector         = MarkFunc(IsPublicSelector)
   Shared.valueIsInner             = MarkFunc(ValueIsInner)
   Shared.valueIsOuter             = MarkFunc(ValueIsOuter)
+  Shared.valueIsTranyan           = MarkFunc(ValueIsTranyan)
   Shared.valueIsImmutable         = MarkFunc(ValueIsImmutable)
   Shared.valueIsFact              = MarkFunc(ValueIsFact)
-  Shared.hasOwn                   = MarkFunc(HasOwn)
-  Shared.CompareSelectors         = MarkFunc(CompareSelectors) 
-  Shared.sortParameters           = MarkFunc(SortParameters)
 
-  _Shared.FindDurables            = FindDurables
+  Shared.valueAsName              = MarkFunc(ValueAsName)
+  Shared.compareSelectors         = MarkFunc(CompareSelectors)
+  Shared.sortParameters           = MarkFunc(SortParameters)
+  Shared.findDurables             = MarkFunc(FindDurables)
+
+  _Shared._HasOwn                 = _HasOwn // ._hasOwn
   _Shared.FindAndSetDurables      = FindAndSetDurables
   _Shared.SetInvisibly            = SetInvisibly
   _Shared._BasicSetImmutable      = _basicSetImmutable

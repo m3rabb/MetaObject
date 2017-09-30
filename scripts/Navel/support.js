@@ -3,14 +3,13 @@ Tranya(function (
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   DISGUISE_PULP, INVISIBLE, SYMBOL_1ST_CHAR,
   ASSIGNER_FUNC, BLANKER_FUNC,
-  AsCapitalized, AsDecapitalized, AsName, CompareSelectors, CrudeBeImmutable, 
+  AsCapitalized, AsDecapitalized, CompareSelectors, CrudeBeImmutable,
   DefineProperty, Frost, Impermeable, InvisibleConfig, IsArray, MarkFunc,
-  NewUniqueId, OwnSymbols, RootOf, SetInvisibly, SpawnFrom,
+  NewUniqueId, OwnSelectorsOf, SetInvisibly, SpawnFrom, ValueAsName,
   DisguisedBarrier, InnerBarrier,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
   ImproperDisguiseNameError, SignalError,
   InterMap, PropertyToSymbolMap,
-  OwnNames, OwnVisibleNames,
   Shared, _Shared
 ) {
   "use strict"
@@ -18,7 +17,7 @@ Tranya(function (
 
   function AsPropertySymbol(selector) {
     return PropertyToSymbolMap[selector] ||
-      (PropertyToSymbolMap[selector] = Symbol(`<$${AsName(selector)}$>`))
+      (PropertyToSymbolMap[selector] = Symbol(`<$${ValueAsName(selector)}$>`))
   }
 
 
@@ -56,7 +55,7 @@ Tranya(function (
   function NewVacuousConstructor(name) {
     const funcBody = `
       return function ${name || ""}() {
-        const message = "This constructor is only used for naming!!"
+        const message = "This constructor is only used for naming in the debugger!!"
         return Tranya.signalError(${name}, message)
       }
     `
@@ -158,11 +157,11 @@ Tranya(function (
 
       const innerBarrier = new InnerBarrier($inner)
       const outerBarrier = new DisguisedBarrier($outer)
-      const func         = Disguiser(name, innerBarrier)
-      const $pulp        = new Proxy(func, innerBarrier)
-      const $rind        = new Proxy(func, outerBarrier)
+      const disguise     = Disguiser(name, innerBarrier)
+      const $pulp        = new Proxy(disguise, innerBarrier)
+      const $rind        = new Proxy(disguise, outerBarrier)
 
-      $inner[$DISGUISE]  = func
+      $inner[$DISGUISE]  = disguise
       $inner[$BARRIER]   = innerBarrier
       $inner[$INNER]     = $inner
       $inner[$OUTER]     = $outer
@@ -172,8 +171,9 @@ Tranya(function (
 
       if (uid) { SetInvisibly($inner, "uid", uid, "SET BOTH INNER & OUTER") }
 
-      Frost(func.prototype)
-      DefineProperty(func, "name", InvisibleConfig)
+      // MarkFunc(disguise, DISGUISE_FUNC)
+      Frost(disguise.prototype)
+      DefineProperty(disguise, "name", InvisibleConfig)
 
       InterMap.set($pulp, DISGUISE_PULP)
       InterMap.set($rind, $inner)
@@ -192,7 +192,7 @@ Tranya(function (
     return ({
       [typeName] : function (...args) {
         // Same as => return Barrier._$target[$PULP].newFact(...args)
-        const   instance = Barrier._$target[$PULP].new(...args)
+        const   instance = Barrier._$target[$PULP].new(...args) // <<----------
         const _$instance = InterMap.get(instance)
         const  _instance = _$instance[$PULP]
         if (_instance.id == null) {
@@ -204,29 +204,10 @@ Tranya(function (
   }
 
 
-
-  function OwnSelectors(target, ignoreDeclarations_) {
-    var index, next, symbol
-    const selectors = ignoreDeclarations_ ?
-      OwnVisibleNames(target) : OwnNames(target)
-    const symbols   = OwnSymbols(target)
-
-    index = selectors.length
-    next  = symbols.length
-    while (next--) {
-      symbol = symbols[next]
-      // Consider using a stash of forbidden selectors, instead!!!
-      if (symbol.toString()[SYMBOL_1ST_CHAR] !== "$") {
-        selectors[index++] = symbol
-      }
-    }
-    return selectors
-  }
-
   function DeleteSelectorsIn(targets) {
     var selectors, selectorIndex, selector, targetIndex
 
-    selectors     = OwnSelectors(targets[0])
+    selectors     = OwnSelectorsOf(targets[0])
     selectorIndex = selectors.length
 
     while (selectorIndex--) {
@@ -251,12 +232,23 @@ Tranya(function (
   }
 
 
-  function SetAsymmetricProperty(_type, property, _value, $value, visibility) {
-    const blanker = _type._blanker
-    const  $root  = blanker.$root$outer
-    const _$root  = blanker.$root$inner
 
-    if (visibility === INVISIBLE) {
+  // function SetDisplayNames(_type, outerName, innerName_) {
+  //   const innerName = innerName_ || ("_" + outerName)
+  //   const _name     = NewVacuousConstructor(innerName)
+  //   const $name     = NewVacuousConstructor(outerName)
+  //
+  //   SetAsymmetricProperty(_type, "constructor", _name, $name)
+  //   _type[$DISGUISE].name = outerName
+  // }
+
+
+  function SetAsymmetricProperty(_type, property, _value, $value, visibility_) {
+    const blanker    = _type._blanker
+    const  $root     = blanker.$root$outer
+    const _$root     = blanker.$root$inner
+
+    if (!visibility_ || visibility_ === INVISIBLE) {
       DefineProperty( $root, property, InvisibleConfig)
       DefineProperty(_$root, property, InvisibleConfig)
     }
@@ -267,34 +259,6 @@ Tranya(function (
   }
 
 
-  function OwnSelectorsSorted(target) {
-    const selectors = OwnSelectors(target, true) // Do ignore declarations
-    selectors.sort(CompareSelectors)
-    return CrudeBeImmutable(selectors)
-  }
-
-
-  function KnownSelectorsSorted(target, selectorPicker) {
-    var targetSelectors, selector, index, next
-    const knowns         = SpawnFrom(null)
-    const selectors      = []
-
-    index = 0
-    while (target) {
-      targetSelectors = selectorPicker(target)
-      next            = targetSelectors.length
-      while (next--) {
-        selector = targetSelectors[next]
-        if (!knowns[selector]) {
-          knowns[selector] = true
-          selectors[index++] = selector
-        }
-      }
-      target = RootOf(target)
-    }
-    selectors.sort(CompareSelectors)
-    return CrudeBeImmutable(selectors)
-  }
 
   function PropertyAt(_$target, selector) {
     const _$method_inner = _$target[$IMMEDIATES][selector]
@@ -308,7 +272,7 @@ Tranya(function (
 
   function ExtractDefinitionFrom(args, context) {
     var def, tag, _$def
-    const Def = context.knownAtOrInRootAt("Definition")
+    const Def = context.atOrInRootAt("Definition")
 
     switch (args.length) {
       case 1 :
@@ -330,8 +294,6 @@ Tranya(function (
 
 
 
-  Shared.ownSelectors = MarkFunc(OwnSelectors)
-
   _Shared.AsPropertySymbol                = AsPropertySymbol
   _Shared.AsMembershipSelector            = AsMembershipSelector
   _Shared.AsPropertyFromSetter            = AsPropertyFromSetter
@@ -345,9 +307,8 @@ Tranya(function (
   _Shared.AsTypeDisguise                  = AsTypeDisguise
   _Shared.DeleteSelectorsIn               = DeleteSelectorsIn
   _Shared.CompletelyDeleteProperty        = CompletelyDeleteProperty
+  // _Shared.SetDisplayNames                 = SetDisplayNames
   _Shared.SetAsymmetricProperty           = SetAsymmetricProperty
-  _Shared.OwnSelectorsSorted              = OwnSelectorsSorted
-  _Shared.KnownSelectorsSorted            = KnownSelectorsSorted
   _Shared.PropertyAt                      = PropertyAt
   _Shared.ExtractDefinitionFrom           = ExtractDefinitionFrom
 

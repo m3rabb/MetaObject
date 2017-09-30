@@ -1,7 +1,4 @@
-Tranya(function (
-  $INNER, $PRIOR_IDS, $PULP, $RIND, _DURABLES,
-  AsName, _Thing
-) {
+Tranya(function ($INNER, $PRIOR_IDS, $PULP, ValueAsName, _$Intrinsic, _Thing) {
   "use strict"
 
 
@@ -46,7 +43,8 @@ Tranya(function (
     return `${name}${(name) ? "," : ""}${_this.oid}`
   })
 
-  _Thing.addAlias("jasmineToString", "toString") // Is this still necessary???
+  _$Intrinsic.addAlias("jasmineToString", _Thing.definitionAt("toString"))
+  // Is this still necessary???
 
 
   // _Thing.addMethod(function toString(_) { // eslint-disable-line
@@ -57,7 +55,8 @@ Tranya(function (
 
 
   _Thing.addValueMethod(function _notYetImplemented(selector) {
-    this._signalError(`The method ${AsName(selector)} has not been implemented yet!!`)
+    this._signalError(
+      `The method ${ValueAsName(selector)} has not been implemented yet!!`)
   })
 
 })

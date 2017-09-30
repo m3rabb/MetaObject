@@ -1,7 +1,5 @@
 Tranya.ImplementationTesting(function (
-  $BARRIER, $INNER, $OUTER, $RIND,
-  CrudeBeImmutable, OwnKeys, RootOf,
-  Thing, Type
+  $BARRIER, $INNER, $OUTER, $RIND, CrudeBeImmutable, RootOf, Thing, Type
 ) {
   "use strict"
 

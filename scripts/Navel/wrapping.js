@@ -1,15 +1,15 @@
 Tranya(function (
   $BARRIER, IS_IMMUTABLE, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT,
-  AsName, AsPropertySymbol, ObjectCopy, _HasOwn, InnerBarrier, InterMap,
-  InvisibleConfig, _$Copy,
-  DefineProperty, InSetProperty,
+  AsPropertySymbol, ObjectCopy, _HasOwn, InnerBarrier, InterMap,
+  InvisibleConfig, ValueAsName, _$Copy,
+  DefineProperty, InSetProperty, IsPublicSelector,
   _Shared
 ) {
   "use strict"
 
 
-  function AsOuter_targeting_fact(property, Handler) {
-    const name = `${AsName(property)}_$outer_targeting_fact`
+  function AsOuter_targeting_fact(selector, Handler) {
+    const name = `${ValueAsName(selector)}_$outer_targeting_fact`
     return ({
       [name] : function (...args) {
         var barrier, _receiver, _$target, result, _$result
@@ -65,8 +65,8 @@ Tranya(function (
     })[name]
   }
 
-  function AsOuter_targeting_self(property, Handler) {
-    const name = `${AsName(property)}_$outer_targeting_self`
+  function AsOuter_targeting_self(selector, Handler) {
+    const name = `${ValueAsName(selector)}_$outer_targeting_self`
     return ({
       [name] : function (...args) {
         const _$receiver = InterMap.get(this)
@@ -103,8 +103,8 @@ Tranya(function (
     })[name]
   }
 
-  function AsOuter_nontargeting_value(property, Handler) {
-    const name = `${AsName(property)}_$outer_nontargeting_value`
+  function AsOuter_nontargeting_value(selector, Handler) {
+    const name = `${ValueAsName(selector)}_$outer_nontargeting_value`
     return ({
       [name] : function (...args) {
         const _$receiver = InterMap.get(this)
@@ -115,8 +115,8 @@ Tranya(function (
     })[name]
   }
 
-  function AsInner_fact(property, Handler) {
-    const name = `${AsName(property)}_$inner_fact`
+  function AsInner_fact(selector, Handler) {
+    const name = `${ValueAsName(selector)}_$inner_fact`
     return ({
       [name] : function (...args) {
         var _$result
@@ -132,8 +132,8 @@ Tranya(function (
     })[name]
   }
 
-  function AsInner_self(property, Handler) {
-    const name = `${AsName(property)}_$inner_self`
+  function AsInner_self(selector, Handler) {
+    const name = `${ValueAsName(selector)}_$inner_self`
     return ({
       [name] : function (...args) {
         Handler.apply(this, args) // <<----------
@@ -142,13 +142,13 @@ Tranya(function (
     })[name]
   }
 
-  function AsInner_value(property, Handler) {
+  function AsInner_value(selector, Handler) {
     return Handler  // Simply passes thru!!!
   }
 
 
-  function AsSuper_fact(property, Handler) {
-    const name = `${AsName(property)}_$super_fact`
+  function AsSuper_fact(selector, Handler) {
+    const name = `${ValueAsName(selector)}_$super_fact`
     return ({
       [name] : function (...args) {
         var _$result
@@ -164,8 +164,8 @@ Tranya(function (
     })[name]
   }
 
-  function AsSuper_self(property, Handler) {
-    const name = `${AsName(property)}_$super_self`
+  function AsSuper_self(selector, Handler) {
+    const name = `${ValueAsName(selector)}_$super_self`
     return ({
       [name] : function (...args) {
         // this is $super. Need to use _receiver instead
@@ -176,8 +176,8 @@ Tranya(function (
     })[name]
   }
 
-  function AsSuper_value(property, Handler) {
-    const name = `${AsName(property)}_$super_value`
+  function AsSuper_value(selector, Handler) {
+    const name = `${ValueAsName(selector)}_$super_value`
     return ({
       [name] : function (...args) {
         // this is $super. Need to use _receiver instead
@@ -234,7 +234,7 @@ Tranya(function (
 
 
   _Shared.AsBasicSetter = function (propertyName, setterName, mode) {
-    const name = `${AsName(setterName)}_$set_${propertyName}`
+    const name = `${ValueAsName(setterName)}_$set_${propertyName}`
     const PropertyName = (mode === MANDATORY_SETTER_METHOD) ?
        AsPropertySymbol(propertyName) : propertyName
     return {
@@ -244,7 +244,7 @@ Tranya(function (
 
 
   _Shared.AsAssignmentSetter = function (propertyName, setterName, Assigner) {
-    const name = `${AsName(setterName)}_$assignSet_${propertyName}`
+    const name = `${ValueAsName(setterName)}_$assignSet_${propertyName}`
     const PropertyName = AsPropertySymbol(propertyName)
     return {
       [name] : function (...args) {
@@ -254,35 +254,39 @@ Tranya(function (
   }
 
 
-  _Shared.AsRetroactiveProperty = function (Property, Assigner) {
-    const name = `${AsName(Property)}_$retro`
+  _Shared.AsRetroactiveProperty = function (Selector, Assigner) {
+    const name     = `${ValueAsName(Selector)}_$retro`
+    const IsPublic = IsPublicSelector(Selector)
     return {
       [name] : function () {
+        value
         const _$receiver = this[$INNER]
-        const value      = _$receiver[Property]
-        const value$root = _$receiver[$ROOT][Property]
+        const value$root = _$receiver[$ROOT][Selector]
+        var   value = _$receiver[Selector]
 
         if (_$receiver[IS_IMMUTABLE]) {
           // Object is already immutable
           if (value !== value$root)                    { return value }
           if (value === undefined)             { /* never been set */ }
-          else if (_HasOwn.call(_$receiver, Property)) { return value }
+          else if (_HasOwn.call(_$receiver, Selector)) { return value }
             // Fortunately, this (expensive) case is unlikely.to persist.
 
           // Below, because $receiver is frosted, InSetProperty will only set _$receiver
         }
+        else if (IsPublic) {
+          DefineProperty(_$receiver[$OUTER], Selector, InvisibleConfig)
+        }
+        DefineProperty(_$receiver, Selector, InvisibleConfig)
 
-        DefineProperty(_$receiver, Property, InvisibleConfig)
-        // if (Property[0] !== "_") {
-        //   DefineProperty(_$receiver[$OUTER], Property, InvisibleConfig)
-        // }
-        return InSetProperty(_$receiver, Property, Assigner.call(this))
+        value = Assigner.call(this)
+        return InSetProperty(_$receiver, Selector, value, IsPublic)
       }
     }[name]
   }
 
-  _Shared.AsLazyProperty = function (Property, Assigner) {
-    const name = `${AsName(Property)}_$lazy`
+  _Shared.AsLazyProperty = function (Selector, Assigner) {
+    const name     = `${ValueAsName(Selector)}_$lazy`
+    const IsPublic = IsPublicSelector(Selector)
     return {
       [name] : function () {
         const _$receiver = this[$INNER]
@@ -290,11 +294,13 @@ Tranya(function (
         // Since receiver is immutable, execution defaults to being getter method.
         if (_$receiver[IS_IMMUTABLE]) { return Assigner.call(this) }
 
-        DefineProperty(_$receiver, Property, InvisibleConfig)
-        // if (Property[0] !== "_") {
-        //   DefineProperty(_$receiver[$OUTER], Property, InvisibleConfig)
-        // }
-        return InSetProperty(_$receiver, Property, Assigner.call(this))
+        if (IsPublic) {
+          DefineProperty(_$receiver[$OUTER], Selector, InvisibleConfig)
+        }
+        DefineProperty(_$receiver, Selector, InvisibleConfig)
+
+        const value = Assigner.call(this)
+        return InSetProperty(_$receiver, Selector, value, IsPublic)
       }
     }[name]
   }
