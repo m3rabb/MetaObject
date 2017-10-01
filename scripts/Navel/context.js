@@ -1,5 +1,5 @@
 Tranya(function (
-  $INNER, $IS_TYPE, $OUTER, $PULP, $RIND,
+  $INNER, $IS_TYPE, $PULP, $RIND,
   COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, VALUE_METHOD,
   AsDecapitalized, BePermeable, ValueAsNext,

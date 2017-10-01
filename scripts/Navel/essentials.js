@@ -106,10 +106,8 @@ Tranya(function (
     }
 
     if (mode === INVISIBLE) {
-      if (isPublic) {
-        DefineProperty(_$root[$OUTER], selector, InvisibleConfig)
-      }
-      DefineProperty(_$root, selector, InvisibleConfig)
+      if (isPublic) { DefineProperty(_$root[$OUTER], tag, InvisibleConfig) }
+      DefineProperty(_$root, tag, InvisibleConfig)
     }
 
     switch (mode) {
@@ -172,7 +170,7 @@ Tranya(function (
     }
 
     this.isMethod = true
-    this.tag      = ValueAsName(selector)
+    this.tag      = selector
 
     const outer = mode.outer(selector, handler, isPublic)
     const inner = mode.inner(selector, handler, isPublic)

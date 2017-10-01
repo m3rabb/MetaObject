@@ -270,7 +270,7 @@ Tranya(function (
   }
 
 
-  function ExtractDefinitionFrom(args, context) {
+  function AsDefinitionFrom(args, context) {
     var def, tag, _$def
     const Def = context.atOrInRootAt("Definition")
 
@@ -310,7 +310,7 @@ Tranya(function (
   // _Shared.SetDisplayNames                 = SetDisplayNames
   _Shared.SetAsymmetricProperty           = SetAsymmetricProperty
   _Shared.PropertyAt                      = PropertyAt
-  _Shared.ExtractDefinitionFrom           = ExtractDefinitionFrom
+  _Shared.AsDefinitionFrom                = AsDefinitionFrom
 
 })
 

@@ -56,19 +56,11 @@ Tranya(function (
   }
 
   function OwnSymbolsOf(value) {
-    if (value == null) { return TheEmptyArray }
-    var symbols = _OwnSymbolsOf(value)
-    symbols = symbols.filter(symbol => !ImplementationSymbols[symbol])
-    return CrudeBeImmutable(symbols.sort(CompareSelectors))
+    return _OwnSortedSelectorsOf(value, _OwnSymbolsOf)
   }
 
   function OwnSelectorsOf(value) {
-    if (value == null) { return TheEmptyArray }
-    var nonImpNames     = _OwnVisiblesOf(value)
-    var symbols         = _OwnSymbolsOf(value)
-    var nonImpSymbols   = symbols.filter(sym => !ImplementationSymbols[sym])
-    var nonImpSelectors = nonImpNames.concat(nonImpSymbols)
-    return CrudeBeImmutable(nonImpSelectors.sort(CompareSelectors))
+    return _OwnSortedSelectorsOf(value, _OwnKeysOf)
   }
 
   function OwnKeysOf(value) {

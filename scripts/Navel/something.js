@@ -1,29 +1,24 @@
 Tranya(function (
-  $BARRIER, $OUTER, $RIND, IS_IMMUTABLE, SYMBOL_1ST_CHAR, VALUE_METHOD,
-  SetInvisibly, SignalError, _$Something, _Super
+  $BARRIER, $OUTER, $RIND, IS_IMMUTABLE, SYMBOL_1ST_CHAR,
+  SELF_METHOD, VALUE_METHOD, VISIBLE,
+  AsRetroactiveProperty, SetInvisibly, SignalError, _$Something, _Super
 ) {
   "use strict"
 
 
-  _$Something.addRetroactiveValue(function self() {
+  // addRetroactiveValue
+  _$Something._addMethod("self", AsRetroactiveProperty("self", function self() {
     return this[$RIND]
-  })
+  }), VALUE_METHOD)
+
+  // _$Something.addAlias("$", "self")
 
 
-  _$Something.addAlias("$", "self")
-
-
-  _$Something.addValueMethod(function _super() { // RetroactiveProperty
+  _$Something.addValueMethod(function _super() { // RetroactiveValue
     const _$target = this[$BARRIER]._$target
     return SetInvisibly(_$target, "_super", new Proxy(_$target, _Super))
   })
 
-
-
-
-  _$Something.addValueMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
-    return this.id
-  })
 
 
   _$Something.addValueMethod(function is(value) {
@@ -36,10 +31,6 @@ Tranya(function (
 
 
 
-  _$Something.addSharedProperty("isTranyan", true)
-
-
-
   _$Something.addValueMethod(function isImmutable() {
     return this[IS_IMMUTABLE] || false
   })
@@ -48,6 +39,13 @@ Tranya(function (
   _$Something.addValueMethod(function isPermeable() {
     return (this[$OUTER].this) ? true : false
   })
+
+
+  _$Something._addMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
+    return this.id
+  }, VALUE_METHOD)
+
+
 
 })
 

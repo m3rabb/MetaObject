@@ -43,7 +43,7 @@ Tranya(function ($INNER, $PRIOR_IDS, $PULP, ValueAsName, _$Intrinsic, _Thing) {
     return `${name}${(name) ? "," : ""}${_this.oid}`
   })
 
-  _$Intrinsic.addAlias("jasmineToString", _Thing.definitionAt("toString"))
+  // _$Intrinsic.addAlias("jasmineToString", _Thing.definitionAt("toString"))
   // Is this still necessary???
 
 
@@ -54,10 +54,12 @@ Tranya(function ($INNER, $PRIOR_IDS, $PULP, ValueAsName, _$Intrinsic, _Thing) {
   // })
 
 
-  _Thing.addValueMethod(function _notYetImplemented(selector) {
-    this._signalError(
-      `The method ${ValueAsName(selector)} has not been implemented yet!!`)
-  })
+
+
+
+  // _Thing.addDeclaration("_initFrom_")
+  // _Thing.addDeclaration("_postInit")
+  // _Thing.addDeclaration("_setPropertiesImmutable")
 
 })
 

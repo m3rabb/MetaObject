@@ -10,7 +10,7 @@ Tranya(function (
 
   Context_atPut, Context_init, Definition_init,
   _AddMethod, _BasicNew, _BasicSetImmutable, SetDefinition, _SetDefinitionAt,
-  _Shared
+  Shared, _Shared
 ) {
   "use strict"
 
@@ -19,12 +19,12 @@ Tranya(function (
     innerMaker        : NewInner,
     $root$outer : {
       __proto__       : null,
-      constructor     : NewVacuousConstructor("Something"), // ???
+      constructor     : NewVacuousConstructor("Core"), // ???
       [$IMMEDIATES]   : null, // emptyObject,
     },
     $root$inner : {
       __proto__       : null,
-      constructor     : NewVacuousConstructor("_Something"), // ???
+      constructor     : NewVacuousConstructor("_Core"), // ???
       [$IMMEDIATES]   : null, // emptyObject,
       [$ASSIGNERS]    : null, // emptyObject,
       [$SUPERS]       : {
@@ -121,7 +121,7 @@ Tranya(function (
 
   // Necessary to prevent breaking Jasmine testing framework
   // Is this still necessary???
-  _SetDefinitionAt.call(_$Something, "asymmetricMatch", null       )
+  // _SetDefinitionAt.call(_$Something, "asymmetricMatch", null       )
 
 
   _SetDefinitionAt.call(_$Something, IS_IMMUTABLE     , false      )
@@ -139,12 +139,12 @@ Tranya(function (
   _SetDefinitionAt.call(_Definition, $IS_DEFINITION   , true       , INVISIBLE)
 
 
-  _AddMethod.call(_Type, _AddMethod, VALUE_METHOD)
+  _AddMethod.call(_Type, _AddMethod, VALUE_METHOD, VISIBLE)
 
   // eslint-disable-next-line
   _Type._addMethod(function addSelfMethod(func_selector, func_) {
     this._addMethod(...arguments, SELF_METHOD, VISIBLE)
-  }, SELF_METHOD)
+  }, SELF_METHOD, VISIBLE)
 
   // eslint-disable-next-line
   _Type.addSelfMethod(function addMethod(func_selector, func_) {
@@ -222,8 +222,8 @@ Tranya(function (
   }
 
 
-  _Shared.RootContext            =  RootContext
-  _Shared.DefaultContext         =  DefaultContext
+  Shared.rootContext            =  RootContext
+  Shared.defaultContext         =  DefaultContext
 
   _Shared.$BaseBlanker          =  $BaseBlanker
   _Shared.$SomethingBlanker     =  $SomethingBlanker

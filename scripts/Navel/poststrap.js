@@ -1,5 +1,5 @@
 Tranya(function (
-  $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, INVISIBLE,
+  $INNER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, INVISIBLE,
   IS_IMMUTABLE, _DURABLES,
   $BaseBlanker, $IntrinsicBlanker, CrudeBeImmutable, Frost,
   InterMap, ImplementationSymbols, SetAsymmetricProperty,
@@ -86,6 +86,7 @@ Tranya(function (
     }
   })
 
+  _RootContext.add(DefaultContext)
   _RootContext.add(TestContext)
 
   Tranya = RootContext

@@ -15,15 +15,16 @@
 
 Tranya(function (
   $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
-  $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD,
+  $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, INVISIBLE,
   IS_IMMUTABLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
-  $Intrinsic$root$inner, CompletelyDeleteProperty, CrudeBeImmutable,
-  ExtractDefinitionFrom, FindAndSetDurables, MakeDefinitionsInfrastructure,
+  AsDefinitionFrom, CompareSelectors, CompletelyDeleteProperty,
+  CrudeBeImmutable, FindAndSetDurables, MakeDefinitionsInfrastructure,
   NewUniqueId, PropertyAt, SetDefinition, SetInvisibly, SpawnFrom, ValueAsFact,
   ValueAsName, _HasOwn, _$Copy, _$Intrinsic,
   PrivateAccessFromOutsideError, SignalError,
   InterMap, PropertyToSymbolMap,
-  NamesOf, OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf, SelectorsOf, VisiblesOf
+  NamesOf, OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf, SelectorsOf, VisiblesOf,
+  _OwnVisiblesOf
 ) {
   // "use strict"
 
@@ -43,6 +44,10 @@ Tranya(function (
   _$Intrinsic.addValueMethod(function isA(type) {
     return this[type.membershipSelector]
   })
+
+
+  _$Intrinsic._setDefinitionAt("isTranyan", true, INVISIBLE)
+
 
 
 
@@ -108,11 +113,7 @@ Tranya(function (
       $inner : _$Copy($inner, true)[$RIND]
   })
 
-  //_$Intrinsic.addAlias("asImmutable", "asImmutableCopy")
-  _$Intrinsic.addValueMethod(function asImmutable() {
-    const $inner = this[$INNER]
-    return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner, true))[$RIND]
-  })
+  _$Intrinsic.addAlias("asImmutable", "asImmutableCopy")
 
 
   // _$Intrinsic.addMethod(function _basicGet(property) {
@@ -200,6 +201,26 @@ Tranya(function (
 
 
 
+  _$Intrinsic.addValueMethod(function _invisiblesFrom(knownsMethod, visiblesMethod) {
+    const knowns   = this[knownsMethod]
+    const visibles = this[visiblesMethod]
+    return CrudeBeImmutable(knowns.filter(sel => !visibles.includes(sel)))
+  })
+
+  _$Intrinsic.addValueMethod(function _primariesFrom(inheritedMethod, ownPicker, sorter_) {
+    var primaries, index
+    const inheriteds = this.type[inheritedMethod]
+    const owns       = ownPicker(this[$OUTER])
+    primaries = []
+    index     = 0
+    owns.forEach(sel => {
+      if (!inheriteds.includes(sel)) { primaries[index++] = sel }
+    })
+    primaries = primaries.concat(inheriteds)
+    return CrudeBeImmutable(primaries.sort(sorter_))
+  })
+
+
   _$Intrinsic.addValueMethod(function _ownVisibleSelectors() {
     return OwnVisiblesOf(this[$INNER])
   })
@@ -209,12 +230,22 @@ Tranya(function (
     return OwnSelectorsOf(this[$INNER])
   })
 
-  // _$Intrinsic.addValueMethod(function _inheritedSelectors() {
-  //   return this.type.allKnownSelectors
-  // })
+  _$Intrinsic.addValueMethod(function _primarySelectors() {
+    return this._primariesFrom(
+      "allDefinedSelectors", OwnSelectorsOf, CompareSelectors)
+  })
+
+  _$Intrinsic.addValueMethod(function _intrinsicSelectors() {
+    return SelectorsOf(_$Intrinsic._blanker.$root$inner)
+  })
+
 
   _$Intrinsic.addValueMethod(function _visibleSelectors() {
     return VisiblesOf(this[$INNER])
+  })
+
+  _$Intrinsic.addValueMethod(function _invisibleSelectors() {
+    return this._invisiblesFrom("_knownSelectors", "_visibleSelectors")
   })
 
   _$Intrinsic.addValueMethod(function _knownSelectors() {
@@ -232,11 +263,25 @@ Tranya(function (
     return OwnNamesOf(this[$OUTER])
   })
 
+
+  _$Intrinsic.addValueMethod(function primarySelectors() {
+    return this._primariesFrom("allPublicSelectors", _OwnVisiblesOf)
+  })
+
+  _$Intrinsic.addValueMethod(function intrinsicSelectors() {
+    return NamesOf(_$Intrinsic._blanker.$root$outer)
+  })
+
   _$Intrinsic.addValueMethod(function visibleSelectors() {
     return VisiblesOf(this[$OUTER])
   })
 
+  _$Intrinsic.addValueMethod(function invisibleSelectors() {
+    return this._invisiblesFrom("knownSelectors", "visibleSelectors")
+  })
+
   _$Intrinsic.addValueMethod(function knownSelectors() {
+    // All selectors except symbols or private selectors
     return NamesOf(this[$OUTER])
   })
 
@@ -374,7 +419,7 @@ Tranya(function (
   // addOwnDefinition(selector, func, mode_) <<--- This one is broken!!!
 
   _$Intrinsic.addSelfMethod(function addOwnDefinition(...args) {
-    const definition   = ExtractDefinitionFrom(args, this.context)
+    const definition   = AsDefinitionFrom(args, this.context)
     const tag          = definition.tag
     const $inner       = this[$INNER]
     var   definitions  = $inner[$OWN_DEFINITIONS]
@@ -426,10 +471,6 @@ Tranya(function (
   // })
 
 
-  _$Intrinsic.addValueMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
-    return this.toString()
-  })
-
 
   // eslint-disable-next-line
   _$Intrinsic.addValueMethod(function _unknownProperty(selector) {
@@ -446,6 +487,12 @@ Tranya(function (
   })
 
 
+  _$Intrinsic.addValueMethod(function _notYetImplemented(selector) {
+    this._signalError(
+      `The method ${ValueAsName(selector)} has not been implemented yet!!`)
+  })
+
+
   _$Intrinsic.addValueMethod(function _externalPrivateAccessError(selector) {
     return this._signalError(
       `External access to private property '${ValueAsName(selector)}' is forbidden!!`)
@@ -454,6 +501,14 @@ Tranya(function (
   _$Intrinsic.addValueMethod(function _unknownPropertyError(selector) {
     return this._signalError(`Unknown property '${ValueAsName(selector)}'!!`)
   })
+
+
+
+  _$Intrinsic._addMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
+    return this.toString()
+  }, VALUE_METHOD)
+
+
 
 
 })

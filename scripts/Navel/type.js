@@ -4,12 +4,12 @@ Tranya(function (
   $PULP, $RIND, $SUPERS,
   ASSIGNER, DECLARATION, INHERIT, INVISIBLE, IS_IMMUTABLE, REINHERIT, VISIBLE,
    _DURABLES,
-  ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
+  ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC, FACT_METHOD,
   IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
-  AsCapitalized, AsMembershipSelector, AsTypeDisguise, AsPropertySymbol,
-  BePermeable, CrudeAsImmutable, CrudeBeImmutable,
-  DefaultContext, DeleteSelectorsIn, ExtractDefinitionFrom,
+  AsCapitalized, AsDefinitionFrom, AsMembershipSelector, AsTypeDisguise, AsPropertySymbol,
+  BePermeable, CompareSelectors, CrudeAsImmutable, CrudeBeImmutable,
+  DefaultContext, DeleteSelectorsIn,
   ExtractParamListing, Frost, InterMap, IsArray, IsPublicSelector,
   IsSubtypeOfThing, NewVacuousConstructor, PropertyAt, RootContext,
   RootOf, SetDefinition, SetInvisibly, SpawnFrom, ValueAsName, ValueAsNext,
@@ -17,7 +17,7 @@ Tranya(function (
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
-  _OwnKeysOf, OwnKeysOf, OwnSelectorsOf, SelectorsOf,
+  OwnKeysOf, OwnSelectorsOf, SelectorsOf, OwnVisiblesOf, _OwnKeysOf,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
   SetAsymmetricProperty,
   AsAssignmentSetter, AsBasicSetter, AsPropertyFromSetter
@@ -365,7 +365,7 @@ Tranya(function (
   // addDefinition(selector, func, mode_)
 
   _Type.addSelfMethod(function addDefinition(...params) {
-    var definition = ExtractDefinitionFrom(params, this.context)
+    const definition = AsDefinitionFrom(params, this.context)
     this._setDefinitionAt(definition.tag, definition)
   })
 
@@ -744,7 +744,7 @@ Tranya(function (
 
   _Type.addSelfMethod(function define(items, mode = "STANDARD") {
     const PropertyLoader = this.context.atOrInRootAt("PropertyLoader")
-    PropertyLoader.new(this.$).load(items, mode)
+    PropertyLoader.new(this.self).load(items, mode)
   })
 
   _Type.addSelfMethod(function addSharedProperties(items) {
@@ -833,7 +833,8 @@ Tranya(function (
   })
 
   _Type.addValueMethod(function publicSelectors() {
-    return CrudeAsImmutable(this.definedSelectors.filter(IsPublicSelector))
+    const definedSelectors = _OwnKeysOf(this._definitions)
+    return CrudeAsImmutable(definedSelectors.filter(IsPublicSelector))
   })
 
 
@@ -842,13 +843,31 @@ Tranya(function (
   })
 
   _Type.addValueMethod(function allDefinedSelectors() {
-    // All but intrinsic selectors
-    return OwnSelectorsOf(this._blanker.$root$inner)
+    var index, next, _$nextType, nextDefinitions, tags
+    const ancestry  = this._ancestry
+    const knowns    = SpawnFrom(null)
+    const selectors = []
+
+    index = 0
+    next  = ancestry.length
+    while (next--) {
+      _$nextType      = InterMap.get(ancestry[next])
+      nextDefinitions = _$nextType._definitions
+      tags            = _OwnKeysOf(nextDefinitions)
+
+      tags.forEach(tag => {
+        if (!knowns[tag]) { selectors[index++] = knowns[tag] = tag }
+      })
+    }
+    return CrudeAsImmutable(selectors.sort(CompareSelectors))
   })
 
   _Type.addValueMethod(function allPublicSelectors() {
-    // All visible public selectors
-    return OwnSelectorsOf(this._blanker.$root$outer)
+    // All public selectors
+    // const definedSelectors = this.allDefinedSelectors
+    // return CrudeAsImmutable(definedSelectors.filter(IsPublicSelector))
+
+    return OwnVisiblesOf(this._blanker.$root$outer)
   })
 
 
