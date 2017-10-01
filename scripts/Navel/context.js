@@ -413,3 +413,32 @@ Tranya(function (
 })
 
   // isAbsolutelyImpermeable isImpenetrable
+
+
+
+  // _Context.addSelfMethod(function knownEntriesDo(action) {
+  //   const entries = this._knownEntries
+  //   for (var key in entries) { action(entries[key], key) }
+  // })
+  //
+  // _Context.addSelfMethod(function ownEntriesDo(action) {
+  //   const entries = this._knownEntries
+  //   const keys    = _OwnKeysOf(this._knownEntries)
+  //   keys.forEach(key => action(entries[key], key) }
+  // })
+  //
+  // _Context.addSelfMethod(function entriesDo(scale, action) {
+  //   (scale.toUpperCase() === "OWN") ?
+  //     this.ownEntriesDo(action) : knownEntriesDo(action)
+  // })
+  //
+  // _Context.addValueMethod(function ownTypes() {
+  //   var   index = 0
+  //   const types = []
+  //
+  //   this.entriesDo("OWN", entry => {
+  //     const _$entry = InterMap.get(entry)
+  //     if (_$entry && _$entry[$IS_TYPE]) { types[index++] = entry }
+  //   })
+  //   return CrudeBeImmutable(types)
+  // })
