@@ -249,6 +249,12 @@ if (useNewContext && marked[COUNT]) {
 ==
 Add subcontexts methods to Context
 
+==
+Consider
+
+  list._1
+  list._atPut(1)
+
 ==========
 
 ikigai

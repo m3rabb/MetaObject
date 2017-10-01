@@ -1,8 +1,8 @@
 Tranya(function (
-  $INNER, $IS_TYPE, $PULP, $RIND,
+  $INNER, $IS_CONTEXT, $IS_TYPE, $PULP, $RIND,
   COUNT, IMMUTABLE, INHERITED, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, VALUE_METHOD,
-  AsDecapitalized, BePermeable,
+  AlwaysPass1st, AlwaysPass2nd, AsDecapitalized, BePermeable,
   CompareSelectors, CrudeBeImmutable, BeImmutableValue,
   DefaultContext, Definition, Definition_init, EmptyThingAncestry,
   ExtractParamNames, InterMap, IsSubtypeOfThing,
@@ -106,62 +106,114 @@ Tranya(function (
   })
 
   _Context.addValueMethod(function ownEntries() {
-    const known     = this._knownEntries
-    const selectors = OwnKeysOf(known)
-    const own       = SpawnFrom(null)
+    const known = this._knownEntries
+    const keys  = OwnKeysOf(known)
+    const own   = SpawnFrom(null)
 
-    selectors.forEach(selector => own[selector] = known[selector])
+    keys.forEach(key => own[key] = known[key])
     return ValueBeImmutable(own)
-  })
-
-  _Context.addValueMethod(function knownTypes() {
-    return CrudeBeImmutable(TypesFrom(this._knownEntries))
-  })
-
-  _Context.addValueMethod(function ownTypes() {
-    return CrudeBeImmutable(TypesFrom(this.ownEntries))
   })
 
 
   _Context.addValueMethod(function knownKeys() {
-    var selectors, selector, index
+    var key, index
     const entries = this._knownEntries
+    const keys    = []
 
-    selectors = []
     index = 0
-    for (selector in entries) {
-      selectors[index++] = selector
-    }
-    return CrudeBeImmutable(selectors.sort(CompareSelectors))
+    for (key in entries) { keys[index++] = key }
+    return CrudeBeImmutable(keys.sort(CompareSelectors))
   })
 
   _Context.addValueMethod(function ownKeys() {
     return OwnKeysOf(this._knownEntries)
   })
 
+
+
+  _Context.addSelfMethod(function forEachKnown(action) {
+    this._forEachEntry("knownKeys", action)
+  })
+
+  _Context.addSelfMethod(function forEachOwn(action) {
+    this._forEachEntry("ownKeys", action)
+  })
+
+  _Context.addValueMethod(function _forEachEntry(where, action) {
+    const Entries = this._knownEntries
+    this[where].forEach(key => action(Entries[key], key))
+    return this
+  })
+
+  _Context.addValueMethod(function _mapEntries(where, action) {
+    const results = []
+    var   index   = 0
+    this._forEachEntry(
+      where, (entry, key) => results[index++] = action(entry, key))
+    return CrudeBeImmutable(results)
+  })
+
+  _Context.addValueMethod(function _mapKind(which, where, selection) {
+    const results = []
+    var   index   = 0
+    this._forEachEntry(where, (entry, key) => {
+      const _$entry = InterMap.get(entry)
+      if (_$entry && _$entry[which]) {
+        results[index++] = [entry, key][selection]
+      }
+    })
+    return CrudeBeImmutable(results)
+  })
+
+  const VALUE = 0
+  const KEY   = 1
+
+  _Context.addValueMethod(function knownTypes() {
+    return this._mapKind($IS_TYPE, "knownKeys", VALUE)
+  })
+
+  _Context.addValueMethod(function ownTypes() {
+    return this._mapKind($IS_TYPE, "ownKeys", VALUE)
+  })
+
   _Context.addValueMethod(function knownTypeNames() {
-    return CrudeBeImmutable(
-      TypesFrom(this._knownEntries).map(type => type.name))
+    return this._mapKind($IS_TYPE, "knownKeys", KEY)
   })
 
   _Context.addValueMethod(function ownTypeNames() {
-    return CrudeBeImmutable(TypesFrom(this.ownEntries).map(type => type.name))
+    return this._mapKind($IS_TYPE, "ownKeys", KEY)
   })
 
 
-  function TypesFrom(entries) {
-    var selector, entry, _$entry, index
-    const types = []
+  _Context.addValueMethod(function _getContexts(where, selection) {
+    var contexts = this._mapKind($IS_CONTEXT, where, selection)
+    var uniques  = new Set(contexts)
+    return CrudeBeImmutable([...uniques])
+  })
 
-    index = 0
-    for (selector in entries) {
-      entry   = entries[selector]
-      _$entry = InterMap.get(entry)
-      if (_$entry && _$entry[$IS_TYPE]) { types[index++] = entry }
-    }
-    return types.sort((a, b) => a.name.localeCompare(b.name))
-  }
+  _Context.addValueMethod(function knownContexts() {
+    return this._getContexts("knownKeys", VALUE)
+  })
 
+  _Context.addValueMethod(function ownContexts() {
+    return this._getContexts("ownKeys", VALUE)
+  })
+
+  _Context.addValueMethod(function knownContextKeys() {
+    return this._getContexts("knownKeys", KEY)
+  })
+
+  _Context.addValueMethod(function ownContextKeys() {
+    return this._getContexts("ownKeys", KEY)
+  })
+
+  _Context.addValueMethod(function knownContextNames() {
+    return CrudeBeImmutable(this.knownContexts.map(context => context.name))
+  })
+
+  _Context.addValueMethod(function ownContextNames() {
+    return CrudeBeImmutable(this.ownContexts.map(context => context.name))
+  })
 
 
   _Context.addValueMethod(function _externalPrivateAccess(selector) {
@@ -413,32 +465,3 @@ Tranya(function (
 })
 
   // isAbsolutelyImpermeable isImpenetrable
-
-
-
-  // _Context.addSelfMethod(function knownEntriesDo(action) {
-  //   const entries = this._knownEntries
-  //   for (var key in entries) { action(entries[key], key) }
-  // })
-  //
-  // _Context.addSelfMethod(function ownEntriesDo(action) {
-  //   const entries = this._knownEntries
-  //   const keys    = _OwnKeysOf(this._knownEntries)
-  //   keys.forEach(key => action(entries[key], key) }
-  // })
-  //
-  // _Context.addSelfMethod(function entriesDo(scale, action) {
-  //   (scale.toUpperCase() === "OWN") ?
-  //     this.ownEntriesDo(action) : knownEntriesDo(action)
-  // })
-  //
-  // _Context.addValueMethod(function ownTypes() {
-  //   var   index = 0
-  //   const types = []
-  //
-  //   this.entriesDo("OWN", entry => {
-  //     const _$entry = InterMap.get(entry)
-  //     if (_$entry && _$entry[$IS_TYPE]) { types[index++] = entry }
-  //   })
-  //   return CrudeBeImmutable(types)
-  // })

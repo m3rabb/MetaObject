@@ -81,12 +81,14 @@
   _Shared.MarkFunc      = MarkFunc
 
   // Simpleton function
-  Shared.alwaysTrue     = MarkFunc(          () => true        )
-  Shared.alwaysFalse    = MarkFunc(          () => false       )
-  Shared.alwaysNull     = MarkFunc(          () => null        )
-  Shared.alwayUndefined = MarkFunc(          () => undefined   )
-  Shared.alwaysSelf     = MarkFunc( function () { return this })
-
+  Shared.alwaysTrue     = MarkFunc(           () => true         )
+  Shared.alwaysFalse    = MarkFunc(           () => false        )
+  Shared.alwaysNull     = MarkFunc(           () => null         )
+  Shared.alwayUndefined = MarkFunc(           () => undefined    )
+  Shared.alwaysSelf     = MarkFunc(  function () { return this } )
+  Shared.alwaysPass1st  = MarkFunc(          arg => arg          )
+  Shared.alwaysPass2nd  = MarkFunc( (arg1, arg2) => arg2         )
+  Shared.alwaysPass     = Shared.alwaysPass1st
 
 
   // private symbols for implementation usage, $ means non-ya-bizness!!!
