@@ -1,6 +1,6 @@
 Tranya(function (
   $INNER, $IS_TYPE, $PULP, $RIND,
-  COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
+  COUNT, IMMUTABLE, INHERITED, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, VALUE_METHOD,
   AsDecapitalized, BePermeable,
   CompareSelectors, CrudeBeImmutable, BeImmutableValue,
@@ -206,7 +206,7 @@ Tranya(function (
   _Context.addValueMethod(function _hasOverwritingParam(marked) {
     const mutability = marked[MUTABLE]
     return mutability ||
-      this[IS_IMMUTABLE] && (mutability !== undefined) || false
+      this[IMMUTABLE] && (mutability !== undefined) || false
   })
 
   _Context.addValueMethod(function _exec(execFunc, forceAsCopy_) {
@@ -394,7 +394,7 @@ Tranya(function (
       if (asPermeable) {
         context = (value === inheritedValue) ? null : execContext
         arg = _ValueCopy(value, false, visited, context)
-        return (arg === value) ? arg : BePermeable(arg, value[IS_IMMUTABLE])
+        return (arg === value) ? arg : BePermeable(arg, value[IMMUTABLE])
       }
       if ( isType  ) { return value  }
       if (asMutable) {
@@ -402,7 +402,7 @@ Tranya(function (
       }
       else {
         if (!marked[MUTABLE]) { return value }
-        arg = _ValueAsNext(value, value[IS_IMMUTABLE], visited, execContext)
+        arg = _ValueAsNext(value, value[IMMUTABLE], visited, execContext)
       }
     }
 

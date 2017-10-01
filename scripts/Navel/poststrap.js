@@ -1,6 +1,6 @@
 Tranya(function (
-  $INNER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, INVISIBLE,
-  IS_IMMUTABLE, _DURABLES,
+  $INNER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, IMMUTABLE, INVISIBLE,
+  _DURABLES,
   $BaseBlanker, $IntrinsicBlanker, CrudeBeImmutable, Frost,
   InterMap, ImplementationSymbols, SetAsymmetricProperty,
   NewAssignmentErrorHandler, SetInvisibly, SpawnFrom, TheEmptyArray,
@@ -52,8 +52,8 @@ Tranya(function (
   SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)
 
 
-  _$Something.forAddAssigner(IS_IMMUTABLE,
-    NewAssignmentErrorHandler(IS_IMMUTABLE, "beImmutable"))
+  _$Something.forAddAssigner(IMMUTABLE,
+    NewAssignmentErrorHandler(IMMUTABLE, "beImmutable"))
   _$Something.forAddAssigner(_DURABLES,
     NewAssignmentErrorHandler(_DURABLES, "addDurables"))
 

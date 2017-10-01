@@ -1,5 +1,5 @@
 Tranya(function (
-  $BARRIER, IS_IMMUTABLE, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT,
+  $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, IMMUTABLE,
   AsPropertySymbol, ObjectCopy, _HasOwn, InnerBarrier, InterMap,
   InvisibleConfig, ValueAsName, _$Copy,
   DefineProperty, InSetProperty, IsPublicSelector,
@@ -15,7 +15,7 @@ Tranya(function (
         var barrier, _receiver, _$target, result, _$result
         const _$receiver = InterMap.get(this)
 
-        if (_$receiver[IS_IMMUTABLE]) {
+        if (_$receiver[IMMUTABLE]) {
           barrier = _$receiver[$BARRIER]
 
           if (barrier.isInUse) {
@@ -56,7 +56,7 @@ Tranya(function (
               // never assigned to untrusted external functions.
               // return (outer && InterMap.get(outer) === OUTER_FUNC) ? outer : result
           case "object"   : if (result === null)             { return result }
-          if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+          if (result[IMMUTABLE] || result.id != null)        { return result }
           if (result === _receiver) { return _$Copy(_receiver[$INNER], true) }
             return ((_$result = InterMap.get(result))) ?
               _$Copy(_$result, true)[$RIND] : ObjectCopy(result, true)
@@ -72,7 +72,7 @@ Tranya(function (
         const _$receiver = InterMap.get(this)
         var   barrier, _receiver, _$target
 
-        if (_$receiver[IS_IMMUTABLE]) {
+        if (_$receiver[IMMUTABLE]) {
           barrier = _$receiver[$BARRIER]
 
           if (barrier.isInUse) {
@@ -124,7 +124,7 @@ Tranya(function (
         const result    = Handler.apply(_receiver, args) // <<----------
 
         if (typeof result !== "object" || result === null) { return result }
-        if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+        if (result[IMMUTABLE] || result.id != null)        { return result }
         if (result === _receiver) { return _$Copy(_receiver[$INNER], true) }
         return ((_$result = InterMap.get(result))) ?
           _$Copy(_$result, true) : ObjectCopy(result, true)
@@ -156,7 +156,7 @@ Tranya(function (
         const result    = Handler.apply(_receiver, args) // <<----------
 
         if (typeof result !== "object" || result === null) { return result }
-        if (result[IS_IMMUTABLE] || result.id != null)     { return result }
+        if (result[IMMUTABLE] || result.id != null)        { return result }
         if (result === _receiver) { return _$Copy(_receiver[$INNER], true) }
         return ((_$result = InterMap.get(result))) ?
           _$Copy(_$result, true) : ObjectCopy(result, true)
@@ -264,7 +264,7 @@ Tranya(function (
         const value$root = _$receiver[$ROOT][Selector]
         var   value = _$receiver[Selector]
 
-        if (_$receiver[IS_IMMUTABLE]) {
+        if (_$receiver[IMMUTABLE]) {
           // Object is already immutable
           if (value !== value$root)                    { return value }
           if (value === undefined)             { /* never been set */ }
@@ -292,7 +292,7 @@ Tranya(function (
         const _$receiver = this[$INNER]
 
         // Since receiver is immutable, execution defaults to being getter method.
-        if (_$receiver[IS_IMMUTABLE]) { return Assigner.call(this) }
+        if (_$receiver[IMMUTABLE]) { return Assigner.call(this) }
 
         if (IsPublic) {
           DefineProperty(_$receiver[$OUTER], Selector, InvisibleConfig)

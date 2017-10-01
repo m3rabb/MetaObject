@@ -15,8 +15,8 @@
 
 Tranya(function (
   $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
-  $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, INVISIBLE,
-  IS_IMMUTABLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
+  $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
+  INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   AsDefinitionFrom, CompareSelectors, CompletelyDeleteProperty,
   CrudeBeImmutable, FindAndSetDurables, MakeDefinitionsInfrastructure,
   NewUniqueId, PropertyAt, SetDefinition, SetInvisibly, SpawnFrom, ValueAsFact,
@@ -33,11 +33,11 @@ Tranya(function (
 
 
   _$Intrinsic.addValueMethod(function isMutable() {
-    return !this[IS_IMMUTABLE]
+    return !this[IMMUTABLE]
   })
 
   _$Intrinsic.addValueMethod(function isFact() {
-    return this[IS_IMMUTABLE] || (this.id != null)
+    return this[IMMUTABLE] || (this.id != null)
   })
 
 
@@ -61,7 +61,7 @@ Tranya(function (
         [undefined, visited_asImmutable_, visited_, context__] :
         [visited_asImmutable_, visited_, context__, exceptSelector___]
 
-    if ($inner[IS_IMMUTABLE] && asImmutable !== false) {
+    if ($inner[IMMUTABLE] && asImmutable !== false) {
       if (!context || $inner.context === context) { return $inner[$RIND] }
     }
     return _$Copy($inner, asImmutable, visited, context, selector)[$RIND]
@@ -69,7 +69,7 @@ Tranya(function (
 
   _$Intrinsic.addValueMethod(function immutableCopy(visited_, context__) {
     const $inner = this[$INNER]
-    if ($inner[IS_IMMUTABLE]) {
+    if ($inner[IMMUTABLE]) {
       if (!context__ || $inner.context === context__) { return $inner[$RIND] }
     }
     return _$Copy($inner, true, visited_, context__)[$RIND]
@@ -90,7 +90,7 @@ Tranya(function (
 
   _$Intrinsic.addValueMethod(function asCopy() {
     const $inner = this[$INNER]
-    return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner))[$RIND]
+    return ($inner[IMMUTABLE] ? $inner : _$Copy($inner))[$RIND]
   })
 
   _$Intrinsic.addValueMethod(function asMutableCopy() {
@@ -99,17 +99,17 @@ Tranya(function (
 
   _$Intrinsic.addValueMethod(function asImmutableCopy() {
     const $inner = this[$INNER]
-    return ($inner[IS_IMMUTABLE] ? $inner : _$Copy($inner, true))[$RIND]
+    return ($inner[IMMUTABLE] ? $inner : _$Copy($inner, true))[$RIND]
   })
 
   _$Intrinsic.addValueMethod(function asMutable() {
     const $inner = this[$INNER]
-    return ($inner[IS_IMMUTABLE] ? _$Copy($inner, false) : $inner)[$RIND]
+    return ($inner[IMMUTABLE] ? _$Copy($inner, false) : $inner)[$RIND]
   })
 
   _$Intrinsic.addValueMethod(function asFact() {
     const $inner = this[$INNER]
-    return ($inner[IS_IMMUTABLE] || ($inner.id != null)) ?
+    return ($inner[IMMUTABLE] || ($inner.id != null)) ?
       $inner : _$Copy($inner, true)[$RIND]
   })
 
@@ -122,7 +122,7 @@ Tranya(function (
 
 
   _$Intrinsic.addValueMethod(function setImmutable(visited_inPlace_, visited_) {
-    if (this[IS_IMMUTABLE]) { return this }
+    if (this[IMMUTABLE]) { return this }
     const [inPlace, visited] = (typeof visited_inPlace_ === "object") ?
       [undefined, visited_inPlace_] : [visited_inPlace_, visited_]
 
@@ -131,7 +131,7 @@ Tranya(function (
 
 
   _$Intrinsic.addValueMethod(function beImmutable() {
-    return this[IS_IMMUTABLE] ? this : this._setImmutable()
+    return this[IMMUTABLE] ? this : this._setImmutable()
   })
 
 
@@ -304,7 +304,7 @@ Tranya(function (
   _$Intrinsic.addValueMethod(function _retarget() {
     const $inner = this[$INNER]
 
-    if ($inner[IS_IMMUTABLE]) {
+    if ($inner[IMMUTABLE]) {
       delete this[$DELETE_IMMUTABILITY]
       return this
     }
@@ -522,7 +522,7 @@ Tranya(function (
 // _$Intrinsic.addMethod(function _retargetAsBlank() {
 //   const $inner = this[$INNER]
 //
-//   if ($inner[IS_IMMUTABLE]) {
+//   if ($inner[IMMUTABLE]) {
 //     delete this.[$DELETE_ALL_PROPERTIES]
 //   }
 //   else {
@@ -539,7 +539,7 @@ Tranya(function (
 
 // _$Intrinsic.addImmediate(function _captureChanges() {
 //   const $inner = this[$INNER]
-//   if ($inner[IS_IMMUTABLE]) { delete this[_DELETE_IMMUTABILITY] }
+//   if ($inner[IMMUTABLE]) { delete this[_DELETE_IMMUTABILITY] }
 //   DefineProperty($inner, "_captureChanges", InvisibleConfig)
 //   return ($inner._captureChanges = this)
 // }, BASIC_SELF_METHOD)
@@ -547,7 +547,7 @@ Tranya(function (
 //
 // _$Intrinsic.addImmediate(function _captureOverwrite() {
 //   const $inner = this[$INNER]
-//   if ($inner[IS_IMMUTABLE]) { delete this[_DELETE_ALL_PROPERTIES] }
+//   if ($inner[IMMUTABLE]) { delete this[_DELETE_ALL_PROPERTIES] }
 //   DefineProperty($inner, "_captureOverwrite", InvisibleConfig)
 //   return ($inner._captureOverwrite = this)
 // }, BASIC_SELF_METHOD)

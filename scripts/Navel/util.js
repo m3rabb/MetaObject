@@ -1,5 +1,5 @@
 Tranya(function (
-  $INNER, $IS_INNER, $OUTER, $RIND, IS_IMMUTABLE, PROOF, SYMBOL_1ST_CHAR,
+  $INNER, $IS_INNER, $OUTER, $RIND, IMMUTABLE, PROOF, SYMBOL_1ST_CHAR,
   _DURABLES,
   CrudeBeImmutable, DefineProperty, Frost, ImplementationSymbols, InterMap,
   InvisibleConfig, MarkFunc, RootOf, SpawnFrom, TheEmptyArray,
@@ -167,13 +167,13 @@ Tranya(function (
       case "object"   : break
       default         : return true
     }
-    return value[IS_IMMUTABLE] ? true : false
+    return value[IMMUTABLE] ? true : false
   }
 
   function ValueIsFact(value) {
     if (typeof value !== "object") { return true }
     if (value === null)            { return true }
-    if (value[IS_IMMUTABLE])       { return true }
+    if (value[IMMUTABLE])          { return true }
     if (value.id != null)          { return true }
     return false
   }
@@ -194,7 +194,7 @@ Tranya(function (
 
   function FindDurables(target) {
     const durables = _OwnNamesOf(target)
-    durables[IS_IMMUTABLE] = true
+    durables[IMMUTABLE] = true
     return Frost(durables)
   }
 
@@ -218,7 +218,7 @@ Tranya(function (
     const  $target = _$target[$OUTER]
 
     delete _$target._retarget
-    $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
+    $target[IMMUTABLE] = _$target[IMMUTABLE] = true
     Frost($target)
     return this
   }
@@ -226,14 +226,14 @@ Tranya(function (
 
   function MarkAndSetFuncImmutable(func, marker) {
     if (func == null || InterMap.get(func)) { return func }
-    func[IS_IMMUTABLE] = true
+    func[IMMUTABLE] = true
     InterMap.set(func, marker)
     Frost(func.prototype)
     return Frost(func)
   }
 
   function SetFuncImmutable(func) {
-    func[IS_IMMUTABLE] = true
+    func[IMMUTABLE] = true
     Frost(func.prototype)
     return Frost(func)
   }

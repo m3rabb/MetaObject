@@ -1,7 +1,7 @@
 Tranya(function (
   $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,$IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
-  IMMEDIATE, IMPLEMENTATION, IS_IMMUTABLE, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
+  IMMEDIATE, IMMUTABLE, IMPLEMENTATION, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
   AlwaysFalse, AlwaysNull, InSetProperty, InterMap, IsPublicSelector, SpawnFrom,
   _$Copy, _HasOwn,
   AssignmentOfUndefinedError, AssignmentViaSuperError,
@@ -153,18 +153,18 @@ Tranya(function (
       }
     }
 
-    const isImmutable = _$target[IS_IMMUTABLE]
+    const isImmutable = _$target[IMMUTABLE]
     const existing    = _$target[selector]
 
     if (value === existing) {
       if (value === _$target[$ROOT][selector]) {
         if (_HasOwn.call(_$target, selector)) { return true }
         if (isImmutable) {
-          if (_$target.type[IS_IMMUTABLE]) {    return true }
+          if (_$target.type[IMMUTABLE])       { return true }
         }
         else { delete _$target[_DURABLES] }            //  because new property
       }
-      else {                                    return true }
+      else                                    { return true }
     }
     else if (existing === undefined) {
       if (!isImmutable) { delete _$target[_DURABLES] } //  because new property
@@ -218,7 +218,7 @@ Tranya(function (
         }
     }
 
-    if (_$self[IS_IMMUTABLE]) {
+    if (_$self[IMMUTABLE]) {
       if (!this.isInUse) { return ChangeToImmutableThisError(_$self) || false }
       this._$target = _$copy || _$Copy(_$self, false, null, null, selector)
     }
@@ -318,12 +318,12 @@ Tranya(function (
   // PermeableBarrier_prototype.has = InnerBarrier_prototype.has
   //
   // PermeableBarrier_prototype.set = function set(_$self, selector, value, _target) {
-  //   return _$self[IS_IMMUTABLE] ? false :
+  //   return _$self[IMMUTABLE] ? false :
   //     InnerBarrier_prototype.set(_$self, selector, value, _target)
   // }
   //
   // PermeableBarrier_prototype.deleteProperty = function deleteProperty(_$self, selector) {
-  //   return _$self[IS_IMMUTABLE] ? false :
+  //   return _$self[IMMUTABLE] ? false :
   //     InnerBarrier_prototype.deleteProperty(_$self, selector)
   // }
 

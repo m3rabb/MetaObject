@@ -8,12 +8,12 @@
   const _Shared = SpawnFrom(Shared)
 
   const _DURABLES    = Symbol("_DURABLES")
-  const IS_IMMUTABLE = Symbol("IS_IMMUTABLE")
-  const SAFE_FUNC    = Frost({ id : "SAFE_FUNC", [IS_IMMUTABLE] : true })
+  const IMMUTABLE    = Symbol("IMMUTABLE")
+  const SAFE_FUNC    = Frost({ id : "SAFE_FUNC", [IMMUTABLE] : true })
   const InterMap     = new WeakMap()
 
-  Shared.IS_IMMUTABLE = IS_IMMUTABLE
-  Shared._DURABLES    = _DURABLES
+  Shared.IMMUTABLE   = IMMUTABLE
+  Shared._DURABLES   = _DURABLES
 
 
   function MarkFunc(func, marker = SAFE_FUNC) {
@@ -69,14 +69,14 @@
 
   // Document these!!!
   _Shared.SAFE_FUNC     = SAFE_FUNC
-  _Shared.BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC" , [IS_IMMUTABLE] : true })
-  _Shared.TAMED_FUNC    = Frost({ id : "TAMED_FUNC"   , [IS_IMMUTABLE] : true })
-  _Shared.OUTER_FUNC    = Frost({ id : "OUTER_FUNC"   , [IS_IMMUTABLE] : true })
-  _Shared.INNER_FUNC    = Frost({ id : "INNER_FUNC"   , [IS_IMMUTABLE] : true })
-  _Shared.ASSIGNER_FUNC = Frost({ id : "ASSIGNER_FUNC", [IS_IMMUTABLE] : true })
-  _Shared.HANDLER_FUNC  = Frost({ id : "HANDLER_FUNC" , [IS_IMMUTABLE] : true })
-  // _Shared.DISGUISE_FUNC = Frost({ id : "DISGUISE_FUNC", [IS_IMMUTABLE] : true })
-  _Shared.DISGUISE_PULP = Frost({ id : "DISGUISE_PULP", [IS_IMMUTABLE] : true })
+  _Shared.BLANKER_FUNC  = Frost({ id : "BLANKER_FUNC" , [IMMUTABLE] : true })
+  _Shared.TAMED_FUNC    = Frost({ id : "TAMED_FUNC"   , [IMMUTABLE] : true })
+  _Shared.OUTER_FUNC    = Frost({ id : "OUTER_FUNC"   , [IMMUTABLE] : true })
+  _Shared.INNER_FUNC    = Frost({ id : "INNER_FUNC"   , [IMMUTABLE] : true })
+  _Shared.ASSIGNER_FUNC = Frost({ id : "ASSIGNER_FUNC", [IMMUTABLE] : true })
+  _Shared.HANDLER_FUNC  = Frost({ id : "HANDLER_FUNC" , [IMMUTABLE] : true })
+  // _Shared.DISGUISE_FUNC = Frost({ id : "DISGUISE_FUNC", [IMMUTABLE] : true })
+  _Shared.DISGUISE_PULP = Frost({ id : "DISGUISE_PULP", [IMMUTABLE] : true })
 
   _Shared.MarkFunc      = MarkFunc
 
@@ -177,7 +177,7 @@
 
   // This method should only be called on a mutable object!!!
   function CrudeBeImmutable(object) {
-    object[IS_IMMUTABLE] = true
+    object[IMMUTABLE] = true
     return Frost(object)
   }
 

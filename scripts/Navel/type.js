@@ -2,7 +2,7 @@ Tranya(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER, $IS_CONTEXT,
   $IS_DEFINITION, $IS_IMPENETRABLE, $IS_TYPE, $OUTER, $OWN_DEFINITIONS,
   $PULP, $RIND, $SUPERS,
-  ASSIGNER, DECLARATION, INHERIT, INVISIBLE, IS_IMMUTABLE, REINHERIT, VISIBLE,
+  ASSIGNER, DECLARATION, IMMUTABLE, INHERIT, INVISIBLE, REINHERIT, VISIBLE,
    _DURABLES,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC, FACT_METHOD,
   IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, VALUE_METHOD,
@@ -443,7 +443,7 @@ Tranya(function (
     next = supertypes.length
     while (next--) {
       _$supertype = InterMap.get(supertypes[next])
-      if (!_$supertype[IS_IMMUTABLE]) {
+      if (!_$supertype[IMMUTABLE]) {
         _$supertype._subordinateTypes.add(subtype)
       }
     }

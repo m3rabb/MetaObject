@@ -1,6 +1,6 @@
 Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND,
-  DISGUISE_PULP, IS_IMMUTABLE, PROOF, SYMBOL_1ST_CHAR, _DURABLES,
+  DISGUISE_PULP, IMMUTABLE, PROOF, SYMBOL_1ST_CHAR, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC,
   OUTER_FUNC, SAFE_FUNC, TAMED_FUNC,
   InterMap, MarkAndSetFuncImmutable, ObjectCopy, _$Copy,
@@ -41,7 +41,7 @@ Tranya(function (
     if (isPublic) {
       const $target = _$target[$OUTER]
 
-      writeOuter = !_$target[IS_IMMUTABLE]
+      writeOuter = !_$target[IMMUTABLE]
 
       switch (typeof value) {
         case "undefined" :
@@ -55,7 +55,7 @@ Tranya(function (
            // Safety check: detect failure to use 'this.$' elsewhere.
             else { return DetectedInnerError(_$target, value) }
           }
-          else if (value[IS_IMMUTABLE])           {        /* NOP */        }
+          else if (value[IMMUTABLE])              {        /* NOP */        }
           else if (value.id != null)              {        /* NOP */        }
           else if (value === _$target[$RIND])     {        /* NOP */        }
           else {   value = (_$value = InterMap.get(value)) ?

@@ -1,7 +1,7 @@
 Tranya(function (
   $ASSIGNERS, $BARRIER, $IMMEDIATES, $IS_CONTEXT, $IS_DEFINITION,
   $IS_IMPENETRABLE, $IS_INNER, $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
-  IMPLEMENTATION, INVISIBLE, IS_IMMUTABLE, PROOF, VISIBLE, _DURABLES,
+  IMMUTABLE, IMPLEMENTATION, INVISIBLE, PROOF, VISIBLE, _DURABLES,
   FACT_METHOD, SELF_METHOD, VALUE_METHOD,
   AlwaysSelf, BecomePermeableError, DefineProperty, InterMap, InvisibleConfig,
   MarkFunc, NewBlanker, NewInner, NewVacuousConstructor, RootOf, SetInvisibly,
@@ -124,19 +124,19 @@ Tranya(function (
   // _SetDefinitionAt.call(_$Something, "asymmetricMatch", null       )
 
 
-  _SetDefinitionAt.call(_$Something, IS_IMMUTABLE     , false      )
-  _SetDefinitionAt.call(_$Something, "isSomething"    , true       )
+  _SetDefinitionAt.call(_$Something, IMMUTABLE     , false      )
+  _SetDefinitionAt.call(_$Something, "isSomething" , true       )
 
   // Could have defined the follow properties later, after addDeclaration has
   // been defined, however it is fast execution within each objects' barrier#get
   // if implemented this way.  These properties are read very frequently.
-  _SetDefinitionAt.call(_$Something, "id"             , null       )
-  _SetDefinitionAt.call(_$Something, _DURABLES        , null       )
-  _SetDefinitionAt.call(_$Something, "context"        , RootContext)
+  _SetDefinitionAt.call(_$Something, "id"          , null       )
+  _SetDefinitionAt.call(_$Something, _DURABLES     , null       )
+  _SetDefinitionAt.call(_$Something, "context"     , RootContext)
 
-  _SetDefinitionAt.call(_Type      , $IS_TYPE         , true       , INVISIBLE)
-  _SetDefinitionAt.call(_Context   , $IS_CONTEXT      , true       , INVISIBLE)
-  _SetDefinitionAt.call(_Definition, $IS_DEFINITION   , true       , INVISIBLE)
+  _SetDefinitionAt.call(_Type      , $IS_TYPE      , true       , INVISIBLE)
+  _SetDefinitionAt.call(_Context   , $IS_CONTEXT   , true       , INVISIBLE)
+  _SetDefinitionAt.call(_Definition, $IS_DEFINITION, true       , INVISIBLE)
 
 
   _AddMethod.call(_Type, _AddMethod, VALUE_METHOD, VISIBLE)

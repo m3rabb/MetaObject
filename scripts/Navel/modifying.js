@@ -1,6 +1,6 @@
 Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND,
-  DISGUISE_PULP, IS_IMMUTABLE, PROOF, _DURABLES,
+  DISGUISE_PULP, IMMUTABLE, PROOF, _DURABLES,
   FindAndSetDurables, FindDurables, Frost, InterMap, MarkFunc,
   SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, InvertedFuncCopyError,
@@ -52,7 +52,7 @@ Tranya(function (
     }
 
     const immutability = (asImmutable !== undefined) ?
-      asImmutable : _$source[IS_IMMUTABLE] || false
+      asImmutable : _$source[IMMUTABLE] || false
 
     if (_$target._postInit) {
       const result = _$target._postInit.call(_target)
@@ -62,7 +62,7 @@ Tranya(function (
     }
 
     if (immutability) {
-      $target[IS_IMMUTABLE] = _$target[IS_IMMUTABLE] = true
+      $target[IMMUTABLE] = _$target[IMMUTABLE] = true
       Frost($target)
     }
 
@@ -76,7 +76,7 @@ Tranya(function (
         [undefined, visited_asImmutable_, visited_ ] :
         [visited_asImmutable_,  visited_, context__]
 
-    return (this[IS_IMMUTABLE] && asImmutable !== false) ?
+    return (this[IMMUTABLE] && asImmutable !== false) ?
       this : ObjectCopy(this, asImmutable, visited, context)
   }
 
@@ -88,7 +88,7 @@ Tranya(function (
     visited = visited || new WeakMap()
 
     const immutability = (asImmutable !== undefined) ?
-      asImmutable : source[IS_IMMUTABLE] ? true : false
+      asImmutable : source[IMMUTABLE] ? true : false
 
     switch (source.constructor) {
       case WeakMap : return source
@@ -165,7 +165,7 @@ Tranya(function (
     }
 
     if (immutability) {
-      target[IS_IMMUTABLE] = true
+      target[IMMUTABLE] = true
       Frost(target)
     }
     return target
@@ -235,7 +235,7 @@ Tranya(function (
       break
     }
 
-    target[IS_IMMUTABLE] = true
+    target[IMMUTABLE] = true
     return Frost(target)
   }
 
@@ -245,7 +245,7 @@ Tranya(function (
     // Next line properly handlers contexts and types since they always have id.
     if (typeof value !== "object")         { return value }
     if (value === null)                    { return value }
-    if (value[IS_IMMUTABLE])               { return value }
+    if (value[IMMUTABLE])                  { return value }
     if (value.id != null)                  { return value }
     if (visited__ && visited__.get(value)) { return value }
 
@@ -284,7 +284,7 @@ Tranya(function (
 
         _value = _$value[$PULP]
         if (_value.id != null)                                { return value }
-        if (_$value[IS_IMMUTABLE]) {
+        if (_$value[IMMUTABLE]) {
           if (!context || _value.context === context)         { return value }
           // If the value is simple in that it only references primitive
           // values, such that it only needs to use _BasicSetImmutable
@@ -297,7 +297,7 @@ Tranya(function (
         if (value === null)                                   { return value }
         if ((traversed = visited.get(value)))             { return traversed }
         if (value.id != null)                                 { return value }
-        if (value[IS_IMMUTABLE]) {
+        if (value[IMMUTABLE]) {
           if (!context || value.context === context)          { return value }
           if ((_$value = InterMap.get(value))) {
             return (_$value._setImmutable === _BasicSetImmutable) ?
@@ -335,14 +335,14 @@ Tranya(function (
         if (_$value && _$value[$IS_INNER] === PROOF) {
           return _$value.copy.call(_$value[$PULP], asImmutable, visited, context)
         }
-        if (value[IS_IMMUTABLE] === asImmutable) { return value }
-        if (asImmutable === undefined)           { return value }
+        if (value[IMMUTABLE] === asImmutable) { return value }
+        if (asImmutable === undefined)        { return value }
         return (context) ? value : InvertedFuncCopyError(value)
 
       case "object"   :
         if (value === null) { return value }
         if (!context) {
-          if (value[IS_IMMUTABLE] && asImmutable !== false) { return value }
+          if (value[IMMUTABLE] && asImmutable !== false) { return value }
         }
         return ((_$value = InterMap.get(value))) ?
           _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
@@ -355,12 +355,12 @@ Tranya(function (
   function ValueAsImmutable(value) {
     switch (typeof value) {
       case "function" :
-        return value[IS_IMMUTABLE] ? value :
+        return value[IMMUTABLE] ? value :
           value.asImmutable || InvertedFuncCopyError(value)
 
       case "object"   :
         return value && value.asImmutable ||
-          (value[IS_IMMUTABLE] ? value : ObjectCopy(value, true))
+          (value[IMMUTABLE] ? value : ObjectCopy(value, true))
     }
     return value
   }
@@ -370,10 +370,10 @@ Tranya(function (
     switch (typeof value) {
       case "function" :
         return value.beImmutable ||
-          (value[IS_IMMUTABLE] ? value : SetFuncImmutable(value))
+          (value[IMMUTABLE] ? value : SetFuncImmutable(value))
 
       case "object"   :
-        return value[IS_IMMUTABLE] ? value :
+        return value[IMMUTABLE] ? value :
           ((_$value = InterMap.get(value))) ?
             _$value._setImmutable.call(_$value[$PULP], inPlace_)[$RIND] :
             ObjectSetImmutable(value, inPlace_)
@@ -382,8 +382,8 @@ Tranya(function (
   }
 
   function CrudeAsImmutable(object) {
-    if (object[IS_IMMUTABLE]) { return object }
-    object[IS_IMMUTABLE] = true
+    if (object[IMMUTABLE]) { return object }
+    object[IMMUTABLE] = true
     return Frost(object)
   }
 
@@ -421,7 +421,7 @@ Tranya(function (
 //   }
 //
 //   if ((traversed = visited.get(value)))              { return traversed }
-//   if (value[IS_IMMUTABLE]) {
+//   if (value[IMMUTABLE]) {
 //     if (!context)                                      { return value }
 //     if (value.id != null)                              { return value }
 //
@@ -447,7 +447,7 @@ Tranya(function (
 
 
 // function InAtPut(source, property, value) {
-//   var isImmutable = source[IS_IMMUTABLE]
+//   var isImmutable = source[IMMUTABLE]
 //   var target = isImmutable ? ObjectCopy(source) : source
 //
 //   switch (source.constructor) {
@@ -468,8 +468,8 @@ Tranya(function (
 //       break
 //   }
 //
-//   if (source[IS_IMMUTABLE]) {
-//     target[IS_IMMUTABLE] = true
+//   if (source[IMMUTABLE]) {
+//     target[IMMUTABLE] = true
 //     Frost(target)
 //   }
 //   return target
@@ -493,8 +493,8 @@ Tranya(function (
 //       break
 //   }
 //
-//   if (source[IS_IMMUTABLE]) {
-//     target[IS_IMMUTABLE] = true
+//   if (source[IMMUTABLE]) {
+//     target[IMMUTABLE] = true
 //     Frost(target)
 //   }
 //   return target

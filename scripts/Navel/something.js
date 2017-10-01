@@ -1,5 +1,5 @@
 Tranya(function (
-  $BARRIER, $OUTER, $RIND, IS_IMMUTABLE, SYMBOL_1ST_CHAR,
+  $BARRIER, $OUTER, $RIND, IMMUTABLE, SYMBOL_1ST_CHAR,
   SELF_METHOD, VALUE_METHOD, VISIBLE,
   AsRetroactiveProperty, SetInvisibly, SignalError, _$Something, _Super
 ) {
@@ -32,7 +32,7 @@ Tranya(function (
 
 
   _$Something.addValueMethod(function isImmutable() {
-    return this[IS_IMMUTABLE] || false
+    return this[IMMUTABLE] || false
   })
 
 
@@ -55,7 +55,7 @@ Tranya(function (
 //   $Something
 //      [$IS_INNER] === PROOF
 //      id = null
-//      IS_IMMUTABLE = null
+//      IMMUTABLE = null
 //
 //      $
 //      _super

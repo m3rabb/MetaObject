@@ -127,7 +127,7 @@ Tranya.ImplementationTesting(function (
   //   }
   //
   //   function beImmutable() {
-  //     this[IS_IMMUTABLE] = true
+  //     this[IMMUTABLE] = true
   //     Frost(this[OUTER])
   //   }
   //
@@ -166,7 +166,7 @@ Tranya.ImplementationTesting(function (
   //     it("the outside of the new object is immutable", function () {
   //       const cat = this.Cat("Nutmeg", 1)
   //       const catCore = InterMap.get(cat)
-  //       expect( catCore[IS_IMMUTABLE] ).toBe( true )
+  //       expect( catCore[IMMUTABLE] ).toBe( true )
   //       expect( IsFrosted(cat) ).toBe( true )
   //     })
   //
