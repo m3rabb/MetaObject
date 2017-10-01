@@ -157,9 +157,8 @@ Tranya(function (
       case "function" : break
       case "object"   : if (value === null) { return false } else { break }
     }
-    const value$ = value[$RIND]
-    if (value$ === undefined) { return false }
-    return (InterMap.get(value$)[$IS_INNER] === PROOF)
+    const target = InterMap.get(value) || value
+    return (target[$IS_INNER] === PROOF)
   }
 
   function ValueIsImmutable(value) {

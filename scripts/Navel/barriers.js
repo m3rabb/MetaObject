@@ -59,7 +59,7 @@ Tranya(function (
       const _externalPrivateAccess = _$self._externalPrivateAccess
       return (_externalPrivateAccess) ?
         _externalPrivateAccess.call(_$self[$PULP], selector) :
-        ExternalPrivateAccessError(_$self, selector)
+        ExternalPrivateAccessError(_$self[$OUTER], selector)
     }
 
     const _unknownProperty = _$self._unknownProperty
@@ -69,7 +69,7 @@ Tranya(function (
   OuterBarrier_prototype.has = function has($self, selector) {
     switch (selector[0]) {
       case "_"       :
-        return ExternalPrivateAccessError($self[$RIND], selector) || false
+        return ExternalPrivateAccessError($self, selector) || false
       case undefined : return null  // Effectively answers a shrug
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       default        : return (selector in $self)

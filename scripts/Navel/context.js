@@ -2,12 +2,12 @@ Tranya(function (
   $INNER, $IS_TYPE, $PULP, $RIND,
   COUNT, INHERITED, IS_IMMUTABLE, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, VALUE_METHOD,
-  AsDecapitalized, BePermeable, ValueAsNext,
-  CompareSelectors, CrudeBeImmutable, BeImmutableValue, ValueCopy,
+  AsDecapitalized, BePermeable,
+  CompareSelectors, CrudeBeImmutable, BeImmutableValue,
   DefaultContext, Definition, Definition_init, EmptyThingAncestry,
   ExtractParamNames, InterMap, IsSubtypeOfThing,
   RootContext, SetInvisibly, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
-  ValueBeImmutable, ValueIsTranyan, _HasOwn,
+  ValueBeImmutable, ValueIsTranyan, _HasOwn, _ValueAsNext, _ValueCopy,
   OwnKeysOf, _OwnKeysOf,
   _BasicNew, _Context
 ) {
@@ -393,16 +393,16 @@ Tranya(function (
     else {
       if (asPermeable) {
         context = (value === inheritedValue) ? null : execContext
-        arg = ValueCopy(value, false, visited, context)
+        arg = _ValueCopy(value, false, visited, context)
         return (arg === value) ? arg : BePermeable(arg, value[IS_IMMUTABLE])
       }
       if ( isType  ) { return value  }
       if (asMutable) {
-        arg = ValueCopy(value, false, visited, execContext)
+        arg = _ValueCopy(value, false, visited, execContext)
       }
       else {
         if (!marked[MUTABLE]) { return value }
-        arg = ValueAsNext(value, value[IS_IMMUTABLE], visited, execContext)
+        arg = _ValueAsNext(value, value[IS_IMMUTABLE], visited, execContext)
       }
     }
 

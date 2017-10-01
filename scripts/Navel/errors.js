@@ -53,37 +53,43 @@ Tranya(function (
   // }
 
 
-  _Shared.DetectedInnerError = function (target, value) {
-    SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value}!!`)
+
+  _Shared.DirectAssignmentFromOutsideError = function ($target) {
+    SignalError($target, "Direct assignment is not allowed from the outside of an object, use a method instead!!")
   }
 
-
-  _Shared.DirectAssignmentFromOutsideError = function (target) {
-    SignalError(target[$RIND], "Direct assignment is not allowed from the outside of an object, use a method instead!!")
+  _Shared.DeleteFromOutsideError = function ($target, selector) {
+    SignalError($target, `Attempt to delete '${ValueAsName(selector)}' is not allowed from the outside of an object, use a method instead!!`)
   }
 
-  _Shared.DeleteFromOutsideError = function (target, selector) {
-    SignalError(target[$RIND], `Attempt to delete '${ValueAsName(selector)}' is not allowed from the outside of an object, use a method instead!!`)
+  _Shared.ExternalPrivateAccessError = function ($target, selector) {
+    SignalError($target, `External access to private property '${ValueAsName(selector)}' is forbidden!!`)
+  }
+
+  _Shared.ChangeToImmutableThisError = function (_$target) {
+    SignalError(_$target[$RIND], "Changes to an immutable object via 'this' is forbidden!! Perhaps the result of improperly using addValueMethod!!")
+  }
+
+  _Shared.DisallowedDeleteError = function (_$target, selector) {
+    SignalError(_$target[$RIND], `Delete of property '${ValueAsName(selector)}' is not allowed!!`)
   }
 
   _Shared.AssignmentViaSuperError = function (target) {
-    SignalError(target[$RIND], "Setting properties via _super in forbidden!!")
+    SignalError(target, "Setting properties via _super in forbidden!!")
   }
 
-  _Shared.ExternalPrivateAccessError = function (target, selector) {
-    SignalError(target[$RIND], `External access to private property '${ValueAsName(selector)}' is forbidden!!`)
-  }
+
 
   // _Shared.UnknownPropertyError = function (target, selector) {
   //   SignalError(target[$RIND], `Receiver ${this.id} doesn't have a property: ${ValueAsName(selector)}!!`)
   // }
 
-  _Shared.DisallowedDeleteError = function (target, selector) {
-    SignalError(target[$RIND], `Delete of property '${ValueAsName(selector)}' is not allowed!!`)
-  }
-
   _Shared.DisallowedAssignmentError = function (target, selector, setter) {
     SignalError(target[$RIND], `Assignment of property '${ValueAsName(selector)}' is not allowed, try '${setter}' method instead!!`)
+  }
+
+  _Shared.DetectedInnerError = function (target, value) {
+    SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value}!!`)
   }
 
   _Shared.UnnamedFuncError = function (target, func) {
@@ -122,10 +128,6 @@ Tranya(function (
 
   _Shared.BecomePermeableError = function (target) {
     SignalError(target[$RIND], "Cannot make an impenetrable object ${target} permeable!!")
-  }
-
-  _Shared.ChangeToImmutableThisError = function (target) {
-    SignalError(target[$RIND], "Changes to an immutable object via 'this' is forbidden!! Perhaps the result of improperly using addValueMethod!!")
   }
 
 })

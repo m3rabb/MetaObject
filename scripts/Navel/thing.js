@@ -36,12 +36,21 @@ Tranya(function ($INNER, $PRIOR_IDS, $PULP, ValueAsName, _$Intrinsic, _Thing) {
 
 
   // Note: explicitly ensuring $pulp prevents printing
-  // inaccuracies in Jasmine, when it has access to the $inner object instead.
+  // inaccuracies in Jasmine, when it has direct access to the
+  // $inner or $outer object instead.
   _Thing.addValueMethod(function toString(_) { // eslint-disable-line
-    const _this = this[$PULP]
-    const name = _this.name
-    return `${name}${(name) ? "," : ""}${_this.oid}`
+    const target    = this[$PULP] || this
+    const name      = target.name
+    const oid       = target.oid
+    const separator = (name && oid) ? "," : ""
+    return `${name}${separator}${oid}`
   })
+
+  // _Thing.addValueMethod(function toString(_) { // eslint-disable-line
+  //   const _this = this[$PULP]
+  //   const name = _this.name
+  //   return `${name}${(name) ? "," : ""}${_this.oid}`
+  // })
 
   // _$Intrinsic.addAlias("jasmineToString", _Thing.definitionAt("toString"))
   // Is this still necessary???

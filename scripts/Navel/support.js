@@ -130,7 +130,6 @@ Tranya(function (
       $inner[$OUTER]   = $outer
       $inner[$PULP]    = new Proxy($inner, barrier)
       $inner[$RIND]    = $rind
-      $outer[$RIND]    = $rind
       InterMap.set($rind, $inner)
     }
   }
@@ -167,7 +166,6 @@ Tranya(function (
       $inner[$OUTER]     = $outer
       $inner[$PULP]      = $pulp
       $inner[$RIND]      = $rind
-      $outer[$RIND]      = $rind
 
       if (uid) { SetInvisibly($inner, "uid", uid, "SET BOTH INNER & OUTER") }
 

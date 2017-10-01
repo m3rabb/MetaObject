@@ -12,8 +12,8 @@ Tranya(function (
   DefaultContext, DeleteSelectorsIn,
   ExtractParamListing, Frost, InterMap, IsArray, IsPublicSelector,
   IsSubtypeOfThing, NewVacuousConstructor, PropertyAt, RootContext,
-  RootOf, SetDefinition, SetInvisibly, SpawnFrom, ValueAsName, ValueAsNext,
-  TheEmptyArray, TheEmptyObject, _HasOwn, _Type,
+  RootOf, SetDefinition, SetInvisibly, SpawnFrom, ValueAsName,
+  TheEmptyArray, TheEmptyObject, _HasOwn, _Type, _ValueAsNext,
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
@@ -415,7 +415,7 @@ Tranya(function (
           knowns[tag] = true
           value       = nextDefinitions[tag]
           nextValue   = noCopy ? value :
-            ValueAsNext(value, asImmutable, visited, context)
+            _ValueAsNext(value, asImmutable, visited, context)
           this._setDefinitionAt(tag, nextValue, REINHERIT)
         }
       })
@@ -723,7 +723,7 @@ Tranya(function (
 
     tags.forEach(tag => {
       const value       = definitions[tag]
-      const nextValue   = ValueAsNext(value, asImmutable, visited, context)
+      const nextValue   = _ValueAsNext(value, asImmutable, visited, context)
       adder.call(this, tag, nextValue)
     })
     return this

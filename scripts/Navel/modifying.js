@@ -43,7 +43,7 @@ Tranya(function (
         if (selector[0] !== "_") {  // public selector
           $target[selector] = (value === source) ? (value = target) : value
         }                           // private selector
-        else { value = ValueAsNext(value, asImmutable, visited, context) }
+        else { value = _ValueAsNext(value, asImmutable, visited, context) }
 
         _$target[selector] = value
       }
@@ -130,7 +130,7 @@ Tranya(function (
         while (next--) {
           property         = properties[next]
           value            = source[property]
-          target[property] = ValueAsNext(value, asImmutable, visited, context)
+          target[property] = _ValueAsNext(value, asImmutable, visited, context)
         }
       break
 
@@ -140,7 +140,7 @@ Tranya(function (
 
         while (next--) {
           value        = source[next]
-          target[next] = ValueAsNext(value, asImmutable, visited, context)
+          target[next] = _ValueAsNext(value, asImmutable, visited, context)
         }
       break
 
@@ -148,8 +148,8 @@ Tranya(function (
         visited.set(source, (target = new Map())) // Handles cyclic objects
 
         source.forEach((value, key) => {
-          var nextKey   = ValueAsNext(key  , asImmutable, visited, context)
-          var nextValue = ValueAsNext(value, asImmutable, visited, context)
+          var nextKey   = _ValueAsNext(key  , asImmutable, visited, context)
+          var nextValue = _ValueAsNext(value, asImmutable, visited, context)
           target.set(nextKey, nextValue)
         })
       break
@@ -158,7 +158,7 @@ Tranya(function (
         visited.set(source, (target = new Set())) // Handles cyclic objects
 
         source.forEach((value) => {
-          var nextValue = ValueAsNext(value, asImmutable, visited, context)
+          var nextValue = _ValueAsNext(value, asImmutable, visited, context)
           target.add(nextValue)
         })
       break
@@ -241,9 +241,6 @@ Tranya(function (
 
 
 
-
-
-
   function ValueAsFact(value, inPlace_, visited__) {
     // Next line properly handlers contexts and types since they always have id.
     if (typeof value !== "object")         { return value }
@@ -266,53 +263,78 @@ Tranya(function (
   }
 
 
-
-  function ValueAsNext(value, asImmutable, visited, context) {
-    var traversed, _$value
-
-    switch(typeof value) {
-      default         : return value
-      case "function" : if (value[$RIND])   { break } else { return value     }
-      case "object"   : if (value !== null) { break } else { return null      }
-    }
-
-    if ((traversed = visited.get(value)))                  { return traversed }
-    if (value[IS_IMMUTABLE]) {
-      if (!context || value.context === context)           { return value     }
-      if (value.id != null)                                { return value     }
-      // If the value is simple in that it only references primitive
-      // values, such that it only needs to use _BasicSetImmutable
-      // (e.g. Definitions), then simply answer the immutable value.
-      if ((_$value = InterMap.get(value))) {
-        if (_$value._setImmutable === _BasicSetImmutable)  { return value     }
-      }
-    }
-    else {
-      if (value.id != null)                                { return value     }
-      _$value = InterMap.get(value)
-    }
-
-    return (_$value) ?
-      _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
-      ObjectCopy(value, asImmutable, visited, context)
-  }
-
-
-    // asImmutable
-    // true       make immutable copy
-    // false      make mutable copy
-    // undefined  make copy of same mutability as the receiver
-
-  function ValueCopy(value, visited_asImmutable_, visited_, context__) {
-    var asImmutable, visited, context, _$value
-    ;[asImmutable, visited, context] =
+  function ValueAsNext(value, visited_asImmutable_, visited_, context__) {
+    const [asImmutable, visited, context] =
       (typeof visited_asImmutable_ === "object") ?
         [undefined           , visited_asImmutable_, visited_ ] :
         [visited_asImmutable_, visited_            , context__]
+    return _ValueAsNext(value, asImmutable, visited, context)
+  }
+
+  function _ValueAsNext(value, asImmutable, visited, context) {
+    var traversed, _$value, _value
+
+    switch(typeof value) {
+      default : return value
+
+      case "function" :
+        if ((_$value = InterMap.get(value)) === undefined)    { return value }
+        if (_$value[$IS_INNER] !== PROOF)                     { return value }
+        if ((traversed = visited.get(value)))             { return traversed }
+
+        _value = _$value[$PULP]
+        if (_value.id != null)                                { return value }
+        if (_$value[IS_IMMUTABLE]) {
+          if (!context || _value.context === context)         { return value }
+          // If the value is simple in that it only references primitive
+          // values, such that it only needs to use _BasicSetImmutable
+          // (e.g. Definitions), then simply answer the immutable value.
+          if (_$value._setImmutable === _BasicSetImmutable)   { return value }
+        }
+        return _$Copy(_$value, asImmutable, visited, context)[$RIND]
+
+      case "object" :
+        if (value === null)                                   { return value }
+        if ((traversed = visited.get(value)))             { return traversed }
+        if (value.id != null)                                 { return value }
+        if (value[IS_IMMUTABLE]) {
+          if (!context || value.context === context)          { return value }
+          if ((_$value = InterMap.get(value))) {
+            return (_$value._setImmutable === _BasicSetImmutable) ?
+              value : _$Copy(_$value, asImmutable, visited, context)[$RIND]
+          }
+        }
+        else if ((_$value = InterMap.get(value))) {
+          return _$Copy(_$value, asImmutable, visited, context)[$RIND]
+        }
+
+        return ObjectCopy(value, asImmutable, visited, context)
+    }
+  }
+
+
+  // asImmutable
+  // true       make immutable copy
+  // false      make mutable copy
+  // undefined  make copy of same mutability as the receiver
+
+  function ValueCopy(value, visited_asImmutable_, visited_, context__) {
+    const [asImmutable, visited, context] =
+      (typeof visited_asImmutable_ === "object") ?
+        [undefined           , visited_asImmutable_, visited_ ] :
+        [visited_asImmutable_, visited_            , context__]
+    return _ValueCopy(value, asImmutable, visited, context)
+  }
+
+  function _ValueCopy(value, asImmutable, visited, context) {
+    var _$value
 
     switch (typeof value) {
       case "function" :
-        if (value[$RIND]) { return value.copy(asImmutable, visited, context) }
+        _$value = InterMap.get(value)
+        if (_$value && _$value[$IS_INNER] === PROOF) {
+          return _$value.copy.call(_$value[$PULP], asImmutable, visited, context)
+        }
         if (value[IS_IMMUTABLE] === asImmutable) { return value }
         if (asImmutable === undefined)           { return value }
         return (context) ? value : InvertedFuncCopyError(value)
@@ -322,7 +344,6 @@ Tranya(function (
         if (!context) {
           if (value[IS_IMMUTABLE] && asImmutable !== false) { return value }
         }
-
         return ((_$value = InterMap.get(value))) ?
           _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
           ObjectCopy(value, asImmutable, visited, context)
@@ -370,10 +391,12 @@ Tranya(function (
   _Shared._$Copy                  = _$Copy
   _Shared.ObjectCopy              = ObjectCopy
   _Shared.ObjectSetImmutable      = ObjectSetImmutable  // Necessary???s
+  _Shared._ValueAsNext            = _ValueAsNext
+  _Shared._ValueCopy              = _ValueCopy
 
   Shared.reliableObjectCopy       = MarkFunc(ReliableObjectCopy)
-  Shared.valueAsNext              = MarkFunc(ValueAsNext)
   Shared.valueAsFact              = MarkFunc(ValueAsFact)
+  Shared.valueAsNext              = MarkFunc(ValueAsNext)
   Shared.valueCopy                = MarkFunc(ValueCopy)
   Shared.valueAsImmutable         = MarkFunc(ValueAsImmutable)
   Shared.valueBeImmutable         = MarkFunc(ValueBeImmutable)
