@@ -3,9 +3,9 @@ Tranya(function (
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   DISGUISE_PULP, INVISIBLE, SYMBOL_1ST_CHAR,
   ASSIGNER_FUNC, BLANKER_FUNC,
-  AsCapitalized, AsDecapitalized, CompareSelectors, CrudeBeImmutable,
-  DefineProperty, Frost, Impermeable, InvisibleConfig, IsArray, MarkFunc,
-  NewUniqueId, OwnSelectorsOf, SetInvisibly, SpawnFrom, ValueAsName,
+  AsCapitalized, AsDecapitalized, CompareSelectors,
+  DefineProperty, FreezeSurface, Impermeable, InvisibleConfig, IsArray,
+  MarkFunc, NewUniqueId, OwnSelectorsOf, SetInvisibly, SpawnFrom, ValueAsName,
   DisguisedBarrier, InnerBarrier,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
   ImproperDisguiseNameError, SignalError,
@@ -13,6 +13,9 @@ Tranya(function (
   Shared, _Shared
 ) {
   "use strict"
+
+
+
 
 
   function AsPropertySymbol(selector) {
@@ -60,7 +63,7 @@ Tranya(function (
       }
     `
     const func = Function(funcBody)()
-    Frost(func.prototype)
+    FreezeSurface(func.prototype)
     return DefineProperty(func, "name", InvisibleConfig)
   }
 
@@ -103,13 +106,14 @@ Tranya(function (
     blanker.innerMaker   = blankerMaker
 
     _$root[$ROOT]     = _$root
+    _$root[$INNER]    = _$root
     _$root[$OUTER]    =  $root
     _$root[$BLANKER]  = blanker
 
     MakeDefinitionsInfrastructure(_$root, root$root$inner)
 
     InterMap.set(blanker, BLANKER_FUNC)
-    return Frost(blanker)
+    return FreezeSurface(blanker)
   }
 
 
@@ -170,7 +174,7 @@ Tranya(function (
       if (uid) { SetInvisibly($inner, "uid", uid, "SET BOTH INNER & OUTER") }
 
       // MarkFunc(disguise, DISGUISE_FUNC)
-      Frost(disguise.prototype)
+      FreezeSurface(disguise.prototype)
       DefineProperty(disguise, "name", InvisibleConfig)
 
       InterMap.set($pulp, DISGUISE_PULP)
@@ -291,7 +295,6 @@ Tranya(function (
   }
 
 
-
   _Shared.AsPropertySymbol                = AsPropertySymbol
   _Shared.AsMembershipSelector            = AsMembershipSelector
   _Shared.AsPropertyFromSetter            = AsPropertyFromSetter
@@ -305,7 +308,6 @@ Tranya(function (
   _Shared.AsTypeDisguise                  = AsTypeDisguise
   _Shared.DeleteSelectorsIn               = DeleteSelectorsIn
   _Shared.CompletelyDeleteProperty        = CompletelyDeleteProperty
-  // _Shared.SetDisplayNames                 = SetDisplayNames
   _Shared.SetAsymmetricProperty           = SetAsymmetricProperty
   _Shared.PropertyAt                      = PropertyAt
   _Shared.AsDefinitionFrom                = AsDefinitionFrom

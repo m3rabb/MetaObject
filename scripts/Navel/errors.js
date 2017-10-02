@@ -54,6 +54,10 @@ Tranya(function (
 
 
 
+  _Shared.GlazeError = function (_target) {
+    SignalError(_target, "GlazeImmutable and GlaseAsImmutable can only be called on standard JS objects!!")
+  }
+
   _Shared.DirectAssignmentFromOutsideError = function ($target) {
     SignalError($target, "Direct assignment is not allowed from the outside of an object, use a method instead!!")
   }
@@ -62,7 +66,7 @@ Tranya(function (
     SignalError($target, `Attempt to delete '${ValueAsName(selector)}' is not allowed from the outside of an object, use a method instead!!`)
   }
 
-  _Shared.ExternalPrivateAccessError = function ($target, selector) {
+  _Shared.PrivateAccessError = function ($target, selector) {
     SignalError($target, `External access to private property '${ValueAsName(selector)}' is forbidden!!`)
   }
 

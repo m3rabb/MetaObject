@@ -1,19 +1,19 @@
 _Context.addValueMethod(function knownTypes() {
-  return CrudeBeImmutable(TypesFrom(this._knownEntries))
+  return GlazeImmutable(TypesFrom(this._knownEntries))
 })
 
 _Context.addValueMethod(function ownTypes() {
-  return CrudeBeImmutable(TypesFrom(this.ownEntries))
+  return GlazeImmutable(TypesFrom(this.ownEntries))
 })
 
 
 _Context.addValueMethod(function knownTypeNames() {
-  return CrudeBeImmutable(
+  return GlazeImmutable(
     TypesFrom(this._knownEntries).map(type => type.name))
 })
 
 _Context.addValueMethod(function ownTypeNames() {
-  return CrudeBeImmutable(TypesFrom(this.ownEntries).map(type => type.name))
+  return GlazeImmutable(TypesFrom(this.ownEntries).map(type => type.name))
 })
 
 
@@ -55,7 +55,7 @@ _Context.addValueMethod(function _mapEntries(which, action) {
   const results = []
   var   index   = 0
   this._enumEntries(which, (entry,key) => results[index++] = action(entry,key))
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 _Context.addValueMethod(function _mapTypes(which, action) {
@@ -67,7 +67,7 @@ _Context.addValueMethod(function _mapTypes(which, action) {
       results[index++] = action(entry, key)
     }
   })
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 _Context.addValueMethod(function knownTypes() {
@@ -114,7 +114,7 @@ _Context.addValueMethod(function knownKeys() {
 
   index = 0
   for (key in entries) { keys[index++] = key }
-  return CrudeBeImmutable(keys.sort(CompareSelectors))
+  return GlazeImmutable(keys.sort(CompareSelectors))
 })
 
 _Context.addSelfMethod(function forEachKnown(action) {
@@ -145,7 +145,7 @@ _Context.addValueMethod(function knownKeys() {
 
   index = 0
   for (key in entries) { keys[index++] = key }
-  return CrudeBeImmutable(keys.sort(CompareSelectors))
+  return GlazeImmutable(keys.sort(CompareSelectors))
 })
 
 _Context.addSelfMethod(function forEachKnown(action) {
@@ -210,7 +210,7 @@ _Context.addValueMethod(function knownKeys() {
 
   index = 0
   for (key in entries) { keys[index++] = key }
-  return CrudeBeImmutable(keys.sort(CompareSelectors))
+  return GlazeImmutable(keys.sort(CompareSelectors))
 })
 
 _Context.addValueMethod(function ownKeys() {
@@ -238,7 +238,7 @@ _Context.addValueMethod(function _mapEntries(which, action) {
   var   index   = 0
   this._forEachEntry(
     which, (entry, key) => results[index++] = action(entry, key))
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 _Context.addValueMethod(function _mapTypes(which, action) {
@@ -250,7 +250,7 @@ _Context.addValueMethod(function _mapTypes(which, action) {
       results[index++] = action(entry, key)
     }
   })
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 
@@ -287,7 +287,7 @@ _Context.addValueMethod(function _mapKind(which, where, action) {
       results[index++] = action(entry, key)
     }
   })
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 
@@ -300,7 +300,7 @@ _Context.addValueMethod(function knownKeys() {
 
   index = 0
   for (key in entries) { keys[index++] = key }
-  return CrudeBeImmutable(keys.sort(CompareSelectors))
+  return GlazeImmutable(keys.sort(CompareSelectors))
 })
 
 _Context.addValueMethod(function ownKeys() {
@@ -328,7 +328,7 @@ _Context.addValueMethod(function _mapEntries(where, action) {
   var   index   = 0
   this._forEachEntry(
     where, (entry, key) => results[index++] = action(entry, key))
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 _Context.addValueMethod(function _mapKind(which, where, action) {
@@ -340,7 +340,7 @@ _Context.addValueMethod(function _mapKind(which, where, action) {
       results[index++] = action(entry, key)
     }
   })
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 
@@ -382,7 +382,7 @@ _Context.addValueMethod(function _mapKind(which, where, action_) {
       results[index++] = action_ ? action_(entry, key) : entry
     }
   })
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 
@@ -407,7 +407,7 @@ _Context.addValueMethod(function _mapKind(which, where, action = AlwaysPass) {
       results[index++] = action(entry, key)
     }
   })
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 
@@ -426,7 +426,7 @@ _Context.addValueMethod(function _mapKind(which, where, selection) {
       results[index++] = selection(entry, key)
     }
   })
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 
@@ -458,7 +458,7 @@ _Context.addValueMethod(function _mapKind(which, where, selection) {
       results[index++] = [entry, key][selection]
     }
   })
-  return CrudeBeImmutable(results)
+  return GlazeImmutable(results)
 })
 
 

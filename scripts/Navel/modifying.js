@@ -1,7 +1,7 @@
 Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND,
   DISGUISE_PULP, IMMUTABLE, PROOF, _DURABLES,
-  FindAndSetDurables, FindDurables, Frost, InterMap, MarkFunc,
+  FindAndSetDurables, FindDurables, FreezeSurface, InterMap, MarkFunc,
   SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, InvertedFuncCopyError,
   Shared, _Shared
@@ -63,7 +63,6 @@ Tranya(function (
 
     if (immutability) {
       $target[IMMUTABLE] = _$target[IMMUTABLE] = true
-      Frost($target)
     }
 
     return _$target
@@ -84,7 +83,7 @@ Tranya(function (
   // Note: The ObjectCopy is only called AFTER confirming that the source
   //       is NOT a fact!!! ***
   function ObjectCopy(source, asImmutable, visited, context) {
-    var target, next, value, property, properties
+    var target, next, value, selector, selectors
     visited = visited || new WeakMap()
 
     const immutability = (asImmutable !== undefined) ?
@@ -121,16 +120,16 @@ Tranya(function (
       case Object :
         visited.set(source, (target = target || {})) // Handles cyclic objects
 
-        properties = source[_DURABLES] || FindDurables(source)
+        selectors = source[_DURABLES] || FindDurables(source)
         if (immutability && !target[_DURABLES]) {
-          target[_DURABLES] = properties
+          target[_DURABLES] = selectors
         }
-        next = properties.length
+        next = selectors.length
 
         while (next--) {
-          property         = properties[next]
-          value            = source[property]
-          target[property] = _ValueAsNext(value, asImmutable, visited, context)
+          selector         = selectors[next]
+          value            = source[selector]
+          target[selector] = _ValueAsNext(value, asImmutable, visited, context)
         }
       break
 
@@ -166,14 +165,14 @@ Tranya(function (
 
     if (immutability) {
       target[IMMUTABLE] = true
-      Frost(target)
+      FreezeSurface(target)
     }
     return target
   }
 
 
   function ObjectSetImmutable(target, inPlace, visited) {
-    var keys, key, values, value, next, nextKey, nextValue, properties, property
+    var keys, key, values, value, next, nextKey, nextValue, selectors, selector
 
     visited = visited || new WeakMap()
     visited.set(target, target)
@@ -183,15 +182,15 @@ Tranya(function (
       case WeakSet : return target
 
       default :
-        properties = target[_DURABLES] || FindAndSetDurables(target)
-        next       = properties.length
+        selectors = target[_DURABLES] || FindAndSetDurables(target)
+        next       = selectors.length
 
         while (next--) {
-          property  = properties[next]
-          value     = target[property]
+          selector  = selectors[next]
+          value     = target[selector]
           nextValue = ValueAsFact(value, inPlace, visited)
           if (nextValue === value) { continue }
-          target[property] = nextValue
+          target[selector] = nextValue
         }
       break
 
@@ -236,7 +235,7 @@ Tranya(function (
     }
 
     target[IMMUTABLE] = true
-    return Frost(target)
+    return FreezeSurface(target)
   }
 
 
@@ -278,27 +277,27 @@ Tranya(function (
       default : return value
 
       case "function" :
-        if ((_$value = InterMap.get(value)) === undefined)    { return value }
-        if (_$value[$IS_INNER] !== PROOF)                     { return value }
-        if ((traversed = visited.get(value)))             { return traversed }
+        if ((_$value = InterMap.get(value)) === undefined)  { return value }
+        if (_$value[$IS_INNER] !== PROOF)                   { return value }
+        if ((traversed = visited.get(value)))           { return traversed }
 
         _value = _$value[$PULP]
-        if (_value.id != null)                                { return value }
+        if (_value.id != null)                              { return value }
         if (_$value[IMMUTABLE]) {
-          if (!context || _value.context === context)         { return value }
+          if (!context || _value.context === context)       { return value }
           // If the value is simple in that it only references primitive
           // values, such that it only needs to use _BasicSetImmutable
           // (e.g. Definitions), then simply answer the immutable value.
-          if (_$value._setImmutable === _BasicSetImmutable)   { return value }
+          if (_$value._setImmutable === _BasicSetImmutable) { return value }
         }
         return _$Copy(_$value, asImmutable, visited, context)[$RIND]
 
       case "object" :
-        if (value === null)                                   { return value }
-        if ((traversed = visited.get(value)))             { return traversed }
-        if (value.id != null)                                 { return value }
+        if (value === null)                                 { return value }
+        if ((traversed = visited.get(value)))           { return traversed }
+        if (value.id != null)                               { return value }
         if (value[IMMUTABLE]) {
-          if (!context || value.context === context)          { return value }
+          if (!context || value.context === context)        { return value }
           if ((_$value = InterMap.get(value))) {
             return (_$value._setImmutable === _BasicSetImmutable) ?
               value : _$Copy(_$value, asImmutable, visited, context)[$RIND]
@@ -381,11 +380,6 @@ Tranya(function (
     return value
   }
 
-  function CrudeAsImmutable(object) {
-    if (object[IMMUTABLE]) { return object }
-    object[IMMUTABLE] = true
-    return Frost(object)
-  }
 
 
   _Shared._$Copy                  = _$Copy
@@ -400,7 +394,6 @@ Tranya(function (
   Shared.valueCopy                = MarkFunc(ValueCopy)
   Shared.valueAsImmutable         = MarkFunc(ValueAsImmutable)
   Shared.valueBeImmutable         = MarkFunc(ValueBeImmutable)
-  Shared.crudeAsImmutable         = MarkFunc(CrudeAsImmutable)
 
 })
 
@@ -425,7 +418,7 @@ Tranya(function (
 //     if (!context)                                      { return value }
 //     if (value.id != null)                              { return value }
 //
-//     // If we're copying properties to a new object in a new context, but
+//     // If we're copying selectors to a new object in a new context, but
 //     // the context is the same...
 //     if ((_$value = InterMap.get(value)) && context === _$value.context) {
 //       // ... and the tranya value is already in that context ...
@@ -446,7 +439,7 @@ Tranya(function (
 // }
 
 
-// function InAtPut(source, property, value) {
+// function InAtPut(source, selector, value) {
 //   var isImmutable = source[IMMUTABLE]
 //   var target = isImmutable ? ObjectCopy(source) : source
 //
@@ -460,22 +453,22 @@ Tranya(function (
 //       // break omitted
 //
 //     case Map :
-//       target.set(property, value)
+//       target.set(selector, value)
 //       break
 //
 //     default :
-//       target[property] = value
+//       target[selector] = value
 //       break
 //   }
 //
 //   if (source[IMMUTABLE]) {
 //     target[IMMUTABLE] = true
-//     Frost(target)
+//     FreezeSurface(target)
 //   }
 //   return target
 // }
 //
-// function CopyAtPut(source, property, value) {
+// function CopyAtPut(source, selector, value) {
 //   var target = ObjectCopy(source)
 //
 //   switch (source.constructor) {
@@ -485,17 +478,17 @@ Tranya(function (
 //       return InvalidCopyTypeError(source)
 //
 //     case Map :
-//       target.set(property, value)
+//       target.set(selector, value)
 //       break
 //
 //     default :
-//       target[property] = value
+//       target[selector] = value
 //       break
 //   }
 //
 //   if (source[IMMUTABLE]) {
 //     target[IMMUTABLE] = true
-//     Frost(target)
+//     FreezeSurface(target)
 //   }
 //   return target
 // }

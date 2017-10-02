@@ -1,6 +1,6 @@
 Tranya.ImplementationTesting(function (
   $BARRIER, $INNER, $OUTER, $PULP,
-  CrudeBeImmutable, RootOf, Type, ValueHasOwn
+  GlazeImmutable, RootOf, Type, ValueHasOwn
 ) {
   "use strict"
 
@@ -27,7 +27,7 @@ Tranya.ImplementationTesting(function (
               this[$BARRIER].isInUse,
               this[$BARRIER]._$target,
             ]
-            return CrudeBeImmutable(results)
+            return GlazeImmutable(results)
           },
 
           "SELF",

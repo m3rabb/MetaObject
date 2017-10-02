@@ -8,16 +8,17 @@ Tranya(function (
   IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
   AsCapitalized, AsDefinitionFrom, AsMembershipSelector, AsTypeDisguise, AsPropertySymbol,
-  BePermeable, CompareSelectors, CrudeAsImmutable, CrudeBeImmutable,
-  DefaultContext, DeleteSelectorsIn,
-  ExtractParamListing, Frost, InterMap, IsArray, IsPublicSelector,
+  BePermeable, CompareSelectors,
+  DefaultContext, DeleteSelectorsIn, ExtractParamListing,
+  GlazeAsImmutable, GlazeImmutable,
+  InterMap, IsArray, IsPublicSelector,
   IsSubtypeOfThing, NewVacuousConstructor, PropertyAt, RootContext,
   RootOf, SetDefinition, SetInvisibly, SpawnFrom, ValueAsName,
-  TheEmptyArray, TheEmptyObject, _HasOwn, _Type, _ValueAsNext,
+  TheEmptyArray, TheEmptyStash, _HasOwn, _Type, _ValueAsNext,
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
-  OwnKeysOf, OwnSelectorsOf, SelectorsOf, OwnVisiblesOf, _OwnKeysOf,
+  OwnKeysOf, OwnVisiblesOf, _OwnKeysOf, SelectorsOf_,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
   SetAsymmetricProperty,
   AsAssignmentSetter, AsBasicSetter, AsPropertyFromSetter
@@ -352,7 +353,7 @@ Tranya(function (
     const $root$inner = this._blanker.$root$inner
     const durables    = $root$inner[_DURABLES] || []
     if (!durables.includes(selector)) {
-      $root$inner[_DURABLES] = CrudeBeImmutable([...durables, selector])
+      $root$inner[_DURABLES] = GlazeImmutable([...durables, selector])
       this.addDeclaration(selector)
     }
   })
@@ -525,8 +526,8 @@ Tranya(function (
 
   _Type.addValueMethod(function _setSupertypesAndAncestry(
                                       supertypes, ancestry, inheritSpec_) {
-    this._supertypes = CrudeAsImmutable(supertypes)
-    this._ancestry   = CrudeBeImmutable(ancestry)
+    this._supertypes = GlazeAsImmutable(supertypes)
+    this._ancestry   = GlazeImmutable(ancestry)
     if (inheritSpec_) { this._inheritAllDefinitions(inheritSpec_) }
     return this._setAsSubordinateOfSupertypes(supertypes)
   })
@@ -555,7 +556,7 @@ Tranya(function (
     }
 
     if (!context) {
-      _$arg2  = _$arg2 || InterMap.get(supertypes_context_) || TheEmptyObject
+      _$arg2  = _$arg2 || InterMap.get(supertypes_context_) || TheEmptyStash
       context = _$arg2[$IS_CONTEXT] ? supertypes_context_ : null
     }
 
@@ -654,7 +655,6 @@ Tranya(function (
 
 
   _Type.addValueMethod(function _buildAncestry(supertypes = this.supertypes) {
-    // if (supertypes === EMPTY_THING_ANCESTRY) { return supertypes }
     const roughAncestry   = BuildRoughAncestryOf(supertypes)
     const visited         = new Set()
     const dupFreeAncestry = []
@@ -734,7 +734,7 @@ Tranya(function (
   _Type.addValueMethod(function _setImmutable(inPlace, visited) { // eslint-disable-line
     this.id // Lazyily sets the id (& uid) befoe it's too late.
     this._subordinateTypes = TheEmptyArray
-    CrudeBeImmutable(this[$DISGUISE])
+    GlazeImmutable(this[$DISGUISE])
     // return this._super._setImmutable(inPlace, visited)
     return this._basicSetImmutable()
   })
@@ -817,7 +817,7 @@ Tranya(function (
 
 
   _Type.addValueMethod(function methodAncestry(selector) {
-    return CrudeBeImmutable(
+    return GlazeImmutable(
       this._ancestry.filter(type => type.hasDefinedMethod(selector)))
   })
 
@@ -832,14 +832,12 @@ Tranya(function (
     return OwnKeysOf(this._definitions)
   })
 
-  _Type.addValueMethod(function publicSelectors() {
-    const definedSelectors = _OwnKeysOf(this._definitions)
-    return CrudeAsImmutable(definedSelectors.filter(IsPublicSelector))
+  _Type.addValueMethod(function definedPublicSelectors() {
+    return GlazeImmutable(this.definedSelectors.filter(IsPublicSelector))
   })
 
-
   _Type.addValueMethod(function allKnownSelectors() {
-    return SelectorsOf(this._blanker.$root$inner)
+    return SelectorsOf_(this._blanker.$root$inner)
   })
 
   _Type.addValueMethod(function allDefinedSelectors() {
@@ -859,13 +857,13 @@ Tranya(function (
         if (!knowns[tag]) { selectors[index++] = knowns[tag] = tag }
       })
     }
-    return CrudeAsImmutable(selectors.sort(CompareSelectors))
+    return GlazeImmutable(selectors.sort(CompareSelectors))
   })
 
-  _Type.addValueMethod(function allPublicSelectors() {
+  _Type.addValueMethod(function allDefinedPublicSelectors() {
     // All public selectors
     // const definedSelectors = this.allDefinedSelectors
-    // return CrudeAsImmutable(definedSelectors.filter(IsPublicSelector))
+    // return GlazeImmutable(definedSelectors.filter(IsPublicSelector))
 
     return OwnVisiblesOf(this._blanker.$root$outer)
   })

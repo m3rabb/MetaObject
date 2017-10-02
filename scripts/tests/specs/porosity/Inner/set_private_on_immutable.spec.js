@@ -1,5 +1,5 @@
 Tranya.ImplementationTesting(function (
-  $BARRIER, $INNER, $OUTER, $RIND, CrudeBeImmutable, RootOf, Thing, Type
+  $BARRIER, $INNER, $OUTER, $RIND, GlazeImmutable, RootOf, Thing, Type
 ) {
   "use strict"
 
@@ -10,8 +10,8 @@ Tranya.ImplementationTesting(function (
 
 
     beforeAll(function () {
-      this.redBall  = CrudeBeImmutable({color : "red"})
-      this.blueBall = CrudeBeImmutable({color : "blue"})
+      this.redBall  = GlazeImmutable({color : "red"})
+      this.blueBall = GlazeImmutable({color : "blue"})
 
       this.Cat_ = Type.new_({
         name   : "Cat",
@@ -552,7 +552,7 @@ Tranya.ImplementationTesting(function (
 
       describe("When the value is an immutable JS object", function() {
         beforeEach(function () {
-          this.value  = CrudeBeImmutable([1, 2, 3])
+          this.value  = GlazeImmutable([1, 2, 3])
           this.result = this.$rind.setXyz(this.value)
         })
 

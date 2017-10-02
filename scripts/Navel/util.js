@@ -1,27 +1,86 @@
 Tranya(function (
   $INNER, $IS_INNER, $OUTER, $RIND, IMMUTABLE, PROOF, SYMBOL_1ST_CHAR,
   _DURABLES,
-  CrudeBeImmutable, DefineProperty, Frost, ImplementationSymbols, InterMap,
-  InvisibleConfig, MarkFunc, RootOf, SpawnFrom, TheEmptyArray,
+  DefineProperty, FreezeSurface, GlazeError, ImplementationSymbols,
+  InterMap, InvisibleConfig, IsSurfaceFrozen, MarkFunc, RootOf, SpawnFrom,
+  TheEmptyArray, ValueAsName,
   Shared, _Shared
 ) {
   "use strict"
 
 
-  function _OwnSortedSelectorsOf(value, picker) {
-    if (value == null) { return TheEmptyArray }
-    var selectors = picker(value)
-    selectors = selectors.filter(selector => !ImplementationSymbols[selector])
-    return CrudeBeImmutable(selectors.sort(CompareSelectors))
+  // This method should only be called on a mutable object!!!
+  function GlazeImmutable(object) {
+    if (object[$IS_INNER] === PROOF) { return GlazeError(object) }
+    object[IMMUTABLE] = true
+    return FreezeSurface(object)
   }
 
-  function _SortedSelectorsOf(value, picker, sorter_) {
+  function GlazeAsImmutable(object) {
+    if (object[IMMUTABLE]) { return object }
+    if (object[$IS_INNER] === PROOF) { return GlazeError(object) }
+    object[IMMUTABLE] = true
+    return FreezeSurface(object)
+  }
+
+  function IsSurfaceImmutable(value) {
+    if (value[IMMUTABLE] === true) {
+      if (value[$IS_INNER] === PROOF || InterMap.get(value)) { return true }
+    }
+    return IsSurfaceFrozen(value)
+  }
+
+
+  const _HasOwn        = Object.prototype.hasOwnProperty // ._hasOwn
+  const _OwnVisiblesOf = Object.keys
+  const _OwnNamesOf    = Object.getOwnPropertyNames
+  const _OwnSymbolsOf  = Object.getOwnPropertySymbols
+  const _OwnKeysOf     = Reflect.ownKeys
+
+  function _OwnSelectorsOf(value) {
+    return _OwnKeysOf(value).filter(sel => !ImplementationSymbols[sel])
+  }
+
+  function _OwnSafeSymbolsOf(value) {
+    return _OwnSymbolsOf(value).filter(sel => !ImplementationSymbols[sel])
+  }
+
+  function OwnVisiblesOf(value) {
+    return (value == null) ? TheEmptyArray :
+      GlazeImmutable(_OwnVisiblesOf(value).sort())
+    // Note: proxy forces _OwnSelectorsOf to be called by _OwnVisiblesOf.
+  }
+
+  function OwnNamesOf(value) {
+    return (value == null) ? TheEmptyArray :
+      GlazeImmutable(_OwnNamesOf(value).sort())
+    // Note: proxy forces _OwnSelectorsOf to be called by _OwnNamesOf.
+  }
+
+  function OwnSymbolsOf(value) {
+    return (value == null) ? TheEmptyArray :
+      GlazeImmutable(_OwnSymbolsOf(value).sort(CompareSelectors))
+    // Note: proxy forces _OwnSelectorsOf to be called by _OwnSymbolsOf.
+  }
+
+  function OwnSelectorsOf(value) {
+    return (value == null) ? TheEmptyArray :
+      GlazeImmutable(_OwnSelectorsOf(value).sort(CompareSelectors))
+  }
+
+  function OwnKeysOf(value) {
+    return (value == null) ? TheEmptyArray :
+      GlazeImmutable(_OwnKeysOf(value).sort(CompareSelectors))
+  }
+
+
+  function SortedSelectorsUsing(value, picker, sorter_) {
     var target, selectors, selector, index, next
     if (value == null) { return TheEmptyArray }
 
     const known        = SpawnFrom(null)
     const allSelectors = []
-    target = Object(value)
+    target = value
     index  = 0
 
     do {
@@ -36,60 +95,87 @@ Tranya(function (
       }
     } while ((target = RootOf(target)))
 
-    return CrudeBeImmutable(allSelectors.sort(sorter_))
+    return GlazeImmutable(allSelectors.sort(sorter_))
+  }
+
+  function AspectOf(value) {
+    var _$value
+    if (value[$IS_INNER] === PROOF) { return value[$INNER] }
+    if ((_$value = InterMap.get(value))) {
+      return (_$value[$IS_INNER] === PROOF) ? _$value[$OUTER] : value
+    }
+    return Object(value)
   }
 
 
-  const _HasOwn        = Object.prototype.hasOwnProperty // ._hasOwn
-  const _OwnVisiblesOf = Object.keys
-  const _OwnNamesOf    = Object.getOwnPropertyNames
-  const _OwnSymbolsOf  = Object.getOwnPropertySymbols
-  const _OwnKeysOf     = Reflect.ownKeys
-
-
-  function OwnVisiblesOf(value) {
-    return CrudeBeImmutable(_OwnVisiblesOf(value).sort())
-  }
-
-  function OwnNamesOf(value) {
-    return CrudeBeImmutable(_OwnNamesOf(value).sort())
-  }
-
-  function OwnSymbolsOf(value) {
-    return _OwnSortedSelectorsOf(value, _OwnSymbolsOf)
-  }
-
-  function OwnSelectorsOf(value) {
-    return _OwnSortedSelectorsOf(value, _OwnKeysOf)
-  }
-
-  function OwnKeysOf(value) {
-    return CrudeBeImmutable(_OwnKeysOf(value).sort(CompareSelectors))
-  }
-
-
-  function VisiblesOf(target) {
+  function VisiblesOf_(value) {
     var index, name
     const visibles = []
     index = 0
-    for (name in target) { visibles[index++] = name }
-    return CrudeBeImmutable(visibles.sort())
+    for (name in value) { visibles[index++] = name }
+    return GlazeImmutable(visibles.sort())
   }
 
-  function NamesOf(target) {
-    return _SortedSelectorsOf(target, _OwnNamesOf)
+  function NamesOf_(value) {
+    return SortedSelectorsUsing(value, _OwnNamesOf)
   }
 
-  function SymbolsOf(target) {
-    return _SortedSelectorsOf(target, OwnSymbolsOf, CompareSelectors)
+  function SymbolsOf_(value) {
+    return SortedSelectorsUsing(value, _OwnSymbolsOf, CompareSelectors)
   }
 
-  function SelectorsOf(target) {
-    return _SortedSelectorsOf(target, OwnSelectorsOf, CompareSelectors)
+  function SafeSymbolsOf_(value) {
+    return SortedSelectorsUsing(value, _OwnSafeSymbolsOf, CompareSelectors)
   }
 
-  function KeysOf(target) {
-    return _SortedSelectorsOf(target, _OwnKeysOf, CompareSelectors)
+  function SelectorsOf_(value) {
+    return SortedSelectorsUsing(value, _OwnSelectorsOf, CompareSelectors)
+  }
+
+  function KeysOf_(value) {
+    return SortedSelectorsUsing(value, _OwnKeysOf, CompareSelectors)
+  }
+
+
+  function VisiblesOf(value) {
+    return (value == null) ? TheEmptyArray : VisiblesOf_(AspectOf(value))
+  }
+
+  function NamesOf(value) {
+    return (value == null) ? TheEmptyArray : NamesOf_(AspectOf(value))
+  }
+
+  function SymbolsOf(value) {
+    var _$value
+    if (value == null) { return TheEmptyArray }
+    if (value[$IS_INNER] === PROOF) { return SafeSymbolsOf_(value[$INNER]) }
+    if ((_$value = InterMap.get(value))) {
+      return (_$value[$IS_INNER] === PROOF) ?
+        SafeSymbolsOf_(_$value[$OUTER]) : SymbolsOf_(value)
+    }
+    return SymbolsOf_(Object(value))
+  }
+
+  function SelectorsOf(value) {
+    var _$value
+    if (value == null) { return TheEmptyArray }
+    if (value[$IS_INNER] === PROOF) { return SelectorsOf_(value[$INNER]) }
+    if ((_$value = InterMap.get(value))) {
+      return (_$value[$IS_INNER] === PROOF) ?
+        NamesOf_(_$value[$OUTER]) : KeysOf_(value)
+    }
+    return KeysOf_(Object(value))
+  }
+
+  function KeysOf(value) {
+    var _$value
+    if (value == null) { return TheEmptyArray }
+    if (value[$IS_INNER] === PROOF) { return SelectorsOf_(value[$INNER]) }
+    if ((_$value = InterMap.get(value))) {
+      return (_$value[$IS_INNER] === PROOF) ?
+        SelectorsOf_(_$value[$OUTER]) : KeysOf_(value)
+    }
+    return KeysOf_(Object(value))
   }
 
 
@@ -103,20 +189,6 @@ Tranya(function (
   }
 
 
-
-  function ValueAsName(value) {
-    var name
-    switch (typeof value) {
-      case "symbol" :
-        name = value.toString()
-        return name.slice(7, name.length - 1)
-
-      case "function" :
-      case "object"   :
-        return value.name
-    }
-    return value
-  }
 
   const SYMBOL_PREFIX_MATCHER = /^[_$]/i
 
@@ -180,9 +252,7 @@ Tranya(function (
 
 
 
-  // function CompareSelectors(a, b) {
-  //   return ValueAsName(a).localeCompare(ValueAsName(b))
-  // }
+
 
   function CompareSelectors(a, b) {
     const nameA = ValueAsName(a)
@@ -190,17 +260,22 @@ Tranya(function (
     return (nameA === nameB) ? 0 : (nameA < nameB ? -1 : 1)
   }
 
+  // function CompareSelectors(a, b) {
+  //   return ValueAsName(a).localeCompare(ValueAsName(b))
+  // }
+
 
 
   function FindDurables(target) {
-    const durables = _OwnNamesOf(target)
+    const durables = _OwnVisiblesOf(target)
     durables[IMMUTABLE] = true
-    return Frost(durables)
+    return FreezeSurface(durables)
   }
 
   function FindAndSetDurables(target) {
-    const durables = OwnNamesOf(target)
-    return (target[_DURABLES] = Frost(durables))
+    const durables = _OwnVisiblesOf(target)
+    durables[IMMUTABLE] = true
+    return (target[_DURABLES] = FreezeSurface(durables))
   }
 
 
@@ -219,7 +294,6 @@ Tranya(function (
 
     delete _$target._retarget
     $target[IMMUTABLE] = _$target[IMMUTABLE] = true
-    Frost($target)
     return this
   }
 
@@ -228,14 +302,14 @@ Tranya(function (
     if (func == null || InterMap.get(func)) { return func }
     func[IMMUTABLE] = true
     InterMap.set(func, marker)
-    Frost(func.prototype)
-    return Frost(func)
+    FreezeSurface(func.prototype)
+    return FreezeSurface(func)
   }
 
   function SetFuncImmutable(func) {
     func[IMMUTABLE] = true
-    Frost(func.prototype)
-    return Frost(func)
+    FreezeSurface(func.prototype)
+    return FreezeSurface(func)
   }
 
 
@@ -291,10 +365,23 @@ Tranya(function (
     return constants.concat(standards, contexts).join(", \n")
   }
 
-  Shared._ownSymbolsOf            = MarkFunc(_OwnSymbolsOf)
-  Shared._ownKeysOf               = MarkFunc(_OwnKeysOf)
+  Shared.glazeImmutable           = MarkFunc(GlazeImmutable)
+  Shared.glazeAsImmutable         = MarkFunc(GlazeAsImmutable)
+  Shared.isSurfaceImmutable       = MarkFunc(IsSurfaceImmutable)
+
+  _Shared._HasOwn                 = _HasOwn // ._hasOwn
+
+  _Shared.VisiblesOf_             = VisiblesOf_
+  _Shared.NamesOf_                = NamesOf_
+  // _Shared.SymbolsOf_           = SymbolsOf_
+  _Shared.SelectorsOf_            = SelectorsOf_
+  _Shared.KeysOf_                 = KeysOf_
+
   Shared._ownVisiblesOf           = MarkFunc(_OwnVisiblesOf)
   Shared._ownNamesOf              = MarkFunc(_OwnNamesOf)
+  Shared._ownSymbolsOf            = MarkFunc(_OwnSymbolsOf)
+  Shared._ownSelectorsOf          = MarkFunc(_OwnSelectorsOf)
+  Shared._ownKeysOf               = MarkFunc(_OwnKeysOf)
 
   Shared.ownVisiblesOf            = MarkFunc(OwnVisiblesOf)
   Shared.ownNamesOf               = MarkFunc(OwnNamesOf)
@@ -311,7 +398,6 @@ Tranya(function (
   Shared.valueHasOwn              = MarkFunc(ValueHasOwn)
   Shared.valueHas                 = MarkFunc(ValueHas)
 
-
   Shared.isPublicSelector         = MarkFunc(IsPublicSelector)
   Shared.valueIsInner             = MarkFunc(ValueIsInner)
   Shared.valueIsOuter             = MarkFunc(ValueIsOuter)
@@ -319,13 +405,12 @@ Tranya(function (
   Shared.valueIsImmutable         = MarkFunc(ValueIsImmutable)
   Shared.valueIsFact              = MarkFunc(ValueIsFact)
 
-  Shared.valueAsName              = MarkFunc(ValueAsName)
   Shared.compareSelectors         = MarkFunc(CompareSelectors)
   Shared.sortParameters           = MarkFunc(SortParameters)
-  Shared.findDurables             = MarkFunc(FindDurables)
 
-  _Shared._HasOwn                 = _HasOwn // ._hasOwn
+  Shared.findDurables             = MarkFunc(FindDurables)
   _Shared.FindAndSetDurables      = FindAndSetDurables
+
   _Shared.SetInvisibly            = SetInvisibly
   _Shared._BasicSetImmutable      = _basicSetImmutable
   _Shared.MarkAndSetFuncImmutable = MarkAndSetFuncImmutable

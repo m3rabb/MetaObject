@@ -1,5 +1,5 @@
 Tranya.ImplementationTesting(function (
-  $BARRIER, $INNER, $OUTER, $RIND, CrudeBeImmutable, RootOf, ValueHasOwn, 
+  $BARRIER, $INNER, $OUTER, $RIND, GlazeImmutable, RootOf, ValueHasOwn,
   Thing, Type
 ) {
   "use strict"
@@ -10,7 +10,7 @@ Tranya.ImplementationTesting(function (
     function mood(newMood) { return `very ${newMood}` }
 
     beforeAll(function () {
-      this.redBall = CrudeBeImmutable({color : "red"})
+      this.redBall = GlazeImmutable({color : "red"})
 
       this.Cat_ = Type.new_({
         name   : "Cat",

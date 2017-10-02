@@ -1,5 +1,5 @@
 Tranya.ImplementationTesting(function (
-  $BARRIER, $OUTER, $PULP, CrudeBeImmutable, IsFrosted, RootOf, Type
+  $BARRIER, $OUTER, $PULP, GlazeImmutable, IsSurfaceFrozen, RootOf, Type
 ) {
   "use strict"
 
@@ -9,7 +9,7 @@ Tranya.ImplementationTesting(function (
     function mood(newMood) { return `very ${newMood}` }
 
     beforeAll(function () {
-      this.redBall = CrudeBeImmutable({color : "red"})
+      this.redBall = GlazeImmutable({color : "red"})
 
       this.CatSpec = {
         name   : "Cat",
@@ -52,7 +52,7 @@ Tranya.ImplementationTesting(function (
 
           it("has the same supertypes", function () {
             expect( this.Cat2.supertypes ).toEqual( this.Cat.supertypes )
-            expect( IsFrosted(this.Cat2.supertypes) ).toBe( true )
+            expect( IsSurfaceFrozen(this.Cat2.supertypes) ).toBe( true )
           })
 
           it("has its instances' type set to itself", function () {
@@ -127,8 +127,8 @@ Tranya.ImplementationTesting(function (
   //   }
   //
   //   function beImmutable() {
-  //     this[IMMUTABLE] = true
-  //     Frost(this[OUTER])
+  //     this[IS_IMMUTABLE] = true
+  //     IsSurfaceFrozen(this[OUTER])
   //   }
   //
   //   beforeEach(function () {
@@ -166,14 +166,14 @@ Tranya.ImplementationTesting(function (
   //     it("the outside of the new object is immutable", function () {
   //       const cat = this.Cat("Nutmeg", 1)
   //       const catCore = InterMap.get(cat)
-  //       expect( catCore[IMMUTABLE] ).toBe( true )
-  //       expect( IsFrosted(cat) ).toBe( true )
+  //       expect( catCore[IS_IMMUTABLE] ).toBe( true )
+  //       expect( IsSurfaceFrozen(cat) ).toBe( true )
   //     })
   //
   //     it("but the inside of the new object is mmutable", function () {
   //       const cat = this.Cat("Nutmeg", 1)
   //       const catCore = InterMap.get(cat)
-  //       expect( IsFrosted(catCore) ).toBe( false )
+  //       expect( IsSurfaceFrozen(catCore) ).toBe( false )
   //     })
   //   })
   //

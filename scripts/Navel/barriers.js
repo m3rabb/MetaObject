@@ -2,12 +2,13 @@ Tranya(function (
   $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,$IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   IMMEDIATE, IMMUTABLE, IMPLEMENTATION, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
-  AlwaysFalse, AlwaysNull, InSetProperty, InterMap, IsPublicSelector, SpawnFrom,
-  _$Copy, _HasOwn,
+  AlwaysFalse, AlwaysNull, InSetProperty, InterMap, IsPublicSelector,
+  SpawnFrom, _$Copy, _HasOwn,
+  _OwnSelectorsOf, _OwnVisiblesOf,
   AssignmentOfUndefinedError, AssignmentViaSuperError,
   ChangeToImmutableThisError, DeleteFromOutsideError,
   DirectAssignmentFromOutsideError, DisallowedDeleteError,
-  ExternalPrivateAccessError,
+  PrivateAccessError,
   _Shared
 ) {
   "use strict"
@@ -45,6 +46,10 @@ Tranya(function (
     return DeleteFromOutsideError($self, selector) || false
   }
 
+  OuterBarrier_prototype.ownKeys = function ownKeys($self) {
+    return _OwnVisiblesOf($self)
+  }
+
   OuterBarrier_prototype.get = function get($self, selector, self) {
     const value = $self[selector]
     if (value !== undefined) { return value }
@@ -59,7 +64,7 @@ Tranya(function (
       const _externalPrivateAccess = _$self._externalPrivateAccess
       return (_externalPrivateAccess) ?
         _externalPrivateAccess.call(_$self[$PULP], selector) :
-        ExternalPrivateAccessError(_$self[$OUTER], selector)
+        PrivateAccessError(_$self[$OUTER], selector)
     }
 
     const _unknownProperty = _$self._unknownProperty
@@ -68,9 +73,8 @@ Tranya(function (
 
   OuterBarrier_prototype.has = function has($self, selector) {
     switch (selector[0]) {
-      case "_"       :
-        return ExternalPrivateAccessError($self, selector) || false
-      case undefined : return null  // Effectively answers a shrug
+      case "_"       : return PrivateAccessError($self, selector) || false
+      case undefined : return undefined  // Effectively answers a shrug
       // case undefined : if (!(selector in VISIBLE_SYMBOLS)) { return false }
       default        : return (selector in $self)
     }
@@ -97,6 +101,10 @@ Tranya(function (
 
   // Below, executing via OuterBarrier_prototype only works
   // because it doesn't access 'this'.
+  DisguisedBarrier_prototype.ownKeys = function ownKeys(func) {
+    return OuterBarrier_prototype.ownKeys(this.$self)
+  }
+
   DisguisedBarrier_prototype.get = function get(func, selector, self) {
     return OuterBarrier_prototype.get(this.$self, selector, self)
   }
@@ -118,6 +126,11 @@ Tranya(function (
 
   const InnerBarrier_prototype = SpawnFrom(DefaultBarrier)
   InnerBarrier.prototype = InnerBarrier_prototype
+
+
+  InnerBarrier_prototype.ownKeys = function ownKeys(_$self) {
+    return _OwnSelectorsOf(_$self)
+  }
 
 
   // eslint-disable-next-line

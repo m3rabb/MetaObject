@@ -3,7 +3,7 @@ Tranya(function (
   COUNT, IMMUTABLE, INHERITED, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, VALUE_METHOD,
   AlwaysPass1st, AlwaysPass2nd, AsDecapitalized, BePermeable,
-  CompareSelectors, CrudeBeImmutable, BeImmutableValue,
+  CompareSelectors, BeImmutableValue, GlazeImmutable,
   DefaultContext, Definition, Definition_init, EmptyThingAncestry,
   ExtractParamNames, InterMap, IsSubtypeOfThing,
   RootContext, SetInvisibly, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
@@ -86,7 +86,7 @@ Tranya(function (
     do {
       contexts.unshift(nextContext)
     } while ((nextContext = nextContext.supercontext))
-    return CrudeBeImmutable(contexts)
+    return GlazeImmutable(contexts)
   })
 
 
@@ -122,7 +122,7 @@ Tranya(function (
 
     index = 0
     for (key in entries) { keys[index++] = key }
-    return CrudeBeImmutable(keys.sort(CompareSelectors))
+    return GlazeImmutable(keys.sort(CompareSelectors))
   })
 
   _Context.addValueMethod(function ownKeys() {
@@ -150,7 +150,7 @@ Tranya(function (
     var   index   = 0
     this._forEachEntry(
       where, (entry, key) => results[index++] = action(entry, key))
-    return CrudeBeImmutable(results)
+    return GlazeImmutable(results)
   })
 
   _Context.addValueMethod(function _mapKind(which, where, selection) {
@@ -162,7 +162,7 @@ Tranya(function (
         results[index++] = [entry, key][selection]
       }
     })
-    return CrudeBeImmutable(results)
+    return GlazeImmutable(results)
   })
 
   const VALUE = 0
@@ -188,7 +188,7 @@ Tranya(function (
   _Context.addValueMethod(function _getContexts(where, selection) {
     var contexts = this._mapKind($IS_CONTEXT, where, selection)
     var uniques  = new Set(contexts)
-    return CrudeBeImmutable([...uniques])
+    return GlazeImmutable([...uniques])
   })
 
   _Context.addValueMethod(function knownContexts() {
@@ -208,11 +208,11 @@ Tranya(function (
   })
 
   _Context.addValueMethod(function knownContextNames() {
-    return CrudeBeImmutable(this.knownContexts.map(context => context.name))
+    return GlazeImmutable(this.knownContexts.map(context => context.name))
   })
 
   _Context.addValueMethod(function ownContextNames() {
-    return CrudeBeImmutable(this.ownContexts.map(context => context.name))
+    return GlazeImmutable(this.ownContexts.map(context => context.name))
   })
 
 

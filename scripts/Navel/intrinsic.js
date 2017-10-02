@@ -18,13 +18,14 @@ Tranya(function (
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   AsDefinitionFrom, CompareSelectors, CompletelyDeleteProperty,
-  CrudeBeImmutable, FindAndSetDurables, MakeDefinitionsInfrastructure,
+  FindAndSetDurables, GlazeImmutable, MakeDefinitionsInfrastructure,
   NewUniqueId, PropertyAt, SetDefinition, SetInvisibly, SpawnFrom, ValueAsFact,
   ValueAsName, _HasOwn, _$Copy, _$Intrinsic,
   PrivateAccessFromOutsideError, SignalError,
   InterMap, PropertyToSymbolMap,
-  NamesOf, OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf, SelectorsOf, VisiblesOf,
-  _OwnVisiblesOf
+  _OwnSelectorsOf, _OwnVisiblesOf,
+  OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf,
+  NamesOf_, SelectorsOf_, VisiblesOf_
 ) {
   // "use strict"
 
@@ -201,13 +202,14 @@ Tranya(function (
 
 
 
-  _$Intrinsic.addValueMethod(function _invisiblesFrom(knownsMethod, visiblesMethod) {
-    const knowns   = this[knownsMethod]
-    const visibles = this[visiblesMethod]
-    return CrudeBeImmutable(knowns.filter(sel => !visibles.includes(sel)))
+  _$Intrinsic.addValueMethod(function _sortedInvisibles(knownsMethod, visiblesMethod) {
+    const knowns     = this[knownsMethod]
+    const visibles   = this[visiblesMethod]
+    const invisibles = knowns.filter(sel => !visibles.includes(sel))
+    return GlazeImmutable(invisibles.sort(CompareSelectors))
   })
 
-  _$Intrinsic.addValueMethod(function _primariesFrom(inheritedMethod, ownPicker, sorter_) {
+  _$Intrinsic.addValueMethod(function _sortedPrimaries(inheritedMethod, ownPicker, sorter_) {
     var primaries, index
     const inheriteds = this.type[inheritedMethod]
     const owns       = ownPicker(this[$OUTER])
@@ -217,7 +219,7 @@ Tranya(function (
       if (!inheriteds.includes(sel)) { primaries[index++] = sel }
     })
     primaries = primaries.concat(inheriteds)
-    return CrudeBeImmutable(primaries.sort(sorter_))
+    return GlazeImmutable(primaries.sort(sorter_))
   })
 
 
@@ -225,31 +227,35 @@ Tranya(function (
     return OwnVisiblesOf(this[$INNER])
   })
 
+  _$Intrinsic.addValueMethod(function _ownInvisibleSelectors() {
+    return this._sortedInvisibles("_ownSelectors", "_ownVisibleSelectors")
+  })
+
   _$Intrinsic.addValueMethod(function _ownSelectors() {
     // All string and symbol properties, includes invisibles
     return OwnSelectorsOf(this[$INNER])
   })
 
+
   _$Intrinsic.addValueMethod(function _primarySelectors() {
-    return this._primariesFrom(
-      "allDefinedSelectors", OwnSelectorsOf, CompareSelectors)
+    return this._sortedPrimaries(
+      "allDefinedSelectors", _OwnSelectorsOf, CompareSelectors)
   })
 
   _$Intrinsic.addValueMethod(function _intrinsicSelectors() {
-    return SelectorsOf(_$Intrinsic._blanker.$root$inner)
+    return SelectorsOf_(_$Intrinsic._blanker.$root$inner)
   })
 
-
   _$Intrinsic.addValueMethod(function _visibleSelectors() {
-    return VisiblesOf(this[$INNER])
+    return VisiblesOf_(this[$INNER])
   })
 
   _$Intrinsic.addValueMethod(function _invisibleSelectors() {
-    return this._invisiblesFrom("_knownSelectors", "_visibleSelectors")
+    return this._sortedInvisibles("_knownSelectors", "_visibleSelectors")
   })
 
   _$Intrinsic.addValueMethod(function _knownSelectors() {
-    return SelectorsOf(this[$INNER])
+    return SelectorsOf_(this[$INNER])
   })
 
 
@@ -265,15 +271,15 @@ Tranya(function (
 
 
   _$Intrinsic.addValueMethod(function primarySelectors() {
-    return this._primariesFrom("allPublicSelectors", _OwnVisiblesOf)
+    return this._sortedPrimaries("allPublicSelectors", _OwnVisiblesOf)
   })
 
   _$Intrinsic.addValueMethod(function intrinsicSelectors() {
-    return NamesOf(_$Intrinsic._blanker.$root$outer)
+    return NamesOf_(_$Intrinsic._blanker.$root$outer)
   })
 
   _$Intrinsic.addValueMethod(function visibleSelectors() {
-    return VisiblesOf(this[$OUTER])
+    return VisiblesOf_(this[$OUTER])
   })
 
   _$Intrinsic.addValueMethod(function invisibleSelectors() {
@@ -282,7 +288,7 @@ Tranya(function (
 
   _$Intrinsic.addValueMethod(function knownSelectors() {
     // All selectors except symbols or private selectors
-    return NamesOf(this[$OUTER])
+    return NamesOf_(this[$OUTER])
   })
 
 
@@ -401,7 +407,7 @@ Tranya(function (
   _$Intrinsic.addSelfMethod(function _addOwnDurable(selector) {
     var durables = this[_DURABLES] || []
     if (!durables.includes(selector)) {
-      this[$INNER][_DURABLES] = CrudeBeImmutable([...durables, selector])
+      this[$INNER][_DURABLES] = GlazeImmutable([...durables, selector])
       this.addOwnDeclaration(selector)
     }
   })

@@ -1,7 +1,7 @@
 Tranya(function (
   $INNER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, IMMUTABLE, INVISIBLE,
   _DURABLES,
-  $BaseBlanker, $IntrinsicBlanker, CrudeBeImmutable, Frost,
+  $BaseBlanker, $IntrinsicBlanker, FreezeSurface, GlazeImmutable,
   InterMap, ImplementationSymbols, SetAsymmetricProperty,
   NewAssignmentErrorHandler, SetInvisibly, SpawnFrom, TheEmptyArray,
   _$DefaultContext, _$Intrinsic, _$Something, _BasicSetImmutable, _RootContext,
@@ -17,7 +17,7 @@ Tranya(function (
   _Context.addDeclaration($OUTER_WRAPPER) // Ensures method wrappers work!!!
 
 
-  const ThingAncestry = CrudeBeImmutable([_Thing[$RIND]])
+  const ThingAncestry = GlazeImmutable([_Thing[$RIND]])
   const BasicSet      = $IntrinsicBlanker.$root$inner._basicSet
 
   function BootstrapType(_type, name, isRootType, spawnIntoRoot, isHidden) {
@@ -61,9 +61,9 @@ Tranya(function (
   // Note: If this was called before the previous declarations,
   // $IMMEDIATES, $ASSIGNERS, constructor, etc, would not be overridable
   // in the descendent $roots.
-  Frost($BaseBlanker.$root$outer)
-  Frost($BaseBlanker.$root$inner)
-  CrudeBeImmutable($BaseBlanker)
+  FreezeSurface($BaseBlanker.$root$outer)
+  FreezeSurface($BaseBlanker.$root$inner)
+  GlazeImmutable($BaseBlanker)
   // _BasicSetImmutable.call(_$Intrinsic)
   // _BasicSetImmutable.call(_$Something)
 
@@ -88,6 +88,7 @@ Tranya(function (
 
   _RootContext.add(DefaultContext)
   _RootContext.add(TestContext)
+  _RootContext.atPut("_", TestContext)
 
   Tranya = RootContext
 })

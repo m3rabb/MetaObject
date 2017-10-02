@@ -4,7 +4,7 @@ Tranya(function (
   REINHERIT, SYMBOL_1ST_CHAR, VISIBLE,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD,
-  AsPropertySymbol, ExtractParamListing, Frost, InterMap, IsPublicSelector,
+  AsPropertySymbol, ExtractParamListing, InterMap, IsPublicSelector,
   MarkFunc, SpawnFrom, MarkAndSetFuncImmutable, NewAssignmentErrorHandler,
   ValueAsName, CompletelyDeleteProperty, InSetProperty,
   DefineProperty, InvisibleConfig, ValueAsFact,
