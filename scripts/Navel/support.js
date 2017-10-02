@@ -1,11 +1,11 @@
 Tranya(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
-  DISGUISE_PULP, INVISIBLE, SYMBOL_1ST_CHAR,
-  ASSIGNER_FUNC, BLANKER_FUNC,
-  AsCapitalized, AsDecapitalized, CompareSelectors,
-  DefineProperty, FreezeSurface, Impermeable, InvisibleConfig, IsArray,
-  MarkFunc, NewUniqueId, OwnSelectorsOf, SetInvisibly, SpawnFrom, ValueAsName,
+  INVISIBLE, SYMBOL_1ST_CHAR,
+  ASSIGNER_FUNC, BLANKER_FUNC, DISGUISE_PULP, DISGUISE_RIND,
+  AsCapitalized, AsDecapitalized, CompareSelectors, DefineProperty,
+  FreezeSurface, Impermeable, InvisibleConfig, IsArray, KnowFunc, KnownFuncs,
+  NewUniqueId, OwnSelectorsOf, SetInvisibly, SpawnFrom, ValueAsName,
   DisguisedBarrier, InnerBarrier,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
   ImproperDisguiseNameError, SignalError,
@@ -46,7 +46,7 @@ Tranya(function (
     function $assignmentError(value) { // eslint-disable-line
       DisallowedAssignmentError(this, Property, Setter)
     }
-    return MarkFunc($assignmentError, ASSIGNER_FUNC)
+    return KnowFunc($assignmentError, ASSIGNER_FUNC)
   }
 
 
@@ -112,7 +112,7 @@ Tranya(function (
 
     MakeDefinitionsInfrastructure(_$root, root$root$inner)
 
-    InterMap.set(blanker, BLANKER_FUNC)
+    KnowFunc(blanker, BLANKER_FUNC)
     return FreezeSurface(blanker)
   }
 
@@ -173,11 +173,10 @@ Tranya(function (
 
       if (uid) { SetInvisibly($inner, "uid", uid, "SET BOTH INNER & OUTER") }
 
-      // MarkFunc(disguise, DISGUISE_FUNC)
       FreezeSurface(disguise.prototype)
       DefineProperty(disguise, "name", InvisibleConfig)
-
-      InterMap.set($pulp, DISGUISE_PULP)
+      KnowFunc($pulp, DISGUISE_PULP)
+      KnowFunc($rind, DISGUISE_RIND)
       InterMap.set($rind, $inner)
     }
   }
@@ -268,7 +267,7 @@ Tranya(function (
 
     const value = _$target[selector]
     return (value == null) ? null :
-      ((value[$OUTER_WRAPPER] && InterMap.get(value)) ? value.method : value)
+      ((value[$OUTER_WRAPPER] && KnownFuncs.get(value)) ? value.method : value)
   }
 
 

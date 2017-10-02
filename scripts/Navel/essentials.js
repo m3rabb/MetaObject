@@ -5,7 +5,7 @@ Tranya(function (
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD,
   AsPropertySymbol, ExtractParamListing, InterMap, IsPublicSelector,
-  MarkFunc, SpawnFrom, MarkAndSetFuncImmutable, NewAssignmentErrorHandler,
+  KnowFunc, KnowAndSetFuncImmutable, NewAssignmentErrorHandler, SpawnFrom,
   ValueAsName, CompletelyDeleteProperty, InSetProperty,
   DefineProperty, InvisibleConfig, ValueAsFact,
   _Shared
@@ -127,7 +127,7 @@ Tranya(function (
 
   const Definition_init = function _init(selector, handler, mode, property_) {
     const isPublic = IsPublicSelector(selector)
-    const $inner   = InterMap.get(this[$RIND])
+    const $inner   = this[$INNER]
     const $outer   = $inner[$OUTER]
 
     if (!selector) { return this._invalidSelectorError(selector) }
@@ -148,7 +148,7 @@ Tranya(function (
       case ASSIGNER :
         this.isAssigner = true
         this.tag        = `_$assigner@${ValueAsName(selector)}`
-        $outer.handler = $inner.handler = MarkFunc(handler, ASSIGNER_FUNC)
+        $outer.handler = $inner.handler = KnowFunc(handler, ASSIGNER_FUNC)
         return
 
       case MANDATORY_SETTER_METHOD :
@@ -184,9 +184,9 @@ Tranya(function (
     outer && (outer.method = inner.method) // this[$RIND]
 
     // Need to subvert function assignment to enable raw functions to be stored.
-    $outer.outer   = $inner.outer   = MarkAndSetFuncImmutable(outer, OUTER_FUNC)
-    $outer.inner   = $inner.inner   = MarkAndSetFuncImmutable(inner, INNER_FUNC)
-    $outer.handler = $inner.handler = MarkFunc           (handler, HANDLER_FUNC)
+    $outer.outer   = $inner.outer   = KnowAndSetFuncImmutable(outer, OUTER_FUNC)
+    $outer.inner   = $inner.inner   = KnowAndSetFuncImmutable(inner, INNER_FUNC)
+    $outer.handler = $inner.handler = KnowFunc           (handler, HANDLER_FUNC)
   }
 
 

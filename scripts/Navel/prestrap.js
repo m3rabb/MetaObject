@@ -4,7 +4,7 @@ Tranya(function (
   IMMUTABLE, IMPLEMENTATION, INVISIBLE, PROOF, VISIBLE, _DURABLES,
   FACT_METHOD, SELF_METHOD, VALUE_METHOD,
   AlwaysSelf, BecomePermeableError, DefineProperty, InterMap, InvisibleConfig,
-  MarkFunc, NewBlanker, NewInner, NewVacuousConstructor, RootOf, SetInvisibly,
+  NewBlanker, NewInner, NewVacuousConstructor, RootOf, SetInvisibly,
   TheEmptyArray, SpawnFrom,
   AsContextDisguise, AsTypeDisguise,
 

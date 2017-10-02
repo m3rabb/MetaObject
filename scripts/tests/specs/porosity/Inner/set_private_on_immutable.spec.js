@@ -811,7 +811,7 @@ Tranya.ImplementationTesting(function (
         it("Throws an detected inner error", function () {
           var value = Thing.new_().this
           expect( () => { this.$rind.setXyz(value) } )
-            .toThrowError(/forgot to pass the 'this'/)
+            .toThrowError(/forgot to pass the 'this.self'/)
         })
       })
 
@@ -819,7 +819,7 @@ Tranya.ImplementationTesting(function (
         it("Throws an detected inner error", function () {
           var value = Type.new_("Cat").this
           expect( () => { this.$rind.setXyz(value) } )
-            .toThrowError(/forgot to pass the 'this'/)
+            .toThrowError(/forgot to pass the 'this.self'/)
         })
       })
     })

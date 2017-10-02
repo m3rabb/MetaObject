@@ -1,9 +1,9 @@
 Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND,
-  DISGUISE_PULP, IMMUTABLE, PROOF, SYMBOL_1ST_CHAR, _DURABLES,
+  DISGUISE_PULP, DISGUISE_RIND, IMMUTABLE, PROOF, SYMBOL_1ST_CHAR, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC,
-  OUTER_FUNC, SAFE_FUNC, TAMED_FUNC,
-  InterMap, MarkAndSetFuncImmutable, ObjectCopy, _$Copy,
+  OUTER_FUNC, SAFE_FUNC, SUPER_FUNC, TAMED_FUNC,
+  InterMap, KnowAndSetFuncImmutable, KnownFuncs, ObjectCopy, _$Copy,
   AssignmentOfUndefinedError, AssignmentToPrivateSymbolError,
   DetectedInnerError,
   _Shared
@@ -30,7 +30,7 @@ Tranya(function (
             result[$RIND] : result
         }
       }[name]
-    return MarkAndSetFuncImmutable(func, TAMED_FUNC)
+    return KnowAndSetFuncImmutable(func, TAMED_FUNC)
   }
 
 
@@ -52,7 +52,7 @@ Tranya(function (
                if (value === null)                {        /* NOP */        }
           else if (value[$IS_INNER] === PROOF)    {
             if (value === _$target[$PULP])        { value = _$target[$RIND] }
-           // Safety check: detect failure to use 'this.$' elsewhere.
+           // Safety check: detect failure to use 'this.self' elsewhere.
             else { return DetectedInnerError(_$target, value) }
           }
           else if (value[IMMUTABLE])              {        /* NOP */        }
@@ -64,12 +64,20 @@ Tranya(function (
 
         case "function" : // LOOK: will catch Type things!!!
           // Note: Checking for value.constructor is inadequate to prevent func spoofing
-          switch (InterMap.get(value)) {
+          switch (KnownFuncs.get(value)) {
+            case DISGUISE_RIND :
+            case SAFE_FUNC     :
+            case OUTER_FUNC    :
+            case TAMED_FUNC    :
+            case BLANKER_FUNC  :
+              break
+
             case DISGUISE_PULP :
-              // Safety check: detect failure to a type's 'this.$' elsewhere.
+              // Safety check: detect failure to use 'this.self' elsewhere.
               return DetectedInnerError(_$target, value)
 
             case INNER_FUNC    :
+            case SUPER_FUNC    :
               // Revisit this if $OUTER_WRAPPER can hold NONE instead
               if (writeOuter) { $target[selector] = value[$OUTER_WRAPPER] }
               return (_$target[selector] = value)
@@ -77,15 +85,8 @@ Tranya(function (
             case undefined     : // New unknown untrusted function to be wrapped.
             case HANDLER_FUNC  :
             case ASSIGNER_FUNC :
+            default :
               value = AsTameFunc(value)
-              // break omitted
-
-            case OUTER_FUNC    :
-            case TAMED_FUNC    :
-            case SAFE_FUNC     :
-            // case DISGUISE_FUNC :
-            case BLANKER_FUNC  :
-            default            : // value is a type's $rind, etc
               break
           }
           break
@@ -99,7 +100,7 @@ Tranya(function (
         }
       }
       else if (value[$IS_INNER] === PROOF && value !== _$target[$PULP]) {
-        // Safety check: detect failure to use 'this.$' elsewhere.
+        // Safety check: detect failure to use 'this.self' elsewhere.
         return DetectedInnerError(_$target, value)
       }
     }

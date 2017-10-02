@@ -1,5 +1,5 @@
 Tranya(function (
-  $IS_IMPENETRABLE, $RIND, MarkFunc, ValueAsName, Shared, _Shared
+  $IS_IMPENETRABLE, $RIND, KnowFunc, ValueAsName, Shared, _Shared
 ) {
   "use strict"
 
@@ -35,14 +35,14 @@ Tranya(function (
   // }
 
   Shared.errorLog    = ErrorLog
-  Shared.signalError = MarkFunc(SignalError)
+  Shared.signalError = KnowFunc(SignalError)
 
-  Shared.setLogErrors = MarkFunc(function (bool) {
+  Shared.setLogErrors = KnowFunc(function (bool) {
     if (!this[$IS_IMPENETRABLE]) { LogErrors = !!bool }
     return this[$RIND]
   })
 
-  Shared.setHandleErrorsQuietly = MarkFunc(function (bool) {
+  Shared.setHandleErrorsQuietly = KnowFunc(function (bool) {
     if (!this[$IS_IMPENETRABLE]) { HandleErrorsQuietly = !!bool }
     return this[$RIND]
   })
@@ -93,7 +93,7 @@ Tranya(function (
   }
 
   _Shared.DetectedInnerError = function (target, value) {
-    SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this' with '$' for ${value}!!`)
+    SignalError(target[$RIND], `On attempted assignment, detected that you forgot to pass the 'this.self' for ${value}!!`)
   }
 
   _Shared.UnnamedFuncError = function (target, func) {

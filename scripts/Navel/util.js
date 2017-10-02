@@ -2,20 +2,21 @@ Tranya(function (
   $INNER, $IS_INNER, $OUTER, $RIND, IMMUTABLE, PROOF, SYMBOL_1ST_CHAR,
   _DURABLES,
   DefineProperty, FreezeSurface, GlazeError, ImplementationSelectors,
-  InterMap, InvisibleConfig, IsSurfaceFrozen, MarkFunc, RootOf, SpawnFrom,
-  TheEmptyArray, ValueAsName,
+  InterMap, InvisibleConfig, IsSurfaceFrozen, KnowFunc, KnownFuncs, RootOf,
+  SpawnFrom, TheEmptyArray, ValueAsName,
   Shared, _Shared
 ) {
   "use strict"
 
 
-  // This method should only be called on a mutable object!!!
+  // This method should only be called on a mutable object|func!!!
   function GlazeImmutable(object) {
     if (object[$IS_INNER] === PROOF) { return GlazeError(object) }
     object[IMMUTABLE] = true
     return FreezeSurface(object)
   }
 
+  // This method should only be called on an object|func!!!
   function GlazeAsImmutable(object) {
     if (object[IMMUTABLE]) { return object }
     if (object[$IS_INNER] === PROOF) { return GlazeError(object) }
@@ -136,14 +137,12 @@ Tranya(function (
     return TheEmptyArray
   }
 
-  function SelectorsOfUsing(value, pickerSpec) {
+  function SelectorsOfUsing(value, pick) {
     var _$value
     if (value == null) { return TheEmptyArray }
-    if (value[$IS_INNER] === PROOF) { return pickerSpec.inner(value[$INNER]) }
-    if ((_$value = InterMap.get(value)) && _$value[$IS_INNER] === PROOF) {
-      return pickerSpec.outer(_$value[$OUTER])
-    }
-    return pickerSpec.value(Object(value))
+    if (value[$IS_INNER] === PROOF)      { return pick.inner(  value[$INNER]) }
+    if ((_$value = InterMap.get(value))) { return pick.outer(_$value[$OUTER]) }
+    return pick.value(Object(value))
   }
 
 
@@ -179,12 +178,9 @@ Tranya(function (
 
 
   function PrimarySelectorsOf(value) {
-    var _$value
     if (value == null) { return TheEmptyArray }
     if (value[$IS_INNER] === PROOF) { return value._primarySelectors }
-    if ((_$value = InterMap.get(value)) && _$value[$IS_INNER] === PROOF) {
-      return value.primarySelectors
-    }
+    if (InterMap.get(value))        { return value.primarySelectors  }
     return SortedSelectorsUsing(
       Object(value), _OwnNamesOf, undefined, Object.prototype)
   }
@@ -325,10 +321,10 @@ Tranya(function (
   }
 
 
-  function MarkAndSetFuncImmutable(func, marker) {
-    if (func == null || InterMap.get(func)) { return func }
+  function KnowAndSetFuncImmutable(func, marker) {
+    if (func == null || KnownFuncs.get(func)) { return func }
     func[IMMUTABLE] = true
-    InterMap.set(func, marker)
+    KnownFuncs.set(func, marker)
     FreezeSurface(func.prototype)
     return FreezeSurface(func)
   }
@@ -393,45 +389,45 @@ Tranya(function (
   }
 
 
-  Shared.glazeImmutable           = MarkFunc(GlazeImmutable)
-  Shared.glazeAsImmutable         = MarkFunc(GlazeAsImmutable)
+  Shared.glazeImmutable           = KnowFunc(GlazeImmutable)
+  Shared.glazeAsImmutable         = KnowFunc(GlazeAsImmutable)
 
-  Shared._ownVisiblesOf           = MarkFunc(_OwnVisiblesOf)
-  Shared._ownNamesOf              = MarkFunc(_OwnNamesOf)
-  Shared._ownSymbolsOf            = MarkFunc(_OwnSymbolsOf)
-  Shared._ownSelectorsOf          = MarkFunc(_OwnSelectorsOf)
-  Shared._ownKeysOf               = MarkFunc(_OwnKeysOf)
+  Shared._ownVisiblesOf           = KnowFunc(_OwnVisiblesOf)
+  Shared._ownNamesOf              = KnowFunc(_OwnNamesOf)
+  Shared._ownSymbolsOf            = KnowFunc(_OwnSymbolsOf)
+  Shared._ownSelectorsOf          = KnowFunc(_OwnSelectorsOf)
+  Shared._ownKeysOf               = KnowFunc(_OwnKeysOf)
 
-  Shared.ownVisiblesOf            = MarkFunc(OwnVisiblesOf)
-  Shared.ownNamesOf               = MarkFunc(OwnNamesOf)
-  Shared.ownSymbolsOf             = MarkFunc(OwnSymbolsOf)
-  Shared.ownSelectorsOf           = MarkFunc(OwnSelectorsOf)
-  Shared.ownKeysOf                = MarkFunc(OwnKeysOf)
+  Shared.ownVisiblesOf            = KnowFunc(OwnVisiblesOf)
+  Shared.ownNamesOf               = KnowFunc(OwnNamesOf)
+  Shared.ownSymbolsOf             = KnowFunc(OwnSymbolsOf)
+  Shared.ownSelectorsOf           = KnowFunc(OwnSelectorsOf)
+  Shared.ownKeysOf                = KnowFunc(OwnKeysOf)
 
-  Shared.knownVisiblesOf          = MarkFunc(KnownVisiblesOf)
-  Shared.knownNamesOf             = MarkFunc(KnownNamesOf)
-  Shared.knownSymbolsOf           = MarkFunc(KnownSymbolsOf)
-  Shared.knownSelectorsOf         = MarkFunc(KnownSelectorsOf)
-  Shared.knownKeysOf              = MarkFunc(KnownKeysOf)
+  Shared.knownVisiblesOf          = KnowFunc(KnownVisiblesOf)
+  Shared.knownNamesOf             = KnowFunc(KnownNamesOf)
+  Shared.knownSymbolsOf           = KnowFunc(KnownSymbolsOf)
+  Shared.knownSelectorsOf         = KnowFunc(KnownSelectorsOf)
+  Shared.knownKeysOf              = KnowFunc(KnownKeysOf)
 
-  Shared.primarySelectorsOf       = MarkFunc(PrimarySelectorsOf)
+  Shared.primarySelectorsOf       = KnowFunc(PrimarySelectorsOf)
 
-  Shared.valueHasOwn              = MarkFunc(ValueHasOwn)
-  Shared.valueHas                 = MarkFunc(ValueHas)
+  Shared.valueHasOwn              = KnowFunc(ValueHasOwn)
+  Shared.valueHas                 = KnowFunc(ValueHas)
 
-  Shared.valueIsInner             = MarkFunc(ValueIsInner)
-  Shared.valueIsOuter             = MarkFunc(ValueIsOuter)
-  Shared.valueIsTranyan           = MarkFunc(ValueIsTranyan)
-  Shared.valueIsFact              = MarkFunc(ValueIsFact)
-  Shared.valueIsImmutable         = MarkFunc(ValueIsImmutable)
-  Shared.valueIsSurfaceImmutable  = MarkFunc(ValueIsSurfaceImmutable)
+  Shared.valueIsInner             = KnowFunc(ValueIsInner)
+  Shared.valueIsOuter             = KnowFunc(ValueIsOuter)
+  Shared.valueIsTranyan           = KnowFunc(ValueIsTranyan)
+  Shared.valueIsFact              = KnowFunc(ValueIsFact)
+  Shared.valueIsImmutable         = KnowFunc(ValueIsImmutable)
+  Shared.valueIsSurfaceImmutable  = KnowFunc(ValueIsSurfaceImmutable)
   Shared.isSurfaceImmutable       = ValueIsSurfaceImmutable
 
-  Shared.isPublicSelector         = MarkFunc(IsPublicSelector)
-  Shared.compareSelectors         = MarkFunc(CompareSelectors)
-  Shared.sortParameters           = MarkFunc(SortParameters)
+  Shared.isPublicSelector         = KnowFunc(IsPublicSelector)
+  Shared.compareSelectors         = KnowFunc(CompareSelectors)
+  Shared.sortParameters           = KnowFunc(SortParameters)
 
-  Shared.findDurables             = MarkFunc(FindDurables)
+  Shared.findDurables             = KnowFunc(FindDurables)
 
 
   _Shared._HasOwn                 = _HasOwn // ._hasOwn
@@ -441,7 +437,7 @@ Tranya(function (
   _Shared.SelectorsOfUsing        = SelectorsOfUsing
   _Shared.SetInvisibly            = SetInvisibly
   _Shared._BasicSetImmutable      = _basicSetImmutable
-  _Shared.MarkAndSetFuncImmutable = MarkAndSetFuncImmutable
+  _Shared.KnowAndSetFuncImmutable = KnowAndSetFuncImmutable
   _Shared.SetFuncImmutable        = SetFuncImmutable
   _Shared.FindAndSetDurables      = FindAndSetDurables
 

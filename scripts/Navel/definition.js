@@ -1,6 +1,7 @@
 Tranya(function (
-  $INNER, ASSIGNER, DECLARATION, LAZY_INSTALLER, SAFE_FUNC,
-  AddIntrinsicDeclaration, Definition, MarkAndSetFuncImmutable,
+  $INNER, $OUTER_WRAPPER, $RIND,
+  ASSIGNER, DECLARATION, LAZY_INSTALLER, SUPER_FUNC,
+  AddIntrinsicDeclaration, Definition, KnowAndSetFuncImmutable,
   _Definition
 ) {
   // "use strict"
@@ -18,8 +19,10 @@ Tranya(function (
 
       const handler =
         $inner.mode.super($inner.selector, $inner.handler, $inner.isPublic)
+      handler[$OUTER_WRAPPER] = $inner.outer
+      handler.method          = $inner[$RIND]
 
-      return MarkAndSetFuncImmutable(handler, SAFE_FUNC)
+      return KnowAndSetFuncImmutable(handler, SUPER_FUNC)
     }
   }.super)
 

@@ -12,32 +12,34 @@
   const IMMUTABLE    = Symbol("IMMUTABLE")
   const SAFE_FUNC    = FreezeSurface({id: "SAFE_FUNC", [IMMUTABLE]: true})
   const InterMap     = new WeakMap()
+  const KnownFuncs   = new WeakMap()
 
   // symbols for publicly knowable properties
   Shared.IMMUTABLE   = IMMUTABLE
   Shared._DURABLES   = Symbol("_DURABLES")
 
 
-  function MarkFunc(func, marker = SAFE_FUNC) {
-    if (InterMap.get(func)) { return func }
-    InterMap.set(func, marker)
+  function KnowFunc(func, marker = SAFE_FUNC) {
+    if (KnownFuncs.get(func)) { return func }
+    KnownFuncs.set(func, marker)
     return func
   }
 
 
   _Shared.InterMap                = InterMap
+  _Shared.KnownFuncs              = KnownFuncs
   _Shared.PropertyToSymbolMap     = SpawnFrom(null)
   // _Shared.SymbolPropertyMap    = SpawnFrom(null)
   _Shared.ImplementationSelectors = SpawnFrom(null)
 
-  Shared.spawnFrom           = MarkFunc(SpawnFrom)
-  Shared.freezeSurface       = MarkFunc(FreezeSurface)
-  Shared.isSurfaceFrozen     = MarkFunc(Object.isFrozen)
-  Shared.isArray             = MarkFunc(Array.isArray)
-  Shared.rootOf              = MarkFunc(Object.getPrototypeOf)
-  Shared.roundUp             = MarkFunc(Math.ceil)
-  Shared.roundDown           = MarkFunc(Math.floor)
-  Shared.randomUnitValue     = MarkFunc(Math.random)
+  Shared.spawnFrom           = KnowFunc(SpawnFrom)
+  Shared.freezeSurface       = KnowFunc(FreezeSurface)
+  Shared.isSurfaceFrozen     = KnowFunc(Object.isFrozen)
+  Shared.isArray             = KnowFunc(Array.isArray)
+  Shared.rootOf              = KnowFunc(Object.getPrototypeOf)
+  Shared.roundUp             = KnowFunc(Math.ceil)
+  Shared.roundDown           = KnowFunc(Math.floor)
+  Shared.randomUnitValue     = KnowFunc(Math.random)
 
   _Shared.DefineProperty     = Object.defineProperty
   _Shared.INSTANCEOF         = Symbol.hasInstance
@@ -126,20 +128,22 @@
   _Shared.TAMED_FUNC    = FreezeSurface({id:"TAMED_FUNC"   , [IMMUTABLE]:true})
   _Shared.OUTER_FUNC    = FreezeSurface({id:"OUTER_FUNC"   , [IMMUTABLE]:true})
   _Shared.INNER_FUNC    = FreezeSurface({id:"INNER_FUNC"   , [IMMUTABLE]:true})
+  _Shared.SUPER_FUNC    = FreezeSurface({id:"SUPER_FUNC"   , [IMMUTABLE]:true})
   _Shared.ASSIGNER_FUNC = FreezeSurface({id:"ASSIGNER_FUNC", [IMMUTABLE]:true})
   _Shared.HANDLER_FUNC  = FreezeSurface({id:"HANDLER_FUNC" , [IMMUTABLE]:true})
-  _Shared.DISGUISE_PULP = FreezeSurface({id:"DISGUISE_FUNC", [IMMUTABLE]:true})
+  _Shared.DISGUISE_RIND = FreezeSurface({id:"DISGUISE_RIND", [IMMUTABLE]:true})
+  _Shared.DISGUISE_PULP = FreezeSurface({id:"DISGUISE_PULP", [IMMUTABLE]:true})
 
-  _Shared.MarkFunc      = MarkFunc
+  _Shared.KnowFunc      = KnowFunc
 
   // Simpleton function
-  Shared.alwaysTrue     = MarkFunc(           () => true         )
-  Shared.alwaysFalse    = MarkFunc(           () => false        )
-  Shared.alwaysNull     = MarkFunc(           () => null         )
-  Shared.alwayUndefined = MarkFunc(           () => undefined    )
-  Shared.alwaysSelf     = MarkFunc(  function () { return this } )
-  Shared.alwaysPass1st  = MarkFunc(          arg => arg          )
-  Shared.alwaysPass2nd  = MarkFunc( (arg1, arg2) => arg2         )
+  Shared.alwaysTrue     = KnowFunc(           () => true         )
+  Shared.alwaysFalse    = KnowFunc(           () => false        )
+  Shared.alwaysNull     = KnowFunc(           () => null         )
+  Shared.alwayUndefined = KnowFunc(           () => undefined    )
+  Shared.alwaysSelf     = KnowFunc(  function () { return this } )
+  Shared.alwaysPass1st  = KnowFunc(          arg => arg          )
+  Shared.alwaysPass2nd  = KnowFunc( (arg1, arg2) => arg2         )
   Shared.alwaysPass     = Shared.alwaysPass1st
 
 
@@ -196,9 +200,9 @@
   _Shared.ExtractParamListing     = ExtractParamListing
   _Shared.ExtractParamNames       = ExtractParamNames
 
-  Shared.asCapitalized            = MarkFunc(AsCapitalized)
-  Shared.asDecapitalized          = MarkFunc(AsDecapitalized)
-  Shared.valueAsName              = MarkFunc(ValueAsName)
+  Shared.asCapitalized            = KnowFunc(AsCapitalized)
+  Shared.asDecapitalized          = KnowFunc(AsDecapitalized)
+  Shared.valueAsName              = KnowFunc(ValueAsName)
 
 
   _Shared._Shared = _Shared

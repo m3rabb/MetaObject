@@ -1,7 +1,7 @@
 Tranya(function (
-  $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND,
-  DISGUISE_PULP, IMMUTABLE, PROOF, _DURABLES,
-  FindAndSetDurables, FindDurables, FreezeSurface, InterMap, MarkFunc,
+  $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND, IMMUTABLE, PROOF,
+  _DURABLES,
+  FindAndSetDurables, FindDurables, FreezeSurface, InterMap, KnowFunc,
   SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, InvertedFuncCopyError,
   Shared, _Shared
@@ -330,8 +330,7 @@ Tranya(function (
 
     switch (typeof value) {
       case "function" :
-        _$value = InterMap.get(value)
-        if (_$value && _$value[$IS_INNER] === PROOF) {
+        if ((_$value = InterMap.get(value))) {
           return _$value.copy.call(_$value[$PULP], asImmutable, visited, context)
         }
         if (value[IMMUTABLE] === asImmutable) { return value }
@@ -388,12 +387,12 @@ Tranya(function (
   _Shared._ValueAsNext            = _ValueAsNext
   _Shared._ValueCopy              = _ValueCopy
 
-  Shared.reliableObjectCopy       = MarkFunc(ReliableObjectCopy)
-  Shared.valueAsFact              = MarkFunc(ValueAsFact)
-  Shared.valueAsNext              = MarkFunc(ValueAsNext)
-  Shared.valueCopy                = MarkFunc(ValueCopy)
-  Shared.valueAsImmutable         = MarkFunc(ValueAsImmutable)
-  Shared.valueBeImmutable         = MarkFunc(ValueBeImmutable)
+  Shared.reliableObjectCopy       = KnowFunc(ReliableObjectCopy)
+  Shared.valueAsFact              = KnowFunc(ValueAsFact)
+  Shared.valueAsNext              = KnowFunc(ValueAsNext)
+  Shared.valueCopy                = KnowFunc(ValueCopy)
+  Shared.valueAsImmutable         = KnowFunc(ValueAsImmutable)
+  Shared.valueBeImmutable         = KnowFunc(ValueBeImmutable)
 
 })
 

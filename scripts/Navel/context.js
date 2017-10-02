@@ -38,17 +38,14 @@ Tranya(function (
 
 
   _Context.addValueMethod(function _setPropertiesImmutable(inPlace, visited) {
-    const entries   = this._knownEntries
-    const selectors = _OwnKeysOf(entries)
-
-    selectors.forEach(selector => {
-      var entry, _$entry, fact
-        entry = entries[selector]
+    const Entries = this._knownEntries
+    this.forEachOwn((entry, key) => {
+      var _$entry, fact
       _$entry = InterMap.get(entry)
       if (_$entry && _$entry[$IS_TYPE]) { entry.setImmutable(inPlace, visited) }
       else {
         fact = ValueAsFact(entry, inPlace, visited)
-        if (fact !== entry) { this[selector] = entries[selector] = fact }
+        if (fact !== entry) { this[key] = Entries[key] = fact }
       }
     })
     return this

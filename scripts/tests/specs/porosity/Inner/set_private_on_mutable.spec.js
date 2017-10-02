@@ -570,14 +570,14 @@ Tranya.ImplementationTesting(function (
       describe("When the value is another object's inner", function() {
         it("Throws an detected inner error", function () {
           var value = Thing.new_().this
-          expect( () => {this.$pulp._xyz = value} ).toThrowError(/forgot to pass the 'this'/)
+          expect( () => {this.$pulp._xyz = value} ).toThrowError(/forgot to pass the 'this.self'/)
         })
       })
 
       describe("When the value is another disguise object's inner", function() {
         it("Throws an detected inner error", function () {
           var value = Type.new_("Cat").this
-          expect( () => {this.$pulp._xyz = value} ).toThrowError(/forgot to pass the 'this'/)
+          expect( () => {this.$pulp._xyz = value} ).toThrowError(/forgot to pass the 'this.self'/)
         })
       })
     })

@@ -1,4 +1,4 @@
-Tranya(function (MarkFunc, RoundDown, RandomUnitValue, Shared) {
+Tranya(function (KnowFunc, RoundDown, RandomUnitValue, Shared) {
   "use strict"
 
   // #### Random Number Generation
@@ -39,7 +39,7 @@ Tranya(function (MarkFunc, RoundDown, RandomUnitValue, Shared) {
     }
   }
 
-  Shared.randomInt   = MarkFunc(RandomInt)
-  Shared.newUniqueId = MarkFunc(NewUniqueId)
+  Shared.randomInt   = KnowFunc(RandomInt)
+  Shared.newUniqueId = KnowFunc(NewUniqueId)
 
 })
