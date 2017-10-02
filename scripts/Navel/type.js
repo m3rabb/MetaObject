@@ -18,7 +18,7 @@ Tranya(function (
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
-  OwnKeysOf, OwnVisiblesOf, _OwnKeysOf, SelectorsOf_,
+  OwnKeysOf, OwnVisiblesOf, _KnownSelectorsOf, _OwnKeysOf,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
   SetAsymmetricProperty,
   AsAssignmentSetter, AsBasicSetter, AsPropertyFromSetter
@@ -837,7 +837,7 @@ Tranya(function (
   })
 
   _Type.addValueMethod(function allKnownSelectors() {
-    return SelectorsOf_(this._blanker.$root$inner)
+    return _KnownSelectorsOf(this._blanker.$root$inner)
   })
 
   _Type.addValueMethod(function allDefinedSelectors() {

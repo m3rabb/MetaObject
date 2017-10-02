@@ -25,12 +25,9 @@ Tranya(function (
   InterMap, PropertyToSymbolMap,
   _OwnSelectorsOf, _OwnVisiblesOf,
   OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf,
-  NamesOf_, SelectorsOf_, VisiblesOf_
+  _KnownNamesOf, _KnownSelectorsOf, _KnownVisiblesOf
 ) {
-  // "use strict"
-
-
-
+  "use strict"
 
 
   _$Intrinsic.addValueMethod(function isMutable() {
@@ -243,11 +240,11 @@ Tranya(function (
   })
 
   _$Intrinsic.addValueMethod(function _intrinsicSelectors() {
-    return SelectorsOf_(_$Intrinsic._blanker.$root$inner)
+    return _KnownSelectorsOf(_$Intrinsic._blanker.$root$inner)
   })
 
   _$Intrinsic.addValueMethod(function _visibleSelectors() {
-    return VisiblesOf_(this[$INNER])
+    return _KnownVisiblesOf(this[$INNER])
   })
 
   _$Intrinsic.addValueMethod(function _invisibleSelectors() {
@@ -255,7 +252,7 @@ Tranya(function (
   })
 
   _$Intrinsic.addValueMethod(function _knownSelectors() {
-    return SelectorsOf_(this[$INNER])
+    return _KnownSelectorsOf(this[$INNER])
   })
 
 
@@ -271,24 +268,20 @@ Tranya(function (
 
 
   _$Intrinsic.addValueMethod(function primarySelectors() {
-    return this._sortedPrimaries("allPublicSelectors", _OwnVisiblesOf)
+    return this._sortedPrimaries("allDefinedPublicSelectors", _OwnVisiblesOf)
   })
 
   _$Intrinsic.addValueMethod(function intrinsicSelectors() {
-    return NamesOf_(_$Intrinsic._blanker.$root$outer)
+    return _KnownNamesOf(_$Intrinsic._blanker.$root$outer)
   })
 
   _$Intrinsic.addValueMethod(function visibleSelectors() {
-    return VisiblesOf_(this[$OUTER])
-  })
-
-  _$Intrinsic.addValueMethod(function invisibleSelectors() {
-    return this._invisiblesFrom("knownSelectors", "visibleSelectors")
+    return _KnownVisiblesOf(this[$OUTER])
   })
 
   _$Intrinsic.addValueMethod(function knownSelectors() {
     // All selectors except symbols or private selectors
-    return NamesOf_(this[$OUTER])
+    return _KnownNamesOf(this[$OUTER])
   })
 
 

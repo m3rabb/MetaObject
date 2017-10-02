@@ -2,10 +2,10 @@ Tranya(function (
   $INNER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, IMMUTABLE, INVISIBLE,
   _DURABLES,
   $BaseBlanker, $IntrinsicBlanker, FreezeSurface, GlazeImmutable,
-  InterMap, ImplementationSymbols, SetAsymmetricProperty,
-  NewAssignmentErrorHandler, SetInvisibly, SpawnFrom, TheEmptyArray,
-  _$DefaultContext, _$Intrinsic, _$Something, _BasicSetImmutable, _RootContext,
-  _Context, _Definition, _Nothing, _Thing, _Type, _OwnKeysOf,
+  InterMap, ImplementationSelectors, IsPublicSelector, SetAsymmetricProperty,
+  NewAssignmentErrorHandler, SelectorsOfUsing, SetInvisibly, SpawnFrom,
+  TheEmptyArray, _$DefaultContext, _$Intrinsic, _$Something, _BasicSetImmutable,
+  _RootContext, _Context, _Definition, _Nothing, _Thing, _Type, _OwnKeysOf,
   DefaultContext, RootContext,
   Shared, _Shared
 ) {
@@ -75,15 +75,18 @@ Tranya(function (
   const  TestContext = _Context.new("ImplementationTesting", RootContext)
   const _TestContext = InterMap.get(TestContext)[$PULP]
 
-  const selectors = _OwnKeysOf(_Shared)
-  selectors.forEach(selector => {
+  _OwnKeysOf(_Shared).forEach(selector => {
     const value = _Shared[selector]
     if (!_RootContext.valueIsInner(value)) {
       _TestContext._atPut(selector, value)
       if (selector[0] === "$" && typeof value === "symbol") {
-        ImplementationSymbols[value] = selector
+        ImplementationSelectors[value] = true
       }
     }
+  })
+
+  _OwnKeysOf(Object.prototype).forEach(sel => {
+    if (!IsPublicSelector(sel)) { ImplementationSelectors[sel] = true }
   })
 
   _RootContext.add(DefaultContext)

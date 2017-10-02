@@ -25,10 +25,10 @@
   }
 
 
-  _Shared.InterMap              = InterMap
-  _Shared.PropertyToSymbolMap   = SpawnFrom(null)
-  // _Shared.SymbolPropertyMap  = SpawnFrom(null)
-  _Shared.ImplementationSymbols = SpawnFrom(null)
+  _Shared.InterMap                = InterMap
+  _Shared.PropertyToSymbolMap     = SpawnFrom(null)
+  // _Shared.SymbolPropertyMap    = SpawnFrom(null)
+  _Shared.ImplementationSelectors = SpawnFrom(null)
 
   Shared.spawnFrom           = MarkFunc(SpawnFrom)
   Shared.freezeSurface       = MarkFunc(FreezeSurface)

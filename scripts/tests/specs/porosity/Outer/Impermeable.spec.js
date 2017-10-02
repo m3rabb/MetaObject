@@ -175,7 +175,7 @@ Tranya.ImplementationTesting(function (Type, ValueAsName) {
         describe("When the receive is immutable", function () {
           it("Throws a TypeError", function () {
             expect( this.iCat.isImmutable ).toBe ( true )
-            expect(() => Object.getPrototypeOf(this.iCat)).toThrowError(TypeError)
+            expect( Object.getPrototypeOf(this.iCat) ).toBe( null )
           })
         })
 
