@@ -41,7 +41,7 @@ Tranya(function (
     return _OwnKeysOf(value).filter(sel => !ImplementationSymbols[sel])
   }
 
-  function _OwnSafeSymbolsOf(value) {
+  function _OwnNonImpSymbolsOf(value) {
     return _OwnSymbolsOf(value).filter(sel => !ImplementationSymbols[sel])
   }
 
@@ -98,14 +98,7 @@ Tranya(function (
     return GlazeImmutable(allSelectors.sort(sorter_))
   }
 
-  function AspectOf(value) {
-    var _$value
-    if (value[$IS_INNER] === PROOF) { return value[$INNER] }
-    if ((_$value = InterMap.get(value))) {
-      return (_$value[$IS_INNER] === PROOF) ? _$value[$OUTER] : value
-    }
-    return Object(value)
-  }
+
 
 
   function VisiblesOf_(value) {
@@ -124,8 +117,8 @@ Tranya(function (
     return SortedSelectorsUsing(value, _OwnSymbolsOf, CompareSelectors)
   }
 
-  function SafeSymbolsOf_(value) {
-    return SortedSelectorsUsing(value, _OwnSafeSymbolsOf, CompareSelectors)
+  function NonImpSymbolsOf_(value) {
+    return SortedSelectorsUsing(value, _OwnNonImpSymbolsOf, CompareSelectors)
   }
 
   function SelectorsOf_(value) {
@@ -136,46 +129,49 @@ Tranya(function (
     return SortedSelectorsUsing(value, _OwnKeysOf, CompareSelectors)
   }
 
+  function HideSelectors_(value) { // eslint-disable-line
+    return TheEmptyArray
+  }
+
+
+  function SelectorsFromUsing(value, spec_picker) {
+    var _$value
+    if (value == null) { return TheEmptyArray }
+    if (value[$IS_INNER] === PROOF) {
+      return (spec_picker.inner || spec_picker)(value[$INNER])
+    }
+    if ((_$value = InterMap.get(value))) {
+      return (_$value[$IS_INNER] === PROOF) ?
+        (spec_picker.outer || spec_picker)(_$value[$OUTER]) :
+        (spec_picker.value || spec_picker)(value)
+    }
+    return (spec_picker.value || spec_picker)(Object(value))
+  }
 
   function VisiblesOf(value) {
-    return (value == null) ? TheEmptyArray : VisiblesOf_(AspectOf(value))
+    return SelectorsFromUsing(value, VisiblesOf_)
   }
 
   function NamesOf(value) {
-    return (value == null) ? TheEmptyArray : NamesOf_(AspectOf(value))
+    return SelectorsFromUsing(value, NamesOf_)
   }
 
   function SymbolsOf(value) {
-    var _$value
-    if (value == null) { return TheEmptyArray }
-    if (value[$IS_INNER] === PROOF) { return SafeSymbolsOf_(value[$INNER]) }
-    if ((_$value = InterMap.get(value))) {
-      return (_$value[$IS_INNER] === PROOF) ?
-        SafeSymbolsOf_(_$value[$OUTER]) : SymbolsOf_(value)
-    }
-    return SymbolsOf_(Object(value))
+    return SelectorsFromUsing(value, {
+      inner : NonImpSymbolsOf_, outer : HideSelectors_, value : SymbolsOf_,
+    })
   }
 
   function SelectorsOf(value) {
-    var _$value
-    if (value == null) { return TheEmptyArray }
-    if (value[$IS_INNER] === PROOF) { return SelectorsOf_(value[$INNER]) }
-    if ((_$value = InterMap.get(value))) {
-      return (_$value[$IS_INNER] === PROOF) ?
-        NamesOf_(_$value[$OUTER]) : KeysOf_(value)
-    }
-    return KeysOf_(Object(value))
+    return SelectorsFromUsing(value, {
+      inner : SelectorsOf_, outer : NamesOf_, value : KeysOf_,
+    })
   }
 
   function KeysOf(value) {
-    var _$value
-    if (value == null) { return TheEmptyArray }
-    if (value[$IS_INNER] === PROOF) { return SelectorsOf_(value[$INNER]) }
-    if ((_$value = InterMap.get(value))) {
-      return (_$value[$IS_INNER] === PROOF) ?
-        SelectorsOf_(_$value[$OUTER]) : KeysOf_(value)
-    }
-    return KeysOf_(Object(value))
+    return SelectorsFromUsing(value, {
+      inner : SelectorsOf_, outer : NamesOf_, value : KeysOf_,
+    })
   }
 
 
