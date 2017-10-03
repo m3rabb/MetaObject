@@ -102,21 +102,21 @@
   _Shared.SYMBOL_1ST_CHAR        = 7
 
 
-  const  InvisibleConfig = {
+  const InvisibleConfig = FreezeSurface({
     id           : "InvisibleConfig",
     configurable : true,
     writable     : true,
     enumerable   : false,
     [IMMUTABLE]  : true,
-  }
+  })
 
-  const VisibleConfig = {
+  const VisibleConfig = FreezeSurface({
     id           : "VisibleConfig",
     configurable : true,
     writable     : true,
     enumerable   : true,
     [IMMUTABLE]  : true,
-  }
+  })
 
 
   // Safe functions are stored in here so that the diguised Types function are

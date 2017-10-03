@@ -1,7 +1,7 @@
 HandAxe(function (
   $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, IMMUTABLE,
-  AsPropertySymbol, ObjectCopy, _HasOwn, InnerBarrier, InterMap,
-  InvisibleConfig, ValueAsName, _$Copy,
+  AsPropertySymbol, ObjectCopy, FreezeSurface, InnerBarrier, InterMap,
+  InvisibleConfig, ValueAsName, _$Copy, _HasOwn,
   DefineProperty, IsPublicSelector, SetProperty,
   _Shared
 ) {
@@ -188,49 +188,58 @@ HandAxe(function (
 
 
 
-  _Shared.FACT_METHOD = {
-    id    : "FACT_METHOD",
-    outer : AsOuter_targeting_fact,
-    inner : AsInner_fact,
-    super : AsSuper_fact,
-  }
+  _Shared.FACT_METHOD = FreezeSurface({
+    id          : "FACT_METHOD",
+    outer       : AsOuter_targeting_fact,
+    inner       : AsInner_fact,
+    super       : AsSuper_fact,
+    [IMMUTABLE] : true,
+  })
 
-  _Shared.SELF_METHOD = {
-    id    : "SELF_METHOD",
-    outer : AsOuter_targeting_self,
-    inner : AsInner_self,
-    super : AsSuper_self,
-  }
+  _Shared.SELF_METHOD = FreezeSurface({
+    id          : "SELF_METHOD",
+    outer       : AsOuter_targeting_self,
+    inner       : AsInner_self,
+    super       : AsSuper_self,
+    [IMMUTABLE] : true,
+  })
 
-  _Shared.VALUE_METHOD = {
-    id    : "VALUE_METHOD",
-    outer : AsOuter_nontargeting_value,
-    inner : AsInner_value,
-    super : AsSuper_value,
-  }
+  _Shared.VALUE_METHOD = FreezeSurface({
+    id          : "VALUE_METHOD",
+    outer       : AsOuter_nontargeting_value,
+    inner       : AsInner_value,
+    super       : AsSuper_value,
+    [IMMUTABLE] : true,
+  })
 
-  _Shared.SETTER_METHOD = {
-    __proto__ : _Shared.SELF_METHOD,
-    id        : "SETTER_METHOD",
-  }
+  _Shared.SETTER_METHOD = FreezeSurface({
+    __proto__   : _Shared.SELF_METHOD,
+    id          : "SETTER_METHOD",
+    [IMMUTABLE] : true,
+  })
 
-  const MANDATORY_SETTER_METHOD = _Shared.MANDATORY_SETTER_METHOD = {
-    __proto__ : _Shared.SETTER_METHOD,
-    id        : "MANDATORY_SETTER_METHOD",
-  }
+  const MANDATORY_SETTER_METHOD = FreezeSurface({
+    __proto__   : _Shared.SETTER_METHOD,
+    id          : "MANDATORY_SETTER_METHOD",
+    [IMMUTABLE] : true,
+  })
+  _Shared.MANDATORY_SETTER_METHOD = MANDATORY_SETTER_METHOD
 
-  _Shared.IMMEDIATE_METHOD = {
-    __proto__ : _Shared.FACT_METHOD,
-    id        : "IMMEDIATE_METHOD",
-  }
+  _Shared.IMMEDIATE_METHOD = FreezeSurface({
+    __proto__   : _Shared.FACT_METHOD,
+    id          : "IMMEDIATE_METHOD",
+    [IMMUTABLE] : true,
+  })
 
-  _Shared.DECLARATION = {
-    id    : "DECLARATION",
-  }
+  _Shared.DECLARATION = FreezeSurface({
+    id          : "DECLARATION",
+    [IMMUTABLE] : true,
+  })
 
-  _Shared.ASSIGNER = {
-    id    : "ASSIGNER",
-  }
+  _Shared.ASSIGNER = FreezeSurface({
+    id          : "ASSIGNER",
+    [IMMUTABLE] : true,
+  })
 
 
   _Shared.AsBasicSetter = function (propertyName, setterName, mode) {
