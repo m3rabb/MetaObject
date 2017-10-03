@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $INNER, $OUTER_WRAPPER, $RIND,
   ASSIGNER, DECLARATION, LAZY_INSTALLER, SUPER_FUNC,
   AddIntrinsicDeclaration, Definition, KnowAndSetFuncImmutable,

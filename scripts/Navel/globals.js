@@ -219,7 +219,7 @@
     }
   }
 
-  globals.Tranya = MakeFauxContext(_Shared)
+  globals.HandAxe = MakeFauxContext(_Shared)
 
 })(this)
 

@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $INNER, $IS_CONTEXT, $IS_TYPE, $PULP, $RIND,
   COUNT, IMMUTABLE, INHERITED, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, VALUE_METHOD,
@@ -7,7 +7,7 @@ Tranya(function (
   DefaultContext, Definition, Definition_init, EmptyThingAncestry,
   ExtractParamNames, InterMap, IsSubtypeOfThing,
   RootContext, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
-  ValueBeImmutable, ValueIsTranyan, _HasOwn, _ValueAsNext, _ValueCopy,
+  ValueBeImmutable, ValueIsSomething, _HasOwn, _ValueAsNext, _ValueCopy,
   OwnKeysOf, _OwnKeysOf,
   _BasicNew, _Context
 ) {
@@ -59,7 +59,7 @@ Tranya(function (
     const entries = this._knownEntries
     for (selector in entries) {
       entry = entries[selector]
-      if (ValueIsTranyan(entry)) { entry.beImpenetrable }
+      if (ValueIsSomething(entry)) { entry.beImpenetrable }
     }
     return this._super.beImpenetrable
   })
@@ -437,7 +437,7 @@ Tranya(function (
     if (value === undefined) {
       if (!(asMutable && name.match(TYPE_NAME_MATCHER))) { return value }
       Type = entries.Type || RootContext.Type
-      arg  = Type.new(name, execContext)
+      arg  = Type.new(name)
     }
     else {
       if (asPermeable) {

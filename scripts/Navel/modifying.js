@@ -1,7 +1,7 @@
-Tranya(function (
+HandAxe(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND, IMMUTABLE, PROOF,
   _DURABLES,
-  BasicSetInvisibly, FindAndSetDurables, FindDurables, FreezeSurface, InterMap, 
+  BasicSetInvisibly, FindAndSetDurables, FindDurables, FreezeSurface, InterMap,
   KnowFunc, SetFuncImmutable, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, InvertedFuncCopyError,
   Shared, _Shared

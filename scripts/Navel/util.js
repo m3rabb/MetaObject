@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $INNER, $IS_INNER, $OUTER, $RIND, IMMUTABLE, PROOF, SYMBOL_1ST_CHAR,
   _DURABLES,
   DefineProperty, FreezeSurface, GlazeError, ImplementationSelectors,
@@ -230,7 +230,7 @@ Tranya(function (
     return (_$value !== undefined && _$value[$RIND] === value)
   }
 
-  function ValueIsTranyan(value) {
+  function ValueIsSomething(value) {
     switch (typeof value) {
       default         : return false
       case "function" : break
@@ -421,7 +421,7 @@ Tranya(function (
 
   Shared.valueIsInner             = KnowFunc(ValueIsInner)
   Shared.valueIsOuter             = KnowFunc(ValueIsOuter)
-  Shared.valueIsTranyan           = KnowFunc(ValueIsTranyan)
+  Shared.valueIsSomething         = KnowFunc(ValueIsSomething)
   Shared.valueIsFact              = KnowFunc(ValueIsFact)
   Shared.valueIsImmutable         = KnowFunc(ValueIsImmutable)
   Shared.valueIsSurfaceImmutable  = KnowFunc(ValueIsSurfaceImmutable)

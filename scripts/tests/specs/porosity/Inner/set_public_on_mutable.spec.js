@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (
+HandAxe._(function (
   Thing_, Type_, $BARRIER, $INNER, $OUTER, GlazeImmutable, RootOf
 ) {
   "use strict"

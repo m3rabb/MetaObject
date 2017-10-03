@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $PULP, $RIND, _Nothing, RootContext,
   AddIntrinsicDeclaration, InterMap, Type, _BasicSetImmutable
 ) {

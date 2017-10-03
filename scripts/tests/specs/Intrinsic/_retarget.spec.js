@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (
+HandAxe._(function (
   $BARRIER, $INNER, $OUTER, $PULP,
   GlazeImmutable, RootOf, Type, ValueHasOwn
 ) {

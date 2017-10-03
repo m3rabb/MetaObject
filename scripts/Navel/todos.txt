@@ -262,19 +262,17 @@ Consider
 Collections
 
 // value elements
-Tranya.Array
-Tranya.Set
-Tranya.Map
+HandAxe.Array
+HandAxe.Set
+HandAxe.Map
 
 // fact elements
-Tranya.List
-Tranya.Dict
-Tranya.AssociativeList
+HandAxe.List
+HandAxe.Dict
+HandAxe.AssociativeList
 
 ==
-Primary|Intrinsic
-Visible|Invisible|All
-Public|Private|All
+addSetterWithAssigner
 
 ==========
 

@@ -13,7 +13,7 @@
 //
 // USER CAN/SHOULD NEVER REDEFINE INATE METHODS
 
-Tranya(function (
+HandAxe(function (
   $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
@@ -42,11 +42,6 @@ Tranya(function (
   _$Intrinsic.addValueMethod(function isA(type) {
     return this[type.membershipSelector]
   })
-
-
-  _$Intrinsic._setDefinitionAt("isTranyan", true, INVISIBLE)
-
-
 
 
 

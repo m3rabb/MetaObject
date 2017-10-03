@@ -1,4 +1,4 @@
-Tranya(function (Thing, Type, Shared) {
+HandAxe(function (Thing, Type, Shared) {
   "use strict"
 
   const Dog = Type({

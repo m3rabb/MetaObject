@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $INNER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, IMMUTABLE, INVISIBLE,
   _DURABLES,
   $BaseBlanker, $IntrinsicBlanker, BasicSetInvisibly, FreezeSurface,
@@ -72,7 +72,7 @@ Tranya(function (
 
   for (var name in Shared) { _RootContext._atPut(name, Shared[name]) }
 
-  const  TestContext = _Context.new("ImplementationTesting", RootContext)
+  const  TestContext = _Context.new("_Implementation", RootContext)
   const _TestContext = InterMap.get(TestContext)[$PULP]
 
   _OwnKeysOf(_Shared).forEach(selector => {
@@ -93,7 +93,7 @@ Tranya(function (
   _RootContext.add(TestContext)
   _RootContext.atPut("_", TestContext)
 
-  Tranya = RootContext
+  HandAxe = RootContext
 })
 
 

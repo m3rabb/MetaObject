@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,$IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   IMMEDIATE, IMMUTABLE, IMPLEMENTATION, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
@@ -162,7 +162,7 @@ Tranya(function (
       else {                                                      // handler
         // The assigner might cause a write, invalidating the target $inner.
         value    = assigner.call(_$target[$PULP], value)
-        _$target = this._$target // assigner might have made new copy
+        _$target = this._$target // assigner might have already caused a new copy
       }
     }
 

@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $ASSIGNERS, $BARRIER, $IMMEDIATES, $IS_CONTEXT, $IS_DEFINITION,
   $IS_IMPENETRABLE, $IS_INNER, $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
   IMMUTABLE, IMPLEMENTATION, INVISIBLE, PROOF, VISIBLE, _DURABLES,
@@ -104,7 +104,7 @@ Tranya(function (
 
 
 
-  const _$RootContext    = new ContextBlanker("Tranya")
+  const _$RootContext    = new ContextBlanker("HandAxe")
   const  _RootContext    = _$RootContext[$PULP]
   const   RootContext    = _$RootContext[$RIND]
 
@@ -112,7 +112,7 @@ Tranya(function (
   const  _DefaultContext = _$DefaultContext[$PULP]
   const   DefaultContext = _$DefaultContext[$RIND]
 
-  _RootContext._init("Tranya")
+  _RootContext._init("HandAxe")
   _DefaultContext._init("Default", RootContext)
 
 

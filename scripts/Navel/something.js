@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $BARRIER, $OUTER, $RIND, IMMUTABLE, SYMBOL_1ST_CHAR,
   SELF_METHOD, VALUE_METHOD, VISIBLE,
   AsRetroactiveProperty, BasicSetInvisibly, SignalError, _$Something, _Super

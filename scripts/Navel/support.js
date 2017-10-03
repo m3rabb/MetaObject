@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   INVISIBLE, SYMBOL_1ST_CHAR,
@@ -60,7 +60,7 @@ Tranya(function (
     const funcBody = `
       return function ${name || ""}() {
         const message = "This constructor is only used for naming in the debugger!!"
-        return Tranya.signalError(${name}, message)
+        return HandAxe.signalError(${name}, message)
       }
     `
     const func = Function(funcBody)()

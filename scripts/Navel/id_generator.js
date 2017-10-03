@@ -1,4 +1,4 @@
-Tranya(function (KnowFunc, RoundDown, RandomUnitValue, Shared) {
+HandAxe(function (KnowFunc, RoundDown, RandomUnitValue, Shared) {
   "use strict"
 
   // #### Random Number Generation

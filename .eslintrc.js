@@ -10,7 +10,7 @@ module.exports = {
         "sourceType": "module"
     },
     "globals": {
-      "Tranya" : true,
+      "HandAxe" : true,
     },
     "rules": {
         // "indent"         : ["error", 2],

@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, IMMUTABLE,
   AsPropertySymbol, ObjectCopy, _HasOwn, InnerBarrier, InterMap,
   InvisibleConfig, ValueAsName, _$Copy,

@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (Type, ValueAsName) {
+HandAxe._(function (Type, ValueAsName) {
   "use strict"
 
   describe("Impermeable outer", function() {

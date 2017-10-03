@@ -1,7 +1,7 @@
-Tranya.exec(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
+HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
   "use strict"
 
-  const LISTING_DELIMITER_MATCHER = /\s*[ ,]\s*/;
+  const LISTING_DELIMITER_MATCHER = /\s*[ ,]\s*/
 
   const modeNames =
     `ALIAS DECLARATION DECLARE DURABLE FOR_ASSIGN FOR_MANDATORY FOR_SETTER

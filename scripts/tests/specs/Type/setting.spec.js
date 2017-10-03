@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (
+HandAxe._(function (
   $ASSIGNERS, $BARRIER, $OUTER, $PULP, RootOf, Type, ValueHasOwn
 ) {
   "use strict"

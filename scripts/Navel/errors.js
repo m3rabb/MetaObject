@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $IS_IMPENETRABLE, $RIND, KnowFunc, ValueAsName, Shared, _Shared
 ) {
   "use strict"

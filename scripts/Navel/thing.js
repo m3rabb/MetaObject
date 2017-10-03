@@ -1,4 +1,4 @@
-Tranya(function (
+HandAxe(function (
   $INNER, $OUTER, $PRIOR_IDS, $PULP, DefineProperty, InvisibleConfig, _Thing
 ) {
   "use strict"

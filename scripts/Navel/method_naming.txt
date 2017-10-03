@@ -1,3 +1,7 @@
+Primary|Intrinsic
+Visible|Invisible|All
+Public|Private|All
+
 
 // instance
 hasOwn
@@ -59,7 +63,7 @@ primarySelectorsOf
 
 valueHasOwn
 valueAsName
-valueIsTranyan
+valueIsSomething
 valueIsImmutable
 valueIsFact
 valueAsFact

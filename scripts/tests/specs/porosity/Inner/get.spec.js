@@ -1,4 +1,4 @@
-Tranya.ImplementationTesting(function (Type_, ValueAsName) {
+HandAxe._(function (Type_, ValueAsName) {
   "use strict"
 
   describe("Inner get", function() {
