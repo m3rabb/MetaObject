@@ -8,7 +8,8 @@ HandAxe(function (
   TheEmptyArray, SpawnFrom,
   AsContextDisguise, AsTypeDisguise,
 
-  Context_atPut, Context_init, Definition_init,
+  Context_atPut, Context_externalPrivateAccess, Context_init,
+  Context_unknownProperty, Definition_init,
   _AddMethod, _BasicNew, _BasicSetImmutable, SetDefinition, _SetDefinitionAt,
   Shared, _Shared
 ) {
@@ -85,22 +86,24 @@ HandAxe(function (
   // Stubs for known properties
 
   // This secret is only known by inner objects
-  $Something$root$inner[$IS_INNER]       = PROOF
-  $Something$root$outer[$IS_INNER]       = null
+  $Something$root$inner[$IS_INNER]          = PROOF
+  $Something$root$outer[$IS_INNER]          = null
 
-  $Something$root$outer.type             = null
+  $Something$root$outer.type                = null
 
-  $Something$root$inner._retarget        = null
+  $Something$root$inner._retarget           = null
 
-  Type$root$inner.new                    = _BasicNew
-  Type$root$inner._setDefinitionAt       = _SetDefinitionAt
-  Type$root$inner._propagateDefinition   = AlwaysSelf
+  Type$root$inner.new                       = _BasicNew
+  Type$root$inner._setDefinitionAt          = _SetDefinitionAt
+  Type$root$inner._propagateDefinition      = AlwaysSelf
 
-  Definition$root$inner._setImmutable    = _BasicSetImmutable
-  Definition$root$inner._init            = Definition_init
+  Definition$root$inner._setImmutable       = _BasicSetImmutable
+  Definition$root$inner._init               = Definition_init
 
-  Context$root$inner._init               = Context_init
-  Context$root$inner._atPut              = Context_atPut
+  Context$root$inner._init                  = Context_init
+  Context$root$inner._atPut                 = Context_atPut
+  Context$root$inner._externalPrivateAccess = Context_externalPrivateAccess
+  Context$root$inner._unknownProperty       = Context_unknownProperty
 
 
 
@@ -246,3 +249,8 @@ HandAxe(function (
   _Shared.AddIntrinsicDeclaration     = AddIntrinsicDeclaration
 
 })
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/

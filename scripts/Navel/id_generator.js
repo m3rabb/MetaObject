@@ -43,3 +43,8 @@ HandAxe(function (KnowFunc, RoundDown, RandomUnitValue, Shared) {
   Shared.newUniqueId = KnowFunc(NewUniqueId)
 
 })
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/

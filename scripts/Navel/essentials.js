@@ -207,7 +207,20 @@ HandAxe(function (
     const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
     const isPublic  = (firstChar !== "_")
     const value     = isPublic ? ValueAsFact(entry) : entry
-    this._knownEntries[selector] = this[$OUTER][selector] = value
+    this._knownEntries[selector] = value // this[$OUTER][selector] = value
+  }
+
+
+  const Context_externalPrivateAccess = function _externalPrivateAccess(selector) {
+    const entry = this._knownEntries[selector]
+    return (entry !== undefined) ?
+      entry : this._super._externalPrivateAccess(selector)
+  }
+
+  const Context_unknownProperty = function _unknownProperty(selector) {
+    const entry = this._knownEntries[selector]
+    return (entry !== undefined) ?
+      entry : this._super._unknownProperty(selector)
   }
 
 
@@ -223,13 +236,19 @@ HandAxe(function (
 
 
 
-  _Shared._BasicNew          = _BasicNew
-  _Shared.SetDefinition      = SetDefinition
-  _Shared._SetDefinitionAt   = _SetDefinitionAt
-
-  _Shared.Definition_init    = Definition_init
-  _Shared.Context_init       = Context_init
-  _Shared.Context_atPut      = Context_atPut
-  _Shared._AddMethod         = _AddMethod
+  _Shared._BasicNew                     = _BasicNew
+  _Shared.SetDefinition                 = SetDefinition
+  _Shared._SetDefinitionAt              = _SetDefinitionAt
+  _Shared.Definition_init               = Definition_init
+  _Shared.Context_init                  = Context_init
+  _Shared.Context_atPut                 = Context_atPut
+  _Shared.Context_externalPrivateAccess = Context_externalPrivateAccess
+  _Shared.Context_unknownProperty       = Context_unknownProperty
+  _Shared._AddMethod                    = _AddMethod
 
 })
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/

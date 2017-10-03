@@ -508,6 +508,10 @@ HandAxe(function (
 })
 
 
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/
+
 
 // _beMutable _touch _captureChanges
 
@@ -548,11 +552,6 @@ HandAxe(function (
 
 // Must we delete the _captureChanges and _captureOverwrite when copying or
 // otherwise done using them???
-
-
-/*       1         2         3         4         5         6         7         8
-12345678901234567890123456789012345678901234567890123456789012345678901234567890
-*/
 
 
 

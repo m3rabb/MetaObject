@@ -48,6 +48,14 @@ HandAxe(function (
     return `${name}${separator}${oid}`
   })
 
+})
+
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/
+
+
   // _Thing.addValueMethod(function toString(_) { // eslint-disable-line
   //   const _this = this[$PULP]
   //   const name = _this.name
@@ -72,7 +80,8 @@ HandAxe(function (
   // _Thing.addDeclaration("_postInit")
   // _Thing.addDeclaration("_setPropertiesImmutable")
 
-})
+
+
 
 // _Thing.addMethod(function _setCopyId() {
 //    if it has a way to make a new id then set it,

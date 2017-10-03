@@ -2,7 +2,7 @@ HandAxe(function (
   $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,$IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   IMMEDIATE, IMMUTABLE, IMPLEMENTATION, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
-  AlwaysFalse, AlwaysNull, InterMap, IsPublicSelector,
+  AlwaysFalse, AlwaysNull, InterMap, IsPublicSelector, KnownFuncs,
   SetProperty, SpawnFrom, _$Copy, _HasOwn,
   _OwnSelectorsOf, _OwnVisiblesOf,
   AssignmentOfUndefinedError, AssignmentViaSuperError,
@@ -260,7 +260,7 @@ HandAxe(function (
 
       if (value != null) {
         return (supers[selector] =
-          (value[$OUTER_WRAPPER] && InterMap.get(value)) ?
+          (value[$OUTER_WRAPPER] && KnownFuncs.get(value)) ?
             value.method.super : value)
       }
       if (value === null) { return (supers[selector] = null) }

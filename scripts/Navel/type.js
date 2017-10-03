@@ -18,7 +18,7 @@ HandAxe(function (
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
-  OwnKeysOf, OwnVisiblesOf, _KnownSelectorsOf, _OwnKeysOf,
+  OwnKeysOf, OwnVisiblesOf, _KnownSelectorsOf, _OwnKeysOf, _OwnSelectorsOf,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
   SetAsymmetricProperty,
   AsAssignmentSetter, AsBasicSetter, AsPropertyFromSetter
@@ -861,7 +861,7 @@ HandAxe(function (
     while (next--) {
       _$nextType      = InterMap.get(ancestry[next])
       nextDefinitions = _$nextType._definitions
-      tags            = _OwnKeysOf(nextDefinitions)
+      tags            = _OwnSelectorsOf(nextDefinitions)
 
       tags.forEach(tag => {
         if (!knowns[tag]) { selectors[index++] = knowns[tag] = tag }
@@ -928,6 +928,10 @@ HandAxe(function (
 
 })
 
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/
 
 
 

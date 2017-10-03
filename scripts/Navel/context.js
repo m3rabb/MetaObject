@@ -213,19 +213,6 @@ HandAxe(function (
   })
 
 
-  _Context.addValueMethod(function _externalPrivateAccess(selector) {
-    const entry = this._knownEntries[selector]
-    return (entry !== undefined) ?
-      entry : this._super._externalPrivateAccess(selector)
-  })
-
-  _Context.addValueMethod(function _unknownProperty(selector) {
-    const entry = this._knownEntries[selector]
-    return (entry !== undefined) ?
-      entry : this._super._unknownProperty(selector)
-  })
-
-
   _Context.addSelfMethod(function _entryOvershadowsPropertyError(selector) {
     return this._signalError(`Entry cannot overshadow existing property '${selector}'!!`)
   })
@@ -460,5 +447,10 @@ HandAxe(function (
   }
 
 })
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/
+
 
   // isAbsolutelyImpermeable isImpenetrable
