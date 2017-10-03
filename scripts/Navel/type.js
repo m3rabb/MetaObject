@@ -520,6 +520,15 @@ HandAxe(function (
   _Type.addMethod(function supertypes() { return this._supertypes })
 
 
+  _Type.addValueMethod(function ancestryNames() {
+    return GlazeImmutable(this._ancestry.map(type => type.name))
+  })
+
+  _Type.addValueMethod(function supertypeNames() {
+    return GlazeImmutable(this._supertypes.map(type => type.name))
+  })
+
+
   _Type.addSelfMethod(function addSupertype(type) {
     this.setSupertypes([...this.supertypes, type])
   })
