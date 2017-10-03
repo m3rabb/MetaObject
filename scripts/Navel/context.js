@@ -6,7 +6,7 @@ Tranya(function (
   CompareSelectors, BeImmutableValue, GlazeImmutable,
   DefaultContext, Definition, Definition_init, EmptyThingAncestry,
   ExtractParamNames, InterMap, IsSubtypeOfThing,
-  RootContext, SetInvisibly, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
+  RootContext, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
   ValueBeImmutable, ValueIsTranyan, _HasOwn, _ValueAsNext, _ValueCopy,
   OwnKeysOf, _OwnKeysOf,
   _BasicNew, _Context

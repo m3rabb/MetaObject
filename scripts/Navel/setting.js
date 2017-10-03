@@ -35,13 +35,11 @@ Tranya(function (
 
 
 
-  function InSetProperty(_$target, selector, value, isPublic) {
-    var _$value, writeOuter
+  function SetProperty(_$target, selector, value, isPublic) {
+    var _$value
 
     if (isPublic) {
       const $target = _$target[$OUTER]
-
-      writeOuter = !_$target[IMMUTABLE]
 
       switch (typeof value) {
         case "undefined" :
@@ -79,7 +77,7 @@ Tranya(function (
             case INNER_FUNC    :
             case SUPER_FUNC    :
               // Revisit this if $OUTER_WRAPPER can hold NONE instead
-              if (writeOuter) { $target[selector] = value[$OUTER_WRAPPER] }
+              $target[selector] = value[$OUTER_WRAPPER]
               return (_$target[selector] = value)
 
             case undefined     : // New unknown untrusted function to be wrapped.
@@ -91,7 +89,7 @@ Tranya(function (
           }
           break
       }
-      if (writeOuter) { $target[selector] = value }
+      $target[selector] = value
     }
     else {
       if (value == null) {
@@ -109,6 +107,6 @@ Tranya(function (
   }
 
 
-  _Shared.InSetProperty = InSetProperty
+  _Shared.SetProperty = SetProperty
 
 })

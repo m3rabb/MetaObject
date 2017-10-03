@@ -17,10 +17,10 @@ Tranya(function (
   $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
-  AsDefinitionFrom, CompareSelectors, CompletelyDeleteProperty,
-  FindAndSetDurables, GlazeImmutable, MakeDefinitionsInfrastructure,
-  NewUniqueId, PropertyAt, SetDefinition, SetInvisibly, SpawnFrom, ValueAsFact,
-  ValueAsName, _HasOwn, _$Copy, _$Intrinsic,
+  AsDefinitionFrom, BasicSetInvisibly, CompareSelectors,
+  CompletelyDeleteProperty, FindAndSetDurables, GlazeImmutable,
+  MakeDefinitionsInfrastructure, NewUniqueId, PropertyAt, SetDefinition,
+  SpawnFrom, ValueAsFact, ValueAsName, _HasOwn, _$Copy, _$Intrinsic,
   PrivateAccessFromOutsideError, SignalError,
   InterMap, PropertyToSymbolMap,
   _OwnSelectorsOf, _OwnVisiblesOf,
@@ -171,7 +171,7 @@ Tranya(function (
     const $instance  = new _$instance[$OUTER]
 
     if ($inner[$OUTER].this) {
-      SetInvisibly($instance, "this", _$instance[$PULP])
+      BasicSetInvisibly($instance, "this", _$instance[$PULP])
     }
     return _$instance[$RIND]
   })
@@ -308,7 +308,7 @@ Tranya(function (
       return this
     }
 
-    return SetInvisibly($inner, "_retarget", this)
+    return BasicSetInvisibly($inner, "_retarget", this)
   })
 
 
@@ -382,7 +382,7 @@ Tranya(function (
 
 
   _$Intrinsic.addSelfMethod(function addOwnDeclaration(selector) {
-    this.addOwnDefinition(selector, null, DECLARATION)
+    this.addOwnDefinition(selector, undefined, DECLARATION)
   })
 
 

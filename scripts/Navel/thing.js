@@ -1,24 +1,26 @@
-Tranya(function ($INNER, $PRIOR_IDS, $PULP, ValueAsName, _$Intrinsic, _Thing) {
+Tranya(function (
+  $INNER, $OUTER, $PRIOR_IDS, $PULP, DefineProperty, InvisibleConfig, _Thing
+) {
   "use strict"
 
 
   _Thing.addSetter("setId", function id(newId_) {
-    const $inner     = this[$INNER]
-    const existingId = $inner.id
-    var   newId, priorIds
-
-    if (newId_ === undefined) {
-      if (existingId != null) { return existingId }
-      newId = this._retarget.oid
+    const existingId = this.id
+    if (existingId == null) {
+      this._retarget
+      const $inner = this[$INNER]
+      DefineProperty($inner        , "id", InvisibleConfig)
+      DefineProperty($inner[$OUTER], "id", InvisibleConfig)
+      return (newId_ !== undefined) ? newId_ : this.oid
     }
-    else if (newId_ === existingId) { return existingId }
-    else { newId = newId_ }
+    if (newId_ == null || newId_ === existingId) { return existingId }
 
     if (existingId != null) {
-      priorIds = $inner[$PRIOR_IDS] || []
+      const $inner   = this[$INNER]
+      const priorIds = this[$PRIOR_IDS] || []
       $inner[$PRIOR_IDS] = [...priorIds, existingId]
     }
-    return newId
+    return newId_
   })
 
 

@@ -3,8 +3,8 @@ Tranya(function (
   $IS_IMPENETRABLE, $IS_INNER, $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
   IMMUTABLE, IMPLEMENTATION, INVISIBLE, PROOF, VISIBLE, _DURABLES,
   FACT_METHOD, SELF_METHOD, VALUE_METHOD,
-  AlwaysSelf, BecomePermeableError, DefineProperty, InterMap, InvisibleConfig,
-  NewBlanker, NewInner, NewVacuousConstructor, RootOf, SetInvisibly,
+  AlwaysSelf, BasicSetInvisibly, BecomePermeableError, DefineProperty, InterMap,
+  InvisibleConfig, NewBlanker, NewInner, NewVacuousConstructor, RootOf,
   TheEmptyArray, SpawnFrom,
   AsContextDisguise, AsTypeDisguise,
 
@@ -57,7 +57,7 @@ Tranya(function (
     _$type._blanker          = blanker_ || NewBlanker($IntrinsicBlanker)
     _$type._supertypes       = TheEmptyArray
 
-    SetInvisibly(_$type, "iid", iid, "SET BOTH INNER & OUTER")
+    BasicSetInvisibly(_$type, "iid", iid, "SET OUTER TOO")
     return _$type[$PULP]
   }
 
@@ -130,8 +130,8 @@ Tranya(function (
   // Could have defined the follow properties later, after addDeclaration has
   // been defined, however it is fast execution within each objects' barrier#get
   // if implemented this way.  These properties are read very frequently.
-  _SetDefinitionAt.call(_$Something, "id"          , null       )
-  _SetDefinitionAt.call(_$Something, _DURABLES     , null       )
+  _SetDefinitionAt.call(_$Something, "id"          , undefined  )
+  _SetDefinitionAt.call(_$Something, _DURABLES     , undefined  )
   _SetDefinitionAt.call(_$Something, "context"     , RootContext)
 
   _SetDefinitionAt.call(_Type      , $IS_TYPE      , true       , INVISIBLE)
@@ -186,7 +186,7 @@ Tranya(function (
       const   instance = NewHandler.apply(this, args)
       const _$instance = InterMap.get(instance)
 
-      SetInvisibly(_$instance[$OUTER], "this", _$instance[$PULP])
+      BasicSetInvisibly(_$instance[$OUTER], "this", _$instance[$PULP])
       return instance
     }
     return Definition("new", handler, VALUE_METHOD)
@@ -210,7 +210,7 @@ Tranya(function (
 
     const _target = _$target[$PULP]
     const $target = _$target[$OUTER]
-    SetInvisibly($target, "this", _target)
+    BasicSetInvisibly($target, "this", _target)
     if (_$target[$IS_TYPE]) { AddPermeableNewDefinitionTo(_$target) }
     if (beImmutable) { _target._setImmutable() }
     return target

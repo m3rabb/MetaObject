@@ -83,7 +83,7 @@ Tranya.ImplementationTesting(function (
         expect( this.result.this._hasOwn(BREED) ).toBe( false )
         expect( this.result.this._age ).toBe( 18 )
         expect( this.result.this._hasOwn("name") ).toBe( false )
-        expect( this.result.this.name ).toBe( null )
+        expect( this.result.this.name ).toBe( undefined )
       })
 
       describe("In the copy", function () {
@@ -128,7 +128,7 @@ Tranya.ImplementationTesting(function (
         expect( this.result.this._hasOwn(BREED) ).toBe( false )
         expect( this.result.this._age ).toBe( 18 )
         expect( this.result.hasOwn("mood") ).toBe( false )
-        expect( this.result.this.mood ).toBe( null )
+        expect( this.result.this.mood ).toBe( undefined )
       })
 
       describe("In the copy", function () {

@@ -302,10 +302,14 @@ Tranya(function (
   }
 
 
-  function SetInvisibly(target, selector, value, setOuterToo_) {
+  function BasicSetInvisibly(target, selector, value, setOuterToo_) {
     DefineProperty(target, selector, InvisibleConfig)
-    if (setOuterToo_) { target[$OUTER][selector] = value }
-    return target[selector] = value
+    if (setOuterToo_) {
+      const $target = target[$OUTER]
+      DefineProperty($target, selector, InvisibleConfig)
+      $target[selector] = value
+    }
+    return (target[selector] = value)
   }
 
 
@@ -435,7 +439,7 @@ Tranya(function (
   _Shared._KnownNamesOf           = _KnownNamesOf
   _Shared._KnownSelectorsOf       = _KnownSelectorsOf
   _Shared.SelectorsOfUsing        = SelectorsOfUsing
-  _Shared.SetInvisibly            = SetInvisibly
+  _Shared.BasicSetInvisibly       = BasicSetInvisibly
   _Shared._BasicSetImmutable      = _basicSetImmutable
   _Shared.KnowAndSetFuncImmutable = KnowAndSetFuncImmutable
   _Shared.SetFuncImmutable        = SetFuncImmutable

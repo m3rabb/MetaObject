@@ -8,12 +8,12 @@ Tranya(function (
   IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
   AsCapitalized, AsDefinitionFrom, AsMembershipSelector, AsTypeDisguise, AsPropertySymbol,
-  BePermeable, CompareSelectors,
+  BasicSetInvisibly, BePermeable, CompareSelectors,
   DefaultContext, DeleteSelectorsIn, ExtractParamListing,
   GlazeAsImmutable, GlazeImmutable,
   InterMap, IsArray, IsPublicSelector,
   IsSubtypeOfThing, NewVacuousConstructor, PropertyAt, RootContext,
-  RootOf, SetDefinition, SetInvisibly, SpawnFrom, ValueAsName,
+  RootOf, SetDefinition, SpawnFrom, ValueAsName,
   TheEmptyArray, TheEmptyStash, _HasOwn, _Type, _ValueAsNext,
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
@@ -63,7 +63,8 @@ Tranya(function (
     const  $instance = new _$instance[$OUTER]
 
     if ($inner[$OUTER].this) {
-      SetInvisibly($instance, "this", AddPermeableNewDefinitionTo(_$instance))
+      const _instance = AddPermeableNewDefinitionTo(_$instance)
+      BasicSetInvisibly($instance, "this", _instance)
     }
     return _$instance[$RIND]
   })
@@ -109,7 +110,7 @@ Tranya(function (
 
 
   _Type.addSelfMethod(function addDeclaration(selector) {
-    const definition = this.context.Definition(selector, null, DECLARATION)
+    const definition = this.context.Definition(selector, undefined, DECLARATION)
     this._setDefinitionAt(definition.tag, definition)
   })
 
@@ -338,15 +339,24 @@ Tranya(function (
   })
 
 
+  _Type.addSelfMethod(function addLazyValue(assigner_selector, assigner_) {
+    // Will set the $inner (even on) an immutable object!!!
+    const [selector, assigner] = (typeof assigner_selector === "function") ?
+      [assigner_selector.name, assigner_selector] :
+      [assigner_selector     , assigner_        ]
+    const lazyHandler = AsLazyProperty(selector, assigner)
+    this._addMethod(selector, lazyHandler, VALUE_METHOD, VISIBLE)
+  })
 
   _Type.addSelfMethod(function addLazyProperty(assigner_selector, assigner_) {
     // Will set the $inner (even on) an immutable object!!!
     const [selector, assigner] = (typeof assigner_selector === "function") ?
       [assigner_selector.name, assigner_selector] :
       [assigner_selector     , assigner_        ]
-
-    this._addMethod(selector, AsLazyProperty(selector, assigner), VISIBLE)
+    const lazyHandler = AsLazyProperty(selector, assigner)
+    this._addMethod(selector, lazyHandler, FACT_METHOD, VISIBLE)
   })
+
 
   // MAKE THIS use a Definition!!!
   _Type.addSelfMethod(function addDurable(selector) {
@@ -773,7 +783,7 @@ Tranya(function (
   _Type.addValueMethod(function id() { // Conditionally lazy property
     const newId = `${this.formalName},${this.oid}`
     if (this.context === DefaultContext) { return newId }
-    return SetInvisibly(this[$INNER], "id", newId, "SET BOTH INNER & OUTER")
+    return BasicSetInvisibly(this[$INNER], "id", newId, "SET OUTER TOO")
   })
 
 

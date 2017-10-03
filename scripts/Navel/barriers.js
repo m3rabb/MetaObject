@@ -2,8 +2,8 @@ Tranya(function (
   $ASSIGNERS, $DELETE_ALL_PROPERTIES, $DELETE_IMMUTABILITY,$IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   IMMEDIATE, IMMUTABLE, IMPLEMENTATION, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
-  AlwaysFalse, AlwaysNull, InSetProperty, InterMap, IsPublicSelector,
-  SpawnFrom, _$Copy, _HasOwn,
+  AlwaysFalse, AlwaysNull, InterMap, IsPublicSelector,
+  SetProperty, SpawnFrom, _$Copy, _HasOwn,
   _OwnSelectorsOf, _OwnVisiblesOf,
   AssignmentOfUndefinedError, AssignmentViaSuperError,
   ChangeToImmutableThisError, DeleteFromOutsideError,
@@ -56,7 +56,7 @@ Tranya(function (
 
     const _$method_outer = $self[$IMMEDIATES][selector]
     if (_$method_outer) { return _$method_outer.call(self) }
-    if (selector in $self) { return null }
+    if (selector in $self) { return undefined }
 
     const _$self    = InterMap.get(self)
     const firstChar = selector[0] || selector.toString()[SYMBOL_1ST_CHAR]
@@ -101,7 +101,7 @@ Tranya(function (
 
   // Below, executing via OuterBarrier_prototype only works
   // because it doesn't access 'this'.
-  DisguisedBarrier_prototype.ownKeys = function ownKeys(func) {
+  DisguisedBarrier_prototype.ownKeys = function ownKeys(func) { // eslint-disable-line
     return OuterBarrier_prototype.ownKeys(this.$self)
   }
 
@@ -141,7 +141,7 @@ Tranya(function (
 
     const $method_inner = _$target[$IMMEDIATES][selector]
     if ($method_inner) { return $method_inner.call(_$target[$PULP]) }
-    if (selector in _$target) { return null }
+    if (selector in _$target) { return undefined }
 
     const _unknownProperty = _$target._unknownProperty
     return _unknownProperty && _unknownProperty.call(_$target[$PULP], selector)
@@ -196,7 +196,7 @@ Tranya(function (
         value = _$target[$RIND]
       }
     }
-    InSetProperty(_$target, selector, value, IsPublicSelector(selector))
+    SetProperty(_$target, selector, value, IsPublicSelector(selector))
     return true
   }
 

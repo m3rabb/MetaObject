@@ -1,9 +1,9 @@
 Tranya(function (
   $INNER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, IMMUTABLE, INVISIBLE,
   _DURABLES,
-  $BaseBlanker, $IntrinsicBlanker, FreezeSurface, GlazeImmutable,
-  InterMap, ImplementationSelectors, IsPublicSelector, SetAsymmetricProperty,
-  NewAssignmentErrorHandler, SelectorsOfUsing, SetInvisibly, SpawnFrom,
+  $BaseBlanker, $IntrinsicBlanker, BasicSetInvisibly, FreezeSurface,
+  GlazeImmutable, InterMap, ImplementationSelectors, IsPublicSelector,
+  SetAsymmetricProperty, NewAssignmentErrorHandler, SelectorsOfUsing, SpawnFrom,
   TheEmptyArray, _$DefaultContext, _$Intrinsic, _$Something, _BasicSetImmutable,
   _RootContext, _Context, _Definition, _Nothing, _Thing, _Type, _OwnKeysOf,
   DefaultContext, RootContext,
@@ -67,7 +67,7 @@ Tranya(function (
   // _BasicSetImmutable.call(_$Intrinsic)
   // _BasicSetImmutable.call(_$Something)
 
-  SetInvisibly(_$DefaultContext, "iid", 0, "SET BOTH INNER & OUTER")
+  BasicSetInvisibly(_$DefaultContext, "iid", 0, "SET OUTER TOO")
   RootContext.iid
 
   for (var name in Shared) { _RootContext._atPut(name, Shared[name]) }

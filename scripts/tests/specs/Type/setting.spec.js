@@ -82,7 +82,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -116,7 +116,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -189,7 +189,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -232,7 +232,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
 
@@ -249,7 +249,7 @@ Tranya.ImplementationTesting(function (
 
           it("Answers null when the property is read", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -289,7 +289,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat._qrs
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -332,7 +332,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
 
@@ -349,7 +349,7 @@ Tranya.ImplementationTesting(function (
 
           it("Answers null when the property is read", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -398,7 +398,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat._mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -479,7 +479,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -519,7 +519,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat._qrs
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -591,7 +591,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -634,7 +634,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
 
@@ -651,7 +651,7 @@ Tranya.ImplementationTesting(function (
 
           it("Answers null when the property is read", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -691,7 +691,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat._qrs
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -733,7 +733,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
 
@@ -750,7 +750,7 @@ Tranya.ImplementationTesting(function (
 
           it("Answers null when the property is read", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -793,7 +793,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat._mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -873,7 +873,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat.mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -913,7 +913,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat._qrs
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })
@@ -956,7 +956,7 @@ Tranya.ImplementationTesting(function (
         describe("When the property read before being set", function () {
           it("Answers null", function () {
             var result = this._cat._mood
-            expect( result ).toBe( null )
+            expect( result ).toBe( undefined )
           })
         })
       })

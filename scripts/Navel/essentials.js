@@ -6,8 +6,8 @@ Tranya(function (
   FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD,
   AsPropertySymbol, ExtractParamListing, InterMap, IsPublicSelector,
   KnowFunc, KnowAndSetFuncImmutable, NewAssignmentErrorHandler, SpawnFrom,
-  ValueAsName, CompletelyDeleteProperty, InSetProperty,
-  DefineProperty, InvisibleConfig, ValueAsFact,
+  ValueAsName, CompletelyDeleteProperty, DefineProperty, InvisibleConfig,
+  SetProperty, ValueAsFact,
   _Shared
 ) {
   "use strict"
@@ -102,7 +102,7 @@ Tranya(function (
       isPublic = IsPublicSelector(selector)
 
       CompletelyDeleteProperty(_$root, selector)
-      InSetProperty(_$root, selector, value, isPublic)
+      SetProperty(_$root, selector, value, isPublic)
     }
 
     if (mode === INVISIBLE) {

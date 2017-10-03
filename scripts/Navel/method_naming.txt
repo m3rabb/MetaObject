@@ -1,0 +1,69 @@
+
+// instance
+hasOwn
+has
+_hasOwn
+_has
+
+ownVisibleSelectors
+ownSelectors
+primarySelectors
+intrinsicSelectors
+visibleSelectors
+_invisibleSelectors
+knownSelectors
+
+
+// type
+definedSelectors
+publicSelectors
+privateSelectors
+
+allPublicSelectors
+allPrivateSelectors
+allDefinedSelectors
+
+allKnownSelectors
+
+
+// context
+knownKeys      / knownEntries
+knownTypeNames / knownTypes
+ownKeys        / ownEntries
+ownTypeNames   / ownTypes
+atOrInRootAt
+at
+ownAt
+
+
+
+// HandAxe
+_ownVisiblesOf
+_ownNamesOf
+_ownSymbolsOf
+_ownKeysOf
+
+ownVisiblesOf
+ownNamesOf
+ownSymbolsOf
+ownSelectorsOf
+ownKeysOf
+
+knownVisiblesOf
+knownNamesOf
+knownSymbolsOf
+knownSelectorsOf
+knownKeysOf
+primarySelectorsOf
+
+
+valueHasOwn
+valueAsName
+valueIsTranyan
+valueIsImmutable
+valueIsFact
+valueAsFact
+valueAsNext
+valueCopy
+valueAsImmutable
+valueBeImmutable

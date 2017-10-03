@@ -3,10 +3,11 @@ Tranya(function (
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   INVISIBLE, SYMBOL_1ST_CHAR,
   ASSIGNER_FUNC, BLANKER_FUNC, DISGUISE_PULP, DISGUISE_RIND,
-  AsCapitalized, AsDecapitalized, CompareSelectors, DefineProperty,
-  FreezeSurface, Impermeable, InvisibleConfig, IsArray, KnowFunc, KnownFuncs,
-  NewUniqueId, OwnSelectorsOf, SetInvisibly, SpawnFrom, ValueAsName,
+  AsCapitalized, AsDecapitalized, BasicSetInvisibly, CompareSelectors,
+  DefineProperty, FreezeSurface, Impermeable, IsArray, KnowFunc, KnownFuncs,
+  NewUniqueId, OwnSelectorsOf, SpawnFrom, ValueAsName,
   DisguisedBarrier, InnerBarrier,
+  InvisibleConfig, VisibleConfig,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
   ImproperDisguiseNameError, SignalError,
   InterMap, PropertyToSymbolMap,
@@ -64,7 +65,7 @@ Tranya(function (
     `
     const func = Function(funcBody)()
     FreezeSurface(func.prototype)
-    return DefineProperty(func, "name", InvisibleConfig)
+    return DefineProperty(func, "name", VisibleConfig)
   }
 
   // const DefaultDisguiseFunc = NewVacuousConstructor("$disguise$")
@@ -171,10 +172,10 @@ Tranya(function (
       $inner[$PULP]      = $pulp
       $inner[$RIND]      = $rind
 
-      if (uid) { SetInvisibly($inner, "uid", uid, "SET BOTH INNER & OUTER") }
+      if (uid) { BasicSetInvisibly($inner, "uid", uid, "SET OUTER TOO") }
 
       FreezeSurface(disguise.prototype)
-      DefineProperty(disguise, "name", InvisibleConfig)
+      DefineProperty(disguise, "name", VisibleConfig)
       KnowFunc($pulp, DISGUISE_PULP)
       KnowFunc($rind, DISGUISE_RIND)
       InterMap.set($rind, $inner)

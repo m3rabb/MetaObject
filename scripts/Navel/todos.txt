@@ -255,6 +255,27 @@ Consider
   list._1
   list._atPut(1)
 
+==
+  addGetter ???
+
+==
+Collections
+
+// value elements
+Tranya.Array
+Tranya.Set
+Tranya.Map
+
+// fact elements
+Tranya.List
+Tranya.Dict
+Tranya.AssociativeList
+
+==
+Primary|Intrinsic
+Visible|Invisible|All
+Public|Private|All
+
 ==========
 
 ikigai
@@ -262,6 +283,7 @@ ponzu
 enjoyment
 ObjectSauce|Tranya
 osauce
+HandAxe
 
 
 // var ParenthesesMatcher   = /\(|\)/

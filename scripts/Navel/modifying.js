@@ -1,8 +1,8 @@
 Tranya(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND, IMMUTABLE, PROOF,
   _DURABLES,
-  FindAndSetDurables, FindDurables, FreezeSurface, InterMap, KnowFunc,
-  SetFuncImmutable, SetInvisibly, SpawnFrom, RootOf, _BasicSetImmutable,
+  BasicSetInvisibly, FindAndSetDurables, FindDurables, FreezeSurface, InterMap, 
+  KnowFunc, SetFuncImmutable, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, InvertedFuncCopyError,
   Shared, _Shared
 ) {
@@ -26,7 +26,7 @@ Tranya(function (
     visited = visited || new WeakMap()
     visited.set(source, target) // to manage cyclic objects
 
-    if (_$source[$OUTER].this) { SetInvisibly($target, "this", _target) }
+    if (_$source[$OUTER].this) { BasicSetInvisibly($target, "this", _target) }
 
     if (_initFrom_) {
      _initFrom_.call(_target, _$source[$PULP], asImmutable, visited, context)

@@ -2,7 +2,7 @@ Tranya(function (
   $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, IMMUTABLE,
   AsPropertySymbol, ObjectCopy, _HasOwn, InnerBarrier, InterMap,
   InvisibleConfig, ValueAsName, _$Copy,
-  DefineProperty, InSetProperty, IsPublicSelector,
+  DefineProperty, IsPublicSelector, SetProperty,
   _Shared
 ) {
   "use strict"
@@ -259,27 +259,13 @@ Tranya(function (
     const IsPublic = IsPublicSelector(Selector)
     return {
       [name] : function () {
-        value
         const _$receiver = this[$INNER]
-        const value$root = _$receiver[$ROOT][Selector]
-        var   value = _$receiver[Selector]
-
-        if (_$receiver[IMMUTABLE]) {
-          // Object is already immutable
-          if (value !== value$root)                    { return value }
-          if (value === undefined)             { /* never been set */ }
-          else if (_HasOwn.call(_$receiver, Selector)) { return value }
-            // Fortunately, this (expensive) case is unlikely.to persist.
-
-          // Below, because $receiver is frosted, InSetProperty will only set _$receiver
-        }
-        else if (IsPublic) {
+        const   value    = Assigner.call(this)
+        if (IsPublic) {
           DefineProperty(_$receiver[$OUTER], Selector, InvisibleConfig)
         }
         DefineProperty(_$receiver, Selector, InvisibleConfig)
-
-        value = Assigner.call(this)
-        return InSetProperty(_$receiver, Selector, value, IsPublic)
+        return SetProperty(_$receiver, Selector, value, IsPublic)
       }
     }[name]
   }
@@ -290,17 +276,14 @@ Tranya(function (
     return {
       [name] : function () {
         const _$receiver = this[$INNER]
-
+        const   value    = Assigner.call(this)
         // Since receiver is immutable, execution defaults to being getter method.
-        if (_$receiver[IMMUTABLE]) { return Assigner.call(this) }
-
+        if (_$receiver[IMMUTABLE]) { return value }
         if (IsPublic) {
           DefineProperty(_$receiver[$OUTER], Selector, InvisibleConfig)
         }
         DefineProperty(_$receiver, Selector, InvisibleConfig)
-
-        const value = Assigner.call(this)
-        return InSetProperty(_$receiver, Selector, value, IsPublic)
+        return SetProperty(_$receiver, Selector, value, IsPublic)
       }
     }[name]
   }

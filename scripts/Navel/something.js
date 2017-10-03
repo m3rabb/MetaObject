@@ -1,7 +1,7 @@
 Tranya(function (
   $BARRIER, $OUTER, $RIND, IMMUTABLE, SYMBOL_1ST_CHAR,
   SELF_METHOD, VALUE_METHOD, VISIBLE,
-  AsRetroactiveProperty, SetInvisibly, SignalError, _$Something, _Super
+  AsRetroactiveProperty, BasicSetInvisibly, SignalError, _$Something, _Super
 ) {
   "use strict"
 
@@ -16,7 +16,7 @@ Tranya(function (
 
   _$Something.addValueMethod(function _super() { // RetroactiveValue
     const _$target = this[$BARRIER]._$target
-    return SetInvisibly(_$target, "_super", new Proxy(_$target, _Super))
+    return BasicSetInvisibly(_$target, "_super", new Proxy(_$target, _Super))
   })
 
 
