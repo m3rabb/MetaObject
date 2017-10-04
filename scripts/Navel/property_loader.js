@@ -8,23 +8,19 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
      LAZY MANDATORY METHOD RETRO RETROACTIVE SELF SELF_METHOD SETTER SHARED
      STANDARD VALUE VALUE_METHOD`
 
-  const PropertyLoader = _PropertyLoader // this.Type.new("PropertyLoader")
+  _PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
 
-  this.add(PropertyLoader)
-
-  PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
-
-  PropertyLoader.addValueMethod(function _init(type) {
+  _PropertyLoader.addValueMethod(function _init(type) {
     this._type    = type
     this._aliases = SpawnFrom(null)
   })
 
 
-  PropertyLoader.addValueMethod(function _saveAlias(aliasName, existingName) {
+  _PropertyLoader.addValueMethod(function _saveAlias(aliasName, existingName) {
     this._aliases[aliasName] = existingName
   })
 
-  PropertyLoader.addValueMethod(function _resolveAliases() {
+  _PropertyLoader.addValueMethod(function _resolveAliases() {
     const type    = this._type
     const aliases = this._aliases
     for (var aliasName in aliases) {
@@ -35,18 +31,18 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
   })
 
 
-  PropertyLoader.addValueMethod(function isMode(string) {
+  _PropertyLoader.addValueMethod(function isMode(string) {
     return (this.modes.indexOf(string) >= 0)
   })
 
 
-  PropertyLoader.addValueMethod(function load(item, mode = "STANDARD") {
+  _PropertyLoader.addValueMethod(function load(item, mode = "STANDARD") {
     this._load(item, mode)
     this._resolveAliases
   })
 
 
-  PropertyLoader.addValueMethod(function _load(item, mode) {
+  _PropertyLoader.addValueMethod(function _load(item, mode) {
     switch (item.constructor) {
       case Array    : this._loadFromArray (item, mode) ; break
       case Object   : this._loadFromSpec  (item, mode) ; break
@@ -57,7 +53,7 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
     }
   })
 
-  PropertyLoader.addValueMethod(function _loadFromArray(items, mode) {
+  _PropertyLoader.addValueMethod(function _loadFromArray(items, mode) {
     var index, count, item
 
     index = 0
@@ -79,7 +75,7 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
     }
   })
 
-  PropertyLoader.addValueMethod(function _loadFromSpec(item, mode) {
+  _PropertyLoader.addValueMethod(function _loadFromSpec(item, mode) {
     var keys = _OwnKeysOf(item)
 
     keys.forEach(key => {
@@ -91,7 +87,7 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
   })
 
 
-  PropertyLoader.addValueMethod(function _loadPair(name, value, mode) {
+  _PropertyLoader.addValueMethod(function _loadPair(name, value, mode) {
     switch (mode) {
       case "ALIAS"         : return this._saveAlias(name, value)
       case "SHARED"        : return this._type.addSharedProperty     (name, value)
@@ -121,7 +117,7 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
     }
   })
 
-  PropertyLoader.addValueMethod(function _loadFunc(func, mode) {
+  _PropertyLoader.addValueMethod(function _loadFunc(func, mode) {
     switch (mode) {
       case "STANDARD"      :
       case "METHOD"        : return this._type.addMethod             (func)
@@ -143,12 +139,12 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
     }
   })
 
-  PropertyLoader.addValueMethod(function _loadFromString(string, mode) {
+  _PropertyLoader.addValueMethod(function _loadFromString(string, mode) {
     const names = string.split(LISTING_DELIMITER_MATCHER)
     names.forEach(name => this._loadFromName(name, mode))
   })
 
-  PropertyLoader.addValueMethod(function _loadFromName(name, mode) {
+  _PropertyLoader.addValueMethod(function _loadFromName(name, mode) {
     switch (mode) {
       case "STANDARD"      : return this._type.addDeclaration       (name)
       case "DECLARE"       : return this._type.addDeclaration       (name)

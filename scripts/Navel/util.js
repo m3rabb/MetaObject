@@ -1,6 +1,6 @@
 HandAxe(function (
-  $INNER, $IS_INNER, $OUTER, $RIND, IMMUTABLE, PROOF, SYMBOL_1ST_CHAR,
-  _DURABLES,
+  $INNER, $IS_INNER, $IS_NOTHING, $IS_THING, $OUTER, $PULP, $RIND,
+  IMMUTABLE, PROOF, SYMBOL_1ST_CHAR, _DURABLES,
   DefineProperty, FreezeSurface, GlazeError, ImplementationSelectors,
   InterMap, InvisibleConfig, IsSurfaceFrozen, KnowFunc, KnownFuncs, RootOf,
   SpawnFrom, TheEmptyArray, ValueAsName,
@@ -176,11 +176,41 @@ HandAxe(function (
     })
   }
 
+  function DiffAndSort(left, right, sorter_) {
+    const remainder = left.filter(item => !right.includes(item))
+    return GlazeImmutable(remainder.sort(sorter_))
+  }
+
+  function MergeAndSort(longer, shorter, sorter_) {
+    var combined = []
+    var index    = 0
+    shorter.forEach(item => {
+      if (!longer.includes(item)) { combined[index++] = item }
+    })
+    combined = combined.concat(longer)
+    return GlazeImmutable(combined.sort(sorter_))
+  }
+
+  function _PrimarySelectorsOf(_target) {
+    const inherited = _target.type.allDefinedSelectors
+    const owned     = _OwnSelectorsOf(_target[$INNER])
+    return MergeAndSort(inherited, owned, CompareSelectors)
+  }
+
+  function _PrimaryPublicSelectorsOf(_target) {
+    const inherited = _target.type.allDefinedPublicSelectors
+    const owned     = _OwnVisiblesOf(_target[$OUTER])
+    return MergeAndSort(inherited, owned, undefined)
+  }
+
+
+
 
   function PrimarySelectorsOf(value) {
     if (value == null) { return TheEmptyArray }
-    if (value[$IS_INNER] === PROOF) { return value._primarySelectors }
-    if (InterMap.get(value))        { return value.primarySelectors  }
+    if (value[$IS_INNER] === PROOF) { return _PrimarySelectorsOf(value) }
+    const _$value = InterMap.get(value)
+    if (_$value)     { return _PrimaryPublicSelectorsOf(_$value[$PULP]) }
     return SortedSelectorsUsing(
       Object(value), _OwnNamesOf, undefined, Object.prototype)
   }
@@ -196,17 +226,16 @@ HandAxe(function (
   }
 
 
-
-  const SYMBOL_PREFIX_MATCHER = /^[_$]/i
+  const PRIVATE_SYMBOL_MATCHER = /^[_$]/i
 
   function IsPublicSelector(selector) {
-    var firstChar = selector[0]
+    var firstChar
     switch (selector[0]) {
       default        : return true
       case "_"       : return false
       case undefined :
         firstChar = selector.toString()[SYMBOL_1ST_CHAR]
-        return !SYMBOL_PREFIX_MATCHER.test(firstChar)
+        return !PRIVATE_SYMBOL_MATCHER.test(firstChar)
     }
   }
 
@@ -226,8 +255,7 @@ HandAxe(function (
       case "function" : break
       case "object"   : if (value === null) { return false } else { break }
     }
-    const _$value = InterMap.get(value)
-    return (_$value !== undefined && _$value[$RIND] === value)
+    return (InterMap.get(value) !== undefined)
   }
 
   function ValueIsSomething(value) {
@@ -236,8 +264,26 @@ HandAxe(function (
       case "function" : break
       case "object"   : if (value === null) { return false } else { break }
     }
-    const target = InterMap.get(value) || value
-    return (target[$IS_INNER] === PROOF)
+    return (value[$IS_INNER] === PROOF || InterMap.get(value) !== undefined)
+  }
+
+  function ValueIsThing(value) {
+    switch (typeof value) {
+      default         : return false
+      case "function" : break
+      case "object"   : if (value === null) { return false } else { break }
+    }
+    if (value[$IS_THING] === PROOF) { return true }
+    const _$value = InterMap.get(value)
+    return (_$value !== undefined && _$value[$IS_THING] === PROOF)
+  }
+
+  function ValueIsNothing(value) {
+    if (typeof value !== "object")    { return false }
+    if (value === null)               { return true  }
+    if (value[$IS_NOTHING] === PROOF) { return true  }
+    const _$value = InterMap.get(value)
+    return (_$value !== undefined && _$value[$IS_NOTHING] === PROOF)
   }
 
   function ValueIsFact(value) {
@@ -316,7 +362,7 @@ HandAxe(function (
   // This method should only be called on a mutable object!!!
   // eslint-disable-next-line
   function _basicSetImmutable(inPlace_, visited__) {
-    const _$target = this[$INNER] //
+    const _$target = this[$INNER]
     const  $target = _$target[$OUTER]
 
     delete _$target._retarget
@@ -422,6 +468,9 @@ HandAxe(function (
   Shared.valueIsInner             = KnowFunc(ValueIsInner)
   Shared.valueIsOuter             = KnowFunc(ValueIsOuter)
   Shared.valueIsSomething         = KnowFunc(ValueIsSomething)
+  Shared.valueIsThing             = KnowFunc(ValueIsThing)
+  Shared.valueIsNothing           = KnowFunc(ValueIsNothing)
+
   Shared.valueIsFact              = KnowFunc(ValueIsFact)
   Shared.valueIsImmutable         = KnowFunc(ValueIsImmutable)
   Shared.valueIsSurfaceImmutable  = KnowFunc(ValueIsSurfaceImmutable)
@@ -431,19 +480,23 @@ HandAxe(function (
   Shared.compareSelectors         = KnowFunc(CompareSelectors)
   Shared.sortParameters           = KnowFunc(SortParameters)
 
+  Shared.DiffAndSort              = KnowFunc(DiffAndSort)
+  Shared.MergeAndSort             = KnowFunc(MergeAndSort)
+
   Shared.findDurables             = KnowFunc(FindDurables)
 
 
-  _Shared._HasOwn                 = _HasOwn // ._hasOwn
-  _Shared._KnownVisiblesOf        = _KnownVisiblesOf
-  _Shared._KnownNamesOf           = _KnownNamesOf
-  _Shared._KnownSelectorsOf       = _KnownSelectorsOf
-  _Shared.SelectorsOfUsing        = SelectorsOfUsing
-  _Shared.BasicSetInvisibly       = BasicSetInvisibly
-  _Shared._BasicSetImmutable      = _basicSetImmutable
-  _Shared.KnowAndSetFuncImmutable = KnowAndSetFuncImmutable
-  _Shared.SetFuncImmutable        = SetFuncImmutable
-  _Shared.FindAndSetDurables      = FindAndSetDurables
+  _Shared._HasOwn                   = _HasOwn // ._hasOwn
+  _Shared._KnownVisiblesOf          = _KnownVisiblesOf
+  _Shared._KnownNamesOf             = _KnownNamesOf
+  _Shared._KnownSelectorsOf         = _KnownSelectorsOf
+  _Shared._PrimarySelectorsOf       = _PrimarySelectorsOf
+  _Shared._PrimaryPublicSelectorsOf = _PrimaryPublicSelectorsOf
+  _Shared.BasicSetInvisibly         = BasicSetInvisibly
+  _Shared._BasicSetImmutable        = _basicSetImmutable
+  _Shared.KnowAndSetFuncImmutable   = KnowAndSetFuncImmutable
+  _Shared.SetFuncImmutable          = SetFuncImmutable
+  _Shared.FindAndSetDurables        = FindAndSetDurables
 
 
 })

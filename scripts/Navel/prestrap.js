@@ -1,8 +1,8 @@
 HandAxe(function (
   $ASSIGNERS, $BARRIER, $IMMEDIATES, $IS_CONTEXT, $IS_DEFINITION,
-  $IS_IMPENETRABLE, $IS_INNER, $IS_TYPE, $OUTER, $PULP, $RIND, $SUPERS,
-  IMMUTABLE, IMPLEMENTATION, INVISIBLE, PROOF, VISIBLE, _DURABLES,
-  FACT_METHOD, SELF_METHOD, VALUE_METHOD,
+  $IS_IMPENETRABLE, $IS_INNER, $IS_NOTHING, $IS_THING, $IS_TYPE, $OUTER,
+  $PULP, $RIND, $SUPERS, IMMUTABLE, IMPLEMENTATION, INVISIBLE, PROOF, VISIBLE,
+  _DURABLES, FACT_METHOD, SELF_METHOD, VALUE_METHOD,
   AlwaysSelf, BasicSetInvisibly, BecomePermeableError, DefineProperty, InterMap,
   InvisibleConfig, NewBlanker, NewInner, NewVacuousConstructor, RootOf,
   TheEmptyArray, SpawnFrom,
@@ -87,11 +87,12 @@ HandAxe(function (
 
   // This secret is only known by inner objects
   $Something$root$inner[$IS_INNER]          = PROOF
-  $Something$root$outer[$IS_INNER]          = null
+  $Something$root$outer[$IS_INNER]          = undefined
 
-  $Something$root$outer.type                = null
-
-  $Something$root$inner._retarget           = null
+  // Placeholders for these critical properties
+  $Something$root$inner._retarget           = undefined
+  $Something$root$inner.id                  = undefined
+  $Something$root$inner[_DURABLES]          = undefined
 
   Type$root$inner.new                       = _BasicNew
   Type$root$inner._setDefinitionAt          = _SetDefinitionAt
@@ -115,31 +116,26 @@ HandAxe(function (
   const  _DefaultContext = _$DefaultContext[$PULP]
   const   DefaultContext = _$DefaultContext[$RIND]
 
+
   _RootContext._init("HandAxe")
   _DefaultContext._init("Default", RootContext)
-
 
   Context_atPut.call(_RootContext, "Thing"     , Thing     )
   Context_atPut.call(_RootContext, "Definition", Definition)
 
-  // Necessary to prevent breaking Jasmine testing framework
-  // Is this still necessary???
+  // Is this still necessary to prevent breaking Jasmine testing framework???
   // _SetDefinitionAt.call(_$Something, "asymmetricMatch", null       )
 
+  _SetDefinitionAt.call(_$Something, IMMUTABLE      , false      )
+  _SetDefinitionAt.call(_$Something, "isSomething"  , true       )
+  _SetDefinitionAt.call(_$Something, "context"      , RootContext)
+  _SetDefinitionAt.call(_$Something, "_init"        , AlwaysSelf , INVISIBLE)
 
-  _SetDefinitionAt.call(_$Something, IMMUTABLE     , false      )
-  _SetDefinitionAt.call(_$Something, "isSomething" , true       )
-
-  // Could have defined the follow properties later, after addDeclaration has
-  // been defined, however it is fast execution within each objects' barrier#get
-  // if implemented this way.  These properties are read very frequently.
-  _SetDefinitionAt.call(_$Something, "id"          , undefined  )
-  _SetDefinitionAt.call(_$Something, _DURABLES     , undefined  )
-  _SetDefinitionAt.call(_$Something, "context"     , RootContext)
-
-  _SetDefinitionAt.call(_Type      , $IS_TYPE      , true       , INVISIBLE)
-  _SetDefinitionAt.call(_Context   , $IS_CONTEXT   , true       , INVISIBLE)
-  _SetDefinitionAt.call(_Definition, $IS_DEFINITION, true       , INVISIBLE)
+  _SetDefinitionAt.call(_Nothing   , $IS_NOTHING    , PROOF      , INVISIBLE)
+  _SetDefinitionAt.call(_Thing     , $IS_THING      , PROOF      , INVISIBLE)
+  _SetDefinitionAt.call(_Type      , $IS_TYPE       , PROOF      , INVISIBLE)
+  _SetDefinitionAt.call(_Context   , $IS_CONTEXT    , PROOF      , INVISIBLE)
+  _SetDefinitionAt.call(_Definition, $IS_DEFINITION , PROOF      , INVISIBLE)
 
 
   _AddMethod.call(_Type, _AddMethod, VALUE_METHOD, VISIBLE)
@@ -159,6 +155,7 @@ HandAxe(function (
     this._addMethod(...arguments, VALUE_METHOD, VISIBLE)
   })
 
+  _$Something._addMethod("_setImmutable", _BasicSetImmutable, VALUE_METHOD)
 
   _$Intrinsic.addValueMethod(_BasicSetImmutable)
 

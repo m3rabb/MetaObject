@@ -1,5 +1,5 @@
 HandAxe(function (
-  $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND, IMMUTABLE, PROOF,
+  $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND, IMMUTABLE,
   _DURABLES,
   BasicSetInvisibly, FindAndSetDurables, FindDurables, FreezeSurface, InterMap,
   KnowFunc, SetFuncImmutable, SpawnFrom, RootOf, _BasicSetImmutable,
@@ -278,7 +278,6 @@ HandAxe(function (
 
       case "function" :
         if ((_$value = InterMap.get(value)) === undefined)  { return value }
-        if (_$value[$IS_INNER] !== PROOF)                   { return value }
         if ((traversed = visited.get(value)))           { return traversed }
 
         _value = _$value[$PULP]

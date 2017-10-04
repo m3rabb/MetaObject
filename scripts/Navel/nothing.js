@@ -1,21 +1,17 @@
 HandAxe(function (
-  $PULP, $RIND, _Nothing, RootContext,
-  AddIntrinsicDeclaration, InterMap, Type, _BasicSetImmutable
+  $PULP, $RIND, AddIntrinsicDeclaration, InterMap, _Nothing, _RootContext
 ) {
   "use strict"
 
-  const _$Nothing = InterMap.get(_Nothing[$RIND])
-  const _$Void    = new _$Nothing._blanker()
-  const _Void     = _$Void[$PULP]
-  const  Void     = _$Void[$RIND]
+  const  nil = _Nothing.new()
+  const _nil = InterMap.get(nil)[$PULP]
 
-  _Void.id     = "Void,0.Nothing"
-  _Void.isVoid = true
+  _nil.id    = "Nil,0.Nothing"
+  _nil.isNil = true
+  _nil._setImmutable()
 
-  AddIntrinsicDeclaration("isVoid")
-  _BasicSetImmutable.call(_$Void)
-
-  RootContext.atPut("void", Void)
+  AddIntrinsicDeclaration("isNil")
+  _RootContext._atPut("nil", nil)
 
 })
 
@@ -30,4 +26,4 @@ HandAxe(function (
 //        isNothing
 //       Void
 //        id
-//        isVoid
+//        isNil

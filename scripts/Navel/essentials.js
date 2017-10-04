@@ -4,10 +4,10 @@ HandAxe(function (
   REINHERIT, SYMBOL_1ST_CHAR, VISIBLE,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
   FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD,
-  AsPropertySymbol, ExtractParamListing, InterMap, IsPublicSelector,
-  KnowFunc, KnowAndSetFuncImmutable, NewAssignmentErrorHandler, SpawnFrom,
-  ValueAsName, CompletelyDeleteProperty, DefineProperty, InvisibleConfig,
-  SetProperty, ValueAsFact,
+  AsPropertySymbol, ExtractParamListing, ImplementationSelectors, InterMap,
+  IsPublicSelector, KnowFunc, KnowAndSetFuncImmutable,
+  NewAssignmentErrorHandler, SpawnFrom, ValueAsName, CompletelyDeleteProperty,
+  DefineProperty, InvisibleConfig, SetProperty, ValueAsFact,
   _Shared
 ) {
   "use strict"
@@ -126,6 +126,7 @@ HandAxe(function (
   }
 
   const Definition_init = function _init(selector, handler, mode, property_) {
+    var tag
     const isPublic = IsPublicSelector(selector)
     const $inner   = this[$INNER]
     const $outer   = $inner[$OUTER]
@@ -142,13 +143,15 @@ HandAxe(function (
     switch(mode) {
       case DECLARATION :
         this.isDeclaration = true
-        this.tag           = `_$declaration@${ValueAsName(selector)}`
+        this.tag           = (tag = `$declaration@${ValueAsName(selector)}`)
+        ImplementationSelectors[tag] = true
         return
 
       case ASSIGNER :
         this.isAssigner = true
-        this.tag        = `_$assigner@${ValueAsName(selector)}`
+        this.tag        = (tag = `$assigner@${ValueAsName(selector)}`)
         $outer.handler = $inner.handler = KnowFunc(handler, ASSIGNER_FUNC)
+        ImplementationSelectors[tag] = true
         return
 
       case MANDATORY_SETTER_METHOD :

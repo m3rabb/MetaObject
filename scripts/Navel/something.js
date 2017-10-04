@@ -1,10 +1,16 @@
 HandAxe(function (
-  $BARRIER, $OUTER, $RIND, IMMUTABLE, SYMBOL_1ST_CHAR,
-  SELF_METHOD, VALUE_METHOD, VISIBLE,
-  AsRetroactiveProperty, BasicSetInvisibly, SignalError, _$Something, _Super
+  $BARRIER, $DELETE_IMMUTABILITY, $INNER, $OUTER, $RIND,
+  IMMUTABLE, SYMBOL_1ST_CHAR, SELF_METHOD, VALUE_METHOD, VISIBLE, _DURABLES,
+  AsRetroactiveProperty, BasicSetInvisibly, NewAssignmentErrorHandler,
+  SignalError, _$Something, _Super
 ) {
   "use strict"
 
+
+  _$Something.forAddAssigner(IMMUTABLE,
+      NewAssignmentErrorHandler(IMMUTABLE, "beImmutable"))
+  _$Something.forAddAssigner(_DURABLES,
+      NewAssignmentErrorHandler(_DURABLES, "addDurables"))
 
   // addRetroactiveValue
   _$Something._addMethod("self", AsRetroactiveProperty("self", function self() {
@@ -12,6 +18,22 @@ HandAxe(function (
   }), VALUE_METHOD)
 
   // _$Something.addAlias("$", "self")
+
+
+  // It's not enough to simple make this method access the receiver's barrier.
+  // The receiver only references its original barrier, and there may be more
+  // than one proxy/barrier associated with the receiver, so we need to invoke
+  // the proxy to force the proper change to occur thru it.
+  _$Something.addValueMethod(function _retarget() {
+    const $inner = this[$INNER]
+
+    if ($inner[IMMUTABLE]) {
+      delete this[$DELETE_IMMUTABILITY]
+      return this
+    }
+
+    return BasicSetInvisibly($inner, "_retarget", this)
+  })
 
 
   _$Something.addValueMethod(function _super() { // RetroactiveValue
@@ -78,7 +100,7 @@ HandAxe(function (
 //        iid
 //        uid
 //        isA
-//        isVoid
+//        isNil
 //        isNothing
 //        isThing
 //       Thing
@@ -88,7 +110,7 @@ HandAxe(function (
 //        isNothing
 //       Void
 //        id
-//        isVoid
+//        isNil
 
 
 // *

@@ -18,7 +18,7 @@ HandAxe(function (
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
-  OwnKeysOf, OwnVisiblesOf, _KnownSelectorsOf, _OwnKeysOf, _OwnSelectorsOf,
+  OwnSelectorsOf, OwnVisiblesOf, _KnownSelectorsOf, _OwnKeysOf, _OwnSelectorsOf,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
   SetAsymmetricProperty,
   AsAssignmentSetter, AsBasicSetter, AsPropertyFromSetter
@@ -105,13 +105,13 @@ HandAxe(function (
     if (!selector) { return UnnamedFuncError(this, assigner) }
 
     const definition = this.context.Definition(selector, assigner, ASSIGNER)
-    this._setDefinitionAt(definition.tag, definition)
+    this._setDefinitionAt(definition.tag, definition, INVISIBLE)
   })
 
 
   _Type.addSelfMethod(function addDeclaration(selector) {
     const definition = this.context.Definition(selector, undefined, DECLARATION)
-    this._setDefinitionAt(definition.tag, definition)
+    this._setDefinitionAt(definition.tag, definition, INVISIBLE)
   })
 
 
@@ -127,14 +127,14 @@ HandAxe(function (
 
 
   _Type.addSelfMethod(function removeAssigner(selector) {
-    const tag = `_$assigner@${ValueAsName(selector)}`
+    const tag = `$assigner@${ValueAsName(selector)}`
     if (this._definitions[tag] !== undefined) {
       this._deleteDefinitionAt(tag)
     }
   })
 
   _Type.addSelfMethod(function removeDeclaration(selector) {
-    const tag = `_$declaration@${ValueAsName(selector)}`
+    const tag = `$declaration@${ValueAsName(selector)}`
   if (this._definitions[tag] !== undefined) {
       this._deleteDefinitionAt(tag)
     }
@@ -173,10 +173,10 @@ HandAxe(function (
 
       case DECLARATION :
         selectors = []
-        if ($root$inner[selector] !== undefined)         { break } // Has value
-        if (defs[selector])                              { break } // Has immediate
-        if (defs[`_$assigner@${ValueAsName(selector)}`]) { break } // Has assigner
-        if (defs[AsSetterFromProperty(selector)])        { break } // Has setter
+        if ($root$inner[selector] !== undefined)        { break } // Has value
+        if (defs[selector])                             { break } // Has immediate
+        if (defs[`$assigner@${ValueAsName(selector)}`]) { break } // Has assigner
+        if (defs[AsSetterFromProperty(selector)])       { break } // Has setter
         selectors = [selector]
         break
 
@@ -188,9 +188,9 @@ HandAxe(function (
       case SETTER_METHOD :
         selectors = [selector]
         var property = value.property
-        if ($root$inner[property] !== undefined)            { break } // Has value
-        if (defs[property])                                 { break } // Has immediate
-        if (defs[`_$declaration@${ValueAsName(property)}`]) { break } // Has def
+        if ($root$inner[property] !== undefined)           { break } // Has value
+        if (defs[property])                                { break } // Has immediate
+        if (defs[`$declaration@${ValueAsName(property)}`]) { break } // Has def
         selectors[1] = property
         // break omitted
 
@@ -259,7 +259,7 @@ HandAxe(function (
           }
           else {
             setter = AsBasicSetter(propertyName, setterName, mode)
-            this._addMethod(propertyName, assigner, ASSIGNER, VISIBLE)
+            this._addMethod(propertyName, assigner, ASSIGNER, INVISIBLE)
           }
         }
         else { setter = property_setter_ }
@@ -848,7 +848,7 @@ HandAxe(function (
 
 
   _Type.addValueMethod(function definedSelectors() {
-    return OwnKeysOf(this._definitions)
+    return OwnSelectorsOf(this._definitions)
   })
 
   _Type.addValueMethod(function definedPublicSelectors() {

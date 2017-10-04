@@ -60,10 +60,12 @@
   _Shared.$BARRIER               = Symbol("$BARRIER")
 
   _Shared.$IS_INNER              = Symbol("$IS_INNER")
-  _Shared.$IS_DEFINITION         = Symbol("$IS_DEFINITION")
+  _Shared.$IS_NOTHING            = Symbol("$IS_NOTHING")
+  _Shared.$IS_THING              = Symbol("$IS_THING")
   _Shared.$IS_TYPE               = Symbol("$IS_TYPE")
   _Shared.$IS_CONTEXT            = Symbol("$IS_CONTEXT")
-  _Shared.$PRIOR_IDS             = Symbol("$PRIOR_IDS")
+  _Shared.$IS_DEFINITION         = Symbol("$IS_DEFINITION")
+  _Shared.$IS_IMPENETRABLE       = Symbol("$IS_IMPENETRABLE")
 
   _Shared.$ROOT                  = Symbol("$ROOT")
   _Shared.$BLANKER               = Symbol("$BLANKER")
@@ -72,9 +74,9 @@
   _Shared.$DECLARATIONS          = Symbol("$DECLARATIONS")
   _Shared.$SUPERS                = Symbol("$SUPERS")
   _Shared.$OWN_DEFINITIONS       = Symbol("$OWN_DEFINITIONS")
-  _Shared.$IS_IMPENETRABLE       = Symbol("$IS_IMPENETRABLE")
 
   _Shared.$OUTER_WRAPPER         = Symbol("$OUTER_WRAPPER")
+  _Shared.$PRIOR_IDS             = Symbol("$PRIOR_IDS")
 
   _Shared.$DELETE_IMMUTABILITY   = Symbol("$DELETE_IMMUTABILITY")
   _Shared.$DELETE_ALL_PROPERTIES = Symbol("$DELETE_ALL_PROPERTIES")

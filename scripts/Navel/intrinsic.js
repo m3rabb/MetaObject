@@ -14,15 +14,16 @@
 // USER CAN/SHOULD NEVER REDEFINE INATE METHODS
 
 HandAxe(function (
-  $BLANKER, $DELETE_IMMUTABILITY, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
+  $BLANKER, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   AsDefinitionFrom, BasicSetInvisibly, CompareSelectors,
-  CompletelyDeleteProperty, FindAndSetDurables, GlazeImmutable,
+  CompletelyDeleteProperty, DiffAndSort, FindAndSetDurables, GlazeImmutable,
   MakeDefinitionsInfrastructure, NewUniqueId, PropertyAt, SetDefinition,
   SpawnFrom, ValueAsFact, ValueAsName, _HasOwn, _$Copy, _$Intrinsic,
   PrivateAccessFromOutsideError, SignalError,
   InterMap, PropertyToSymbolMap,
+  _PrimaryPublicSelectorsOf, _PrimarySelectorsOf,
   _OwnSelectorsOf, _OwnVisiblesOf,
   OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf,
   _KnownNamesOf, _KnownSelectorsOf, _KnownVisiblesOf
@@ -194,33 +195,13 @@ HandAxe(function (
 
 
 
-  _$Intrinsic.addValueMethod(function _sortedInvisibles(knownsMethod, visiblesMethod) {
-    const knowns     = this[knownsMethod]
-    const visibles   = this[visiblesMethod]
-    const invisibles = knowns.filter(sel => !visibles.includes(sel))
-    return GlazeImmutable(invisibles.sort(CompareSelectors))
-  })
-
-  _$Intrinsic.addValueMethod(function _sortedPrimaries(inheritedMethod, ownPicker, sorter_) {
-    var primaries, index
-    const inheriteds = this.type[inheritedMethod]
-    const owns       = ownPicker(this[$OUTER])
-    primaries = []
-    index     = 0
-    owns.forEach(sel => {
-      if (!inheriteds.includes(sel)) { primaries[index++] = sel }
-    })
-    primaries = primaries.concat(inheriteds)
-    return GlazeImmutable(primaries.sort(sorter_))
-  })
-
-
   _$Intrinsic.addValueMethod(function _ownVisibleSelectors() {
     return OwnVisiblesOf(this[$INNER])
   })
 
   _$Intrinsic.addValueMethod(function _ownInvisibleSelectors() {
-    return this._sortedInvisibles("_ownSelectors", "_ownVisibleSelectors")
+    return DiffAndSort(
+      this._ownSelectors, this._ownVisibleSelectors, CompareSelectors)
   })
 
   _$Intrinsic.addValueMethod(function _ownSelectors() {
@@ -230,8 +211,7 @@ HandAxe(function (
 
 
   _$Intrinsic.addValueMethod(function _primarySelectors() {
-    return this._sortedPrimaries(
-      "allDefinedSelectors", _OwnSelectorsOf, CompareSelectors)
+    return _PrimarySelectorsOf(this)
   })
 
   _$Intrinsic.addValueMethod(function _intrinsicSelectors() {
@@ -243,7 +223,8 @@ HandAxe(function (
   })
 
   _$Intrinsic.addValueMethod(function _invisibleSelectors() {
-    return this._sortedInvisibles("_knownSelectors", "_visibleSelectors")
+    return DiffAndSort(
+      this._knownSelectors, this._visibleSelectors, CompareSelectors)
   })
 
   _$Intrinsic.addValueMethod(function _knownSelectors() {
@@ -263,8 +244,9 @@ HandAxe(function (
 
 
   _$Intrinsic.addValueMethod(function primarySelectors() {
-    return this._sortedPrimaries("allDefinedPublicSelectors", _OwnVisiblesOf)
+    return _PrimaryPublicSelectorsOf(this)
   })
+
 
   _$Intrinsic.addValueMethod(function intrinsicSelectors() {
     return _KnownNamesOf(_$Intrinsic._blanker.$root$outer)
@@ -285,25 +267,6 @@ HandAxe(function (
     const selector = PropertyToSymbolMap[property] || property
     this[selector] = value
     return this
-  })
-
-
-
-  // Note: This method might need to be moved to _$Something!!!
-  //
-  // It's not enough to simple make this method access the receiver's barrier.
-  // Th receiver only references its original barrier, and there may be more than
-  // one proxy/barrier associated with the receiver, so we need to invoke the
-  // proxy to force the proper change to occur thru it.
-  _$Intrinsic.addValueMethod(function _retarget() {
-    const $inner = this[$INNER]
-
-    if ($inner[IMMUTABLE]) {
-      delete this[$DELETE_IMMUTABILITY]
-      return this
-    }
-
-    return BasicSetInvisibly($inner, "_retarget", this)
   })
 
 
@@ -334,6 +297,10 @@ HandAxe(function (
 
   _$Intrinsic.addValueMethod(function typeName() {
     return this.type.name
+  })
+
+  _$Intrinsic.addValueMethod(function contextName() {
+    return this.context.name
   })
 
 
