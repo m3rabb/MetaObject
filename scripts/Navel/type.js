@@ -1,26 +1,28 @@
 HandAxe(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER, $IS_CONTEXT,
-  $IS_DEFINITION, $IS_IMPENETRABLE, $IS_TYPE, $OUTER, $OWN_DEFINITIONS,
-  $PULP, $RIND, $SUPERS,
-  ASSIGNER, DECLARATION, IMMUTABLE, INHERIT, INVISIBLE, REINHERIT, VISIBLE,
-   _DURABLES,
-  ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC, FACT_METHOD,
-  IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD, VALUE_METHOD,
+  $IS_DEFINITION, $IS_IMPENETRABLE, $IS_TYPE, $OUTER, $OWN_DEFINITIONS, $PULP,
+  $RIND, $SUPERS, ASSIGNER, DECLARATION, IMMUTABLE, INHERIT, INVISIBLE,
+  REINHERIT, VISIBLE, _DURABLES,
+  ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
+  FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD,
+  VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
-  AsCapitalized, AsDefinitionFrom, AsMembershipSelector, AsTypeDisguise, AsPropertySymbol,
-  BasicSetInvisibly, BePermeable, CompareSelectors,
-  DefaultContext, DeleteSelectorsIn, ExtractParamListing,
-  GlazeAsImmutable, GlazeImmutable,
-  InterMap, IsArray, IsPublicSelector,
-  IsSubtypeOfThing, NewVacuousConstructor, PropertyAt, RootContext,
-  RootOf, SetDefinition, SpawnFrom, ValueAsName,
-  TheEmptyArray, TheEmptyStash, _HasOwn, _Type, _ValueAsNext,
+  AsCapitalized, AsPropertySymbol, AsTypeDisguise, BasicSetInvisibly,
+  BePermeable, CompareSelectors, DeleteSelectorsIn, InterMap, IsSubtypeOfThing,
+  NewVacuousConstructor, PropertyAt, SetDefinition, TheEmptyStash, ValueAsName,
+  _HasOwnHandler, _Type,
+  IsArray, TheEmptyArray,
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
+  DefaultContext, RootContext,
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
-  OwnSelectorsOf, OwnVisiblesOf, _KnownSelectorsOf, _OwnKeysOf, _OwnSelectorsOf,
+  AsDefinitionFrom, SpawnFrom,
+  GlazeAsImmutable, GlazeImmutable,
+  OwnSelectorsOf, OwnVisiblesOf, RootOf, _KnownSelectorsOf,
+  _OwnKeysOf, _OwnSelectorsOf,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
-  SetAsymmetricProperty,
+  SetAsymmetricProperty, _CopyProperty,
+  AsMembershipSelector, IsPublicSelector,
   AsAssignmentSetter, AsBasicSetter, AsPropertyFromSetter
 ) {
   "use strict"
@@ -29,7 +31,7 @@ HandAxe(function (
   _Type.addValueMethod(function newImmutable(...args) {
     const   instance = this.new(...args) // <<----------
     const _$instance = InterMap.get(instance)
-    return _$instance._setImmutable.call(_$instance[$PULP], true)[$RIND]
+    return _$instance._setImmutable.call(_$instance[$PULP])[$RIND]
   })
 
   _Type.addValueMethod(function newFact(...args) {
@@ -259,7 +261,7 @@ HandAxe(function (
           }
           else {
             setter = AsBasicSetter(propertyName, setterName, mode)
-            this._addMethod(propertyName, assigner, ASSIGNER, INVISIBLE)
+            this._addMethod(propertyName, assigner, INVISIBLE, ASSIGNER)
           }
         }
         else { setter = property_setter_ }
@@ -273,7 +275,7 @@ HandAxe(function (
     }
     if (!setter) { setter = AsBasicSetter(propertyName, setterName, mode) }
 
-    return this._addMethod(setterName, setter, mode, VISIBLE, propertyName)
+    return this._addMethod(setterName, setter, VISIBLE, mode, propertyName)
   })
 
 
@@ -326,7 +328,7 @@ HandAxe(function (
         [assigner_selector.name, assigner_selector] :
         [assigner_selector     , assigner_        ]
     const retroHandler = AsRetroactiveProperty(selector, assigner)
-    this._addMethod(selector, retroHandler, VALUE_METHOD, VISIBLE)
+    this._addMethod(selector, retroHandler, VISIBLE, VALUE_METHOD)
   })
 
   _Type.addSelfMethod(function addRetroactiveProperty(assigner_selector, assigner_) {
@@ -335,7 +337,7 @@ HandAxe(function (
         [assigner_selector.name, assigner_selector] :
         [assigner_selector     , assigner_        ]
     const retroHandler = AsRetroactiveProperty(selector, assigner)
-    this._addMethod(selector, retroHandler, FACT_METHOD, VISIBLE)
+    this._addMethod(selector, retroHandler, VISIBLE, FACT_METHOD)
   })
 
 
@@ -345,7 +347,7 @@ HandAxe(function (
       [assigner_selector.name, assigner_selector] :
       [assigner_selector     , assigner_        ]
     const lazyHandler = AsLazyProperty(selector, assigner)
-    this._addMethod(selector, lazyHandler, VALUE_METHOD, VISIBLE)
+    this._addMethod(selector, lazyHandler, VISIBLE, VALUE_METHOD)
   })
 
   _Type.addSelfMethod(function addLazyProperty(assigner_selector, assigner_) {
@@ -354,7 +356,7 @@ HandAxe(function (
       [assigner_selector.name, assigner_selector] :
       [assigner_selector     , assigner_        ]
     const lazyHandler = AsLazyProperty(selector, assigner)
-    this._addMethod(selector, lazyHandler, FACT_METHOD, VISIBLE)
+    this._addMethod(selector, lazyHandler, VISIBLE, FACT_METHOD)
   })
 
 
@@ -426,7 +428,7 @@ HandAxe(function (
           knowns[tag] = true
           value       = nextDefinitions[tag]
           nextValue   = noCopy ? value :
-            _ValueAsNext(value, asImmutable, visited, context)
+            _CopyProperty(value, asImmutable, visited, context)
           this._setDefinitionAt(tag, nextValue, REINHERIT)
         }
       })
@@ -506,7 +508,7 @@ HandAxe(function (
 
 
   _Type.addMandatorySetter("_setContext", function context(context) {
-    if (_HasOwn.call(this, "context")) {
+    if (_HasOwnHandler.call(this, "context")) {
       return this._attemptToReassignContextError
     }
     this.addSharedProperty("context", context)
@@ -553,7 +555,7 @@ HandAxe(function (
 
 
 
-  _Type.addValueMethod(function _extractArgs(
+  _Type.addValueMethod(function _extractInitArgs(
                               spec_name, supertypes_context_, context__) {
     var spec, name, supertypes, context, _$arg2
     ;[name, spec] = (typeof spec_name === "string") ?
@@ -591,7 +593,7 @@ HandAxe(function (
 
   _Type.addValueMethod(function _init(spec_name, supertypes_context_, context__) {
     const [name, supertypes, context, spec] =
-      this._extractArgs(spec_name, supertypes_context_, context__)
+      this._extractInitArgs(spec_name, supertypes_context_, context__)
     const ancestry   = this._buildAncestry(supertypes)
     const isRootType = this._validateNewSupertypes(supertypes, ancestry)
 
@@ -742,7 +744,7 @@ HandAxe(function (
 
     tags.forEach(tag => {
       const value       = definitions[tag]
-      const nextValue   = _ValueAsNext(value, asImmutable, visited, context)
+      const nextValue   = _CopyProperty(value, asImmutable, visited, context)
       adder.call(this, tag, nextValue)
     })
     return this
@@ -849,6 +851,10 @@ HandAxe(function (
 
   _Type.addValueMethod(function definedSelectors() {
     return OwnSelectorsOf(this._definitions)
+  })
+
+  _Type.addValueMethod(function primaryDefinedSelectors() {
+    return OwnVisiblesOf(this._definitions)
   })
 
   _Type.addValueMethod(function definedPublicSelectors() {

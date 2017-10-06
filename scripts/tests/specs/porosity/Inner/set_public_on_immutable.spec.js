@@ -1127,7 +1127,7 @@ HandAxe._(function (
 
           describe("When the receiver's type is immutable", function () {
             beforeEach(function () {
-              var iCat_          = this.Cat_.asImmutableCopy
+              var iCat_          = this.Cat_.asImmutable
               this.$rind         = iCat_("Rufus", "Siamese-tabby", 18)
               this.$pulp         = this.$rind.this
               this.$inner        = this.$pulp[$INNER]

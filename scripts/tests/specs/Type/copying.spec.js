@@ -42,7 +42,7 @@ HandAxe._(function (
     describe("#copy", function () {
       describe("When called with 0 args", function () {
         beforeEach(function () {
-          this.Cat2 = this.Cat.copy()
+          this.Cat2 = this.Cat.asCopy
         })
 
         describe("The answered copy", function () {

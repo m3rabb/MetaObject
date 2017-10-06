@@ -13,9 +13,9 @@ HandAxe(function (
       NewAssignmentErrorHandler(_DURABLES, "addDurables"))
 
   // addRetroactiveValue
-  _$Something._addMethod("self", AsRetroactiveProperty("self", function self() {
+  _$Something.addValueMethod("self", AsRetroactiveProperty("self", function self() {
     return this[$RIND]
-  }), VALUE_METHOD)
+  }), "INVISIBLE")
 
   // _$Something.addAlias("$", "self")
 
@@ -26,12 +26,10 @@ HandAxe(function (
   // the proxy to force the proper change to occur thru it.
   _$Something.addValueMethod(function _retarget() {
     const $inner = this[$INNER]
-
     if ($inner[IMMUTABLE]) {
       delete this[$DELETE_IMMUTABILITY]
       return this
     }
-
     return BasicSetInvisibly($inner, "_retarget", this)
   })
 
@@ -63,9 +61,9 @@ HandAxe(function (
   })
 
 
-  _$Something._addMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
+  _$Something.addValueMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
     return this.id
-  }, VALUE_METHOD)
+  }, "INVISIBLE")
 
 
 
@@ -108,7 +106,7 @@ HandAxe(function (
 //
 //     Nothing
 //        isNothing
-//       Void
+//       Nil
 //        id
 //        isNil
 

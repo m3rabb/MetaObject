@@ -1,7 +1,7 @@
 HandAxe(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER,
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
-  INVISIBLE, SYMBOL_1ST_CHAR,
+  INVISIBLE, VISIBLE, SYMBOL_1ST_CHAR,
   ASSIGNER_FUNC, BLANKER_FUNC, DISGUISE_PULP, DISGUISE_RIND,
   AsCapitalized, AsDecapitalized, BasicSetInvisibly, CompareSelectors,
   DefineProperty, FreezeSurface, Impermeable, IsArray, KnowFunc, KnownFuncs,
@@ -294,6 +294,14 @@ HandAxe(function (
     return SignalError("Improper arguments to make a Definition!!")
   }
 
+  function ExtractMethodArgs(func_selector, func_, invisible__) {
+    const args = (typeof func_selector === "function") ?
+      [func_selector.name, func_selector, func_      ] :
+      [func_selector     , func_        , invisible__]
+    args[2] = (args[2] !== undefined) ? INVISIBLE : VISIBLE
+    return args
+  }
+
 
   _Shared.AsPropertySymbol                = AsPropertySymbol
   _Shared.AsMembershipSelector            = AsMembershipSelector
@@ -311,6 +319,7 @@ HandAxe(function (
   _Shared.SetAsymmetricProperty           = SetAsymmetricProperty
   _Shared.PropertyAt                      = PropertyAt
   _Shared.AsDefinitionFrom                = AsDefinitionFrom
+  _Shared.ExtractMethodArgs               = ExtractMethodArgs
 
 })
 

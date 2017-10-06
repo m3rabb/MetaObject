@@ -1,5 +1,5 @@
 HandAxe(function (
-  $PULP, $RIND, AddIntrinsicDeclaration, InterMap, _Nothing, _RootContext
+  $PULP, AddIntrinsicDeclaration, InterMap, _Nothing, _RootContext
 ) {
   "use strict"
 
@@ -24,6 +24,6 @@ HandAxe(function (
 //     Nothing
 //        _unknownProperty
 //        isNothing
-//       Void
+//       Nil
 //        id
 //        isNil

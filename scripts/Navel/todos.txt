@@ -274,6 +274,34 @@ HandAxe.AssociativeList
 ==
 addSetterWithAssigner
 
+
+==
+
+addBothValueMethods(function copy_())
+addBothValueMethods(function copy$())
+
+addBothMethods
+addBothValueMethods
+addBothSelfMethods
+
+==
+Add a visibility property to definition
+so that copying of invisible definitions actually works
+
+==
+Consider using this naming convention for permeables
+
+.new$()
+._initFrom$()
+
+execContext (Dog, $Dog, _Dog, Dog$)
+// current, inherited, mutable, permeable
+
+==
+Add HandAxe.AsString <-- for debugging 'something' objects
+
+
+
 ==========
 
 ikigai

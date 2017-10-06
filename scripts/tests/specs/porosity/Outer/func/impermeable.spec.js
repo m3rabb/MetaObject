@@ -188,7 +188,7 @@ HandAxe._(function (Type_, ValueAsName) {
         expect( bat.name ).toBe( "Spooky" )
         expect( bat.kind ).toBe( "Fruit" )
         expect( bat.isImmutable ).toBe( true )
-        expect( bat.oid ).toBe( "1.Bat_" )
+        expect( bat.oid ).toBe( "1._.Bat" )
       })
 
       xit("Answers an instance that's the exactly same as when executing .newAsFact", function () {

@@ -1,0 +1,26 @@
+.$
+
+
+id()
+
+mutableCopy()
+_postInit
+
+mutableCopyExcept("id")
+
+
+asCopy
+
+setId()
+
+_postInit
+
+addRetroactiveValue(function id())
+
+addValueMethod(function id() { return this.oid })
+
+addAlias("id", "oid")
+addAlias("id", "basicId")
+
+
+====================

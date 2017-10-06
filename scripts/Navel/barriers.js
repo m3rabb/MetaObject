@@ -3,7 +3,7 @@ HandAxe(function (
   $IS_DEFINITION, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, $SUPERS,
   IMMEDIATE, IMMUTABLE, IMPLEMENTATION, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
   AlwaysFalse, AlwaysNull, InterMap, IsPublicSelector, KnownFuncs,
-  SetProperty, SpawnFrom, _$Copy, _HasOwn,
+  SetProperty, SpawnFrom, _$Copy, _HasOwnHandler,
   _OwnSelectorsOf, _OwnVisiblesOf,
   AssignmentOfUndefinedError, AssignmentViaSuperError,
   ChangeToImmutableThisError, DeleteFromOutsideError,
@@ -171,7 +171,7 @@ HandAxe(function (
 
     if (value === existing) {
       if (value === _$target[$ROOT][selector]) {
-        if (_HasOwn.call(_$target, selector)) { return true }
+        if (_HasOwnHandler.call(_$target, selector)) { return true }
         if (isImmutable) {
           if (_$target.type[IMMUTABLE])       { return true }
         }
@@ -225,7 +225,7 @@ HandAxe(function (
         value      = _$target[selector]
 
         if (value === value$root) {
-          if (value === undefined || !_HasOwn.call(_$target, selector)) {
+          if (value === undefined || !_HasOwnHandler.call(_$target, selector)) {
             return true // Doesn't have the property, but inherits it from root.
           }
         }

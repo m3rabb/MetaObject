@@ -1,7 +1,7 @@
 HandAxe(function (
   $BARRIER, $INNER, $OUTER, $OUTER_WRAPPER, $PULP, $RIND, $ROOT, IMMUTABLE,
-  AsPropertySymbol, ObjectCopy, FreezeSurface, InnerBarrier, InterMap,
-  InvisibleConfig, ValueAsName, _$Copy, _HasOwn,
+  AsPropertySymbol, FreezeSurface, InnerBarrier, InterMap,
+  InvisibleConfig, ValueAsName, _$Copy, _CopyObject,
   DefineProperty, IsPublicSelector, SetProperty,
   _Shared
 ) {
@@ -59,7 +59,7 @@ HandAxe(function (
           if (result[IMMUTABLE] || result.id != null)        { return result }
           if (result === _receiver) { return _$Copy(_receiver[$INNER], true) }
             return ((_$result = InterMap.get(result))) ?
-              _$Copy(_$result, true)[$RIND] : ObjectCopy(result, true)
+              _$Copy(_$result, true)[$RIND] : _CopyObject(result, true)
         }
       }
     })[name]
@@ -127,7 +127,7 @@ HandAxe(function (
         if (result[IMMUTABLE] || result.id != null)        { return result }
         if (result === _receiver) { return _$Copy(_receiver[$INNER], true) }
         return ((_$result = InterMap.get(result))) ?
-          _$Copy(_$result, true) : ObjectCopy(result, true)
+          _$Copy(_$result, true) : _CopyObject(result, true)
       }
     })[name]
   }
@@ -159,7 +159,7 @@ HandAxe(function (
         if (result[IMMUTABLE] || result.id != null)        { return result }
         if (result === _receiver) { return _$Copy(_receiver[$INNER], true) }
         return ((_$result = InterMap.get(result))) ?
-          _$Copy(_$result, true) : ObjectCopy(result, true)
+          _$Copy(_$result, true) : _CopyObject(result, true)
       }
     })[name]
   }

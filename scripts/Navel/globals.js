@@ -166,13 +166,13 @@
   }
 
   function AsCapitalized(word) {
-    const match = CAP_WORD_MATCHER.exec(word)
-    return `${match[1]}${match[2].toUpperCase()}${match[3]}`
+    const [ , prefix, first, remaining] = CAP_WORD_MATCHER.exec(word)
+    return `${prefix}${first.toUpperCase()}${remaining}`
   }
 
   function AsDecapitalized(word) {
-    const match = CAP_WORD_MATCHER.exec(word)
-    return `${match[1]}${match[2].toLowerCase()}${match[3]}`
+    const [ , prefix, first, remaining] = CAP_WORD_MATCHER.exec(word)
+    return `${prefix}${first.toLowerCase()}${remaining}`
   }
 
   function ValueAsName(value) {

@@ -33,8 +33,9 @@ HandAxe(function (
     }
     else {
       durables = _$source[_DURABLES] || FindAndSetDurables(_$source)
-      next      = durables.length
+      if (!_$target[_DURABLES]) { _$target[_DURABLES] = durables }
 
+      next = durables.length
       while (next--) {
         selector = durables[next]
         if (selector === exceptSelector_) { continue }
@@ -43,51 +44,69 @@ HandAxe(function (
         if (selector[0] !== "_") {  // public selector
           $target[selector] = (value === source) ? (value = target) : value
         }                           // private selector
-        else { value = _ValueAsNext(value, asImmutable, visited, context) }
+        else { value = _CopyProperty(value, asImmutable, visited, context) }
 
         _$target[selector] = value
       }
-
-      _$target[_DURABLES] = durables
     }
 
+    const _postInit    = _$target._postInit
     const immutability = (asImmutable !== undefined) ?
       asImmutable : _$source[IMMUTABLE] || false
 
-    if (_$target._postInit) {
-      const result = _$target._postInit.call(_target)
+    if (_postInit) {
+      const result = _postInit.call(_target)
       if (result !== _target && result !== undefined) {
-        return immutability ? result.asImmutable : result
+        return immutability ? result.beImmutable : result
       }
     }
 
-    if (immutability) {
-      $target[IMMUTABLE] = _$target[IMMUTABLE] = true
-    }
+    if (immutability) { $target[IMMUTABLE] = _$target[IMMUTABLE] = true }
 
     return _$target
   }
 
 
-  const ReliableObjectCopy = function copy(visited_asImmutable_, visited_, context__) {
-    const [asImmutable, visited, context] =
-      (typeof visited_asImmutable_ === "object") ?
-        [undefined, visited_asImmutable_, visited_ ] :
-        [visited_asImmutable_,  visited_, context__]
-
-    return (this[IMMUTABLE] && asImmutable !== false) ?
-      this : ObjectCopy(this, asImmutable, visited, context)
+  function ExtractCopyArgs(...args) {
+    // args --> asImmutable_, visited_, context_
+    var next, a, imm, map, ctx
+    next = 0
+    a = args[next]
+    if (a.constructor === Object) {
+      return [args.asImmutable, args.visited, args.context]
+    }
+    if (a == null || typeof a === "boolean")    { imm = a; a = args[++next] }
+    if (a == null || a.constructor === WeakMap) { map = a; a = args[++next] }
+    ctx = a
+    return [imm, map, ctx]
   }
 
 
-  // Note: The ObjectCopy is only called AFTER confirming that the source
-  //       is NOT a fact!!! ***
-  function ObjectCopy(source, asImmutable, visited, context) {
-    var target, next, value, selector, selectors
-    visited = visited || new WeakMap()
+  const GenericCopyHandler = function copy(asImmutable_, visited_, context_) {
+    var traversed, context
+    const optionals = ExtractCopyArgs(asImmutable_, visited_, context_)
+    const visited   = optionals[1]
 
+    if (visited && (traversed = visited.get(this))) { return traversed }
+    if (this[IMMUTABLE] && optionals[0] !== false) {
+      // When the value has an id, we always want the same value
+      if (this.id != null)                               { return this }
+      context = optionals[2]
+      if (!context || this.context === context)          { return this }
+    }
+
+    return _CopyObject(this, ...optionals)
+  }
+
+
+  // Note: The _CopyObject is only called AFTER confirming that the source
+  //       is NOT a fact!!! ***
+  function _CopyObject(source, asImmutable, visited, context) {
+    var target, next, value, selector, durables
     const immutability = (asImmutable !== undefined) ?
       asImmutable : source[IMMUTABLE] ? true : false
+
+    visited = visited || new WeakMap()
 
     switch (source.constructor) {
       case WeakMap : return source
@@ -95,7 +114,7 @@ HandAxe(function (
 
       default : // Custom Object
         if ((target = source.copy)) {
-          if (target !== ReliableObjectCopy) {
+          if (target !== GenericCopyHandler) {
             // If copy method was a getter or precopied object
             if (typeof target === "function") { target = source.copy(visited) }
 
@@ -120,16 +139,14 @@ HandAxe(function (
       case Object :
         visited.set(source, (target = target || {})) // Handles cyclic objects
 
-        selectors = source[_DURABLES] || FindDurables(source)
-        if (immutability && !target[_DURABLES]) {
-          target[_DURABLES] = selectors
-        }
-        next = selectors.length
+        durables = source[_DURABLES] || FindDurables(source)
+        if (immutability && !target[_DURABLES]) { target[_DURABLES] = durables }
 
+        next = durables.length
         while (next--) {
-          selector         = selectors[next]
+          selector         = durables[next]
           value            = source[selector]
-          target[selector] = _ValueAsNext(value, asImmutable, visited, context)
+          target[selector] = _CopyProperty(value, asImmutable, visited, context)
         }
       break
 
@@ -139,7 +156,7 @@ HandAxe(function (
 
         while (next--) {
           value        = source[next]
-          target[next] = _ValueAsNext(value, asImmutable, visited, context)
+          target[next] = _CopyProperty(value, asImmutable, visited, context)
         }
       break
 
@@ -147,8 +164,8 @@ HandAxe(function (
         visited.set(source, (target = new Map())) // Handles cyclic objects
 
         source.forEach((value, key) => {
-          var nextKey   = _ValueAsNext(key  , asImmutable, visited, context)
-          var nextValue = _ValueAsNext(value, asImmutable, visited, context)
+          const nextKey   = _CopyProperty(key  , asImmutable, visited, context)
+          const nextValue = _CopyProperty(value, asImmutable, visited, context)
           target.set(nextKey, nextValue)
         })
       break
@@ -157,7 +174,7 @@ HandAxe(function (
         visited.set(source, (target = new Set())) // Handles cyclic objects
 
         source.forEach((value) => {
-          var nextValue = _ValueAsNext(value, asImmutable, visited, context)
+          const nextValue = _CopyProperty(value, asImmutable, visited, context)
           target.add(nextValue)
         })
       break
@@ -172,7 +189,7 @@ HandAxe(function (
 
 
   function ObjectSetImmutable(target, inPlace, visited) {
-    var keys, key, values, value, next, nextKey, nextValue, selectors, selector
+    var keys, key, values, value, next, nextKey, nextValue, selector, durables
 
     visited = visited || new WeakMap()
     visited.set(target, target)
@@ -182,15 +199,13 @@ HandAxe(function (
       case WeakSet : return target
 
       default :
-        selectors = target[_DURABLES] || FindAndSetDurables(target)
-        next       = selectors.length
+        durables = target[_DURABLES] || FindAndSetDurables(target)
 
+        next = durables.length
         while (next--) {
-          selector  = selectors[next]
-          value     = target[selector]
-          nextValue = ValueAsFact(value, inPlace, visited)
-          if (nextValue === value) { continue }
-          target[selector] = nextValue
+          selector         = durables[next]
+          value            = target[selector]
+          target[selector] = ValueAsFact(value, inPlace, visited)
         }
       break
 
@@ -198,10 +213,8 @@ HandAxe(function (
         next = target.length
 
         while (next--) {
-          value     = target[next]
-          nextValue = ValueAsFact(value, inPlace, visited)
-          if (nextValue === value) { continue }
-          target[next] = nextValue
+          value            = target[next]
+          target[selector] = ValueAsFact(value, inPlace, visited)
         }
       break
 
@@ -213,9 +226,7 @@ HandAxe(function (
           nextKey   = ValueAsFact(key  , inPlace, visited)
           nextValue = ValueAsFact(value, inPlace, visited)
 
-          if (nextKey !== key) {
-            target.delete(key)
-          }
+          if (nextKey !== key) { target.delete(key) }
           else if (nextValue === value) { continue }
           target.set(nextKey, nextValue)
         }
@@ -257,56 +268,56 @@ HandAxe(function (
       return ObjectSetImmutable(value, true, visited__)
     }
     return (_$value) ?
-      _$Copy(  _$value, true, visited__)[$RIND] :
-      ObjectCopy(value, true, visited__)
+      _$Copy(   _$value, true, visited__)[$RIND] :
+      _CopyObject(value, true, visited__)
   }
 
 
-  function ValueAsNext(value, visited_asImmutable_, visited_, context__) {
-    const [asImmutable, visited, context] =
-      (typeof visited_asImmutable_ === "object") ?
-        [undefined           , visited_asImmutable_, visited_ ] :
-        [visited_asImmutable_, visited_            , context__]
-    return _ValueAsNext(value, asImmutable, visited, context)
+
+  function CopyProperty(value, asImmutable_, visited_, context_) {
+    const optionals = ExtractCopyArgs(asImmutable_, visited_, context_)
+    return _CopyProperty(value, ...optionals)
   }
 
-  function _ValueAsNext(value, asImmutable, visited, context) {
+  function _CopyProperty(value, asImmutable, visited, context) {
     var traversed, _$value, _value
 
     switch(typeof value) {
-      default : return value
-
       case "function" :
-        if ((_$value = InterMap.get(value)) === undefined)  { return value }
-        if ((traversed = visited.get(value)))           { return traversed }
-
+           // Answer value if it's an ordinary function
+        if ((_$value = InterMap.get(value)) === undefined)    { return value }
+        if ((traversed = visited.get(value)))             { return traversed }
         _value = _$value[$PULP]
-        if (_value.id != null)                              { return value }
+           // When the value has an id, we always want the same value
+        if (_value.id != null)                                { return value }
         if (_$value[IMMUTABLE]) {
-          if (!context || _value.context === context)       { return value }
-          // If the value is simple in that it only references primitive
-          // values, such that it only needs to use _BasicSetImmutable
-          // (e.g. Definitions), then simply answer the immutable value.
-          if (_$value._setImmutable === _BasicSetImmutable) { return value }
+          if (!context || _value.context === context)         { return value }
+          // When the context is different, it's properties may need to be
+          // created from the corresponding types in the new context.
+          // But if it used _BasicSetImmutable (e.g. Definitions), then it
+          // only refs primitive values, so no need to make a new copy.
+          if (_$value._setImmutable === _BasicSetImmutable)   { return value }
         }
         return _$Copy(_$value, asImmutable, visited, context)[$RIND]
 
       case "object" :
-        if (value === null)                                 { return value }
-        if ((traversed = visited.get(value)))           { return traversed }
-        if (value.id != null)                               { return value }
+        if (value === null)                                   { return value }
+        if ((traversed = visited.get(value)))             { return traversed }
+        if (value.id != null)                                 { return value }
         if (value[IMMUTABLE]) {
-          if (!context || value.context === context)        { return value }
+          if (context === undefined)                          { return value }
           if ((_$value = InterMap.get(value))) {
-            return (_$value._setImmutable === _BasicSetImmutable) ?
-              value : _$Copy(_$value, asImmutable, visited, context)[$RIND]
+            if (_$value[$PULP].context === context)           { return value }
+            if (_$value._setImmutable === _BasicSetImmutable) { return value }
           }
         }
-        else if ((_$value = InterMap.get(value))) {
-          return _$Copy(_$value, asImmutable, visited, context)[$RIND]
-        }
+        else { _$value = InterMap.get(value) }
 
-        return ObjectCopy(value, asImmutable, visited, context)
+        return (_$value) ?
+          _$Copy(   _$value, asImmutable, visited, context)[$RIND] :
+          _CopyObject(value, asImmutable, visited, context)
+
+      default : return value
     }
   }
 
@@ -316,38 +327,56 @@ HandAxe(function (
   // false      make mutable copy
   // undefined  make copy of same mutability as the receiver
 
-  function ValueCopy(value, visited_asImmutable_, visited_, context__) {
-    const [asImmutable, visited, context] =
-      (typeof visited_asImmutable_ === "object") ?
-        [undefined           , visited_asImmutable_, visited_ ] :
-        [visited_asImmutable_, visited_            , context__]
-    return _ValueCopy(value, asImmutable, visited, context)
+  function CopyValue(value, asImmutable_, visited_, context_) {
+    const optionals = ExtractCopyArgs(asImmutable_, visited_, context_)
+    return _CopyValue(value, ...optionals)
   }
 
-  function _ValueCopy(value, asImmutable, visited, context) {
-    var _$value
+  function ValueAsCopy(value) { return _CopyValue(value) }
+
+
+  function _CopyValue(value, asImmutable, visited, context) {
+    var traversed, _$value, _value
 
     switch (typeof value) {
       case "function" :
-        if ((_$value = InterMap.get(value))) {
-          return _$value.copy.call(_$value[$PULP], asImmutable, visited, context)
+           // Answer value if it's an ordinary function
+        if ((_$value = InterMap.get(value)) === undefined)    { return value }
+        if (visited && (traversed = visited.get(value)))  { return traversed }
+        if (_$value[IMMUTABLE] && asImmutable !== false) {
+          _value = _$value[$PULP]
+          // When the value has an id, we always want the same value
+          if (_value.id != null)                              { return value }
+          if (!context || _value.context === context)         { return value }
+          // When the context is different, it's properties may need to be
+          // created from the corresponding types in the new context.
+          // But if it used _BasicSetImmutable (e.g. Definitions), then it
+          // only refs primitive values, so no need to make a new copy.
+          if (_$value._setImmutable === _BasicSetImmutable)   { return value }
         }
-        if (value[IMMUTABLE] === asImmutable) { return value }
-        if (asImmutable === undefined)        { return value }
-        return (context) ? value : InvertedFuncCopyError(value)
+        return _$Copy(_$value, asImmutable, visited, context)[$RIND]
 
       case "object"   :
-        if (value === null) { return value }
-        if (!context) {
-          if (value[IMMUTABLE] && asImmutable !== false) { return value }
+        if (value === null)                                   { return value }
+        if (visited && (traversed = visited.get(value)))  { return traversed }
+        if (value[IMMUTABLE] && asImmutable !== false) {
+          // When the value has an id, we always want the same value
+          if (value.id != null)                               { return value }
+          if (context === undefined)                          { return value }
+          if ((_$value = InterMap.get(value))) {
+            if (_$value[$PULP].context === context)           { return value }
+            if (_$value._setImmutable === _BasicSetImmutable) { return value }
+          }
         }
-        return ((_$value = InterMap.get(value))) ?
-          _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
-          ObjectCopy(value, asImmutable, visited, context)
-    }
-    return value
-  }
+        else { _$value = InterMap.get(value) }
 
+        return (_$value) ?
+          _$Copy(   _$value, asImmutable, visited, context)[$RIND] :
+          _CopyObject(value, asImmutable, visited, context)
+
+        default : return value
+    }
+  }
 
   function ValueAsImmutable(value) {
     switch (typeof value) {
@@ -356,10 +385,11 @@ HandAxe(function (
           value.asImmutable || InvertedFuncCopyError(value)
 
       case "object"   :
-        return value && value.asImmutable ||
-          (value[IMMUTABLE] ? value : ObjectCopy(value, true))
+        return (value === null) ? null : value.asImmutable ||
+          (value[IMMUTABLE] ? value : _CopyObject(value, true))
+
+      default : return value
     }
-    return value
   }
 
   function ValueBeImmutable(value, inPlace_) {
@@ -381,15 +411,16 @@ HandAxe(function (
 
 
   _Shared._$Copy                  = _$Copy
-  _Shared.ObjectCopy              = ObjectCopy
-  _Shared.ObjectSetImmutable      = ObjectSetImmutable  // Necessary???s
-  _Shared._ValueAsNext            = _ValueAsNext
-  _Shared._ValueCopy              = _ValueCopy
+  _Shared._CopyObject             = _CopyObject
+  _Shared._CopyProperty           = _CopyProperty
+  _Shared._CopyValue              = _CopyValue
+  _Shared.ExtractCopyArgs         = ExtractCopyArgs
 
-  Shared.reliableObjectCopy       = KnowFunc(ReliableObjectCopy)
+  Shared.genericCopyHandler       = KnowFunc(GenericCopyHandler)
+  Shared.valueAsCopy              = KnowFunc(ValueAsCopy)
   Shared.valueAsFact              = KnowFunc(ValueAsFact)
-  Shared.valueAsNext              = KnowFunc(ValueAsNext)
-  Shared.valueCopy                = KnowFunc(ValueCopy)
+  Shared.copyProperty             = KnowFunc(CopyProperty)
+  Shared.copyValue                = KnowFunc(CopyValue)
   Shared.valueAsImmutable         = KnowFunc(ValueAsImmutable)
   Shared.valueBeImmutable         = KnowFunc(ValueBeImmutable)
 
@@ -400,42 +431,6 @@ HandAxe(function (
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
-
-
-// function ValueAsNext(value, asImmutable, visited, context) {
-//   var traversed, _$value
-//
-//   switch(typeof value) {
-//     default         : return value
-//     case "function" : if (!value[$RIND])  { return value } else { break }
-//     case "object"   : if (value === null) { return null  } else { break }
-//   }
-//
-//   if ((traversed = visited.get(value)))              { return traversed }
-//   if (value[IMMUTABLE]) {
-//     if (!context)                                      { return value }
-//     if (value.id != null)                              { return value }
-//
-//     // If we're copying selectors to a new object in a new context, but
-//     // the context is the same...
-//     if ((_$value = InterMap.get(value)) && context === _$value.context) {
-//       // ... and the tranya value is already in that context ...
-//           // ... and the value is simple in that it only references primitive
-//           // values, such that it only needs to use _BasicSetImmutable
-//           // (e.g. Definitions), then simply answer the immutable value.
-//       if (_$value._setImmutable === _BasicSetImmutable) { return value }
-//     }
-//   }
-//   else {
-//     if (value.id != null)                               { return value }
-//     _$value = InterMap.get(value)
-//   }
-//
-//   return (_$value) ?
-//     _$Copy(  _$value, asImmutable, visited, context)[$RIND] :
-//     ObjectCopy(value, asImmutable, visited, context)
-// }
-
 
 // function InAtPut(source, selector, value) {
 //   var isImmutable = source[IMMUTABLE]

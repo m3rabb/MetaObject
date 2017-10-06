@@ -48,6 +48,11 @@ HandAxe(function (
     return `${name}${separator}${oid}`
   })
 
+
+  // _$Intrinsic.addAlias("jasmineToString", _Thing.definitionAt("toString"))
+  // Is this still necessary???
+
+
 })
 
 
@@ -55,30 +60,6 @@ HandAxe(function (
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
 
-
-  // _Thing.addValueMethod(function toString(_) { // eslint-disable-line
-  //   const _this = this[$PULP]
-  //   const name = _this.name
-  //   return `${name}${(name) ? "," : ""}${_this.oid}`
-  // })
-
-  // _$Intrinsic.addAlias("jasmineToString", _Thing.definitionAt("toString"))
-  // Is this still necessary???
-
-
-  // _Thing.addMethod(function toString(_) { // eslint-disable-line
-  //   const name       = this.name
-  //   const namePrefix = `${name}${(name) ? "," : ""}`
-  //   return `${namePrefix}${this.oid}`
-  // })
-
-
-
-
-
-  // _Thing.addDeclaration("_initFrom_")
-  // _Thing.addDeclaration("_postInit")
-  // _Thing.addDeclaration("_setPropertiesImmutable")
 
 
 

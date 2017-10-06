@@ -3,7 +3,7 @@ HandAxe(function (
   DISGUISE_PULP, DISGUISE_RIND, IMMUTABLE, PROOF, SYMBOL_1ST_CHAR, _DURABLES,
   ASSIGNER_FUNC, BLANKER_FUNC, HANDLER_FUNC, INNER_FUNC,
   OUTER_FUNC, SAFE_FUNC, SUPER_FUNC, TAMED_FUNC,
-  InterMap, KnowAndSetFuncImmutable, KnownFuncs, ObjectCopy, _$Copy,
+  InterMap, KnowAndSetFuncImmutable, KnownFuncs, _$Copy, _CopyObject,
   AssignmentOfUndefinedError, AssignmentToPrivateSymbolError,
   DetectedInnerError,
   _Shared
@@ -47,17 +47,17 @@ HandAxe(function (
           return AssignmentOfUndefinedError(_$target, selector)
 
         case "object" :
-               if (value === null)                {        /* NOP */        }
-          else if (value[$IS_INNER] === PROOF)    {
-            if (value === _$target[$PULP])        { value = _$target[$RIND] }
+               if (value === null)                 {        /* NOP */        }
+          else if (value[$IS_INNER] === PROOF) {
+            if (value === _$target[$PULP])         { value = _$target[$RIND] }
            // Safety check: detect failure to use 'this.self' elsewhere.
             else { return DetectedInnerError(_$target, value) }
           }
-          else if (value[IMMUTABLE])              {        /* NOP */        }
-          else if (value.id != null)              {        /* NOP */        }
-          else if (value === _$target[$RIND])     {        /* NOP */        }
+          else if (value[IMMUTABLE])               {        /* NOP */        }
+          else if (value.id != null)               {        /* NOP */        }
+          else if (value === _$target[$RIND])      {        /* NOP */        }
           else {   value = (_$value = InterMap.get(value)) ?
-                     _$Copy(_$value, true)[$RIND] : ObjectCopy(value, true) }
+                     _$Copy(_$value, true)[$RIND] : _CopyObject(value, true) }
           break
 
         case "function" : // LOOK: will catch Type things!!!

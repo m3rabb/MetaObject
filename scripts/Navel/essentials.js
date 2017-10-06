@@ -228,13 +228,9 @@ HandAxe(function (
 
 
 
-  const _AddMethod = function _addMethod(func_selector, ...remaining__) {
-    const [selector, handler, mode = FACT_METHOD, visibility, property] =
-      (typeof func_selector === "function") ?
-        [func_selector.name, func_selector, ...remaining__] :
-        [func_selector, ...remaining__]
+  const _AddMethod = function _addMethod(selector, handler, visibility, mode, property) {
     const def = this.context.Definition(selector, handler, mode, property)
-    return this._setDefinitionAt(def.tag, def, visibility || INVISIBLE)
+    return this._setDefinitionAt(def.tag, def, visibility)
   }
 
 

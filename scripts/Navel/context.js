@@ -7,7 +7,8 @@ HandAxe(function (
   DefaultContext, Definition, Definition_init, EmptyThingAncestry,
   ExtractParamNames, InterMap, IsSubtypeOfThing,
   RootContext, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
-  ValueBeImmutable, ValueIsSomething, _HasOwn, _ValueAsNext, _ValueCopy,
+  ValueIsSomething, ValueBeImmutable,
+  _CopyProperty, _CopyValue, _HasOwnHandler,
   OwnKeysOf, _OwnKeysOf,
   _BasicNew, _Context
 ) {
@@ -94,7 +95,8 @@ HandAxe(function (
 
   _Context.addValueMethod(function ownAt(selector) {
     const entries = this._knownEntries
-    return _HasOwn.call(entries, selector) ? entries[selector] : undefined
+    return _HasOwnHandler.call(entries, selector) ?
+      entries[selector] : undefined
   })
 
 
@@ -218,6 +220,12 @@ HandAxe(function (
   })
 
 
+  // myContext(function (Dog, _Dog, Dog_, Dog$) {})
+  //
+  //  Dog   current
+  //  _Dog  mutable copy
+  //  $Dog  inherited
+  //  Dog_  permeable copy
 
   _Context.addValueMethod(function newSub(execFunc) {
     return this._exec(execFunc, true)
@@ -412,7 +420,7 @@ HandAxe(function (
 
 
   function ComposeArg(_$execContext, paramSpec, marked, visited) {
-    var Type, arg, context
+    var arg
     const { selector : name, inheritedValue, asInherited,
             asMutable, asPermeable, isType } = paramSpec
     const entries     = _$execContext._knownEntries
@@ -423,22 +431,22 @@ HandAxe(function (
     if (value === null) { return     null       }
     if (value === undefined) {
       if (!(asMutable && name.match(TYPE_NAME_MATCHER))) { return value }
-      Type = entries.Type || RootContext.Type
+      const Type = entries.Type || RootContext.Type
       arg  = Type.new(name)
     }
     else {
       if (asPermeable) {
-        context = (value === inheritedValue) ? null : execContext
-        arg = _ValueCopy(value, false, visited, context)
+        const context = (value === inheritedValue) ? null : execContext
+        arg = _CopyValue(value, false, visited, context)
         return (arg === value) ? arg : BePermeable(arg, value[IMMUTABLE])
       }
-      if ( isType  ) { return value  }
+      if ( isType  ) { return value }
       if (asMutable) {
-        arg = _ValueCopy(value, false, visited, execContext)
+        arg = _CopyValue(value, false, visited, execContext)
       }
       else {
         if (!marked[MUTABLE]) { return value }
-        arg = _ValueAsNext(value, value[IMMUTABLE], visited, execContext)
+        arg = _CopyProperty(value, value[IMMUTABLE], visited, execContext)
       }
     }
 

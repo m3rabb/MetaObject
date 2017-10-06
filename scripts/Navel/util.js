@@ -26,7 +26,7 @@ HandAxe(function (
 
 
 
-  const _HasOwn        = Object.prototype.hasOwnProperty // ._hasOwn
+  const _HasOwnHandler = Object.prototype.hasOwnProperty // ._hasOwn
   const _OwnVisiblesOf = Object.keys
   const _OwnNamesOf    = Object.getOwnPropertyNames
   const _OwnSymbolsOf  = Object.getOwnPropertySymbols
@@ -218,7 +218,7 @@ HandAxe(function (
 
 
   function ValueHasOwn(value, selector) {
-    return (value != null) && _HasOwn.call(value, selector)
+    return (value != null) && _HasOwnHandler.call(value, selector)
   }
 
   function ValueHas(value, selector) {
@@ -403,7 +403,7 @@ HandAxe(function (
       family.push(param)
     })
 
-    var suffixes      = OwnKeysOf(families).sort()
+    var suffixes      = _OwnKeysOf(families).sort()
     var finalSuffixes = []
 
     suffixes.forEach(suffix => {
@@ -486,7 +486,7 @@ HandAxe(function (
   Shared.findDurables             = KnowFunc(FindDurables)
 
 
-  _Shared._HasOwn                   = _HasOwn // ._hasOwn
+  _Shared._HasOwnHandler            = _HasOwnHandler // ._hasOwn
   _Shared._KnownVisiblesOf          = _KnownVisiblesOf
   _Shared._KnownNamesOf             = _KnownNamesOf
   _Shared._KnownSelectorsOf         = _KnownSelectorsOf

@@ -18,9 +18,10 @@ HandAxe(function (
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   AsDefinitionFrom, BasicSetInvisibly, CompareSelectors,
-  CompletelyDeleteProperty, DiffAndSort, FindAndSetDurables, GlazeImmutable,
-  MakeDefinitionsInfrastructure, NewUniqueId, PropertyAt, SetDefinition,
-  SpawnFrom, ValueAsFact, ValueAsName, _HasOwn, _$Copy, _$Intrinsic,
+  CompletelyDeleteProperty, DiffAndSort, ExtractCopyArgs,
+  FindAndSetDurables, GlazeImmutable, MakeDefinitionsInfrastructure,
+  NewUniqueId, PropertyAt, SetDefinition, SpawnFrom, ValueAsFact, ValueAsName,
+  _BasicSetImmutable, _HasOwnHandler, _$Copy, _$Intrinsic,
   PrivateAccessFromOutsideError, SignalError,
   InterMap, PropertyToSymbolMap,
   _PrimaryPublicSelectorsOf, _PrimarySelectorsOf,
@@ -29,6 +30,12 @@ HandAxe(function (
   _KnownNamesOf, _KnownSelectorsOf, _KnownVisiblesOf
 ) {
   "use strict"
+
+
+  _$Intrinsic.addDeclaration("_initFrom_")
+  _$Intrinsic.addDeclaration("_postInit")
+  _$Intrinsic.addDeclaration("_setPropertiesImmutable")
+
 
 
   _$Intrinsic.addValueMethod(function isMutable() {
@@ -46,39 +53,54 @@ HandAxe(function (
 
 
 
-  _$Intrinsic.addValueMethod(function copy(
-    visited_asImmutable_, visited_, context__, exceptSelector___
-  ) {
-    const $inner = this[$INNER]
-    const [asImmutable, visited, context, selector] =
-      (typeof visited_asImmutable_ === "object") ?
-        [undefined, visited_asImmutable_, visited_, context__] :
-        [visited_asImmutable_, visited_, context__, exceptSelector___]
-
-    if ($inner[IMMUTABLE] && asImmutable !== false) {
-      if (!context || $inner.context === context) { return $inner[$RIND] }
+  _$Intrinsic.addValueMethod(function copy(asImmutable_, visited_, context_) {
+    var _value, context
+    const $inner    = this[$INNER]
+    const optionals = ExtractCopyArgs(asImmutable_, visited_, context_)
+    if ($inner[IMMUTABLE] && optionals[0] !== false) {
+      _value = this[$PULP]
+      // When the value has an id, we always want the same value
+      if (_value.id != null)                         { return this }
+      context = optionals[2]
+      if (!context || _value.context === context)    { return this }
+      // When the context is different, it's properties may need to be
+      // created from the corresponding types in the new context.
+      // But if it used _BasicSetImmutable (e.g. Definitions), then it
+      // only refs primitive values, so no need to make a new copy.
+      if (this._setImmutable === _BasicSetImmutable) { return this }
     }
-    return _$Copy($inner, asImmutable, visited, context, selector)[$RIND]
+    return _$Copy($inner, ...optionals)[$RIND]
   })
 
-  _$Intrinsic.addValueMethod(function immutableCopy(visited_, context__) {
+  _$Intrinsic.addValueMethod(function immutableCopy(visited_, context_) {
+    var _value, optionals, context
     const $inner = this[$INNER]
     if ($inner[IMMUTABLE]) {
-      if (!context__ || $inner.context === context__) { return $inner[$RIND] }
+      _value = this[$PULP]
+      // When the value has an id, we always want the same value
+      if (_value.id != null)                         { return this }
+      optionals = ExtractCopyArgs(true, visited_, context_)
+      context   = optionals[2]
+      if (!context || _value.context === context)    { return this }
+      if (this._setImmutable === _BasicSetImmutable) { return this }
     }
-    return _$Copy($inner, true, visited_, context__)[$RIND]
+    else { optionals = ExtractCopyArgs(true, visited_, context_) }
+    return _$Copy($inner, ...optionals)[$RIND]
   })
 
-  _$Intrinsic.addValueMethod(function mutableCopy(visited_, context__) {
-    return _$Copy(this[$INNER], false, visited_, context__)[$RIND]
+  _$Intrinsic.addValueMethod(function mutableCopy(visited_, context_) {
+    const optionals = ExtractCopyArgs(false, visited_, context_)
+    return _$Copy(this[$INNER], ...optionals)[$RIND]
   })
 
-  _$Intrinsic.addValueMethod(function mutableCopyExcept(selector, visited_, context__) {
-    return _$Copy(this[$INNER], false, visited_, context__, selector)[$RIND]
+  _$Intrinsic.addValueMethod(function mutableCopyExcept(selector, visited_, context_) {
+    const optionals = ExtractCopyArgs(false, visited_, context_)
+    return _$Copy(this[$INNER], ...optionals, selector)[$RIND]
   })
 
-  // Thing.add(function _nonCopy() {
-  //   return (this[IS_FACT] === IMMUTABLE) ? this._newBlank() : this
+
+  // _$Intrinsic.addValueMethod(function _nonCopy() {
+  //   return this[IMMUTABLE] ? this._newBlank()[$RIND] : this
   // })
 
 
@@ -87,11 +109,7 @@ HandAxe(function (
     return ($inner[IMMUTABLE] ? $inner : _$Copy($inner))[$RIND]
   })
 
-  _$Intrinsic.addValueMethod(function asMutableCopy() {
-    return _$Copy(this[$INNER], false)[$RIND]
-  })
-
-  _$Intrinsic.addValueMethod(function asImmutableCopy() {
+  _$Intrinsic.addValueMethod(function asImmutable() {
     const $inner = this[$INNER]
     return ($inner[IMMUTABLE] ? $inner : _$Copy($inner, true))[$RIND]
   })
@@ -103,23 +121,16 @@ HandAxe(function (
 
   _$Intrinsic.addValueMethod(function asFact() {
     const $inner = this[$INNER]
-    return ($inner[IMMUTABLE] || ($inner.id != null)) ?
+    return ($inner[IMMUTABLE] || $inner.id != null) ?
       $inner : _$Copy($inner, true)[$RIND]
   })
 
-  _$Intrinsic.addAlias("asImmutable", "asImmutableCopy")
 
 
-  // _$Intrinsic.addMethod(function _basicGet(property) {
-  //
-  // }, BASIC_VALUE_METHOD)
-
-
-  _$Intrinsic.addValueMethod(function setImmutable(visited_inPlace_, visited_) {
+  _$Intrinsic.addValueMethod(function setImmutable(inPlace_, visited_) {
     if (this[IMMUTABLE]) { return this }
-    const [inPlace, visited] = (typeof visited_inPlace_ === "object") ?
-      [undefined, visited_inPlace_] : [visited_inPlace_, visited_]
-
+    const [inPlace, visited] = (typeof inPlace_ === "object") ?
+      [undefined, inPlace_] : [inPlace_, visited_]
     return this._setImmutable(inPlace, visited)
   })
 
@@ -174,7 +185,7 @@ HandAxe(function (
 
 
 
-  _$Intrinsic.addValueMethod("_hasOwn", _HasOwn)
+  _$Intrinsic.addValueMethod("_hasOwn", _HasOwnHandler)
 
   _$Intrinsic.addValueMethod(function hasOwn(selector) {
     switch (selector[0]) {
@@ -272,8 +283,8 @@ HandAxe(function (
 
 
   _$Intrinsic.addValueMethod(function basicId() {
-    const suffix = this.isPermeable ? "_" : ""
-    return `#${this.uid}.${this.type.name}${suffix}`
+    const permeability = this.isPermeable ? "._" : ""
+    return `#${this.uid}${permeability}.${this.type.name}`
   })
 
 
@@ -284,8 +295,8 @@ HandAxe(function (
 
 
   _$Intrinsic.addValueMethod(function oid() {
-    const suffix = this.isPermeable ? "_" : ""
-    return `${this.iid}.${this.type.formalName}${suffix}`
+    const permeability = this.isPermeable ? "._" : ""
+    return `${this.iid}${permeability}.${this.type.formalName}`
   })
 
 
@@ -465,9 +476,9 @@ HandAxe(function (
 
 
 
-  _$Intrinsic._addMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
+  _$Intrinsic.addValueMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
     return this.toString()
-  }, VALUE_METHOD)
+  }, "INVISIBLE")
 
 
 
