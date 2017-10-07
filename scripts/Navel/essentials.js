@@ -228,7 +228,7 @@ HandAxe(function (
 
 
 
-  const _AddMethod = function _addMethod(selector, handler, visibility, mode, property) {
+  const _AddDefinition = function _addDefinition(selector, handler, visibility, mode, property) {
     const def = this.context.Definition(selector, handler, mode, property)
     return this._setDefinitionAt(def.tag, def, visibility)
   }
@@ -243,7 +243,7 @@ HandAxe(function (
   _Shared.Context_atPut                 = Context_atPut
   _Shared.Context_externalPrivateAccess = Context_externalPrivateAccess
   _Shared.Context_unknownProperty       = Context_unknownProperty
-  _Shared._AddMethod                    = _AddMethod
+  _Shared._AddDefinition                = _AddDefinition
 
 })
 

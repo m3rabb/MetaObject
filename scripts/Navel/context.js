@@ -188,7 +188,7 @@ HandAxe(function (
     var contexts = this._mapKind($IS_CONTEXT, where, selection)
     var uniques  = new Set(contexts)
     return GlazeImmutable([...uniques])
-  })
+  }, "INVISIBLE")
 
   _Context.addValueMethod(function knownContexts() {
     return this._getContexts("knownKeys", VALUE)
@@ -217,7 +217,7 @@ HandAxe(function (
 
   _Context.addSelfMethod(function _entryOvershadowsPropertyError(selector) {
     return this._signalError(`Entry cannot overshadow existing property '${selector}'!!`)
-  })
+  }, "INVISIBLE")
 
 
   // myContext(function (Dog, _Dog, Dog_, Dog$) {})
@@ -251,7 +251,7 @@ HandAxe(function (
     const mutability = marked[MUTABLE]
     return mutability ||
       this[IMMUTABLE] && (mutability !== undefined) || false
-  })
+  }, "INVISIBLE")
 
   _Context.addValueMethod(function _exec(execFunc, forceAsCopy_) {
     const sourceContext = this[$RIND]

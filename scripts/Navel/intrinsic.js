@@ -468,11 +468,11 @@ HandAxe(function (
   _$Intrinsic.addValueMethod(function _externalPrivateAccessError(selector) {
     return this._signalError(
       `External access to private property '${ValueAsName(selector)}' is forbidden!!`)
-  })
+  }, "INVISIBLE")
 
   _$Intrinsic.addValueMethod(function _unknownPropertyError(selector) {
     return this._signalError(`Unknown property '${ValueAsName(selector)}'!!`)
-  })
+  }, "INVISIBLE")
 
 
 

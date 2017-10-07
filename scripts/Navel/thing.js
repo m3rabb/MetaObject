@@ -4,7 +4,7 @@ HandAxe(function (
   "use strict"
 
 
-  _Thing.addSetter("setId", function id(newId_) {
+  _Thing.addSetterAndAssigner("setId", function id(newId_) {
     const existingId = this.id
     if (existingId == null) {
       this._retarget

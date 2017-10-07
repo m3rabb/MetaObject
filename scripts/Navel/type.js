@@ -8,9 +8,9 @@ HandAxe(function (
   VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
   AsCapitalized, AsPropertySymbol, AsTypeDisguise, BasicSetInvisibly,
-  BePermeable, CompareSelectors, DeleteSelectorsIn, InterMap, IsSubtypeOfThing,
-  NewVacuousConstructor, PropertyAt, SetDefinition, TheEmptyStash, ValueAsName,
-  _HasOwnHandler, _Type,
+  BePermeable, CompareSelectors, DeleteSelectorsIn, ExtractFuncArgs,
+  InterMap, IsSubtypeOfThing, NewVacuousConstructor, PropertyAt, SetDefinition,
+  TheEmptyStash, ValueAsName, _HasOwnHandler, _Type,
   IsArray, TheEmptyArray,
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   DefaultContext, RootContext,
@@ -39,7 +39,7 @@ HandAxe(function (
     const   instance = this.new(...args) // <<----------
     const _$instance = InterMap.get(instance)
     const  _instance = _$instance[$PULP]
-    if (_instance.id == null) { _$instance._setImmutable.call(_instance, true) }
+    if (_instance.id == null) { _$instance._setImmutable.call(_instance) }
     return instance
   })
 
@@ -99,21 +99,15 @@ HandAxe(function (
   // forAddAssigner(function property() {})
   // forAddAssigner("property", function () {})
 
-  _Type.addSelfMethod(function addAssigner(property_assigner, assigner_) {
-    const [selector, assigner] = (assigner_) ?
-      [property_assigner     , assigner_        ] :
-      [property_assigner.name, property_assigner]
-
-    if (!selector) { return UnnamedFuncError(this, assigner) }
-
-    const definition = this.context.Definition(selector, assigner, ASSIGNER)
-    this._setDefinitionAt(definition.tag, definition, INVISIBLE)
+  _Type.addSelfMethod(function addAssigner(propertyName_, assigner_) {
+    const [propertyName, assigner] = ExtractFuncArgs(propertyName_, assigner_)
+    if (!propertyName) { return UnnamedFuncError(this, assigner) }
+    this._addDefinition(propertyName, assigner, VISIBLE, ASSIGNER)
   })
 
 
   _Type.addSelfMethod(function addDeclaration(selector) {
-    const definition = this.context.Definition(selector, undefined, DECLARATION)
-    this._setDefinitionAt(definition.tag, definition, INVISIBLE)
+    this._addDefinition(selector, undefined, VISIBLE, DECLARATION)
   })
 
 
@@ -210,7 +204,7 @@ HandAxe(function (
       delete defs[tag]
     }
     return this._inheritDefinitionAt(tag)
-  })
+  }, "INVISIBLE")
 
 
   _Type.addValueMethod(function _inheritDefinitionAt(tag) {
@@ -230,7 +224,7 @@ HandAxe(function (
       }
     }
     return this
-  })
+  }, "INVISIBLE")
 
 
   _Type.addValueMethod(function _propagateDefinition(tag) {
@@ -239,44 +233,41 @@ HandAxe(function (
       _$subtype._inheritDefinitionAt.call(_$subtype[$PULP], tag)
     })
     return this
-  })
+  }, "INVISIBLE")
+
 
 
   _Type.addValueMethod(function _addSetter(name_setter, property_setter_, mode) {
     var propertyName, assigner, setterName, setter
+    const isIndirect = (mode === MANDATORY_SETTER_METHOD)
 
     ;[setterName, setter] = (typeof name_setter === "function") ?
       [name_setter.name, name_setter] : [name_setter, null]
+    if (!setterName) { return UnnamedFuncError(this, setter) }
 
     switch (typeof property_setter_) {
       case "string"   :
         propertyName = property_setter_
-        break
+      break
 
       case "function" :
         if ((propertyName = property_setter_.name)) {
           assigner = property_setter_
-          if (mode === MANDATORY_SETTER_METHOD) {
-            setter = AsAssignmentSetter(propertyName, setterName, assigner)
-          }
-          else {
-            setter = AsBasicSetter(propertyName, setterName, mode)
-            this._addMethod(propertyName, assigner, INVISIBLE, ASSIGNER)
-          }
+          setter   =
+            AsAssignmentSetter(propertyName, setterName, isIndirect, assigner)
         }
         else { setter = property_setter_ }
-        break
+      break
     }
 
-    if (!setterName)   { return UnnamedFuncError(this, assigner) }
     if (!propertyName) {
       propertyName = AsPropertyFromSetter(setterName) ||
         this._signalError(`Improper setter '${setterName}'!!`)
     }
-    if (!setter) { setter = AsBasicSetter(propertyName, setterName, mode) }
+    if (!setter) { setter = AsBasicSetter(propertyName, setterName, isIndirect) }
 
-    return this._addMethod(setterName, setter, VISIBLE, mode, propertyName)
-  })
+    return this._addDefinition(setterName, setter, VISIBLE, mode, propertyName)
+  }, "INVISIBLE")
 
 
   // addSetter("setterName")
@@ -321,42 +312,46 @@ HandAxe(function (
   })
 
 
+  // addSetterAndAssigner("setterName", function propertyAssigner() {})
 
-  _Type.addSelfMethod(function addRetroactiveValue(assigner_selector, assigner_) {
+  _Type.addSelfMethod(function addSetterAndAssigner(setterName, assigner) {
+    const propertyName = assigner.name
+    if (!propertyName) { return UnnamedFuncError(this, assigner) }
+    this._addDefinition(propertyName, assigner, VISIBLE, ASSIGNER)
+
+    const setter = AsBasicSetter(propertyName, setterName)
+    this._addDefinition(setterName, setter, VISIBLE, SETTER_METHOD, propertyName)
+  })
+
+
+
+  _Type.addSelfMethod(function addRetroactiveValue(selector_, assigner_) {
     // Will set the $inner selector even on an immutable object!!!
-    const [selector, assigner] = (typeof assigner_selector === "function") ?
-        [assigner_selector.name, assigner_selector] :
-        [assigner_selector     , assigner_        ]
-    const retroHandler = AsRetroactiveProperty(selector, assigner)
-    this._addMethod(selector, retroHandler, VISIBLE, VALUE_METHOD)
+    const [selector, assigner] = ExtractFuncArgs(selector_, assigner_)
+    const retroHandler         = AsRetroactiveProperty(selector, assigner)
+    this._addDefinition(selector, retroHandler, VISIBLE, VALUE_METHOD)
   })
 
-  _Type.addSelfMethod(function addRetroactiveProperty(assigner_selector, assigner_) {
+  _Type.addSelfMethod(function addRetroactiveProperty(selector_, assigner_) {
     // Will set the $inner selector even on an immutable object!!!
-    const [selector, assigner] = (typeof assigner_selector === "function") ?
-        [assigner_selector.name, assigner_selector] :
-        [assigner_selector     , assigner_        ]
-    const retroHandler = AsRetroactiveProperty(selector, assigner)
-    this._addMethod(selector, retroHandler, VISIBLE, FACT_METHOD)
+    const [selector, assigner] = ExtractFuncArgs(selector_, assigner_)
+    const retroHandler         = AsRetroactiveProperty(selector, assigner)
+    this._addDefinition(selector, retroHandler, VISIBLE, FACT_METHOD)
   })
 
 
-  _Type.addSelfMethod(function addLazyValue(assigner_selector, assigner_) {
+  _Type.addSelfMethod(function addLazyValue(selector_, assigner_) {
     // Will set the $inner (even on) an immutable object!!!
-    const [selector, assigner] = (typeof assigner_selector === "function") ?
-      [assigner_selector.name, assigner_selector] :
-      [assigner_selector     , assigner_        ]
-    const lazyHandler = AsLazyProperty(selector, assigner)
-    this._addMethod(selector, lazyHandler, VISIBLE, VALUE_METHOD)
+    const [selector, assigner] = ExtractFuncArgs(selector_, assigner_)
+    const lazyHandler          = AsLazyProperty(selector, assigner)
+    this._addDefinition(selector, lazyHandler, VISIBLE, VALUE_METHOD)
   })
 
-  _Type.addSelfMethod(function addLazyProperty(assigner_selector, assigner_) {
+  _Type.addSelfMethod(function addLazyProperty(selector_, assigner_) {
     // Will set the $inner (even on) an immutable object!!!
-    const [selector, assigner] = (typeof assigner_selector === "function") ?
-      [assigner_selector.name, assigner_selector] :
-      [assigner_selector     , assigner_        ]
-    const lazyHandler = AsLazyProperty(selector, assigner)
-    this._addMethod(selector, lazyHandler, VISIBLE, FACT_METHOD)
+    const [selector, assigner] = ExtractFuncArgs(selector_, assigner_)
+    const lazyHandler          = AsLazyProperty(selector, assigner)
+    this._addDefinition(selector, lazyHandler, VISIBLE, FACT_METHOD)
   })
 
 
@@ -435,7 +430,7 @@ HandAxe(function (
     }
 
     return this._propagateReinheritance(inheritSpec)
-  })
+  }, "INVISIBLE")
 
 
 
@@ -445,7 +440,7 @@ HandAxe(function (
       _$subtype._inheritAllDefinitions.call(_$subtype[$PULP], inheritSpec)
     })
     return this
-  })
+  }, "INVISIBLE")
 
 
   _Type.addValueMethod(function _setAsSubordinateOfSupertypes(supertypes) {
@@ -461,7 +456,7 @@ HandAxe(function (
       }
     }
     return this
-  })
+  }, "INVISIBLE")
 
 
 
@@ -497,7 +492,7 @@ HandAxe(function (
     SetAsymmetricProperty(this, "constructor", _name, $name)
     this[$DISGUISE].name = outerName
     return this
-  })
+  }, "INVISIBLE")
 
 
 
@@ -551,7 +546,7 @@ HandAxe(function (
     this._ancestry   = GlazeImmutable(ancestry)
     if (inheritSpec_) { this._inheritAllDefinitions(inheritSpec_) }
     return this._setAsSubordinateOfSupertypes(supertypes)
-  })
+  }, "INVISIBLE")
 
 
 
@@ -582,7 +577,7 @@ HandAxe(function (
     }
 
     return [name, supertypes, context, spec]
-  })
+  }, "INVISIBLE")
 
 
   //  spec
@@ -617,7 +612,7 @@ HandAxe(function (
     this._definitions      = SpawnFrom(null)
     this._subordinateTypes = new Set()
     return this
-  })
+  }, "INVISIBLE")
 
 
 
@@ -634,7 +629,7 @@ HandAxe(function (
     methods     && this.addMethods(methods)
     definitions && this.define(definitions)
     return this
-  })
+  }, "INVISIBLE")
 
 
   _Type.addValueMethod(function _validateNewSupertypes(supertypes, ancestry) {
@@ -657,7 +652,7 @@ HandAxe(function (
       // Perhaps not. Might be able to redirect the _blanker of an existing type???
     }
     return beRootType
-  })
+  }, "INVISIBLE")
 
 
 
@@ -691,7 +686,7 @@ HandAxe(function (
     }
     dupFreeAncestry.reverse().push(this[$RIND])
     return dupFreeAncestry
-  })
+  }, "INVISIBLE")
 
 
   function BuildRoughAncestryOf(supertypes, originalTypes_) {
@@ -748,7 +743,7 @@ HandAxe(function (
       adder.call(this, tag, nextValue)
     })
     return this
-  })
+  }, "INVISIBLE")
 
 
   // This method should only be called on a mutable object!!!
@@ -789,7 +784,7 @@ HandAxe(function (
   _Type.addValueMethod(function _nextIID() {
     // This works on an immutable type without creating a new copy.
     return ++this[$INNER]._iidCount
-  })
+  }, "INVISIBLE")
 
   _Type.addValueMethod(function id() { // Conditionally lazy property
     const newId = `${this.formalName},${this.oid}`
@@ -910,23 +905,23 @@ HandAxe(function (
     this._initDefinitionsFrom_(_sourceType, visited, context)
 
     if (!asMutable && sourceType.isImmutable) { this.beImmutable }
-  })
+  }, "INVISIBLE")
 
   _Type.addSelfMethod(function _reconciledSupertypes(visited) {
     return this._supertypes.map(supertype =>
       visited.get(supertype) || supertype)
-  })
+  }, "INVISIBLE")
 
 
 
   _Type.addValueMethod(function _unknownMethodToAliasError(selector) {
     return this._signalError(
       `Can't find method '${ValueAsName(selector)}' to alias!!`)
-  })
+  }, "INVISIBLE")
 
   _Type.addValueMethod(function _attemptToReassignContextError(context) {
     return this._signalError(`Can't reassign context of ${this} from ${this.context} to ${context}!!`)
-  })
+  }, "INVISIBLE")
 
 
 

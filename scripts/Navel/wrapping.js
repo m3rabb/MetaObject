@@ -242,19 +242,24 @@ HandAxe(function (
   })
 
 
-  _Shared.AsBasicSetter = function (propertyName, setterName, mode) {
-    const name = `${ValueAsName(setterName)}_$set_${propertyName}`
-    const PropertyName = (mode === MANDATORY_SETTER_METHOD) ?
-       AsPropertySymbol(propertyName) : propertyName
+  _Shared.AsBasicSetter = function (propertyName, setterName, isIndirect) {
+    const PropertyName = isIndirect ?
+      AsPropertySymbol(propertyName) : propertyName
+    const displaySetterName   = ValueAsName(setterName)
+    const displayPropertyName = ValueAsName(PropertyName)
+    const name = `${displaySetterName}_$set_${displayPropertyName}`
     return {
       [name] : function (value) { this[PropertyName] = value }
     }[name]
   }
 
 
-  _Shared.AsAssignmentSetter = function (propertyName, setterName, Assigner) {
-    const name = `${ValueAsName(setterName)}_$assignSet_${propertyName}`
-    const PropertyName = AsPropertySymbol(propertyName)
+  _Shared.AsAssignmentSetter = function (propertyName, setterName, isIndirect, Assigner) {
+    const PropertyName = isIndirect ?
+      AsPropertySymbol(propertyName) : propertyName
+    const displaySetterName   = ValueAsName(setterName)
+    const displayPropertyName = ValueAsName(PropertyName)
+    const name = `${displaySetterName}_$assignSet_${displayPropertyName}`
     return {
       [name] : function (...args) {
         this[PropertyName] = Assigner.apply(this, args)

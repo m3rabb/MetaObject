@@ -4,13 +4,13 @@ HandAxe(function (
   $PULP, $RIND, $SUPERS, IMMUTABLE, IMPLEMENTATION, INVISIBLE, PROOF, VISIBLE,
   _DURABLES, FACT_METHOD, SELF_METHOD, VALUE_METHOD,
   AlwaysSelf, BasicSetInvisibly, BecomePermeableError, DefineProperty,
-  ExtractMethodArgs, InterMap, InvisibleConfig, NewBlanker, NewInner,
+  ExtractFuncArgs, InterMap, InvisibleConfig, NewBlanker, NewInner,
   NewVacuousConstructor, RootOf, TheEmptyArray, SpawnFrom,
   AsContextDisguise, AsTypeDisguise,
 
   Context_atPut, Context_externalPrivateAccess, Context_init,
-  Context_unknownProperty, Definition_init,
-  _AddMethod, _BasicNew, _BasicSetImmutable, SetDefinition, _SetDefinitionAt,
+  Context_unknownProperty, Definition_init, SetDefinition,
+  _AddDefinition, _BasicNew, _BasicSetImmutable, _SetDefinitionAt,
   Shared, _Shared
 ) {
   "use strict"
@@ -138,27 +138,28 @@ HandAxe(function (
   _SetDefinitionAt.call(_Definition, $IS_DEFINITION , PROOF      , INVISIBLE)
 
 
-  _AddMethod.call(_Type, "_addMethod", _AddMethod, VISIBLE, VALUE_METHOD)
+  _AddDefinition.call(
+    _Type, "_addDefinition", _AddDefinition, VISIBLE, VALUE_METHOD)
 
   // eslint-disable-next-line
-  _Type._addMethod(
+  _Type._addDefinition(
     "addSelfMethod",
     function addSelfMethod(func_selector, func_, invisible__) {
-      const args = ExtractMethodArgs(func_selector, func_, invisible__)
-      this._addMethod(...args, SELF_METHOD)
+      const args = ExtractFuncArgs(func_selector, func_, invisible__)
+      this._addDefinition(...args, SELF_METHOD)
     },
     VISIBLE, SELF_METHOD)
 
   // eslint-disable-next-line
   _Type.addSelfMethod(function addMethod(func_selector, func_, invisible__) {
-    const args = ExtractMethodArgs(func_selector, func_, invisible__)
-    this._addMethod(...args, FACT_METHOD)
+    const args = ExtractFuncArgs(func_selector, func_, invisible__)
+    this._addDefinition(...args, FACT_METHOD)
   })
 
   // eslint-disable-next-line
   _Type.addSelfMethod(function addValueMethod(func_selector, func_, invisible__) {
-    const args = ExtractMethodArgs(func_selector, func_, invisible__)
-    this._addMethod(...args, VALUE_METHOD)
+    const args = ExtractFuncArgs(func_selector, func_, invisible__)
+    this._addDefinition(...args, VALUE_METHOD)
   })
 
   _$Something.addValueMethod("_setImmutable", _BasicSetImmutable, "INVISIBLE")

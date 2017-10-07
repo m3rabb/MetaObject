@@ -198,7 +198,7 @@ HandAxe(function (
         const _$instance = InterMap.get(instance)
         const  _instance = _$instance[$PULP]
         if (_instance.id == null) {
-          _$instance._setImmutable.call(_instance, true)
+          _$instance._setImmutable.call(_instance)
         }
         return instance
       }
@@ -294,7 +294,7 @@ HandAxe(function (
     return SignalError("Improper arguments to make a Definition!!")
   }
 
-  function ExtractMethodArgs(func_selector, func_, invisible__) {
+  function ExtractFuncArgs(func_selector, func_, invisible__) {
     const args = (typeof func_selector === "function") ?
       [func_selector.name, func_selector, func_      ] :
       [func_selector     , func_        , invisible__]
@@ -319,7 +319,7 @@ HandAxe(function (
   _Shared.SetAsymmetricProperty           = SetAsymmetricProperty
   _Shared.PropertyAt                      = PropertyAt
   _Shared.AsDefinitionFrom                = AsDefinitionFrom
-  _Shared.ExtractMethodArgs               = ExtractMethodArgs
+  _Shared.ExtractFuncArgs                 = ExtractFuncArgs
 
 })
 

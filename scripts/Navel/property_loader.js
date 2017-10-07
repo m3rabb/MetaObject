@@ -5,8 +5,8 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
 
   const modeNames =
     `ALIAS DECLARATION DECLARE DURABLE FOR_ASSIGN FOR_MANDATORY FOR_SETTER
-     LAZY MANDATORY METHOD RETRO RETROACTIVE SELF SELF_METHOD SETTER SHARED
-     STANDARD VALUE VALUE_METHOD`
+     LAZY MANDATORY METHOD RETRO RETROACTIVE SELF SELF_METHOD SETTER
+     SETTER_ASSIGNER SHARED STANDARD VALUE VALUE_METHOD`
 
   _PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
 
@@ -89,29 +89,30 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
 
   _PropertyLoader.addValueMethod(function _loadPair(name, value, mode) {
     switch (mode) {
-      case "ALIAS"         : return this._saveAlias(name, value)
-      case "SHARED"        : return this._type.addSharedProperty     (name, value)
+      case "ALIAS"           : return this._saveAlias(name, value)
+      case "SHARED"          : return this._type.addSharedProperty    (name, value)
 
-      case "METHOD"        : return this._type.addMethod             (name, value)
+      case "METHOD"          : return this._type.addMethod            (name, value)
 
-      case "SELF"          :
-      case "SELF_METHOD"   : return this._type.addSelfMethod         (name, value)
-      case "VALUE"         :
-      case "VALUE_METHOD"  : return this._type.addValueMethod        (name, value)
+      case "SELF"            :
+      case "SELF_METHOD"     : return this._type.addSelfMethod        (name, value)
+      case "VALUE"           :
+      case "VALUE_METHOD"    : return this._type.addValueMethod       (name, value)
 
-      case "LAZY"          : return this._type.addLazyProperty       (name, value)
-      case "RETRO"         :
-      case "RETROACTIVE"   : return this._type.addRetroactiveProperty(name, value)
-      case "SETTER"        : return this._type.addSetter             (name, value)
-      case "MANDATORY"     : return this._type.addMandatorySetter    (name, value)
+      case "LAZY"            : return this._type.addLazyProperty      (name, value)
+      case "RETRO"           :
+      case "RETROACTIVE"     : return this._type.addRetroactiveValue  (name, value)
+      case "SETTER"          : return this._type.addSetter            (name, value)
+      case "MANDATORY"       : return this._type.addMandatorySetter   (name, value)
+      case "SETTER_ASSIGNER" : return this._type.addSetterAndAssigner (name, value)
 
-      case "FOR_ASSIGN"    : return this._type.forAddAssigner        (name, value)
-      case "FOR_SETTER"    : return this._type.forAddSetter          (name, value)
-      case "FOR_MANDATORY" : return this._type.forAddMandatorySetter (name, value)
 
-      case "STANDARD"      :
-        return this._signalError(
-          `Must define mode for spec containing '${name}'!!`)
+      case "FOR_ASSIGN"      : return this._type.forAddAssigner       (name, value)
+      case "FOR_SETTER"      : return this._type.forAddSetter         (name, value)
+      case "FOR_MANDATORY"   : return this._type.forAddMandatorySetter(name, value)
+
+      case "STANDARD"        :
+        return this._signalError(`Must define mode for spec containing '${name}'!!`)
 
       default : return this._signalError(`Invalid pair mode: ${mode}!!`)
     }
@@ -120,20 +121,20 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
   _PropertyLoader.addValueMethod(function _loadFunc(func, mode) {
     switch (mode) {
       case "STANDARD"      :
-      case "METHOD"        : return this._type.addMethod             (func)
+      case "METHOD"        : return this._type.addMethod          (func)
 
       case "SELF"          :
-      case "SELF_METHOD"   : return this._type.addSelfMethod         (func)
+      case "SELF_METHOD"   : return this._type.addSelfMethod      (func)
       case "VALUE"         :
-      case "VALUE_METHOD"  : return this._type.addValueMethod        (func)
+      case "VALUE_METHOD"  : return this._type.addValueMethod     (func)
 
-      case "LAZY"          : return this._type.addLazyProperty       (func)
+      case "LAZY"          : return this._type.addLazyProperty    (func)
       case "RETRO"         :
-      case "RETROACTIVE"   : return this._type.addRetroactiveProperty(func)
-      case "SETTER"        : return this._type.addSetter             (func)
-      case "MANDATORY"     : return this._type.addMandatorySetter    (func)
+      case "RETROACTIVE"   : return this._type.addRetroactiveValue(func)
+      case "SETTER"        : return this._type.addSetter          (func)
+      case "MANDATORY"     : return this._type.addMandatorySetter (func)
 
-      case "FOR_ASSIGN"    : return this._type.forAddAssigner        (func)
+      case "FOR_ASSIGN"    : return this._type.forAddAssigner     (func)
 
       default : return this._signalError(`Invalid definition mode: ${mode}!!`)
     }

@@ -366,9 +366,9 @@ HandAxe._(function (
           expect( this._$root.setMood.name ).toBe( "setMood_$inner_self" )
         })
 
-        it("Put an assigner func in the root", function () {
+        it("Doesn't put an assigner func in the root", function () {
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
-          expect( ValueHasOwn(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
+          expect( ValueHasOwn(this._$root[$ASSIGNERS], "_mood") ).toBe( false )
         })
 
         it("Sets undefined as a placeholder at the property in the root", function () {
@@ -389,9 +389,9 @@ HandAxe._(function (
         })
 
         describe("When the property is assigned", function () {
-          it("The property is set", function () {
+          it("The property is simply assigned", function () {
             this._cat._mood = "happy"
-            expect( this._cat._mood ).toBe( "very happy" )
+            expect( this._cat._mood ).toBe( "happy" )
           })
         })
 
@@ -562,7 +562,7 @@ HandAxe._(function (
         })
 
         it("Puts as basic setter property in the root", function () {
-          expect( this._$root.setMood.method.handler.name ).toBe( "setMood_$set_mood" )
+          expect( this._$root.setMood.method.handler.name ).toBe( "setMood_$set_<$mood$>" )
         })
 
         it("Puts an assigner func in the root", function () {
@@ -844,7 +844,7 @@ HandAxe._(function (
         })
 
         it("Puts as basic setter property in the root", function () {
-          expect( this._$root.setMood.method.handler.name ).toBe( "setMood_$set_mood" )
+          expect( this._$root.setMood.method.handler.name ).toBe( "setMood_$set_<$mood$>" )
         })
 
         it("Puts an assigner func in the root", function () {
