@@ -567,6 +567,7 @@ HandAxe(function (
         this.removeSharedProperty(AsMembershipSelector(priorName))
       }
       const selector = AsMembershipSelector(properName)
+      this.membershipSelector = selector
       this.addSharedProperty(selector, true, "INVISIBLE")
       AddIntrinsicDeclaration(selector)
     }
@@ -701,6 +702,11 @@ HandAxe(function (
   _Type.addValueMethod(function hasDefinedMethod(selector) {
     const value = this._definitions[selector]
     return (value) ? value.isMethod : false
+  })
+
+
+  _Type.addValueMethod(Symbol.hasInstance, function (instance) {
+    return instance[this.membershipSelector]
   })
 
 
