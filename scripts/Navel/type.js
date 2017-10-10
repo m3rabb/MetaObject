@@ -98,6 +98,10 @@ HandAxe(function (
     return this._definedSelectors(OwnSelectorsOf)
   })
 
+  _Type.addValueMethod(function definedImmediates() {
+    return this._definedSelectors(OwnSelectorsOf, true)
+  })
+
   _Type.addValueMethod(function definedPublics() {
     return this._definedSelectors(OwnPublicsOf)
   })
@@ -123,6 +127,10 @@ HandAxe(function (
 
   _Type.addValueMethod(function allDefinedSelectors() {
     return OwnSelectorsOf(this._blanker.$root$inner)
+  })
+
+  _Type.addValueMethod(function allDefinedImmediates() {
+    return _KnownSelectorsOf(this._blanker.$root$inner[$IMMEDIATES])
   })
 
   _Type.addValueMethod(function allDefinedPublics() {
@@ -161,7 +169,7 @@ HandAxe(function (
     return ++this[$INNER]._iidCount
   }, "INVISIBLE")
 
-  _Type.addValueMethod(function _definedSelectors(picker) {
+  _Type.addValueMethod(function _definedSelectors(picker, immediates_) {
     const definitions = this._definitions
     const tags        = picker(definitions)
     const found       = SpawnFrom(null)
@@ -171,19 +179,20 @@ HandAxe(function (
     tags.forEach(tag => {
       var value, selector
       value = definitions[tag]
-      selector = (value && value.isDefinition) ? value.selector : tag
-      // if (value && value.isDefinition) {
-      //   if (value.isSetter) {
-      //     selector           = value.selector
-      //     found[selector]    = true
-      //     selectors[index++] = selector
-      //     selector           = value.property
-      //   }
-      //   else { selector = value.selector }
-      // }
-      // else { selector = tag }
+      if (value && value.isDefinition) {
+        //   if (value.isSetter) {
+        //     selector           = value.selector
+        //     found[selector]    = true
+        //     selectors[index++] = selector
+        //     selector           = value.property
+        //   }
+        //   else { selector = value.selector }
+        selector = value.selector
+        if (immediates_ && !value.isImmediate) { selector = null }
+      }
+      else { selector = tag }
 
-      if (!found[selector]) {
+      if (selector && !found[selector]) {
         found[selector]    = true
         selectors[index++] = selector
       }

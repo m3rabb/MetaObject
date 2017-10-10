@@ -230,7 +230,12 @@ HandAxe(function (
     return DeclareImmutable(remainder.sort(sorter_))
   }
 
-  function MergeAndSort(longer, shorter, sorter_) {
+  function IntersectAndSort(left, right, sorter_) {
+    const union = left.filter(item => right.includes(item))
+    return DeclareImmutable(union.sort(sorter_))
+  }
+
+  function UnionAndSort(longer, shorter, sorter_) {
     var combined = []
     var index    = 0
     shorter.forEach(item => {
@@ -243,13 +248,13 @@ HandAxe(function (
   function _PrimarySelectorsOf(_target) {
     const inherited = _target.type.allDefinedVisibles
     const owned     = _OwnSelectorsOf(_target[$INNER])
-    return MergeAndSort(inherited, owned, CompareSelectors)
+    return UnionAndSort(inherited, owned, CompareSelectors)
   }
 
   function _PrimaryPublicSelectorsOf(_target) {
     const inherited = _target.type.allDefinedVisiblePublics
     const owned     = _OwnNamesOf(_target[$OUTER])
-    return MergeAndSort(inherited, owned, CompareSelectors)
+    return UnionAndSort(inherited, owned, CompareSelectors)
   }
 
 
@@ -531,7 +536,8 @@ HandAxe(function (
   Shared.sortParameters           = KnowFunc(SortParameters)
 
   Shared.DiffAndSort              = KnowFunc(DiffAndSort)
-  Shared.MergeAndSort             = KnowFunc(MergeAndSort)
+  Shared.IntersectAndSort         = KnowFunc(IntersectAndSort)
+  Shared.UnionAndSort             = KnowFunc(UnionAndSort)
 
   Shared.findDurables             = KnowFunc(FindDurables)
 

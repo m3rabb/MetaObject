@@ -14,11 +14,11 @@
 // USER CAN/SHOULD NEVER REDEFINE INATE METHODS
 
 HandAxe(function (
-  $BLANKER, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
+  $BLANKER, $IMMEDIATES, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   AsDefinitionFrom, BasicSetInvisibly, CompareSelectors,
-  CompletelyDeleteProperty, DeclareImmutable, DiffAndSort, FindAndSetDurables,
+  CompletelyDeleteProperty, DeclareImmutable, FindAndSetDurables,
   MakeDefinitionsInfrastructure, NewUniqueId, NormalizeCopyArgs, PropertyAt,
   SetDefinition, SpawnFrom, ValueAsFact, ValueAsName,
   _BasicSetImmutable, _HasOwnHandler, _$Copy, _$Intrinsic,
@@ -26,7 +26,8 @@ HandAxe(function (
   InterMap, PropertyToSymbolMap,
   _PrimaryPublicSelectorsOf, _PrimarySelectorsOf,
   OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf, OwnVisibleNamesOf,
-  _KnownNamesOf, _KnownSelectorsOf, _KnownVisiblesOf, _KnownVisibleNamesOf
+  _KnownNamesOf, _KnownSelectorsOf, _KnownVisiblesOf, _KnownVisibleNamesOf,
+  DiffAndSort, IntersectAndSort
 ) {
   "use strict"
 
@@ -224,6 +225,11 @@ HandAxe(function (
     return _PrimarySelectorsOf(this)
   })
 
+  _$Intrinsic.addValueMethod(function _primaryImmediates() {
+    const immediates = _KnownSelectorsOf(this[$IMMEDIATES])
+    return IntersectAndSort(this._primarySelectors, immediates)
+  })
+
   _$Intrinsic.addValueMethod(function _intrinsicSelectors() {
     return _KnownSelectorsOf(_$Intrinsic._blanker.$root$inner)
   })
@@ -257,6 +263,10 @@ HandAxe(function (
     return _PrimaryPublicSelectorsOf(this)
   })
 
+  _$Intrinsic.addValueMethod(function primaryImmediates() {
+    const immediates = _KnownSelectorsOf(this[$IMMEDIATES])
+    return IntersectAndSort(this.primarySelectors, immediates)
+  })
 
   _$Intrinsic.addValueMethod(function knownIntrinsicSelectors() {
     return _KnownVisiblesOf(_$Intrinsic._blanker.$root$outer)
