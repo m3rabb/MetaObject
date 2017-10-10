@@ -1284,19 +1284,21 @@ Krust.set((context) => {
                                                                  // direction
           switch (span.length) {
             case undefined :
-              if (typof specifier === "boolean") {              // direction
+              if (typeof specifier === "boolean") {              // direction
                 return [0, size, (specifier) ? FWD : BWD]
               }
               specifier = specifier.scan                        // dirSpec
-              ;continue
+              continue
             case 1 :
               ;[start, end, dir] = [specifier, specifier, NON]  // relative edge
-              if (start + 1 === start) { return [0, size, FWD] }// direction
-              ;break
+              if (start + 1 === start) {
+                return [0, size, (specifier < 0) ? BWD : FWD]   // direction
+              }
+              break
             case 2 :
               ;[start, end] = specifier                    // relative span|edge
               if (end === undefined) { end = start + 1 }   // relative index
-              ;break
+              break
             case 4 :
               wraps = specifier[WRAPS]
               // break omitted
