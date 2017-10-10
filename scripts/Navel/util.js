@@ -9,6 +9,22 @@ HandAxe(function (
   "use strict"
 
 
+  //// INTRINSIC ////
+
+  //// INTRINSIC : Immutablility
+
+  // This method should only be called on a mutable object!!!
+  // eslint-disable-next-line
+  function _basicSetImmutable(inPlace_, visited__) {
+    const _$target = this[$INNER]
+    const  $target = _$target[$OUTER]
+
+    delete _$target._retarget
+    $target[IMMUTABLE] = _$target[IMMUTABLE] = true
+    return this
+  }
+
+
   // This method should only be called on a mutable object|func!!!
   function DeclareImmutable(object) {
     if (object[$IS_INNER] === PROOF) { return GlazeError(object) }
@@ -26,22 +42,86 @@ HandAxe(function (
 
 
 
-  const _HasOwnHandler     = Object.prototype.hasOwnProperty // ._hasOwn
+  //// INTRINSIC : Durables
+
+  function FindDurables(target) {
+    return OwnVisibleNamesOf(target)
+  }
+
+  function FindAndSetDurables(target) {
+    return (target[_DURABLES] = OwnVisibleNamesOf(target))
+  }
+
+
+
+
+  //// ARRAY OPERATIONS ////
+
+  function DiffAndSort(left, right, sorter_) {
+    const remainder = left.filter(item => !right.includes(item))
+    return DeclareImmutable(remainder.sort(sorter_))
+  }
+
+  function IntersectAndSort(left, right, sorter_) {
+    const union = left.filter(item => right.includes(item))
+    return DeclareImmutable(union.sort(sorter_))
+  }
+
+  function UnionAndSort(longer, shorter, sorter_) {
+    var combined = []
+    var index    = 0
+    shorter.forEach(item => {
+      if (!longer.includes(item)) { combined[index++] = item }
+    })
+    combined = combined.concat(longer)
+    return DeclareImmutable(combined.sort(sorter_))
+  }
+
+
+
+  //// SELECTOR TESTING ////
+
+  const PRIVATE_SYMBOL_MATCHER = /^[_$]/i
+
+
+  function IsPublicSelector(selector) {
+    var firstChar
+    switch (selector[0]) {
+      default        : return true
+      case "_"       : return false
+      case undefined :
+        firstChar = selector.toString()[SYMBOL_1ST_CHAR]
+        return !PRIVATE_SYMBOL_MATCHER.test(firstChar)
+    }
+  }
+
+  function CompareSelectors(a, b) {
+    const nameA = ValueAsName(a)
+    const nameB = ValueAsName(b)
+    return (nameA === nameB) ? 0 : (nameA < nameB ? -1 : 1)
+  }
+
+  // function CompareSelectors(a, b) {
+  //   return ValueAsName(a).localeCompare(ValueAsName(b))
+  // }
+
+
+
+
+  //// SELECTOR INTROSPECTION ////
+
+  //// SELECTOR INTROSPECTION : Basic - Answers unsorted mutable array
+
   const _OwnVisibleNamesOf = Object.keys
+
   const _OwnNamesOf        = Object.getOwnPropertyNames
+
   const _OwnSymbolsOf      = Object.getOwnPropertySymbols
+
   const _OwnKeysOf         = Reflect.ownKeys
 
   function _OwnSelectorsOf(value) {
     return _OwnKeysOf(value).filter(sel => !ImplementationSelectors[sel])
-  }
-
-  function _OwnNonImpSymbolsOf(value) {
-    return _OwnSymbolsOf(value).filter(sel => !ImplementationSelectors[sel])
-  }
-
-  function _OwnNonImpNamesOf(value) {
-    return _OwnNamesOf(value).filter(sel => !ImplementationSelectors[sel])
   }
 
   function _OwnVisiblesOf(value) {
@@ -65,12 +145,7 @@ HandAxe(function (
 
 
 
-  function SortedOwnSelectorsUsing(value, picker, sorter_) {
-    return (value == null) ? TheEmptyArray :
-      DeclareImmutable(picker(Object(value)).sort(sorter_))
-      // Note: proxy forces _OwnSelectorsOf to be called
-  }
-
+  //// SELECTOR INTROSPECTION : Own - Answers sorted immutable array
 
   function OwnVisibleNamesOf(value) {
     return SortedOwnSelectorsUsing(value, _OwnVisibleNamesOf)
@@ -102,84 +177,7 @@ HandAxe(function (
 
 
 
-  function SortedSelectorsUsing(value, picker, sorter_, root = null) {
-    var target, selectors, selector, index, next
-    if (value == null) { return TheEmptyArray }
-
-    const known        = SpawnFrom(null)
-    const allSelectors = []
-    target = value
-    index  = 0
-
-    do {
-      selectors = picker(target)
-      next      = selectors.length
-      while (next--) {
-        selector = selectors[next]
-        if (!known[selector]) {
-          known[selector]       = true
-          allSelectors[index++] = selector
-        }
-      }
-      target = RootOf(target)
-    } while (target !== root)
-
-    return DeclareImmutable(allSelectors.sort(sorter_))
-  }
-
-
-  function _KnownVisibleNamesOf(value) {
-    var index, name
-    const visibles = []
-    index = 0
-    for (name in value) { visibles[index++] = name }
-    return DeclareImmutable(visibles.sort())
-  }
-
-  function _KnownVisiblesOf(value) {
-    return SortedSelectorsUsing(value, _OwnVisiblesOf, CompareSelectors)
-  }
-
-  function _KnownPublicsOf(value) {
-    return SortedSelectorsUsing(value, _OwnPublicsOf, CompareSelectors)
-  }
-
-  function _KnownNamesOf(value) {
-    return SortedSelectorsUsing(value, _OwnNamesOf)
-  }
-
-  function _KnownSymbolsOf(value) {
-    return SortedSelectorsUsing(value, _OwnSymbolsOf, CompareSelectors)
-  }
-
-  function _KnownNonImpSymbolsOf(value) {
-    return SortedSelectorsUsing(value, _OwnNonImpSymbolsOf, CompareSelectors)
-  }
-
-  function _KnownSelectorsOf(value) {
-    return SortedSelectorsUsing(value, _OwnSelectorsOf, CompareSelectors)
-  }
-
-  function _KnownKeysOf(value) {
-    return SortedSelectorsUsing(value, _OwnKeysOf, CompareSelectors)
-  }
-
-  function _NonImpNamesOf(value) {
-    return SortedSelectorsUsing(value, _OwnNonImpNamesOf, CompareSelectors)
-  }
-
-  function _NoneOf(value) { // eslint-disable-line
-    return TheEmptyArray
-  }
-
-  function SelectorsOfUsing(value, pick) {
-    var _$value
-    if (value == null) { return TheEmptyArray }
-    if (value[$IS_INNER] === PROOF)      { return pick.inner(  value[$INNER]) }
-    if ((_$value = InterMap.get(value))) { return pick.outer(_$value[$OUTER]) }
-    return pick.value(Object(value))
-  }
-
+  //// SELECTOR INTROSPECTION : Known - Answers sorted immutable array
 
   function KnownVisibleNamesOf(value) {
     return SelectorsOfUsing(value, {
@@ -225,25 +223,70 @@ HandAxe(function (
     })
   }
 
-  function DiffAndSort(left, right, sorter_) {
-    const remainder = left.filter(item => !right.includes(item))
-    return DeclareImmutable(remainder.sort(sorter_))
+
+
+  //// SELECTOR INTROSPECTION : Known - Answers sorted immutable array
+
+  function PrimarySelectorsOf(value) {
+    if (value == null) { return TheEmptyArray }
+    if (value[$IS_INNER] === PROOF) { return _PrimarySelectorsOf(value) }
+    const _$value = InterMap.get(value)
+    if (_$value)     { return _PrimaryPublicSelectorsOf(_$value[$PULP]) }
+    return SortedSelectorsUsing(
+      Object(value), _OwnNamesOf, undefined, Object.prototype)
   }
 
-  function IntersectAndSort(left, right, sorter_) {
-    const union = left.filter(item => right.includes(item))
-    return DeclareImmutable(union.sort(sorter_))
+
+
+  //// SELECTOR INTROSPECTION : Support : Knowns -Answers sorted immutable array
+
+  function _KnownVisibleNamesOf(value) {
+    var index, name
+    const visibles = []
+    index = 0
+    for (name in value) { visibles[index++] = name }
+    return DeclareImmutable(visibles.sort())
   }
 
-  function UnionAndSort(longer, shorter, sorter_) {
-    var combined = []
-    var index    = 0
-    shorter.forEach(item => {
-      if (!longer.includes(item)) { combined[index++] = item }
-    })
-    combined = combined.concat(longer)
-    return DeclareImmutable(combined.sort(sorter_))
+  function _KnownVisiblesOf(value) {
+    return SortedSelectorsUsing(value, _OwnVisiblesOf, CompareSelectors)
   }
+
+  function _KnownPublicsOf(value) {
+    return SortedSelectorsUsing(value, _OwnPublicsOf, CompareSelectors)
+  }
+
+  function _KnownNamesOf(value) {
+    return SortedSelectorsUsing(value, _OwnNamesOf)
+  }
+
+  function _KnownSymbolsOf(value) {
+    return SortedSelectorsUsing(value, _OwnSymbolsOf, CompareSelectors)
+  }
+
+  function _KnownNonImpSymbolsOf(value) {
+    return SortedSelectorsUsing(value, _OwnNonImpSymbolsOf, CompareSelectors)
+  }
+
+  function _KnownSelectorsOf(value) {
+    return SortedSelectorsUsing(value, _OwnSelectorsOf, CompareSelectors)
+  }
+
+  function _KnownKeysOf(value) {
+    return SortedSelectorsUsing(value, _OwnKeysOf, CompareSelectors)
+  }
+
+  function _NonImpNamesOf(value) {
+    return SortedSelectorsUsing(value, _OwnNonImpNamesOf, CompareSelectors)
+  }
+
+  function _NoneOf(value) { // eslint-disable-line
+    return TheEmptyArray
+  }
+
+
+
+  //// SELECTOR INTROSPECTION : Support - Primaries
 
   function _PrimarySelectorsOf(_target) {
     const inherited = _target.type.allDefinedVisibles
@@ -259,15 +302,64 @@ HandAxe(function (
 
 
 
-  function PrimarySelectorsOf(value) {
-    if (value == null) { return TheEmptyArray }
-    if (value[$IS_INNER] === PROOF) { return _PrimarySelectorsOf(value) }
-    const _$value = InterMap.get(value)
-    if (_$value)     { return _PrimaryPublicSelectorsOf(_$value[$PULP]) }
-    return SortedSelectorsUsing(
-      Object(value), _OwnNamesOf, undefined, Object.prototype)
+  //// SELECTOR INTROSPECTION : Support
+
+  function _OwnNonImpSymbolsOf(value) {
+    return _OwnSymbolsOf(value).filter(sel => !ImplementationSelectors[sel])
   }
 
+  function _OwnNonImpNamesOf(value) {
+    return _OwnNamesOf(value).filter(sel => !ImplementationSelectors[sel])
+  }
+
+
+  function SortedOwnSelectorsUsing(value, picker, sorter_) {
+    return (value == null) ? TheEmptyArray :
+      DeclareImmutable(picker(Object(value)).sort(sorter_))
+      // Note: proxy forces _OwnSelectorsOf to be called
+  }
+
+
+  function SortedSelectorsUsing(value, picker, sorter_, root = null) {
+    var target, selectors, selector, index, next
+    if (value == null) { return TheEmptyArray }
+
+    const known        = SpawnFrom(null)
+    const allSelectors = []
+    target = value
+    index  = 0
+
+    do {
+      selectors = picker(target)
+      next      = selectors.length
+      while (next--) {
+        selector = selectors[next]
+        if (!known[selector]) {
+          known[selector]       = true
+          allSelectors[index++] = selector
+        }
+      }
+      target = RootOf(target)
+    } while (target !== root)
+
+    return DeclareImmutable(allSelectors.sort(sorter_))
+  }
+
+
+  function SelectorsOfUsing(value, pick) {
+    var _$value
+    if (value == null) { return TheEmptyArray }
+    if (value[$IS_INNER] === PROOF)      { return pick.inner(  value[$INNER]) }
+    if ((_$value = InterMap.get(value))) { return pick.outer(_$value[$OUTER]) }
+    return pick.value(Object(value))
+  }
+
+
+
+
+  //// VALUE TESTING ////
+
+  const _HasOwnHandler = Object.prototype.hasOwnProperty // ._hasOwn
 
 
   function ValueHasOwn(value, selector) {
@@ -276,20 +368,6 @@ HandAxe(function (
 
   function ValueHas(value, selector) {
     return (value != null) && (selector in Object(value))
-  }
-
-
-  const PRIVATE_SYMBOL_MATCHER = /^[_$]/i
-
-  function IsPublicSelector(selector) {
-    var firstChar
-    switch (selector[0]) {
-      default        : return true
-      case "_"       : return false
-      case undefined :
-        firstChar = selector.toString()[SYMBOL_1ST_CHAR]
-        return !PRIVATE_SYMBOL_MATCHER.test(firstChar)
-    }
   }
 
 
@@ -310,6 +388,7 @@ HandAxe(function (
     }
     return (InterMap.get(value) !== undefined)
   }
+
 
   function ValueIsSomething(value) {
     switch (typeof value) {
@@ -338,6 +417,7 @@ HandAxe(function (
     const _$value = InterMap.get(value)
     return (_$value !== undefined && _$value[$IS_NOTHING] === PROOF)
   }
+
 
   function ValueIsFact(value) {
     if (typeof value !== "object") { return true }
@@ -376,26 +456,8 @@ HandAxe(function (
 
 
 
-  function CompareSelectors(a, b) {
-    const nameA = ValueAsName(a)
-    const nameB = ValueAsName(b)
-    return (nameA === nameB) ? 0 : (nameA < nameB ? -1 : 1)
-  }
 
-  // function CompareSelectors(a, b) {
-  //   return ValueAsName(a).localeCompare(ValueAsName(b))
-  // }
-
-
-
-  function FindDurables(target) {
-    return OwnVisibleNamesOf(target)
-  }
-
-  function FindAndSetDurables(target) {
-    return (target[_DURABLES] = OwnVisibleNamesOf(target))
-  }
-
+  //// IMPLEMENTATION SUPPORT ////
 
   function BasicSetInvisibly(target, selector, value, setOuterToo_) {
     DefineProperty(target, selector, InvisibleConfig)
@@ -405,18 +467,6 @@ HandAxe(function (
       $target[selector] = value
     }
     return (target[selector] = value)
-  }
-
-
-  // This method should only be called on a mutable object!!!
-  // eslint-disable-next-line
-  function _basicSetImmutable(inPlace_, visited__) {
-    const _$target = this[$INNER]
-    const  $target = _$target[$OUTER]
-
-    delete _$target._retarget
-    $target[IMMUTABLE] = _$target[IMMUTABLE] = true
-    return this
   }
 
 
@@ -433,7 +483,6 @@ HandAxe(function (
     FreezeSurface(func.prototype)
     return FreezeSurface(func)
   }
-
 
 
   const PARAM_FAMILY_MATCHER = /^(\w+(_[a-zA-Z]+))|([a-zA-Z]*[a-z]([A-Z][a-z]+))$/
@@ -488,8 +537,20 @@ HandAxe(function (
   }
 
 
+
+
   Shared.declareImmutable         = KnowFunc(DeclareImmutable)
   Shared.declareAsImmutable       = KnowFunc(DeclareAsImmutable)
+
+  Shared.findDurables             = KnowFunc(FindDurables)
+  Shared.findAndSetDurables       = KnowFunc(FindAndSetDurables)
+
+  Shared.diffAndSort              = KnowFunc(DiffAndSort)
+  Shared.intersectAndSort         = KnowFunc(IntersectAndSort)
+  Shared.unionAndSort             = KnowFunc(UnionAndSort)
+
+  Shared.isPublicSelector         = KnowFunc(IsPublicSelector)
+  Shared.compareSelectors         = KnowFunc(CompareSelectors)
 
   Shared._ownVisibleNamesOf       = KnowFunc(_OwnVisibleNamesOf)
   Shared._ownVisiblesOf           = KnowFunc(_OwnVisiblesOf)
@@ -522,6 +583,7 @@ HandAxe(function (
 
   Shared.valueIsInner             = KnowFunc(ValueIsInner)
   Shared.valueIsOuter             = KnowFunc(ValueIsOuter)
+
   Shared.valueIsSomething         = KnowFunc(ValueIsSomething)
   Shared.valueIsThing             = KnowFunc(ValueIsThing)
   Shared.valueIsNothing           = KnowFunc(ValueIsNothing)
@@ -531,16 +593,7 @@ HandAxe(function (
   Shared.valueIsSurfaceImmutable  = KnowFunc(ValueIsSurfaceImmutable)
   Shared.isSurfaceImmutable       = ValueIsSurfaceImmutable
 
-  Shared.isPublicSelector         = KnowFunc(IsPublicSelector)
-  Shared.compareSelectors         = KnowFunc(CompareSelectors)
-  Shared.sortParameters           = KnowFunc(SortParameters)
-
-  Shared.DiffAndSort              = KnowFunc(DiffAndSort)
-  Shared.IntersectAndSort         = KnowFunc(IntersectAndSort)
-  Shared.UnionAndSort             = KnowFunc(UnionAndSort)
-
-  Shared.findDurables             = KnowFunc(FindDurables)
-
+  Shared.sortParameters             = KnowFunc(SortParameters)
 
   _Shared._HasOwnHandler            = _HasOwnHandler // ._hasOwn
   _Shared._KnownVisibleNamesOf      = _KnownVisibleNamesOf
@@ -552,10 +605,9 @@ HandAxe(function (
   _Shared._BasicSetImmutable        = _basicSetImmutable
   _Shared.KnowAndSetFuncImmutable   = KnowAndSetFuncImmutable
   _Shared.SetFuncImmutable          = SetFuncImmutable
-  _Shared.FindAndSetDurables        = FindAndSetDurables
+
 
 })
-
 
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890

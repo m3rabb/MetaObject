@@ -10,11 +10,17 @@ HandAxe(function (
   _nil.isNil = true
   _nil._setImmutable()
 
-  AddIntrinsicDeclaration("isNil")
   _RootContext._atPut("nil", nil)
 
-})
 
+
+
+  //// TESTING ////
+
+  AddIntrinsicDeclaration("isNil")
+
+
+})
 
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890

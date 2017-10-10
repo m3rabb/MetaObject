@@ -10,11 +10,39 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
 
   _PropertyLoader.addSharedProperty("modes", modeNames.split(/\s+/))
 
+
+  //// INITIALIZING ////
+
   _PropertyLoader.addValueMethod(function _init(type) {
     this._type    = type
     this._aliases = SpawnFrom(null)
   })
 
+
+
+
+  //// EXECUTING ////
+
+  _PropertyLoader.addValueMethod(function load(item, mode = "STANDARD") {
+    this._load(item, mode)
+    this._resolveAliases
+  })
+
+
+
+
+  //// TESTING ////
+
+  _PropertyLoader.addValueMethod(function isMode(string) {
+    return (this.modes.indexOf(string) >= 0)
+  })
+
+
+
+
+  //// SUPPORT ////
+
+  //// SUPPORT : Aliases
 
   _PropertyLoader.addValueMethod(function _saveAlias(aliasName, existingName) {
     this._aliases[aliasName] = existingName
@@ -31,16 +59,8 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
   })
 
 
-  _PropertyLoader.addValueMethod(function isMode(string) {
-    return (this.modes.indexOf(string) >= 0)
-  })
 
-
-  _PropertyLoader.addValueMethod(function load(item, mode = "STANDARD") {
-    this._load(item, mode)
-    this._resolveAliases
-  })
-
+  //// SUPPORT : Loading
 
   _PropertyLoader.addValueMethod(function _load(item, mode) {
     switch (item.constructor) {
@@ -164,7 +184,6 @@ HandAxe(function (SpawnFrom, _OwnKeysOf, _PropertyLoader) {
   })
 
 })
-
 
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
