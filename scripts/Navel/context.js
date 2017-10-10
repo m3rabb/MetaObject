@@ -15,6 +15,16 @@ HandAxe(function (
   "use strict"
 
 
+  const VALUE = 0
+  const KEY   = 1
+
+
+  //// ADDING ////
+
+  _Context.addSelfMethod(function add(object) {
+    this.atPut(object.name || object.tag, object)
+  })
+
   _Context.addSelfMethod(function atPut(selector, entry) {
     if (this[$RIND] === DefaultContext)         { return }
     if (this._knownEntries[selector] === entry) { return }
@@ -32,40 +42,9 @@ HandAxe(function (
   })
 
 
-  _Context.addSelfMethod(function add(object) {
-    this.atPut(object.name || object.tag, object)
-  })
 
 
-
-  _Context.addValueMethod(function _setPropertiesImmutable(inPlace, visited) {
-    const Entries = this._knownEntries
-    this.forEachOwn((entry, key) => {
-      var _$entry, fact
-      _$entry = InterMap.get(entry)
-      if (_$entry && _$entry[$IS_TYPE]) { entry.setImmutable(inPlace, visited) }
-      else {
-        fact = ValueAsFact(entry, inPlace, visited)
-        if (fact !== entry) { this[key] = Entries[key] = fact }
-      }
-    })
-    return this
-  })
-
-
-
-  _Context.addValueMethod(function beImpenetrable() {
-    var selector, entry
-    if (this.isImpenetrable) { return this }
-    const entries = this._knownEntries
-    for (selector in entries) {
-      entry = entries[selector]
-      if (ValueIsSomething(entry)) { entry.beImpenetrable }
-    }
-    return this._super.beImpenetrable
-  })
-
-
+  //// ACCESSING ////
 
   _Context.addRetroactiveValue(function id() {
     return `${this.formalName},${this.oid}`
@@ -78,16 +57,8 @@ HandAxe(function (
   })
 
 
-  _Context.addValueMethod(function ancestry() {
-    var nextContext = this[$RIND]
-    const contexts = []
-    do {
-      contexts.unshift(nextContext)
-    } while ((nextContext = nextContext.supercontext))
-    return DeclareImmutable(contexts)
-  })
 
-
+  //// ACCESSING : Entries
 
   _Context.addValueMethod(function at(selector) {
     return this._knownEntries[selector]
@@ -98,7 +69,6 @@ HandAxe(function (
     return _HasOwnHandler.call(entries, selector) ?
       entries[selector] : undefined
   })
-
 
   _Context.addMethod(function knownEntries() {
     return this._knownEntries
@@ -113,6 +83,49 @@ HandAxe(function (
     return ValueBeImmutable(own)
   })
 
+
+
+  //// ACCESSING : Type Entries
+
+  _Context.addValueMethod(function knownTypes() {
+    return this._mapKind($IS_TYPE, "knownKeys", VALUE)
+  })
+
+  _Context.addValueMethod(function ownTypes() {
+    return this._mapKind($IS_TYPE, "ownKeys", VALUE)
+  })
+
+  _Context.addValueMethod(function knownTypeNames() {
+    return this._mapKind($IS_TYPE, "knownKeys", KEY)
+  })
+
+  _Context.addValueMethod(function ownTypeNames() {
+    return this._mapKind($IS_TYPE, "ownKeys", KEY)
+  })
+
+
+
+  //// ACCESSING : Context Entries
+
+  _Context.addValueMethod(function knownContexts() {
+    return this._getContexts("knownKeys", VALUE)
+  })
+
+  _Context.addValueMethod(function ownContexts() {
+    return this._getContexts("ownKeys", VALUE)
+  })
+
+  _Context.addValueMethod(function knownContextKeys() {
+    return this._getContexts("knownKeys", KEY)
+  })
+
+  _Context.addValueMethod(function ownContextKeys() {
+    return this._getContexts("ownKeys", KEY)
+  })
+
+
+
+  //// ACCESSING : Entry Keys
 
   _Context.addValueMethod(function knownKeys() {
     var key, index
@@ -130,6 +143,32 @@ HandAxe(function (
 
 
 
+  //// ACCESSING : Hierarchy
+
+  _Context.addValueMethod(function ancestry() {
+    var nextContext = this[$RIND]
+    const contexts = []
+    do {
+      contexts.unshift(nextContext)
+    } while ((nextContext = nextContext.supercontext))
+    return DeclareImmutable(contexts)
+  })
+
+
+
+  //// ACCESSING : Support
+
+  _Context.addValueMethod(function _getContexts(where, selection) {
+    var contexts = this._mapKind($IS_CONTEXT, where, selection)
+    var uniques  = new Set(contexts)
+    return DeclareImmutable([...uniques])
+  }, "INVISIBLE")
+
+
+
+
+  //// ENUMERATING ////
+
   _Context.addSelfMethod(function forEachKnown(action) {
     this._forEachEntry("knownKeys", action)
   })
@@ -137,6 +176,7 @@ HandAxe(function (
   _Context.addSelfMethod(function forEachOwn(action) {
     this._forEachEntry("ownKeys", action)
   })
+
 
   _Context.addValueMethod(function _forEachEntry(where, action) {
     const Entries = this._knownEntries
@@ -164,68 +204,50 @@ HandAxe(function (
     return DeclareImmutable(results)
   })
 
-  const VALUE = 0
-  const KEY   = 1
 
-  _Context.addValueMethod(function knownTypes() {
-    return this._mapKind($IS_TYPE, "knownKeys", VALUE)
-  })
 
-  _Context.addValueMethod(function ownTypes() {
-    return this._mapKind($IS_TYPE, "ownKeys", VALUE)
-  })
 
-  _Context.addValueMethod(function knownTypeNames() {
-    return this._mapKind($IS_TYPE, "knownKeys", KEY)
-  })
+  //// INTRINSIC ////
 
-  _Context.addValueMethod(function ownTypeNames() {
-    return this._mapKind($IS_TYPE, "ownKeys", KEY)
+  _Context.addValueMethod(function beImpenetrable() {
+    var selector, entry
+    if (this.isImpenetrable) { return this }
+    const entries = this._knownEntries
+    for (selector in entries) {
+      entry = entries[selector]
+      if (ValueIsSomething(entry)) { entry.beImpenetrable }
+    }
+    return this._super.beImpenetrable
   })
 
 
-  _Context.addValueMethod(function _getContexts(where, selection) {
-    var contexts = this._mapKind($IS_CONTEXT, where, selection)
-    var uniques  = new Set(contexts)
-    return DeclareImmutable([...uniques])
-  }, "INVISIBLE")
-
-  _Context.addValueMethod(function knownContexts() {
-    return this._getContexts("knownKeys", VALUE)
+  _Context.addValueMethod(function _setPropertiesImmutable(inPlace, visited) {
+    const Entries = this._knownEntries
+    this.forEachOwn((entry, key) => {
+      var _$entry, fact
+      _$entry = InterMap.get(entry)
+      if (_$entry && _$entry[$IS_TYPE]) { entry.setImmutable(inPlace, visited) }
+      else {
+        fact = ValueAsFact(entry, inPlace, visited)
+        if (fact !== entry) { this[key] = Entries[key] = fact }
+      }
+    })
+    return this
   })
 
-  _Context.addValueMethod(function ownContexts() {
-    return this._getContexts("ownKeys", VALUE)
-  })
 
-  _Context.addValueMethod(function knownContextKeys() {
-    return this._getContexts("knownKeys", KEY)
-  })
 
-  _Context.addValueMethod(function ownContextKeys() {
-    return this._getContexts("ownKeys", KEY)
-  })
 
-  _Context.addValueMethod(function knownContextNames() {
-    return DeclareImmutable(this.knownContexts.map(context => context.name))
-  })
-
-  _Context.addValueMethod(function ownContextNames() {
-    return DeclareImmutable(this.ownContexts.map(context => context.name))
-  })
-
+  //// ERROR HANDLING ////
 
   _Context.addSelfMethod(function _entryOvershadowsPropertyError(selector) {
     return this._signalError(`Entry cannot overshadow existing property '${selector}'!!`)
   }, "INVISIBLE")
 
 
-  // myContext(function (Dog, _Dog, Dog_, Dog$) {})
-  //
-  //  Dog   current
-  //  _Dog  mutable copy
-  //  $Dog  inherited
-  //  Dog_  permeable copy
+
+
+  //// INSTANTIATING ////
 
   _Context.addValueMethod(function newSub(execFunc) {
     return this._exec(execFunc, true)
@@ -234,10 +256,16 @@ HandAxe(function (
   _Context.addAlias("newSubcontext", "newSub")
 
 
-  _Context.addValueMethod(function exec(execFunc) {
-    return this._exec(execFunc, false)
-  })
 
+
+  //// EXECUTING ////
+
+  // myContext(function (Dog, _Dog, Dog_, Dog$) {})
+  //
+  //  Dog   current
+  //  _Dog  mutable copy
+  //  $Dog  inherited
+  //  Dog_  permeable copy
 
   // Work(function Xyz(Employee, Office, Job, Building) {
   //   this.
@@ -247,11 +275,10 @@ HandAxe(function (
   //   this.
   // })
 
-  _Context.addValueMethod(function _hasOverwritingParam(marked) {
-    const mutability = marked[MUTABLE]
-    return mutability ||
-      this[IMMUTABLE] && (mutability !== undefined) || false
-  }, "INVISIBLE")
+  _Context.addValueMethod(function exec(execFunc) {
+    return this._exec(execFunc, false)
+  })
+
 
   _Context.addValueMethod(function _exec(execFunc, forceAsCopy_) {
     const sourceContext = this[$RIND]
@@ -280,6 +307,16 @@ HandAxe(function (
     execFunc.apply(execContext, args)
     return execContext
   })
+
+
+
+  //// EXECUTING : support
+
+  _Context.addValueMethod(function _hasOverwritingParam(marked) {
+    const mutability = marked[MUTABLE]
+    return mutability ||
+      this[IMMUTABLE] && (mutability !== undefined) || false
+  }, "INVISIBLE")
 
 
 

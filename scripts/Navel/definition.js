@@ -4,7 +4,10 @@ HandAxe(function (
   AddIntrinsicDeclaration, Definition, KnowAndSetFuncImmutable,
   _Definition
 ) {
-  // "use strict"
+  "use strict"
+
+
+  //// ACCESSING ////
 
   _Definition.addRetroactiveValue("super", {
     super : function () {
@@ -27,10 +30,9 @@ HandAxe(function (
   }.super)
 
 
-  // _Definition.addLazyProperty(function isLazy() {
-  //   return (this.mode === LAZY_INSTALLER)
-  // })
 
+
+  //// CONVERTING ////
 
   _Definition.addValueMethod(function toString(_) { // eslint-disable-line
     var count = this.handler.length
@@ -38,16 +40,23 @@ HandAxe(function (
   })
 
 
-  // AddIntrinsicDeclaration("isDeclaration")
-  // AddIntrinsicDeclaration("isDurable")
-  // AddIntrinsicDeclaration("isAssigner")
-  // AddIntrinsicDeclaration("isProperty")
-  // AddIntrinsicDeclaration("isMethod")
 
+
+  //// ERROR HANDLING ////
 
   _Definition.addMethod(function _invalidSelectorError(selector) {
     this._signalError(`Definition must be set with a valid selector!! Not: '${selector}'`)
   }, "INVISIBLE")
+
+
+
+
+  //// TESTING ////
+
+  // _Definition.addLazyProperty(function isLazy() {
+  //   return (this.mode === LAZY_INSTALLER)
+  // })
+
 
 })
 
