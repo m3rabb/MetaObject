@@ -1,5 +1,5 @@
 HandAxe._(function (
-  Thing_, Type_, $BARRIER, $INNER, $OUTER, GlazeImmutable, RootOf
+  Thing_, Type_, $BARRIER, $INNER, $OUTER, DeclareImmutable, RootOf
 ) {
   "use strict"
 
@@ -9,8 +9,8 @@ HandAxe._(function (
     function mood(newMood) { return `very ${newMood}` }
 
     beforeAll(function () {
-      this.redBall  = GlazeImmutable({color : "red"})
-      this.blueBall = GlazeImmutable({color : "blue"})
+      this.redBall  = DeclareImmutable({color : "red"})
+      this.blueBall = DeclareImmutable({color : "blue"})
 
       this.Cat_ = Type_.new({
         name   : "Cat",
@@ -424,7 +424,7 @@ HandAxe._(function (
 
       describe("When the value is an immutable JS object", function() {
         beforeEach(function () {
-          this.value     = GlazeImmutable([1, 2, 3])
+          this.value     = DeclareImmutable([1, 2, 3])
           this.$pulp.xyz = this.value
         })
 

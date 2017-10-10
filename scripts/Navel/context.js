@@ -3,7 +3,7 @@ HandAxe(function (
   COUNT, IMMUTABLE, INHERITED, MUTABLE, MUTABLE_PASS_FUNCS,
   PERMEABLE, VALUE_METHOD,
   AlwaysPass1st, AlwaysPass2nd, AsDecapitalized, BePermeable,
-  CompareSelectors, BeImmutableValue, GlazeImmutable,
+  CompareSelectors, BeImmutableValue, DeclareImmutable,
   DefaultContext, Definition, Definition_init, EmptyThingAncestry,
   ExtractParamNames, InterMap, IsSubtypeOfThing,
   RootContext, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
@@ -84,7 +84,7 @@ HandAxe(function (
     do {
       contexts.unshift(nextContext)
     } while ((nextContext = nextContext.supercontext))
-    return GlazeImmutable(contexts)
+    return DeclareImmutable(contexts)
   })
 
 
@@ -121,7 +121,7 @@ HandAxe(function (
 
     index = 0
     for (key in entries) { keys[index++] = key }
-    return GlazeImmutable(keys.sort(CompareSelectors))
+    return DeclareImmutable(keys.sort(CompareSelectors))
   })
 
   _Context.addValueMethod(function ownKeys() {
@@ -149,7 +149,7 @@ HandAxe(function (
     var   index   = 0
     this._forEachEntry(
       where, (entry, key) => results[index++] = action(entry, key))
-    return GlazeImmutable(results)
+    return DeclareImmutable(results)
   })
 
   _Context.addValueMethod(function _mapKind(which, where, selection) {
@@ -161,7 +161,7 @@ HandAxe(function (
         results[index++] = [entry, key][selection]
       }
     })
-    return GlazeImmutable(results)
+    return DeclareImmutable(results)
   })
 
   const VALUE = 0
@@ -187,7 +187,7 @@ HandAxe(function (
   _Context.addValueMethod(function _getContexts(where, selection) {
     var contexts = this._mapKind($IS_CONTEXT, where, selection)
     var uniques  = new Set(contexts)
-    return GlazeImmutable([...uniques])
+    return DeclareImmutable([...uniques])
   }, "INVISIBLE")
 
   _Context.addValueMethod(function knownContexts() {
@@ -207,11 +207,11 @@ HandAxe(function (
   })
 
   _Context.addValueMethod(function knownContextNames() {
-    return GlazeImmutable(this.knownContexts.map(context => context.name))
+    return DeclareImmutable(this.knownContexts.map(context => context.name))
   })
 
   _Context.addValueMethod(function ownContextNames() {
-    return GlazeImmutable(this.ownContexts.map(context => context.name))
+    return DeclareImmutable(this.ownContexts.map(context => context.name))
   })
 
 

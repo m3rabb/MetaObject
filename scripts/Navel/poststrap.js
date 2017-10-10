@@ -1,7 +1,7 @@
 HandAxe(function (
   $INNER, $OUTER_WRAPPER, $PULP, $RIND, INHERIT, INVISIBLE,
-  $BaseBlanker, $IntrinsicBlanker, BasicSetInvisibly, FreezeSurface,
-  GlazeImmutable, InterMap, ImplementationSelectors, IsPublicSelector,
+  $BaseBlanker, $IntrinsicBlanker, BasicSetInvisibly, DeclareImmutable,
+  FreezeSurface, InterMap, ImplementationSelectors, IsPublicSelector,
   SetAsymmetricProperty, SpawnFrom,
   TheEmptyArray, _$DefaultContext, _$Intrinsic, _$Something, _BasicSetImmutable,
   _RootContext, _Context, _Definition, _Nothing, _Thing, _Type, _OwnKeysOf,
@@ -16,7 +16,7 @@ HandAxe(function (
   _Context.addDeclaration($OUTER_WRAPPER) // Ensures method wrappers work!!!
 
 
-  const ThingAncestry = GlazeImmutable([_Thing[$RIND]])
+  const ThingAncestry = DeclareImmutable([_Thing[$RIND]])
   const BasicSet      = $IntrinsicBlanker.$root$inner._basicSet
 
   const  TestContext  = _Context.new("_Implementation", RootContext)
@@ -64,7 +64,7 @@ HandAxe(function (
   // in the descendent $roots.
   FreezeSurface($BaseBlanker.$root$outer)
   FreezeSurface($BaseBlanker.$root$inner)
-  GlazeImmutable($BaseBlanker)
+  DeclareImmutable($BaseBlanker)
 
   BasicSetInvisibly(_$DefaultContext, "iid", 0, "SET OUTER TOO")
   RootContext.iid

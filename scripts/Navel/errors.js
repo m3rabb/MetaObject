@@ -55,7 +55,7 @@ HandAxe(function (
 
 
   _Shared.GlazeError = function (_target) {
-    SignalError(_target, "GlazeImmutable and GlaseAsImmutable can only be called on standard JS objects!!")
+    SignalError(_target, "DeclareImmutable and DeclareAsImmutable can only be called on standard JS objects!!")
   }
 
   _Shared.DirectAssignmentFromOutsideError = function ($target) {

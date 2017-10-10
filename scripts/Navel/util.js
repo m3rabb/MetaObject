@@ -10,14 +10,14 @@ HandAxe(function (
 
 
   // This method should only be called on a mutable object|func!!!
-  function GlazeImmutable(object) {
+  function DeclareImmutable(object) {
     if (object[$IS_INNER] === PROOF) { return GlazeError(object) }
     object[IMMUTABLE] = true
     return FreezeSurface(object)
   }
 
   // This method should only be called on an object|func!!!
-  function GlazeAsImmutable(object) {
+  function DeclareAsImmutable(object) {
     if (object[IMMUTABLE]) { return object }
     if (object[$IS_INNER] === PROOF) { return GlazeError(object) }
     object[IMMUTABLE] = true
@@ -67,7 +67,7 @@ HandAxe(function (
 
   function SortedOwnSelectorsUsing(value, picker, sorter_) {
     return (value == null) ? TheEmptyArray :
-      GlazeImmutable(picker(Object(value)).sort(sorter_))
+      DeclareImmutable(picker(Object(value)).sort(sorter_))
       // Note: proxy forces _OwnSelectorsOf to be called
   }
 
@@ -124,7 +124,7 @@ HandAxe(function (
       target = RootOf(target)
     } while (target !== root)
 
-    return GlazeImmutable(allSelectors.sort(sorter_))
+    return DeclareImmutable(allSelectors.sort(sorter_))
   }
 
 
@@ -133,7 +133,7 @@ HandAxe(function (
     const visibles = []
     index = 0
     for (name in value) { visibles[index++] = name }
-    return GlazeImmutable(visibles.sort())
+    return DeclareImmutable(visibles.sort())
   }
 
   function _KnownVisiblesOf(value) {
@@ -227,7 +227,7 @@ HandAxe(function (
 
   function DiffAndSort(left, right, sorter_) {
     const remainder = left.filter(item => !right.includes(item))
-    return GlazeImmutable(remainder.sort(sorter_))
+    return DeclareImmutable(remainder.sort(sorter_))
   }
 
   function MergeAndSort(longer, shorter, sorter_) {
@@ -237,7 +237,7 @@ HandAxe(function (
       if (!longer.includes(item)) { combined[index++] = item }
     })
     combined = combined.concat(longer)
-    return GlazeImmutable(combined.sort(sorter_))
+    return DeclareImmutable(combined.sort(sorter_))
   }
 
   function _PrimarySelectorsOf(_target) {
@@ -483,8 +483,8 @@ HandAxe(function (
   }
 
 
-  Shared.glazeImmutable           = KnowFunc(GlazeImmutable)
-  Shared.glazeAsImmutable         = KnowFunc(GlazeAsImmutable)
+  Shared.declareImmutable         = KnowFunc(DeclareImmutable)
+  Shared.declareAsImmutable       = KnowFunc(DeclareAsImmutable)
 
   Shared._ownVisibleNamesOf       = KnowFunc(_OwnVisibleNamesOf)
   Shared._ownVisiblesOf           = KnowFunc(_OwnVisiblesOf)

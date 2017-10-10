@@ -1,5 +1,5 @@
 HandAxe._(function (
-  $BARRIER, $OUTER, $PULP, GlazeImmutable, IsSurfaceFrozen, RootOf, Type
+  $BARRIER, $OUTER, $PULP, DeclareImmutable, IsSurfaceFrozen, RootOf, Type
 ) {
   "use strict"
 
@@ -9,7 +9,7 @@ HandAxe._(function (
     function mood(newMood) { return `very ${newMood}` }
 
     beforeAll(function () {
-      this.redBall = GlazeImmutable({color : "red"})
+      this.redBall = DeclareImmutable({color : "red"})
 
       this.CatSpec = {
         name   : "Cat",

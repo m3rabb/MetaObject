@@ -17,7 +17,7 @@ HandAxe(function (
   AncestryOfPermeableTypeError, DuplicateSupertypeError,
   ImproperChangeToAncestryError, UnnamedFuncError,
   AsDefinitionFrom, SpawnFrom,
-  GlazeAsImmutable, GlazeImmutable,
+  DeclareAsImmutable, DeclareImmutable,
   OwnPublicsOf, OwnSelectorsOf, OwnVisiblesOf, OwnVisibleNamesOf, RootOf,
   _KnownSelectorsOf, _OwnKeysOf, _OwnSelectorsOf,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
@@ -382,7 +382,7 @@ HandAxe(function (
     const $root$inner = this._blanker.$root$inner
     const durables    = $root$inner[_DURABLES] || []
     if (!durables.includes(selector)) {
-      $root$inner[_DURABLES] = GlazeImmutable([...durables, selector])
+      $root$inner[_DURABLES] = DeclareImmutable([...durables, selector])
       this.addDeclaration(selector)
     }
   })
@@ -540,11 +540,11 @@ HandAxe(function (
 
 
   _Type.addValueMethod(function ancestryNames() {
-    return GlazeImmutable(this._ancestry.map(type => type.name))
+    return DeclareImmutable(this._ancestry.map(type => type.name))
   })
 
   _Type.addValueMethod(function supertypeNames() {
-    return GlazeImmutable(this._supertypes.map(type => type.name))
+    return DeclareImmutable(this._supertypes.map(type => type.name))
   })
 
 
@@ -564,8 +564,8 @@ HandAxe(function (
 
   _Type.addValueMethod(function _setSupertypesAndAncestry(
                                       supertypes, ancestry, inheritSpec_) {
-    this._supertypes = GlazeAsImmutable(supertypes)
-    this._ancestry   = GlazeImmutable(ancestry)
+    this._supertypes = DeclareAsImmutable(supertypes)
+    this._ancestry   = DeclareImmutable(ancestry)
     if (inheritSpec_) { this._inheritAllDefinitions(inheritSpec_) }
     return this._setAsSubordinateOfSupertypes(supertypes)
   }, "INVISIBLE")
@@ -774,7 +774,7 @@ HandAxe(function (
   _Type.addValueMethod(function _setImmutable(inPlace, visited) { // eslint-disable-line
     this.id // Lazyily sets the id (& uid) befoe it's too late.
     this._subordinateTypes = TheEmptyArray
-    GlazeImmutable(this[$DISGUISE])
+    DeclareImmutable(this[$DISGUISE])
     // return this._super._setImmutable(inPlace, visited)
     return this._basicSetImmutable()
   })
@@ -861,7 +861,7 @@ HandAxe(function (
 
 
   _Type.addValueMethod(function methodAncestry(selector) {
-    return GlazeImmutable(
+    return DeclareImmutable(
       this._ancestry.filter(type => type.hasDefinedMethod(selector)))
   })
 
@@ -903,7 +903,7 @@ HandAxe(function (
         selectors[index++] = selector
       }
     })
-    return GlazeImmutable(selectors.sort(CompareSelectors))
+    return DeclareImmutable(selectors.sort(CompareSelectors))
   }, "INVISIBLE")
 
   _Type.addValueMethod(function definedSelectors() {
@@ -929,7 +929,7 @@ HandAxe(function (
   })
 
   _Type.addValueMethod(function definedVisiblePublics() {
-    return GlazeImmutable(this.definedVisibles.filter(IsPublicSelector))
+    return DeclareImmutable(this.definedVisibles.filter(IsPublicSelector))
   })
 
 
@@ -956,7 +956,7 @@ HandAxe(function (
   })
 
   _Type.addValueMethod(function allDefinedVisiblePublics() {
-    return GlazeImmutable(this.allDefinedVisibles.filter(IsPublicSelector))
+    return DeclareImmutable(this.allDefinedVisibles.filter(IsPublicSelector))
   })
 
 
@@ -982,13 +982,13 @@ HandAxe(function (
   //       if (!knowns[tag]) { selectors[index++] = knowns[tag] = tag }
   //     })
   //   }
-  //   return GlazeImmutable(selectors.sort(CompareSelectors))
+  //   return DeclareImmutable(selectors.sort(CompareSelectors))
   // })
 
   // _Type.addValueMethod(function allDefinedPublicSelectors() {
   //   // All public selectors
   //   const definedSelectors = this.allDefinedSelectors
-  //   return GlazeImmutable(definedSelectors.filter(IsPublicSelector))
+  //   return DeclareImmutable(definedSelectors.filter(IsPublicSelector))
   // })
 
 

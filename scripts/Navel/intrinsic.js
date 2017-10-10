@@ -18,7 +18,7 @@ HandAxe(function (
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   AsDefinitionFrom, BasicSetInvisibly, CompareSelectors,
-  CompletelyDeleteProperty, DiffAndSort, FindAndSetDurables, GlazeImmutable,
+  CompletelyDeleteProperty, DeclareImmutable, DiffAndSort, FindAndSetDurables,
   MakeDefinitionsInfrastructure, NewUniqueId, NormalizeCopyArgs, PropertyAt,
   SetDefinition, SpawnFrom, ValueAsFact, ValueAsName,
   _BasicSetImmutable, _HasOwnHandler, _$Copy, _$Intrinsic,
@@ -372,7 +372,7 @@ HandAxe(function (
   _$Intrinsic.addSelfMethod(function _addOwnDurable(selector) {
     var durables = this[_DURABLES] || []
     if (!durables.includes(selector)) {
-      this[$INNER][_DURABLES] = GlazeImmutable([...durables, selector])
+      this[$INNER][_DURABLES] = DeclareImmutable([...durables, selector])
       this.addOwnDeclaration(selector)
     }
   })

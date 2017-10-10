@@ -310,7 +310,12 @@ Add
 In types, change _blanker to $INSTANCE_BLANKER
 
 ==
-Check when using addSharedProperty to add a func 
+Check when using addSharedProperty to add a func
+
+==
+Add petrified
+asPetrified
+bePetrified
 
 ==========
 

@@ -1,6 +1,6 @@
 HandAxe._(function (
   $BARRIER, $INNER, $OUTER, $PULP,
-  GlazeImmutable, RootOf, Type, ValueHasOwn
+  DeclareImmutable, RootOf, Type, ValueHasOwn
 ) {
   "use strict"
 
@@ -27,7 +27,7 @@ HandAxe._(function (
               this[$BARRIER].isInUse,
               this[$BARRIER]._$target,
             ]
-            return GlazeImmutable(results)
+            return DeclareImmutable(results)
           },
 
           "SELF",
