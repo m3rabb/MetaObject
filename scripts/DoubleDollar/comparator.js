@@ -530,10 +530,10 @@ mutable                       immutable
 is(Same)                          the exact same object
 isExactly                         same type/structure/mutablility
 isIdentical (forever)      same object                   same type/values
-isEqual (W|R)    same type/structure/submutability       same type/values
-isEquivalent (for R)       same values (ignore mutability)
-isAlike      (for R)       same values (ignore mutability, type)
-isSimilar    (for R)       same values (ignore mutability, type, case)
+isEqual (W|R)       same type/structure/mutability       same type/values
+isEquivalent (for R)       same type/values
+isAlike      (for R)       alike values
+isSimilar    (for R)       similar values ignore case
 
 isEquivEqual (for R)       equivalent root, equal children
 isAlikeEqual (for R)       alike root     , equal children
