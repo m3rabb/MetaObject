@@ -310,3 +310,5 @@ delector|delight|delightment
        Thing
     jsobject
      Object
+
+innate vs intrinsic

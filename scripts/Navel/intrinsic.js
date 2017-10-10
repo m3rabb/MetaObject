@@ -1,17 +1,4 @@
-// $Innate methods
-//   id
-//   _basicSet
-//   other basicMethods
-//   $
-//   _super
-//   isPermeable
-//   isImmutable|isMutable
-//   beImmutable
-//   typeMembership methods
-//   asMutable|asCopy
-//   copying methods
-//
-// USER CAN/SHOULD NEVER REDEFINE INATE METHODS
+// Programmers should never redefine these intrinsic methods!!!
 
 HandAxe(function (
   $BLANKER, $IMMEDIATES, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
@@ -32,11 +19,92 @@ HandAxe(function (
   "use strict"
 
 
+
+
+  //// INITIALIZING ////
+
   _$Intrinsic.addDeclaration("_initFrom_")
   _$Intrinsic.addDeclaration("_postInit")
+
+
+
+
+  //// INTRINSIC ////
+
+  //// INTRINSIC : Immutablility
+
+  _$Intrinsic.addValueMethod(function beImmutable() {
+    return this[IMMUTABLE] ? this : this._setImmutable()
+  })
+
+  _$Intrinsic.addValueMethod(function setImmutable(inPlace_, visited_) {
+    if (this[IMMUTABLE]) { return this }
+    const [inPlace, visited] = (typeof inPlace_ === "object") ?
+      [undefined, inPlace_] : [inPlace_, visited_]
+    return this._setImmutable(inPlace, visited)
+  })
+
+
+  // This method should only be called on a mutable object!!!
+  _$Intrinsic.addValueMethod(function _setImmutable(inPlace, visited) {
+    var durables, selector, next, value, nextValue
+    const $inner                  = this[$INNER]
+    const $rind                   = $inner[$RIND]
+    const _setPropertiesImmutable = $inner._setPropertiesImmutable
+
+    visited = visited || new WeakMap()
+    visited.set($rind, $rind)
+
+    if (_setPropertiesImmutable) {
+      _setPropertiesImmutable.call(this, inPlace, visited)
+    }
+    else {
+      durables = $inner[_DURABLES] || FindAndSetDurables($inner)
+      next      = durables.length
+
+      while (next--) {
+        selector = durables[next]
+        if (selector[0] !== "_") { continue }
+
+        value     = $inner[selector]
+        nextValue = ValueAsFact(value, inPlace, visited)
+        if (nextValue !== value) { $inner[selector] = nextValue }
+      }
+    }
+
+    return this._basicSetImmutable()
+  })
+
   _$Intrinsic.addDeclaration("_setPropertiesImmutable")
 
 
+
+  //// INTRINSIC : Permeability
+
+  _$Intrinsic.addValueMethod(function beImpenetrable() {
+    this[$INNER][$IS_IMPENETRABLE] = true
+    return this
+  })
+
+
+
+  //// INTRINSIC : Exception Handling
+
+  // eslint-disable-next-line
+  _$Intrinsic.addValueMethod(function _unknownProperty(selector) {
+    return undefined
+  })
+
+  _$Intrinsic.addValueMethod(function _externalPrivateAccess(selector) {
+    return this._externalPrivateAccessError(selector)
+  })
+
+
+
+
+  //// TESTING ////
+
+  //// TESTING : Intrinsic
 
   _$Intrinsic.addValueMethod(function isMutable() {
     return !this[IMMUTABLE]
@@ -46,12 +114,185 @@ HandAxe(function (
     return this[IMMUTABLE] || (this.id != null)
   })
 
-
   _$Intrinsic.addValueMethod(function isA(type) {
     return this[type.membershipSelector]
   })
 
+  _$Intrinsic.addValueMethod(function isImpenetrable() {
+    return this[$IS_IMPENETRABLE] || false
+  })
 
+
+
+  //// TESTING : Selectors
+
+  _$Intrinsic.addValueMethod(function hasOwn(selector) {
+    switch (selector[0]) {
+      case undefined : return undefined  // "Shrug when selector is a symbol
+      case "_"       : return undefined
+      default        : return this._hasOwn(selector)
+    }
+  })
+
+  _$Intrinsic.addValueMethod(function has(selector) {
+    return (selector in this[$OUTER])
+  })
+
+
+  _$Intrinsic.addValueMethod("_hasOwn", _HasOwnHandler)
+
+  _$Intrinsic.addValueMethod(function _has(selector) {
+    return (selector in this[$INNER])
+  })
+
+
+
+
+  //// SETTING ////
+
+  _$Intrinsic.addValueMethod(function _basicSet(property, value) {
+    const selector = PropertyToSymbolMap[property] || property
+    this[selector] = value
+    return this
+  })
+
+
+
+
+  //// ACCESSING ////
+
+  //// ACCESSING : Ids
+
+  _$Intrinsic.addValueMethod(function oid() {
+    const permeability = this.isPermeable ? "._" : ""
+    return `${this.iid}${permeability}.${this.type.formalName}`
+  })
+
+  _$Intrinsic.addValueMethod(function basicId() {
+    const permeability = this.isPermeable ? "._" : ""
+    return `#${this.uid}${permeability}.${this.type.name}`
+  })
+
+  _$Intrinsic.addRetroactiveValue(function iid() {
+    return InterMap.get(this.type)[$PULP]._nextIID
+  })
+
+  _$Intrinsic.addRetroactiveValue(function uid() {
+    return this._hasOwn("guid") ? this.guid : NewUniqueId()
+  })
+
+
+
+  //// ACCESSING : Intrinsic
+
+  _$Intrinsic.addValueMethod(function typeName() {
+    return this.type.name
+  })
+
+  _$Intrinsic.addValueMethod(function contextName() {
+    return this.context.name
+  })
+
+
+
+  //// ACCESSING : Selector introspection
+
+  _$Intrinsic.addValueMethod(function ownVisibleNameSelectors() {
+    // Not retroactive|lazy properties or symbols
+    return OwnVisibleNamesOf(this[$OUTER])
+  })
+
+  _$Intrinsic.addValueMethod(function ownNameSelectors() {
+    // Includes placed retroactive|lazy properties, but not symbols
+    return OwnNamesOf(this[$OUTER])
+  })
+
+
+  _$Intrinsic.addValueMethod(function primarySelectors() {
+    return _PrimaryPublicSelectorsOf(this)
+  })
+
+  _$Intrinsic.addValueMethod(function primaryImmediates() {
+    const immediates = _KnownSelectorsOf(this[$IMMEDIATES])
+    return IntersectAndSort(this.primarySelectors, immediates)
+  })
+
+  _$Intrinsic.addValueMethod(function knownIntrinsicSelectors() {
+    return _KnownVisiblesOf(_$Intrinsic._blanker.$root$outer)
+  })
+
+  _$Intrinsic.addValueMethod(function visibleNameSelectors() {
+    return _KnownVisibleNamesOf(this[$OUTER])
+  })
+
+  _$Intrinsic.addValueMethod(function knownNameSelectors() {
+    // All selectors except symbols or private selectors
+    return _KnownNamesOf(this[$OUTER])
+  })
+
+
+
+  _$Intrinsic.addValueMethod(function _ownVisibleSelectors() {
+    return OwnVisiblesOf(this[$INNER])
+  })
+
+  _$Intrinsic.addValueMethod(function _ownInvisibleSelectors() {
+    return DiffAndSort(
+      this._ownSelectors, this._ownVisibleSelectors, CompareSelectors)
+  })
+
+  _$Intrinsic.addValueMethod(function _ownSelectors() {
+    // All string and symbol properties, includes invisibles
+    return OwnSelectorsOf(this[$INNER])
+  })
+
+
+  _$Intrinsic.addValueMethod(function _primarySelectors() {
+    return _PrimarySelectorsOf(this)
+  })
+
+  _$Intrinsic.addValueMethod(function _primaryImmediates() {
+    const immediates = _KnownSelectorsOf(this[$IMMEDIATES])
+    return IntersectAndSort(this._primarySelectors, immediates)
+  })
+
+  _$Intrinsic.addValueMethod(function _intrinsicSelectors() {
+    return _KnownSelectorsOf(_$Intrinsic._blanker.$root$inner)
+  })
+
+  _$Intrinsic.addValueMethod(function _visibleSelectors() {
+    return _KnownVisiblesOf(this[$INNER])
+  })
+
+  _$Intrinsic.addValueMethod(function _invisibleSelectors() {
+    return DiffAndSort(
+      this._knownSelectors, this._visibleSelectors, CompareSelectors)
+  })
+
+  _$Intrinsic.addValueMethod(function _knownSelectors() {
+    return _KnownSelectorsOf(this[$INNER])
+  })
+
+
+
+  //// ACCESSING : Properties
+
+  _$Intrinsic.addMethod(function propertyAt(selector) {
+    return (selector[0] !== "_") ? PropertyAt(this[$INNER], selector) : null
+    // If restoring the following, also add it back to InSetProperty.
+    // return ((selector[0] || selector.toString()[SYMBOL_1ST_CHAR]) !== "_") ?
+    //   PropertyAt(this[$INNER], selector) : null
+  })
+
+
+  _$Intrinsic.addValueMethod(function _propertyAt(selector) {
+    return PropertyAt(this[$INNER], selector)
+  })
+
+
+
+
+  //// COPYING ////
 
   _$Intrinsic.addValueMethod(function copy(asImmutable_, visited_, context_) {
     var _value, context
@@ -99,11 +340,6 @@ HandAxe(function (
   })
 
 
-  // _$Intrinsic.addValueMethod(function _nonCopy() {
-  //   return this[IMMUTABLE] ? this._newBlank()[$RIND] : this
-  // })
-
-
   _$Intrinsic.addValueMethod(function asCopy() {
     const $inner = this[$INNER]
     return ($inner[IMMUTABLE] ? $inner : _$Copy($inner))[$RIND]
@@ -127,226 +363,18 @@ HandAxe(function (
 
 
 
-  _$Intrinsic.addValueMethod(function setImmutable(inPlace_, visited_) {
-    if (this[IMMUTABLE]) { return this }
-    const [inPlace, visited] = (typeof inPlace_ === "object") ?
-      [undefined, inPlace_] : [inPlace_, visited_]
-    return this._setImmutable(inPlace, visited)
+
+  //// ADDING ////
+
+  // eslint-disable-next-line
+  _$Intrinsic.addSelfMethod(function addOwnMethod(func_selector, func_, mode__) {
+    const [selector, handler, mode = FACT_METHOD] =
+      (typeof func_selector === "function") ?
+        [func_selector.name, func_selector, func_ ] :
+        [func_selector     , func_        , mode__]
+    const definition = this.context.Definition(selector, handler, mode)
+    this.addOwnDefinition(definition)
   })
-
-
-  _$Intrinsic.addValueMethod(function beImmutable() {
-    return this[IMMUTABLE] ? this : this._setImmutable()
-  })
-
-
-  // This method should only be called on a mutable object!!!
-  _$Intrinsic.addValueMethod(function _setImmutable(inPlace, visited) {
-    var durables, selector, next, value, nextValue
-    const $inner                  = this[$INNER]
-    const $rind                   = $inner[$RIND]
-    const _setPropertiesImmutable = $inner._setPropertiesImmutable
-
-    visited = visited || new WeakMap()
-    visited.set($rind, $rind)
-
-    if (_setPropertiesImmutable) {
-      _setPropertiesImmutable.call(this, inPlace, visited)
-    }
-    else {
-      durables = $inner[_DURABLES] || FindAndSetDurables($inner)
-      next      = durables.length
-
-      while (next--) {
-        selector = durables[next]
-        if (selector[0] !== "_") { continue }
-
-        value     = $inner[selector]
-        nextValue = ValueAsFact(value, inPlace, visited)
-        if (nextValue !== value) { $inner[selector] = nextValue }
-      }
-    }
-
-    return this._basicSetImmutable()
-  })
-
-
-
-  _$Intrinsic.addValueMethod(function _newBlank() {
-    const $inner     = this[$INNER]
-    const _$instance = new $inner[$BLANKER]()
-    const $instance  = new _$instance[$OUTER]
-
-    if ($inner[$OUTER].this) {
-      BasicSetInvisibly($instance, "this", _$instance[$PULP])
-    }
-    return _$instance[$RIND]
-  })
-
-
-
-  _$Intrinsic.addValueMethod("_hasOwn", _HasOwnHandler)
-
-  _$Intrinsic.addValueMethod(function hasOwn(selector) {
-    switch (selector[0]) {
-      case undefined : return undefined  // "Shrug when selector is a symbol
-      case "_"       : return undefined
-      default        : return this._hasOwn(selector)
-    }
-  })
-
-
-  _$Intrinsic.addValueMethod(function _has(selector) {
-    return (selector in this[$INNER])
-  })
-
-  _$Intrinsic.addValueMethod(function has(selector) {
-    return (selector in this[$OUTER])
-  })
-
-
-
-  _$Intrinsic.addValueMethod(function _ownVisibleSelectors() {
-    return OwnVisiblesOf(this[$INNER])
-  })
-
-  _$Intrinsic.addValueMethod(function _ownInvisibleSelectors() {
-    return DiffAndSort(
-      this._ownSelectors, this._ownVisibleSelectors, CompareSelectors)
-  })
-
-  _$Intrinsic.addValueMethod(function _ownSelectors() {
-    // All string and symbol properties, includes invisibles
-    return OwnSelectorsOf(this[$INNER])
-  })
-
-
-  _$Intrinsic.addValueMethod(function _primarySelectors() {
-    return _PrimarySelectorsOf(this)
-  })
-
-  _$Intrinsic.addValueMethod(function _primaryImmediates() {
-    const immediates = _KnownSelectorsOf(this[$IMMEDIATES])
-    return IntersectAndSort(this._primarySelectors, immediates)
-  })
-
-  _$Intrinsic.addValueMethod(function _intrinsicSelectors() {
-    return _KnownSelectorsOf(_$Intrinsic._blanker.$root$inner)
-  })
-
-  _$Intrinsic.addValueMethod(function _visibleSelectors() {
-    return _KnownVisiblesOf(this[$INNER])
-  })
-
-  _$Intrinsic.addValueMethod(function _invisibleSelectors() {
-    return DiffAndSort(
-      this._knownSelectors, this._visibleSelectors, CompareSelectors)
-  })
-
-  _$Intrinsic.addValueMethod(function _knownSelectors() {
-    return _KnownSelectorsOf(this[$INNER])
-  })
-
-
-  _$Intrinsic.addValueMethod(function ownVisibleNameSelectors() {
-    // Not retroactive|lazy properties or symbols
-    return OwnVisibleNamesOf(this[$OUTER])
-  })
-
-  _$Intrinsic.addValueMethod(function ownNameSelectors() {
-    // Includes placed retroactive|lazy properties, but not symbols
-    return OwnNamesOf(this[$OUTER])
-  })
-
-
-  _$Intrinsic.addValueMethod(function primarySelectors() {
-    return _PrimaryPublicSelectorsOf(this)
-  })
-
-  _$Intrinsic.addValueMethod(function primaryImmediates() {
-    const immediates = _KnownSelectorsOf(this[$IMMEDIATES])
-    return IntersectAndSort(this.primarySelectors, immediates)
-  })
-
-  _$Intrinsic.addValueMethod(function knownIntrinsicSelectors() {
-    return _KnownVisiblesOf(_$Intrinsic._blanker.$root$outer)
-  })
-
-  _$Intrinsic.addValueMethod(function visibleNameSelectors() {
-    return _KnownVisibleNamesOf(this[$OUTER])
-  })
-
-  _$Intrinsic.addValueMethod(function knownNameSelectors() {
-    // All selectors except symbols or private selectors
-    return _KnownNamesOf(this[$OUTER])
-  })
-
-
-
-  _$Intrinsic.addValueMethod(function _basicSet(property, value) {
-    const selector = PropertyToSymbolMap[property] || property
-    this[selector] = value
-    return this
-  })
-
-
-
-  _$Intrinsic.addValueMethod(function basicId() {
-    const permeability = this.isPermeable ? "._" : ""
-    return `#${this.uid}${permeability}.${this.type.name}`
-  })
-
-
-  _$Intrinsic.addRetroactiveValue(function uid() {
-    return this._hasOwn("guid") ? this.guid : NewUniqueId()
-  })
-
-
-
-  _$Intrinsic.addValueMethod(function oid() {
-    const permeability = this.isPermeable ? "._" : ""
-    return `${this.iid}${permeability}.${this.type.formalName}`
-  })
-
-
-  _$Intrinsic.addRetroactiveValue(function iid() {
-    return InterMap.get(this.type)[$PULP]._nextIID
-  })
-
-
-
-  _$Intrinsic.addValueMethod(function typeName() {
-    return this.type.name
-  })
-
-  _$Intrinsic.addValueMethod(function contextName() {
-    return this.context.name
-  })
-
-
-
-  _$Intrinsic.addValueMethod(function beImpenetrable() {
-    this[$INNER][$IS_IMPENETRABLE] = true
-    return this
-  })
-
-
-  _$Intrinsic.addValueMethod(function isImpenetrable() {
-    return this[$IS_IMPENETRABLE] || false
-  })
-
-
-
-  // uri
-
-  // @NamedFunction
-  // Navel/30303/Type/367
-
-
-  // _$Intrinsic.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
-  //   return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
-  // }, BASIC_SELF_METHOD)
-  //
 
   _$Intrinsic.addSelfMethod(function addOwnAlias(aliasSelector, selector_definition) {
     var value, _$value
@@ -361,38 +389,9 @@ HandAxe(function (
     this.addOwnDefinition(aliasSelector, value)
   })
 
-
-
   _$Intrinsic.addSelfMethod(function addOwnDeclaration(selector) {
     this.addOwnDefinition(selector, undefined, DECLARATION)
   })
-
-
-  // eslint-disable-next-line
-  _$Intrinsic.addSelfMethod(function addOwnMethod(func_selector, func_, mode__) {
-    const [selector, handler, mode = FACT_METHOD] =
-      (typeof func_selector === "function") ?
-        [func_selector.name, func_selector, func_ ] :
-        [func_selector     , func_        , mode__]
-    const definition = this.context.Definition(selector, handler, mode)
-    this.addOwnDefinition(definition)
-  })
-
-
-  _$Intrinsic.addSelfMethod(function _addOwnDurable(selector) {
-    var durables = this[_DURABLES] || []
-    if (!durables.includes(selector)) {
-      this[$INNER][_DURABLES] = DeclareImmutable([...durables, selector])
-      this.addOwnDeclaration(selector)
-    }
-  })
-
-
-  _$Intrinsic.addSelfMethod(function _addOwnDurables(selectors) {
-    selectors.forEach(selector => this._addOwnDurable(selector))
-  })
-
-
 
   // addOwnDefinition(definition)
   // addOwnDefinition(tag, definition)
@@ -421,20 +420,6 @@ HandAxe(function (
   })
 
 
-
-  _$Intrinsic.addValueMethod(function _propertyAt(selector) {
-    return PropertyAt(this[$INNER], selector)
-  })
-
-  _$Intrinsic.addMethod(function propertyAt(selector) {
-    return (selector[0] !== "_") ? PropertyAt(this[$INNER], selector) : null
-    // If restoring the following, also add it back to InSetProperty.
-    // return ((selector[0] || selector.toString()[SYMBOL_1ST_CHAR]) !== "_") ?
-    //   PropertyAt(this[$INNER], selector) : null
-  })
-
-
-
   // _$Intrinsic.addMethod(function _addOwnValueMethod(...namedFunc_name__handler) {
   //   this.addOwnMethod(...namedFunc_name__handler, VALUE_METHOD)
   // })
@@ -451,39 +436,29 @@ HandAxe(function (
   //   this.addOwnMethod(...namedFunc_name__handler, VALUE_IMMEDIATE)
   // })
 
+  // _$Intrinsic.addMethod(function addOwnLazyProperty(...namedFunc_name__handler) {
+  //   return this.addOwnMethod(...namedFunc_name__handler, LAZY_INSTALLER)
+  // }, BASIC_SELF_METHOD)
 
 
-  // eslint-disable-next-line
-  _$Intrinsic.addValueMethod(function _unknownProperty(selector) {
-    return undefined
+
+
+  _$Intrinsic.addSelfMethod(function _addOwnDurable(selector) {
+    var durables = this[_DURABLES] || []
+    if (!durables.includes(selector)) {
+      this[$INNER][_DURABLES] = DeclareImmutable([...durables, selector])
+      this.addOwnDeclaration(selector)
+    }
   })
 
-  _$Intrinsic.addValueMethod(function _externalPrivateAccess(selector) {
-    return this._externalPrivateAccessError(selector)
-  })
-
-
-  _$Intrinsic.addValueMethod(function _signalError(message) {
-    return SignalError(this, message)
-  })
-
-
-  _$Intrinsic.addValueMethod(function _notYetImplemented(selector) {
-    this._signalError(
-      `The method ${ValueAsName(selector)} has not been implemented yet!!`)
+  _$Intrinsic.addSelfMethod(function _addOwnDurables(selectors) {
+    selectors.forEach(selector => this._addOwnDurable(selector))
   })
 
 
-  _$Intrinsic.addValueMethod(function _externalPrivateAccessError(selector) {
-    return this._signalError(
-      `External access to private property '${ValueAsName(selector)}' is forbidden!!`)
-  }, "INVISIBLE")
-
-  _$Intrinsic.addValueMethod(function _unknownPropertyError(selector) {
-    return this._signalError(`Unknown property '${ValueAsName(selector)}'!!`)
-  }, "INVISIBLE")
 
 
+  //// CONVERTING ////
 
   _$Intrinsic.addValueMethod(Symbol.toPrimitive, function (hint) { // eslint-disable-line
     return this.toString()
@@ -492,15 +467,58 @@ HandAxe(function (
 
 
 
-})
+  //// INSTANTIATING ////
 
+  _$Intrinsic.addValueMethod(function _newBlank() {
+    const $inner     = this[$INNER]
+    const _$instance = new $inner[$BLANKER]()
+    const $instance  = new _$instance[$OUTER]
+
+    if ($inner[$OUTER].this) {
+      BasicSetInvisibly($instance, "this", _$instance[$PULP])
+    }
+    return _$instance[$RIND]
+  })
+
+  // _$Intrinsic.addValueMethod(function _nonCopy() {
+  //   return this[IMMUTABLE] ? this._newBlank() : this
+  // })
+
+
+
+
+  //// ERROR HANDLING ////
+
+  _$Intrinsic.addValueMethod(function _notYetImplemented(selector) {
+    this._signalError(
+      `The method ${ValueAsName(selector)} has not been implemented yet!!`)
+  })
+
+  _$Intrinsic.addValueMethod(function _signalError(message) {
+    return SignalError(this, message)
+  })
+
+
+  _$Intrinsic.addValueMethod(function _unknownPropertyError(selector) {
+    return this._signalError(`Unknown property '${ValueAsName(selector)}'!!`)
+  }, "INVISIBLE")
+
+  _$Intrinsic.addValueMethod(function _externalPrivateAccessError(selector) {
+    return this._signalError(
+      `External access to private property '${ValueAsName(selector)}' is forbidden!!`)
+  }, "INVISIBLE")
+
+})
 
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 */
 
 
-// _beMutable _touch _captureChanges
+// “Innate” means “born with” and should be applied only to living things.
+// “Inherent” means “essential” or “intrinsic” and is best applied to objects or ideas.
+//
+// http://people.physics.illinois.edu/Celia/MsP/Innate-Inherent.pdf
 
 
 
@@ -542,43 +560,27 @@ HandAxe(function (
 
 
 
-
-
-  // _$Intrinsic.addMethod(function _knowns(propertyName) {
-  //   const properties = this[_DURABLES] || FindAndSetDurables(this)
-  //   return (properties[propertyName] !== undefined)
-  // }, BASIC_VALUE_METHOD)
-
-
-  // const ancestry = this.ancestry
-  // const knowns   = SpawnFrom(null)
-  // var   next, _$nextType, nextDefinitions, tag, value
-  //
-  // next = ancestry.length
-  // while (next--) {
-  //   _$nextType      = InterMap.get(ancestry[next])
-  //   nextDefinitions = _$nextType._definitions
-  //
-  //   for (tag in nextDefinitions) {
-  //     if (!knowns[tag]) {
-  //       knowns[tag] = true
-  //       value       = nextDefinitions[tag]
-  //       this._setDefinitionAt(tag, value, REINHERIT)
-  //     }
-  //   }
-  // }
-  //
-  //
-
-
-// AddMethod(_Primordial_root, function hasMethod(selector) {
-//   return this[__type].methodAt(selector) != null
-// })
+// const ancestry = this.ancestry
+// const knowns   = SpawnFrom(null)
+// var   next, _$nextType, nextDefinitions, tag, value
+//
+// next = ancestry.length
+// while (next--) {
+//   _$nextType      = InterMap.get(ancestry[next])
+//   nextDefinitions = _$nextType._definitions
+//
+//   for (tag in nextDefinitions) {
+//     if (!knowns[tag]) {
+//       knowns[tag] = true
+//       value       = nextDefinitions[tag]
+//       this._setDefinitionAt(tag, value, REINHERIT)
+//     }
+//   }
+// }
 //
 //
-//
-//
-//
+
+
 // AddMethod(_Primordial_root, function execWithAll(selector, args) {
 //   return Reflect_apply(this[selector], this, args)
 // })
@@ -612,11 +614,3 @@ HandAxe(function (
 // AddMethod(_Primordial_root, function _superExec(selector, ...args) {
 //   return this._superExecWithAll(selector, args)
 // })
-
-
-
-
-// “Innate” means “born with” and should be applied only to living things.
-// “Inherent” means “essential” or “intrinsic” and is best applied to objects or ideas.
-//
-// http://people.physics.illinois.edu/Celia/MsP/Innate-Inherent.pdf
