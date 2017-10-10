@@ -42,17 +42,20 @@ ownAt
 
 
 // HandAxe
+_ownVisibleNamesOf
 _ownVisiblesOf
 _ownNamesOf
 _ownSymbolsOf
 _ownKeysOf
 
+ownVisibleNamesOf
 ownVisiblesOf
 ownNamesOf
 ownSymbolsOf
 ownSelectorsOf
 ownKeysOf
 
+knownVisibleNamesOf
 knownVisiblesOf
 knownNamesOf
 knownSymbolsOf

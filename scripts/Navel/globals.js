@@ -42,6 +42,7 @@
   Shared.randomUnitValue     = KnowFunc(Math.random)
 
   _Shared.DefineProperty     = Object.defineProperty
+  _Shared.DescriptorsOf      = Object.getOwnPropertyDescriptors
   _Shared.INSTANCEOF         = Symbol.hasInstance
 
 
@@ -176,17 +177,12 @@
   }
 
   function ValueAsName(value) {
-    var name
     switch (typeof value) {
-      case "symbol" :
-        name = value.toString()
-        return name.slice(7, name.length - 1)
-
-      case "function" :
-      case "object"   :
-        return value.name
+      case "symbol"   : return value.toString().slice(7, name.length - 1)
+      case "function" : return value.name
+      case "object"   : return value.name
+      default         : return value
     }
-    return value
   }
 
 

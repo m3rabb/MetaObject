@@ -41,7 +41,7 @@ HandAxe(function (
         // value. Doing this specifically to deal with inherited null id value
         // which breaks defining immediate/lazy id values by the type instances.
         CompletelyDeleteProperty(_$target, selector)
-         _$target[selector] = undefined
+        _$target[selector] = undefined
         _$target[$IMMEDIATES][selector] = _$definition.inner
         if (isPublic) {
           $target[selector] = undefined
@@ -51,7 +51,7 @@ HandAxe(function (
 
       case ASSIGNER :
         _$target[$ASSIGNERS][selector] = _$definition.handler
-        // break omitted
+        break  // break omitted
 
       case DECLARATION :
         if (_$target[selector] === undefined) {
@@ -66,10 +66,10 @@ HandAxe(function (
         // break omitted
 
       case SETTER_METHOD :
-        if (_$target[property] === undefined) {
-          _$target[property] = undefined
-          if (isPublic) { $target[property] = undefined }
-        }
+        // if (_$target[property] === undefined) {
+        //   _$target[property] = undefined
+        //   if (IsPublicSelector(property)) { $target[property] = undefined }
+        // }
         // break omitted
 
       default :
@@ -126,7 +126,6 @@ HandAxe(function (
   }
 
   const Definition_init = function _init(selector, handler, mode, property_) {
-    var tag
     const isPublic = IsPublicSelector(selector)
     const $inner   = this[$INNER]
     const $outer   = $inner[$OUTER]
@@ -143,24 +142,25 @@ HandAxe(function (
     switch(mode) {
       case DECLARATION :
         this.isDeclaration = true
-        this.tag           = (tag = `$declaration@${ValueAsName(selector)}`)
-        ImplementationSelectors[tag] = true
+        this.tag           = `_declaration@${ValueAsName(selector)}`
         return
 
       case ASSIGNER :
         this.isAssigner = true
-        this.tag        = (tag = `$assigner@${ValueAsName(selector)}`)
+        this.tag        = `_assigner@${ValueAsName(selector)}`
         $outer.handler = $inner.handler = KnowFunc(handler, ASSIGNER_FUNC)
-        ImplementationSelectors[tag] = true
         return
 
       case MANDATORY_SETTER_METHOD :
+        this.isMandatory       = true
+        this.mappedSymbol      = AsPropertySymbol(property_)
         $outer.assignmentError = $inner.assignmentError =
           NewAssignmentErrorHandler(property_, selector)
-        this.mappedSymbol = AsPropertySymbol(property_)
+
         // break omitted
 
       case SETTER_METHOD :
+        this.isSetter = true
         this.property = property_
         break
 
@@ -173,7 +173,7 @@ HandAxe(function (
     }
 
     this.isMethod = true
-    this.tag      = selector
+    this.tag      = selector  // ValueAsName(selector)
 
     const outer = mode.outer(selector, handler, isPublic)
     const inner = mode.inner(selector, handler, isPublic)
@@ -228,10 +228,12 @@ HandAxe(function (
 
 
 
-  const _AddDefinition = function _addDefinition(selector, handler, visibility, mode, property) {
-    const def = this.context.Definition(selector, handler, mode, property)
-    return this._setDefinitionAt(def.tag, def, visibility)
-  }
+  const _AddDefinition =
+    function _addDefinition(selector, handler, visibility_, mode, property_) {
+      const def = this.context.Definition(selector, handler, mode, property_)
+      const visibility = (visibility_ !== undefined) ? INVISIBLE : VISIBLE
+      return this._setDefinitionAt(def.tag, def, visibility)
+    }
 
 
 

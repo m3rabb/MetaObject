@@ -4,8 +4,8 @@ HandAxe(function (
   $PULP, $RIND, $SUPERS, IMMUTABLE, IMPLEMENTATION, INVISIBLE, PROOF, VISIBLE,
   _DURABLES, FACT_METHOD, SELF_METHOD, VALUE_METHOD,
   AlwaysSelf, BasicSetInvisibly, BecomePermeableError, DefineProperty,
-  ExtractFuncArgs, InterMap, InvisibleConfig, NewBlanker, NewInner,
-  NewVacuousConstructor, RootOf, TheEmptyArray, SpawnFrom,
+  InterMap, InvisibleConfig, NewBlanker, NewInner, NewVacuousConstructor,
+  NormalizeFuncArgs, RootOf, TheEmptyArray, SpawnFrom,
   AsContextDisguise, AsTypeDisguise,
 
   Context_atPut, Context_externalPrivateAccess, Context_init,
@@ -127,7 +127,6 @@ HandAxe(function (
   // _SetDefinitionAt.call(_$Something, "asymmetricMatch", null       )
 
   _SetDefinitionAt.call(_$Something, IMMUTABLE      , false      )
-  _SetDefinitionAt.call(_$Something, "isSomething"  , true       )
   _SetDefinitionAt.call(_$Something, "context"      , RootContext)
   _SetDefinitionAt.call(_$Something, "_init"        , AlwaysSelf , INVISIBLE)
 
@@ -141,28 +140,24 @@ HandAxe(function (
   _AddDefinition.call(
     _Type, "_addDefinition", _AddDefinition, VISIBLE, VALUE_METHOD)
 
-  // eslint-disable-next-line
   _Type._addDefinition(
     "addSelfMethod",
-    function addSelfMethod(func_selector, func_, invisible__) {
-      const args = ExtractFuncArgs(func_selector, func_, invisible__)
+    function addSelfMethod(func_selector, func_, visibility__) {
+      const args = NormalizeFuncArgs(func_selector, func_, visibility__)
       this._addDefinition(...args, SELF_METHOD)
     },
     VISIBLE, SELF_METHOD)
 
-  // eslint-disable-next-line
-  _Type.addSelfMethod(function addMethod(func_selector, func_, invisible__) {
-    const args = ExtractFuncArgs(func_selector, func_, invisible__)
+  _Type.addSelfMethod(function addMethod(func_selector, func_, visibility__) {
+    const args = NormalizeFuncArgs(func_selector, func_, visibility__)
     this._addDefinition(...args, FACT_METHOD)
   })
 
-  // eslint-disable-next-line
-  _Type.addSelfMethod(function addValueMethod(func_selector, func_, invisible__) {
-    const args = ExtractFuncArgs(func_selector, func_, invisible__)
+  _Type.addSelfMethod(function addValueMethod(func_selector, func_, visibility__) {
+    const args = NormalizeFuncArgs(func_selector, func_, visibility__)
     this._addDefinition(...args, VALUE_METHOD)
   })
 
-  _$Something.addValueMethod("_setImmutable", _BasicSetImmutable, "INVISIBLE")
 
   _$Intrinsic.addValueMethod(_BasicSetImmutable)
 

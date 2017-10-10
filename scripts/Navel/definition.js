@@ -38,17 +38,16 @@ HandAxe(function (
   })
 
 
-  AddIntrinsicDeclaration("isDeclaration")
-  AddIntrinsicDeclaration("isDurable")
-  AddIntrinsicDeclaration("isAssigner")
-  AddIntrinsicDeclaration("isProperty")
-  AddIntrinsicDeclaration("isMethod")
-  AddIntrinsicDeclaration("isValue")
+  // AddIntrinsicDeclaration("isDeclaration")
+  // AddIntrinsicDeclaration("isDurable")
+  // AddIntrinsicDeclaration("isAssigner")
+  // AddIntrinsicDeclaration("isProperty")
+  // AddIntrinsicDeclaration("isMethod")
 
 
   _Definition.addMethod(function _invalidSelectorError(selector) {
     this._signalError(`Definition must be set with a valid selector!! Not: '${selector}'`)
-  })
+  }, "INVISIBLE")
 
 })
 

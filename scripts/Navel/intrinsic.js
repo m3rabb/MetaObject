@@ -18,16 +18,15 @@ HandAxe(function (
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   AsDefinitionFrom, BasicSetInvisibly, CompareSelectors,
-  CompletelyDeleteProperty, DiffAndSort, ExtractCopyArgs,
-  FindAndSetDurables, GlazeImmutable, MakeDefinitionsInfrastructure,
-  NewUniqueId, PropertyAt, SetDefinition, SpawnFrom, ValueAsFact, ValueAsName,
+  CompletelyDeleteProperty, DiffAndSort, FindAndSetDurables, GlazeImmutable,
+  MakeDefinitionsInfrastructure, NewUniqueId, NormalizeCopyArgs, PropertyAt,
+  SetDefinition, SpawnFrom, ValueAsFact, ValueAsName,
   _BasicSetImmutable, _HasOwnHandler, _$Copy, _$Intrinsic,
   PrivateAccessFromOutsideError, SignalError,
   InterMap, PropertyToSymbolMap,
   _PrimaryPublicSelectorsOf, _PrimarySelectorsOf,
-  _OwnSelectorsOf, _OwnVisiblesOf,
-  OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf,
-  _KnownNamesOf, _KnownSelectorsOf, _KnownVisiblesOf
+  OwnNamesOf, OwnSelectorsOf, OwnVisiblesOf, OwnVisibleNamesOf,
+  _KnownNamesOf, _KnownSelectorsOf, _KnownVisiblesOf, _KnownVisibleNamesOf
 ) {
   "use strict"
 
@@ -56,7 +55,7 @@ HandAxe(function (
   _$Intrinsic.addValueMethod(function copy(asImmutable_, visited_, context_) {
     var _value, context
     const $inner    = this[$INNER]
-    const optionals = ExtractCopyArgs(asImmutable_, visited_, context_)
+    const optionals = NormalizeCopyArgs(asImmutable_, visited_, context_)
     if ($inner[IMMUTABLE] && optionals[0] !== false) {
       _value = this[$PULP]
       // When the value has an id, we always want the same value
@@ -79,22 +78,22 @@ HandAxe(function (
       _value = this[$PULP]
       // When the value has an id, we always want the same value
       if (_value.id != null)                         { return this }
-      optionals = ExtractCopyArgs(true, visited_, context_)
+      optionals = NormalizeCopyArgs(true, visited_, context_)
       context   = optionals[2]
       if (!context || _value.context === context)    { return this }
       if (this._setImmutable === _BasicSetImmutable) { return this }
     }
-    else { optionals = ExtractCopyArgs(true, visited_, context_) }
+    else { optionals = NormalizeCopyArgs(true, visited_, context_) }
     return _$Copy($inner, ...optionals)[$RIND]
   })
 
   _$Intrinsic.addValueMethod(function mutableCopy(visited_, context_) {
-    const optionals = ExtractCopyArgs(false, visited_, context_)
+    const optionals = NormalizeCopyArgs(false, visited_, context_)
     return _$Copy(this[$INNER], ...optionals)[$RIND]
   })
 
   _$Intrinsic.addValueMethod(function mutableCopyExcept(selector, visited_, context_) {
-    const optionals = ExtractCopyArgs(false, visited_, context_)
+    const optionals = NormalizeCopyArgs(false, visited_, context_)
     return _$Copy(this[$INNER], ...optionals, selector)[$RIND]
   })
 
@@ -243,12 +242,12 @@ HandAxe(function (
   })
 
 
-  _$Intrinsic.addValueMethod(function ownVisibleSelectors() {
+  _$Intrinsic.addValueMethod(function ownVisibleNameSelectors() {
     // Not retroactive|lazy properties or symbols
-    return OwnVisiblesOf(this[$OUTER])
+    return OwnVisibleNamesOf(this[$OUTER])
   })
 
-  _$Intrinsic.addValueMethod(function ownSelectors() {
+  _$Intrinsic.addValueMethod(function ownNameSelectors() {
     // Includes placed retroactive|lazy properties, but not symbols
     return OwnNamesOf(this[$OUTER])
   })
@@ -259,15 +258,15 @@ HandAxe(function (
   })
 
 
-  _$Intrinsic.addValueMethod(function intrinsicSelectors() {
-    return _KnownNamesOf(_$Intrinsic._blanker.$root$outer)
+  _$Intrinsic.addValueMethod(function knownIntrinsicSelectors() {
+    return _KnownVisiblesOf(_$Intrinsic._blanker.$root$outer)
   })
 
-  _$Intrinsic.addValueMethod(function visibleSelectors() {
-    return _KnownVisiblesOf(this[$OUTER])
+  _$Intrinsic.addValueMethod(function visibleNameSelectors() {
+    return _KnownVisibleNamesOf(this[$OUTER])
   })
 
-  _$Intrinsic.addValueMethod(function knownSelectors() {
+  _$Intrinsic.addValueMethod(function knownNameSelectors() {
     // All selectors except symbols or private selectors
     return _KnownNamesOf(this[$OUTER])
   })

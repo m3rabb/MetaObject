@@ -294,12 +294,10 @@ HandAxe(function (
     return SignalError("Improper arguments to make a Definition!!")
   }
 
-  function ExtractFuncArgs(func_selector, func_, invisible__) {
-    const args = (typeof func_selector === "function") ?
-      [func_selector.name, func_selector, func_      ] :
-      [func_selector     , func_        , invisible__]
-    args[2] = (args[2] !== undefined) ? INVISIBLE : VISIBLE
-    return args
+  function NormalizeFuncArgs(namedFunc_selector, handler_, visibility__) {
+    return (typeof namedFunc_selector === "function") ?
+      [namedFunc_selector.name, namedFunc_selector, handler_    ] :
+      [namedFunc_selector     , handler_          , visibility__]
   }
 
 
@@ -319,7 +317,7 @@ HandAxe(function (
   _Shared.SetAsymmetricProperty           = SetAsymmetricProperty
   _Shared.PropertyAt                      = PropertyAt
   _Shared.AsDefinitionFrom                = AsDefinitionFrom
-  _Shared.ExtractFuncArgs                 = ExtractFuncArgs
+  _Shared.NormalizeFuncArgs               = NormalizeFuncArgs
 
 })
 

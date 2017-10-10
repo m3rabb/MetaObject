@@ -44,10 +44,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
-        it("There is no set undefined placeholder in the root", function () {
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( false )
-        })
-
         it("Has no property", function () {
           expect( this.cat.has("mood") ).toBe( false )
         })
@@ -57,11 +53,6 @@ HandAxe._(function (
         beforeEach(function () {
           this.assigner = function mood(newMood) { return `very ${newMood}` }
           this.Cat.forAddAssigner(this.assigner)
-        })
-
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Doesn't put a setter property in the root", function () {
@@ -91,11 +82,6 @@ HandAxe._(function (
         beforeEach(function () {
           this.assigner = function (newMood) { return `very ${newMood}` }
           this.Cat.forAddAssigner("mood", this.assigner)
-        })
-
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Doesn't put a setter property in the root", function () {
@@ -145,10 +131,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
-        it("There is no set undefined placeholder in the root", function () {
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( false )
-        })
-
         it("The property has no value yet", function () {
           expect( this.cat.mood ).toBe( undefined )
         })
@@ -157,11 +139,6 @@ HandAxe._(function (
       describe("When called with 1 args: a setter name", function () {
         beforeEach(function () {
           this.Cat.addSetter("setMood")
-        })
-
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Puts as basic setter property in the root", function () {
@@ -202,11 +179,6 @@ HandAxe._(function (
           this.Cat.addSetter(this.setter)
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-        })
-
         it("Puts a basic setter property in the root", function () {
           expect( this._$root.setMood.name ).toBe( "setMood_$inner_self" )
         })
@@ -242,11 +214,6 @@ HandAxe._(function (
             this.Cat.addSetter(this.setter)
           })
 
-          it("Sets undefined as a placeholder at the selector in the root", function () {
-            expect( this._$root.mood ).toBe( undefined )
-            expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-          })
-
           it("Answers null when the property is read", function () {
             var result = this._cat.mood
             expect( result ).toBe( undefined )
@@ -257,11 +224,6 @@ HandAxe._(function (
       describe("When called with 2 args: a setter name and a property", function () {
         beforeEach(function () {
           this.Cat.addSetter("setXyz", "_qrs")
-        })
-
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root._qrs ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "_qrs") ).toBe( true )
         })
 
         it("Puts a basic setter property in the root", function () {
@@ -302,11 +264,6 @@ HandAxe._(function (
           this.Cat.addSetter("setMood", this.func)
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-        })
-
         it("Puts a basic setter property in the root", function () {
           expect( this._$root.setMood.name ).toBe( "setMood_$inner_self" )
         })
@@ -342,11 +299,6 @@ HandAxe._(function (
             this.Cat.addSetter(this.setter)
           })
 
-          it("Sets undefined as a placeholder at the selector in the root", function () {
-            expect( this._$root.mood ).toBe( undefined )
-            expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-          })
-
           it("Answers null when the property is read", function () {
             var result = this._cat.mood
             expect( result ).toBe( undefined )
@@ -371,16 +323,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "_mood") ).toBe( false )
         })
 
-        it("Sets undefined as a placeholder at the property in the root", function () {
-          expect( this._$root._mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "_mood") ).toBe( true )
-        })
-
-        it("Sets undefined as a placeholder at the matching selector in the root", function () {
-          expect( this._$root._mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "_mood") ).toBe( true )
-        })
-
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
@@ -396,7 +338,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat._mood
             expect( result ).toBe( undefined )
           })
@@ -435,10 +377,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
-        it("There is no set undefined placeholder in the root", function () {
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( false )
-        })
-
         it("The property has no value yet", function () {
           expect( this.cat.mood ).toBe( undefined )
         })
@@ -447,11 +385,6 @@ HandAxe._(function (
       describe("When called with 1 args: a property name", function () {
         beforeEach(function () {
           this.Cat.forAddSetter("mood")
-        })
-
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
         })
 
         it("Puts as basic setter property in the root", function () {
@@ -477,7 +410,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat.mood
             expect( result ).toBe( undefined )
           })
@@ -487,11 +420,6 @@ HandAxe._(function (
       describe("When called with 2 args: a property and a setter name", function () {
         beforeEach(function () {
           this.Cat.forAddSetter("_qrs", "setXyz")
-        })
-
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root._qrs ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "_qrs") ).toBe( true )
         })
 
         it("Puts a basic setter property in the root", function () {
@@ -517,7 +445,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat._qrs
             expect( result ).toBe( undefined )
           })
@@ -547,10 +475,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
-        it("There is no set undefined placeholder in the root", function () {
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( false )
-        })
-
         it("The property has no value yet", function () {
           expect( this.cat.mood ).toBe( undefined )
         })
@@ -569,11 +493,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( true )
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-        })
-
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
@@ -589,7 +508,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat.mood
             expect( result ).toBe( undefined )
           })
@@ -612,11 +531,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( true )
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-        })
-
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
@@ -632,7 +546,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat.mood
             expect( result ).toBe( undefined )
           })
@@ -644,12 +558,7 @@ HandAxe._(function (
             this.Cat.addMandatorySetter(this.setter)
           })
 
-          it("Sets undefined as a placeholder at the selector in the root", function () {
-            expect( this._$root.mood ).toBe( undefined )
-            expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-          })
-
-          it("Answers null when the property is read", function () {
+          it("Answers undefined when the property is read", function () {
             var result = this._cat.mood
             expect( result ).toBe( undefined )
           })
@@ -669,11 +578,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "_qrs") ).toBe( true )
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root._qrs ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "_qrs") ).toBe( true )
-        })
-
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setXyz("happy")
@@ -689,7 +593,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat._qrs
             expect( result ).toBe( undefined )
           })
@@ -711,11 +615,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( true )
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-        })
-
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
@@ -731,7 +630,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat.mood
             expect( result ).toBe( undefined )
           })
@@ -743,12 +642,7 @@ HandAxe._(function (
             this.Cat.addMandatorySetter(this.setter)
           })
 
-          it("Sets undefined as a placeholder at the selector in the root", function () {
-            expect( this._$root.mood ).toBe( undefined )
-            expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-          })
-
-          it("Answers null when the property is read", function () {
+          it("Answers undefined when the property is read", function () {
             var result = this._cat.mood
             expect( result ).toBe( undefined )
           })
@@ -771,11 +665,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root._mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "_mood") ).toBe( true )
-        })
-
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
@@ -791,7 +680,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat._mood
             expect( result ).toBe( undefined )
           })
@@ -829,10 +718,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( false )
         })
 
-        it("There is no set undefined placeholder in the root", function () {
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( false )
-        })
-
         it("The property has no value yet", function () {
           expect( this.cat.mood ).toBe( undefined )
         })
@@ -851,11 +736,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "mood") ).toBe( true )
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root.mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "mood") ).toBe( true )
-        })
-
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
@@ -871,7 +751,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat.mood
             expect( result ).toBe( undefined )
           })
@@ -891,11 +771,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "_qrs") ).toBe( true )
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root._qrs ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "_qrs") ).toBe( true )
-        })
-
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setXyz("happy")
@@ -911,7 +786,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat._qrs
             expect( result ).toBe( undefined )
           })
@@ -934,11 +809,6 @@ HandAxe._(function (
           expect( ValueHasOwn(this._$root[$ASSIGNERS], "_mood") ).toBe( true )
         })
 
-        it("Sets undefined as a placeholder at the selector in the root", function () {
-          expect( this._$root._mood ).toBe( undefined )
-          expect( ValueHasOwn(this._$root, "_mood") ).toBe( true )
-        })
-
         describe("When the setter is called", function () {
           it("The property is set", function () {
             this._cat.setMood("happy")
@@ -954,7 +824,7 @@ HandAxe._(function (
         })
 
         describe("When the property read before being set", function () {
-          it("Answers null", function () {
+          it("Answers undefined", function () {
             var result = this._cat._mood
             expect( result ).toBe( undefined )
           })

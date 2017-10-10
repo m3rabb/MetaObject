@@ -67,7 +67,7 @@ HandAxe(function (
   }
 
 
-  function ExtractCopyArgs(...args) {
+  function NormalizeCopyArgs(args) {
     // args --> asImmutable_, visited_, context_
     var next, a, imm, map, ctx
     next = 0
@@ -84,7 +84,7 @@ HandAxe(function (
 
   const GenericCopyHandler = function copy(asImmutable_, visited_, context_) {
     var traversed, context
-    const optionals = ExtractCopyArgs(asImmutable_, visited_, context_)
+    const optionals = NormalizeCopyArgs(asImmutable_, visited_, context_)
     const visited   = optionals[1]
 
     if (visited && (traversed = visited.get(this))) { return traversed }
@@ -275,7 +275,7 @@ HandAxe(function (
 
 
   function CopyProperty(value, asImmutable_, visited_, context_) {
-    const optionals = ExtractCopyArgs(asImmutable_, visited_, context_)
+    const optionals = NormalizeCopyArgs(asImmutable_, visited_, context_)
     return _CopyProperty(value, ...optionals)
   }
 
@@ -328,7 +328,7 @@ HandAxe(function (
   // undefined  make copy of same mutability as the receiver
 
   function CopyValue(value, asImmutable_, visited_, context_) {
-    const optionals = ExtractCopyArgs(asImmutable_, visited_, context_)
+    const optionals = NormalizeCopyArgs(asImmutable_, visited_, context_)
     return _CopyValue(value, ...optionals)
   }
 
@@ -414,7 +414,7 @@ HandAxe(function (
   _Shared._CopyObject             = _CopyObject
   _Shared._CopyProperty           = _CopyProperty
   _Shared._CopyValue              = _CopyValue
-  _Shared.ExtractCopyArgs         = ExtractCopyArgs
+  _Shared.NormalizeCopyArgs       = NormalizeCopyArgs
 
   Shared.genericCopyHandler       = KnowFunc(GenericCopyHandler)
   Shared.valueAsCopy              = KnowFunc(ValueAsCopy)

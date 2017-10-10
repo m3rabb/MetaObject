@@ -1,9 +1,9 @@
 HandAxe(function (
   $INNER, $IS_INNER, $IS_NOTHING, $IS_THING, $OUTER, $PULP, $RIND,
   IMMUTABLE, PROOF, SYMBOL_1ST_CHAR, _DURABLES,
-  DefineProperty, FreezeSurface, GlazeError, ImplementationSelectors,
-  InterMap, InvisibleConfig, IsSurfaceFrozen, KnowFunc, KnownFuncs, RootOf,
-  SpawnFrom, TheEmptyArray, ValueAsName,
+  DefineProperty, DescriptorsOf, FreezeSurface, GlazeError,
+  ImplementationSelectors, InterMap, InvisibleConfig, IsSurfaceFrozen,
+  KnowFunc, KnownFuncs, RootOf, SpawnFrom, TheEmptyArray, ValueAsName,
   Shared, _Shared
 ) {
   "use strict"
@@ -26,11 +26,11 @@ HandAxe(function (
 
 
 
-  const _HasOwnHandler = Object.prototype.hasOwnProperty // ._hasOwn
-  const _OwnVisiblesOf = Object.keys
-  const _OwnNamesOf    = Object.getOwnPropertyNames
-  const _OwnSymbolsOf  = Object.getOwnPropertySymbols
-  const _OwnKeysOf     = Reflect.ownKeys
+  const _HasOwnHandler     = Object.prototype.hasOwnProperty // ._hasOwn
+  const _OwnVisibleNamesOf = Object.keys
+  const _OwnNamesOf        = Object.getOwnPropertyNames
+  const _OwnSymbolsOf      = Object.getOwnPropertySymbols
+  const _OwnKeysOf         = Reflect.ownKeys
 
   function _OwnSelectorsOf(value) {
     return _OwnKeysOf(value).filter(sel => !ImplementationSelectors[sel])
@@ -44,6 +44,25 @@ HandAxe(function (
     return _OwnNamesOf(value).filter(sel => !ImplementationSelectors[sel])
   }
 
+  function _OwnVisiblesOf(value) {
+    const descriptors = DescriptorsOf(value)
+    const keys        = _OwnKeysOf(descriptors)
+    const selectors   = []
+    var   index       = 0
+
+    keys.forEach(selector => {
+      const descriptor = descriptors[selector]
+      if (descriptor.enumerable && !ImplementationSelectors[selector]) {
+        selectors[index++] = selector
+      }
+    })
+    return selectors
+  }
+
+  function _OwnPublicsOf(value) {
+    return _OwnSelectorsOf(value).filter(IsPublicSelector)
+  }
+
 
 
   function SortedOwnSelectorsUsing(value, picker, sorter_) {
@@ -53,8 +72,8 @@ HandAxe(function (
   }
 
 
-  function OwnVisiblesOf(value) {
-    return SortedOwnSelectorsUsing(value, _OwnVisiblesOf)
+  function OwnVisibleNamesOf(value) {
+    return SortedOwnSelectorsUsing(value, _OwnVisibleNamesOf)
   }
 
   function OwnNamesOf(value) {
@@ -71,6 +90,14 @@ HandAxe(function (
 
   function OwnKeysOf(value) {
     return SortedOwnSelectorsUsing(value, _OwnKeysOf, CompareSelectors)
+  }
+
+  function OwnVisiblesOf(value) {
+    return SortedOwnSelectorsUsing(value, _OwnVisiblesOf, CompareSelectors)
+  }
+
+  function OwnPublicsOf(value) {
+    return SortedOwnSelectorsUsing(value, _OwnPublicsOf, CompareSelectors)
   }
 
 
@@ -101,12 +128,20 @@ HandAxe(function (
   }
 
 
-  function _KnownVisiblesOf(value) {
+  function _KnownVisibleNamesOf(value) {
     var index, name
     const visibles = []
     index = 0
     for (name in value) { visibles[index++] = name }
     return GlazeImmutable(visibles.sort())
+  }
+
+  function _KnownVisiblesOf(value) {
+    return SortedSelectorsUsing(value, _OwnVisiblesOf, CompareSelectors)
+  }
+
+  function _KnownPublicsOf(value) {
+    return SortedSelectorsUsing(value, _OwnPublicsOf, CompareSelectors)
   }
 
   function _KnownNamesOf(value) {
@@ -146,9 +181,23 @@ HandAxe(function (
   }
 
 
+  function KnownVisibleNamesOf(value) {
+    return SelectorsOfUsing(value, {
+      inner: _KnownVisibleNamesOf,
+      outer: _KnownVisibleNamesOf,
+      value: _KnownVisibleNamesOf,
+    })
+  }
+
   function KnownVisiblesOf(value) {
     return SelectorsOfUsing(value, {
       inner: _KnownVisiblesOf, outer: _KnownVisiblesOf, value: _KnownVisiblesOf,
+    })
+  }
+
+  function KnownPublicsOf(value) {
+    return SelectorsOfUsing(value, {
+      inner: _KnownPublicsOf, outer: _KnownPublicsOf, value: _KnownPublicsOf,
     })
   }
 
@@ -192,17 +241,16 @@ HandAxe(function (
   }
 
   function _PrimarySelectorsOf(_target) {
-    const inherited = _target.type.allDefinedSelectors
+    const inherited = _target.type.allDefinedVisibles
     const owned     = _OwnSelectorsOf(_target[$INNER])
     return MergeAndSort(inherited, owned, CompareSelectors)
   }
 
   function _PrimaryPublicSelectorsOf(_target) {
-    const inherited = _target.type.allDefinedPublicSelectors
-    const owned     = _OwnVisiblesOf(_target[$OUTER])
-    return MergeAndSort(inherited, owned, undefined)
+    const inherited = _target.type.allDefinedVisiblePublics
+    const owned     = _OwnNamesOf(_target[$OUTER])
+    return MergeAndSort(inherited, owned, CompareSelectors)
   }
-
 
 
 
@@ -336,15 +384,11 @@ HandAxe(function (
 
 
   function FindDurables(target) {
-    const durables = _OwnVisiblesOf(target)
-    durables[IMMUTABLE] = true
-    return FreezeSurface(durables)
+    return OwnVisibleNamesOf(target)
   }
 
   function FindAndSetDurables(target) {
-    const durables = _OwnVisiblesOf(target)
-    durables[IMMUTABLE] = true
-    return (target[_DURABLES] = FreezeSurface(durables))
+    return (target[_DURABLES] = OwnVisibleNamesOf(target))
   }
 
 
@@ -442,19 +486,25 @@ HandAxe(function (
   Shared.glazeImmutable           = KnowFunc(GlazeImmutable)
   Shared.glazeAsImmutable         = KnowFunc(GlazeAsImmutable)
 
+  Shared._ownVisibleNamesOf       = KnowFunc(_OwnVisibleNamesOf)
   Shared._ownVisiblesOf           = KnowFunc(_OwnVisiblesOf)
+  Shared._ownPublicsOf            = KnowFunc(_OwnPublicsOf)
   Shared._ownNamesOf              = KnowFunc(_OwnNamesOf)
   Shared._ownSymbolsOf            = KnowFunc(_OwnSymbolsOf)
   Shared._ownSelectorsOf          = KnowFunc(_OwnSelectorsOf)
   Shared._ownKeysOf               = KnowFunc(_OwnKeysOf)
 
+  Shared.ownVisibleNamesOf        = KnowFunc(OwnVisibleNamesOf)
   Shared.ownVisiblesOf            = KnowFunc(OwnVisiblesOf)
+  Shared.ownPublicsOf             = KnowFunc(OwnPublicsOf)
   Shared.ownNamesOf               = KnowFunc(OwnNamesOf)
   Shared.ownSymbolsOf             = KnowFunc(OwnSymbolsOf)
   Shared.ownSelectorsOf           = KnowFunc(OwnSelectorsOf)
   Shared.ownKeysOf                = KnowFunc(OwnKeysOf)
 
+  Shared.knownVisibleNamesOf      = KnowFunc(KnownVisibleNamesOf)
   Shared.knownVisiblesOf          = KnowFunc(KnownVisiblesOf)
+  Shared.knownPublicsOf           = KnowFunc(KnownPublicsOf)
   Shared.knownNamesOf             = KnowFunc(KnownNamesOf)
   Shared.knownSymbolsOf           = KnowFunc(KnownSymbolsOf)
   Shared.knownSelectorsOf         = KnowFunc(KnownSelectorsOf)
@@ -487,7 +537,7 @@ HandAxe(function (
 
 
   _Shared._HasOwnHandler            = _HasOwnHandler // ._hasOwn
-  _Shared._KnownVisiblesOf          = _KnownVisiblesOf
+  _Shared._KnownVisibleNamesOf      = _KnownVisibleNamesOf
   _Shared._KnownNamesOf             = _KnownNamesOf
   _Shared._KnownSelectorsOf         = _KnownSelectorsOf
   _Shared._PrimarySelectorsOf       = _PrimarySelectorsOf
@@ -497,7 +547,6 @@ HandAxe(function (
   _Shared.KnowAndSetFuncImmutable   = KnowAndSetFuncImmutable
   _Shared.SetFuncImmutable          = SetFuncImmutable
   _Shared.FindAndSetDurables        = FindAndSetDurables
-
 
 })
 

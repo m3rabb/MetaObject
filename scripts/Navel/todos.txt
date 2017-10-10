@@ -271,8 +271,6 @@ HandAxe.List
 HandAxe.Dict
 HandAxe.AssociativeList
 
-==
-addSetterWithAssigner
 
 
 ==
@@ -301,6 +299,18 @@ execContext (Dog, $Dog, _Dog, Dog$)
 Add HandAxe.AsString <-- for debugging 'something' objects
 
 
+==
+Add
+- allDefinitionTags
+- forEachDefinitions
+
+- enum
+
+==
+In types, change _blanker to $INSTANCE_BLANKER
+
+==
+Check when using addSharedProperty to add a func 
 
 ==========
 

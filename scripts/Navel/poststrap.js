@@ -11,8 +11,7 @@ HandAxe(function (
   "use strict"
 
 
-  // Are these declrations still necessary???
-  _Type.addDeclaration("_blanker")
+  // Are these declarations still necessary???
   _Type.addDeclaration($OUTER_WRAPPER)    // Ensures method wrappers work!!!
   _Context.addDeclaration($OUTER_WRAPPER) // Ensures method wrappers work!!!
 
@@ -33,13 +32,15 @@ HandAxe(function (
     // The order of the following is intentional.
     _type._setSupertypesAndAncestry(supertypes, ancestry, INHERIT)
     _type.setName(name)
-    _type.addSharedProperty("type", type)
+    _type.addSharedProperty("type", type, "INVISIBLE")
     BasicSet.call(_type, "context", RootContext)
     context._atPut(name, type)
-    if (spawnIntoRoot) { _type.addSharedProperty("context", RootContext) }
+    if (spawnIntoRoot) {
+      _type.addSharedProperty("context", RootContext, "INVISIBLE")
+    }
   }
 
-  _$Something.addSharedProperty("context", DefaultContext)
+  _$Something.addSharedProperty("context", DefaultContext, "INVISIBLE")
   //               type         name     isRootType, spawnIntoRoot, isHidden
   BootstrapType(_$Something, "$Something", true ,       false,       true )
   BootstrapType(_$Intrinsic, "$Intrinsic", true ,       false,       true )

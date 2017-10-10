@@ -4,7 +4,7 @@ HandAxe(function (
   IMMEDIATE, IMMUTABLE, IMPLEMENTATION, NO_SUPER, SYMBOL_1ST_CHAR, _DURABLES,
   AlwaysFalse, AlwaysNull, InterMap, IsPublicSelector, KnownFuncs,
   SetProperty, SpawnFrom, _$Copy, _HasOwnHandler,
-  _OwnSelectorsOf, _OwnVisiblesOf,
+  _OwnSelectorsOf, _OwnVisibleNamesOf,
   AssignmentOfUndefinedError, AssignmentViaSuperError,
   ChangeToImmutableThisError, DeleteFromOutsideError,
   DirectAssignmentFromOutsideError, DisallowedDeleteError,
@@ -47,7 +47,7 @@ HandAxe(function (
   }
 
   OuterBarrier_prototype.ownKeys = function ownKeys($self) {
-    return _OwnVisiblesOf($self)
+    return _OwnVisibleNamesOf($self)
   }
 
   OuterBarrier_prototype.get = function get($self, selector, self) {

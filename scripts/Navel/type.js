@@ -8,9 +8,9 @@ HandAxe(function (
   VALUE_METHOD,
   $Something$root$inner, AddIntrinsicDeclaration, AddPermeableNewDefinitionTo,
   AsCapitalized, AsPropertySymbol, AsTypeDisguise, BasicSetInvisibly,
-  BePermeable, CompareSelectors, DeleteSelectorsIn, ExtractFuncArgs,
-  InterMap, IsSubtypeOfThing, NewVacuousConstructor, PropertyAt, SetDefinition,
-  TheEmptyStash, ValueAsName, _HasOwnHandler, _Type,
+  BePermeable, CompareSelectors, DeleteSelectorsIn, DiffAndSort, InterMap,
+  IsSubtypeOfThing, NewVacuousConstructor, NormalizeFuncArgs, PropertyAt,
+  SetDefinition, TheEmptyStash, ValueAsName, _HasOwnHandler, _Type,
   IsArray, TheEmptyArray,
   $IntrinsicBlanker, $SomethingBlanker, NewBlanker,
   DefaultContext, RootContext,
@@ -18,8 +18,8 @@ HandAxe(function (
   ImproperChangeToAncestryError, UnnamedFuncError,
   AsDefinitionFrom, SpawnFrom,
   GlazeAsImmutable, GlazeImmutable,
-  OwnSelectorsOf, OwnVisiblesOf, RootOf, _KnownSelectorsOf,
-  _OwnKeysOf, _OwnSelectorsOf,
+  OwnPublicsOf, OwnSelectorsOf, OwnVisiblesOf, OwnVisibleNamesOf, RootOf,
+  _KnownSelectorsOf, _OwnKeysOf, _OwnSelectorsOf,
   AsLazyProperty, AsRetroactiveProperty, AsSetterFromProperty,
   SetAsymmetricProperty, _CopyProperty,
   AsMembershipSelector, IsPublicSelector,
@@ -93,44 +93,23 @@ HandAxe(function (
   })
 
 
-
-  // addAssigner(function property() {})
-  // addAssigner("property", function () {})
-  // forAddAssigner(function property() {})
-  // forAddAssigner("property", function () {})
-
-  _Type.addSelfMethod(function addAssigner(propertyName_, assigner_) {
-    const [propertyName, assigner] = ExtractFuncArgs(propertyName_, assigner_)
-    if (!propertyName) { return UnnamedFuncError(this, assigner) }
-    this._addDefinition(propertyName, assigner, VISIBLE, ASSIGNER)
+  _Type.addValueMethod(function newSubtype(spec_name, context_) {
+    const [name, , context, spec] = this._extractInitArgs(spec_name, context_)
+    return this.context.Type.new(spec || name, this, context)
   })
 
-
-  _Type.addSelfMethod(function addDeclaration(selector) {
-    this._addDefinition(selector, undefined, VISIBLE, DECLARATION)
-  })
-
-
-  _Type.addSelfMethod(function addSharedProperty(selector, value) {
-    this._setDefinitionAt(selector, value)
-  })
-
-  // _Type.addSelfMethod(function addSharedProperty(selector, value, isVisible_) {
-  //   const visibility = (isVisible_ !== false) ? VISIBLE : INVISIBLE
-  //   this._setDefinitionAt(selector, value, visibility)
-  // })
 
 
 
   _Type.addSelfMethod(function removeAssigner(selector) {
-    const tag = `$assigner@${ValueAsName(selector)}`
+    const tag = `_assigner@${ValueAsName(selector)}`
     if (this._definitions[tag] !== undefined) {
       this._deleteDefinitionAt(tag)
     }
   })
 
   _Type.addSelfMethod(function removeDeclaration(selector) {
-    const tag = `$declaration@${ValueAsName(selector)}`
+    const tag = `_declaration@${ValueAsName(selector)}`
   if (this._definitions[tag] !== undefined) {
       this._deleteDefinitionAt(tag)
     }
@@ -171,7 +150,7 @@ HandAxe(function (
         selectors = []
         if ($root$inner[selector] !== undefined)        { break } // Has value
         if (defs[selector])                             { break } // Has immediate
-        if (defs[`$assigner@${ValueAsName(selector)}`]) { break } // Has assigner
+        if (defs[`_assigner@${ValueAsName(selector)}`]) { break } // Has assigner
         if (defs[AsSetterFromProperty(selector)])       { break } // Has setter
         selectors = [selector]
         break
@@ -186,7 +165,7 @@ HandAxe(function (
         var property = value.property
         if ($root$inner[property] !== undefined)           { break } // Has value
         if (defs[property])                                { break } // Has immediate
-        if (defs[`$declaration@${ValueAsName(property)}`]) { break } // Has def
+        if (defs[`_declaration@${ValueAsName(property)}`]) { break } // Has def
         selectors[1] = property
         // break omitted
 
@@ -237,37 +216,65 @@ HandAxe(function (
 
 
 
-  _Type.addValueMethod(function _addSetter(name_setter, property_setter_, mode) {
-    var propertyName, assigner, setterName, setter
-    const isIndirect = (mode === MANDATORY_SETTER_METHOD)
+  _Type.addSelfMethod(function addSharedProperty(selector, value, visibility_) {
+    const visibility = (visibility_ !== undefined) ? INVISIBLE : VISIBLE
+    this._setDefinitionAt(selector, value, visibility)
+  })
 
-    ;[setterName, setter] = (typeof name_setter === "function") ?
-      [name_setter.name, name_setter] : [name_setter, null]
-    if (!setterName) { return UnnamedFuncError(this, setter) }
+  _Type.addSelfMethod(function addDeclaration(selector, visibility_) {
+    this._addDefinition(selector, undefined, visibility_, DECLARATION)
+  })
 
-    switch (typeof property_setter_) {
-      case "string"   :
-        propertyName = property_setter_
-      break
 
-      case "function" :
-        if ((propertyName = property_setter_.name)) {
-          assigner = property_setter_
-          setter   =
-            AsAssignmentSetter(propertyName, setterName, isIndirect, assigner)
-        }
-        else { setter = property_setter_ }
-      break
-    }
+  // addAssigner(function property() {})
+  // addAssigner("property", function () {})
+  // forAddAssigner(function property() {})
+  // forAddAssigner("property", function () {})
 
-    if (!propertyName) {
-      propertyName = AsPropertyFromSetter(setterName) ||
-        this._signalError(`Improper setter '${setterName}'!!`)
-    }
-    if (!setter) { setter = AsBasicSetter(propertyName, setterName, isIndirect) }
+  _Type.addSelfMethod(
+    function addAssigner(propertyName_, assigner_, visibility__) {
+      const [propertyName, assigner, visibility] =
+        NormalizeFuncArgs(propertyName_, assigner_, visibility__)
+      if (!propertyName) { return UnnamedFuncError(this, assigner) }
+      this._addDefinition(propertyName, assigner, visibility, ASSIGNER)
+    })
 
-    return this._addDefinition(setterName, setter, VISIBLE, mode, propertyName)
-  }, "INVISIBLE")
+
+
+  _Type.addValueMethod(
+    function _addSetter(name_setter, property_setter_, visibility_, mode) {
+      var propertyName, assigner, setterName, setter
+      const isIndirect = (mode === MANDATORY_SETTER_METHOD)
+
+      ;[setterName, setter] = (typeof name_setter === "function") ?
+        [name_setter.name, name_setter] : [name_setter, null]
+      if (!setterName) { return UnnamedFuncError(this, setter) }
+
+      switch (typeof property_setter_) {
+        case "string"   :
+          propertyName = property_setter_
+        break
+
+        case "function" :
+          if ((propertyName = property_setter_.name)) {
+            assigner = property_setter_
+            setter   =
+              AsAssignmentSetter(propertyName, setterName, isIndirect, assigner)
+          }
+          else { setter = property_setter_ }
+        break
+      }
+
+      if (!propertyName) {
+        propertyName = AsPropertyFromSetter(setterName) ||
+          this._signalError(`Improper setter '${setterName}'!!`)
+      }
+      if (!setter) { setter = AsBasicSetter(propertyName, setterName, isIndirect) }
+
+      return this._addDefinition(
+        setterName, setter, visibility_, mode, propertyName)
+    },
+    "INVISIBLE")
 
 
   // addSetter("setterName")
@@ -276,19 +283,22 @@ HandAxe(function (
   // addSetter("setterName", function () {})
   // addSetter("setterName", function propertyAssigner() {})
 
-  _Type.addSelfMethod(function addSetter(name_setter, property_setter_) {
-    this._addSetter(name_setter, property_setter_, SETTER_METHOD)
-  })
+  _Type.addSelfMethod(
+    function addSetter(name_setter, property_setter_, visibility__) {
+      this._addSetter(
+        name_setter, property_setter_, visibility__, SETTER_METHOD)
+    })
 
 
   // forAddSetter("propertyName")
   // forAddSetter("propertyName", "setterName")
 
-  _Type.addSelfMethod(function forAddSetter(propertyName, setterName_) {
-    const setterName = setterName_ || AsSetterFromProperty(propertyName) ||
-      this._signalError(`Improper property name: ${propertyName}!!`)
-    this._addSetter(setterName, propertyName, SETTER_METHOD)
-  })
+  _Type.addSelfMethod(
+    function forAddSetter(propertyName, setterName_, visibility__) {
+      const setterName = setterName_ || AsSetterFromProperty(propertyName) ||
+        this._signalError(`Improper property name: ${propertyName}!!`)
+      this._addSetter(setterName, propertyName, visibility__, SETTER_METHOD)
+    })
 
 
   // addMandatorySetter("setterName")
@@ -297,62 +307,74 @@ HandAxe(function (
   // addMandatorySetter("setterName", function () {}) // within must call _basicSet
   // addMandatorySetter("setterName", function propertyAssigner() {})
   //
-  _Type.addSelfMethod(function addMandatorySetter(name_setter, property_setter_) {
-    this._addSetter(name_setter, property_setter_, MANDATORY_SETTER_METHOD)
-  })
+  _Type.addSelfMethod(
+    function addMandatorySetter(name_setter, property_setter_, visibility__) {
+      this._addSetter(
+        name_setter, property_setter_, visibility__, MANDATORY_SETTER_METHOD)
+    })
 
   // forAddMandatorySetter("property")
   // forAddMandatorySetter("property", "setterName")
   // forAddMandatorySetter("property", function setterName() {}) // within must call _basicSet
 
-  _Type.addSelfMethod(function forAddMandatorySetter(propertyName, setter_) {
-    const setter = setter_ || AsSetterFromProperty(propertyName) ||
-      this._signalError(`Improper property name: ${propertyName}!!`)
-    this._addSetter(setter, propertyName, MANDATORY_SETTER_METHOD)
-  })
+  _Type.addSelfMethod(
+    function forAddMandatorySetter(propertyName, setter_, visibility__) {
+      const setter = setter_ || AsSetterFromProperty(propertyName) ||
+        this._signalError(`Improper property name: ${propertyName}!!`)
+      this._addSetter(
+        setter, propertyName, visibility__, MANDATORY_SETTER_METHOD)
+    })
 
 
   // addSetterAndAssigner("setterName", function propertyAssigner() {})
 
-  _Type.addSelfMethod(function addSetterAndAssigner(setterName, assigner) {
-    const propertyName = assigner.name
-    if (!propertyName) { return UnnamedFuncError(this, assigner) }
-    this._addDefinition(propertyName, assigner, VISIBLE, ASSIGNER)
+  _Type.addSelfMethod(
+    function addSetterAndAssigner(setterName, assigner, visibility_) {
+      const propertyName = assigner.name
+      if (!propertyName) { return UnnamedFuncError(this, assigner) }
+      this._addDefinition(propertyName, assigner, visibility_, ASSIGNER)
 
-    const setter = AsBasicSetter(propertyName, setterName)
-    this._addDefinition(setterName, setter, VISIBLE, SETTER_METHOD, propertyName)
-  })
-
-
-
-  _Type.addSelfMethod(function addRetroactiveValue(selector_, assigner_) {
-    // Will set the $inner selector even on an immutable object!!!
-    const [selector, assigner] = ExtractFuncArgs(selector_, assigner_)
-    const retroHandler         = AsRetroactiveProperty(selector, assigner)
-    this._addDefinition(selector, retroHandler, VISIBLE, VALUE_METHOD)
-  })
-
-  _Type.addSelfMethod(function addRetroactiveProperty(selector_, assigner_) {
-    // Will set the $inner selector even on an immutable object!!!
-    const [selector, assigner] = ExtractFuncArgs(selector_, assigner_)
-    const retroHandler         = AsRetroactiveProperty(selector, assigner)
-    this._addDefinition(selector, retroHandler, VISIBLE, FACT_METHOD)
-  })
+      const setter = AsBasicSetter(propertyName, setterName)
+      this._addDefinition(
+        setterName, setter, visibility_, SETTER_METHOD, propertyName)
+    })
 
 
-  _Type.addSelfMethod(function addLazyValue(selector_, assigner_) {
-    // Will set the $inner (even on) an immutable object!!!
-    const [selector, assigner] = ExtractFuncArgs(selector_, assigner_)
-    const lazyHandler          = AsLazyProperty(selector, assigner)
-    this._addDefinition(selector, lazyHandler, VISIBLE, VALUE_METHOD)
-  })
 
-  _Type.addSelfMethod(function addLazyProperty(selector_, assigner_) {
-    // Will set the $inner (even on) an immutable object!!!
-    const [selector, assigner] = ExtractFuncArgs(selector_, assigner_)
-    const lazyHandler          = AsLazyProperty(selector, assigner)
-    this._addDefinition(selector, lazyHandler, VISIBLE, FACT_METHOD)
-  })
+  _Type.addSelfMethod(
+    function addRetroactiveValue(propertyName_, assigner_, visibility__) {
+      const [propertyName, assigner, visibility] =
+        NormalizeFuncArgs(propertyName_, assigner_, visibility__)
+      const retroHandler = AsRetroactiveProperty(propertyName, assigner)
+      this._addDefinition(propertyName, retroHandler, visibility, VALUE_METHOD)
+    })
+
+  _Type.addSelfMethod(
+    function addRetroactiveFact(propertyName_, assigner_, visibility__) {
+      const [propertyName, assigner, visibility] =
+        NormalizeFuncArgs(propertyName_, assigner_, visibility__)
+      const retroHandler = AsRetroactiveProperty(propertyName, assigner)
+      this._addDefinition(propertyName, retroHandler, visibility, FACT_METHOD)
+    })
+
+
+  _Type.addSelfMethod(
+    function addLazyValue(propertyName_, assigner_, visibility__) {
+      const [propertyName, assigner, visibility] =
+        NormalizeFuncArgs(propertyName_, assigner_, visibility__)
+      const lazyHandler = AsLazyProperty(propertyName, assigner)
+      this._addDefinition(propertyName, lazyHandler, visibility, VALUE_METHOD)
+    })
+
+  _Type.addSelfMethod(
+    function addLazyFact(propertyName_, assigner_, visibility__) {
+      const [propertyName, assigner, visibility] =
+        NormalizeFuncArgs(propertyName_, assigner_, visibility__)
+      const lazyHandler = AsLazyProperty(propertyName, assigner)
+      this._addDefinition(propertyName, lazyHandler, visibility, FACT_METHOD)
+    })
+
+
 
 
   // MAKE THIS use a Definition!!!
@@ -470,7 +492,7 @@ HandAxe(function (
         this.removeSharedProperty(AsMembershipSelector(priorName))
       }
       const selector = AsMembershipSelector(properName)
-      this.addSharedProperty(selector, true)
+      this.addSharedProperty(selector, true, "INVISIBLE")
       AddIntrinsicDeclaration(selector)
     }
 
@@ -506,7 +528,7 @@ HandAxe(function (
     if (_HasOwnHandler.call(this, "context")) {
       return this._attemptToReassignContextError
     }
-    this.addSharedProperty("context", context)
+    this.addSharedProperty("context", context, "INVISIBLE")
     return context
   })
 
@@ -596,7 +618,7 @@ HandAxe(function (
     this._initCoreProperties(isRootType)
     this._setSupertypesAndAncestry(supertypes, ancestry, INHERIT)
     this.setName(name)
-    this.addSharedProperty("type", this[$RIND])
+    this.addSharedProperty("type", this[$RIND], "INVISIBLE")
 
     context && this.setContext(context)
     spec    && this._initDefinitions(spec)
@@ -621,12 +643,14 @@ HandAxe(function (
     const durables    = spec.durable || spec.durables
     const shared      = spec.shared  || spec.sharedProperties
     const methods     = spec.methods || spec.instanceMethods
+    const aliases     = spec.alias   || spec.aliases
     const definitions = spec.define  || spec.defines
 
     declared    && this.addDeclarations(declared)
     durables    && this.addDurables(durables) // This needs to be for the root!!!
     shared      && this.addSharedProperties(shared)
     methods     && this.addMethods(methods)
+    aliases     && this.addAliases(aliases)
     definitions && this.define(definitions)
     return this
   }, "INVISIBLE")
@@ -771,6 +795,10 @@ HandAxe(function (
     this.define(items, "METHOD")
   })
 
+  _Type.addSelfMethod(function addAliases(items) {
+    this.define(items, "ALIAS")
+  })
+
   _Type.addSelfMethod(function addDeclarations(items) {
     this.define(items, "DECLARATION")
   })
@@ -843,50 +871,125 @@ HandAxe(function (
   })
 
 
-
-  _Type.addValueMethod(function definedSelectors() {
+  _Type.addValueMethod(function definitionTags() {
     return OwnSelectorsOf(this._definitions)
   })
 
-  _Type.addValueMethod(function primaryDefinedSelectors() {
-    return OwnVisiblesOf(this._definitions)
+
+  _Type.addValueMethod(function _definedSelectors(picker) {
+    const definitions = this._definitions
+    const tags        = picker(definitions)
+    const found       = SpawnFrom(null)
+    const selectors   = []
+    var   index       = 0
+
+    tags.forEach(tag => {
+      var value, selector
+      value = definitions[tag]
+      selector = (value && value.isDefinition) ? value.selector : tag
+      // if (value && value.isDefinition) {
+      //   if (value.isSetter) {
+      //     selector           = value.selector
+      //     found[selector]    = true
+      //     selectors[index++] = selector
+      //     selector           = value.property
+      //   }
+      //   else { selector = value.selector }
+      // }
+      // else { selector = tag }
+
+      if (!found[selector]) {
+        found[selector]    = true
+        selectors[index++] = selector
+      }
+    })
+    return GlazeImmutable(selectors.sort(CompareSelectors))
+  }, "INVISIBLE")
+
+  _Type.addValueMethod(function definedSelectors() {
+    return this._definedSelectors(OwnSelectorsOf)
   })
 
-  _Type.addValueMethod(function definedPublicSelectors() {
-    return GlazeImmutable(this.definedSelectors.filter(IsPublicSelector))
+  _Type.addValueMethod(function definedPublics() {
+    return this._definedSelectors(OwnPublicsOf)
   })
+
+  _Type.addValueMethod(function definedPrivates() {
+    return DiffAndSort(
+      this.definedSelectors, this.definedPublics, CompareSelectors)
+  })
+
+  _Type.addValueMethod(function definedVisibles() {
+    return this._definedSelectors(OwnVisiblesOf)
+  })
+
+  _Type.addValueMethod(function definedInvisibles() {
+    return DiffAndSort(
+      this.definedSelectors, this.definedVisibles, CompareSelectors)
+  })
+
+  _Type.addValueMethod(function definedVisiblePublics() {
+    return GlazeImmutable(this.definedVisibles.filter(IsPublicSelector))
+  })
+
+
+  _Type.addValueMethod(function allDefinedSelectors() {
+    return OwnSelectorsOf(this._blanker.$root$inner)
+  })
+
+  _Type.addValueMethod(function allDefinedPublics() {
+    return OwnPublicsOf(this._blanker.$root$inner)
+  })
+
+  _Type.addValueMethod(function allDefinedPrivates() {
+    return DiffAndSort(
+      this.allDefinedSelectors, this.allDefinedPublics, CompareSelectors)
+  })
+
+  _Type.addValueMethod(function allDefinedVisibles() {
+    return OwnVisiblesOf(this._blanker.$root$inner)
+  })
+
+  _Type.addValueMethod(function allDefinedInvisibles() {
+    return DiffAndSort(
+      this.allDefinedSelectors, this.allDefinedVisibles, CompareSelectors)
+  })
+
+  _Type.addValueMethod(function allDefinedVisiblePublics() {
+    return GlazeImmutable(this.allDefinedVisibles.filter(IsPublicSelector))
+  })
+
 
   _Type.addValueMethod(function allKnownSelectors() {
     return _KnownSelectorsOf(this._blanker.$root$inner)
   })
 
-  _Type.addValueMethod(function allDefinedSelectors() {
-    var index, next, _$nextType, nextDefinitions, tags
-    const ancestry  = this._ancestry
-    const knowns    = SpawnFrom(null)
-    const selectors = []
 
-    index = 0
-    next  = ancestry.length
-    while (next--) {
-      _$nextType      = InterMap.get(ancestry[next])
-      nextDefinitions = _$nextType._definitions
-      tags            = _OwnSelectorsOf(nextDefinitions)
+  // _Type.addValueMethod(function allDefinedSelectors() {
+  //   var index, next, _$nextType, nextDefinitions, tags
+  //   const ancestry  = this._ancestry
+  //   const knowns    = SpawnFrom(null)
+  //   const selectors = []
+  //
+  //   index = 0
+  //   next  = ancestry.length
+  //   while (next--) {
+  //     _$nextType      = InterMap.get(ancestry[next])
+  //     nextDefinitions = _$nextType._definitions
+  //     tags            = _OwnSelectorsOf(nextDefinitions)
+  //
+  //     tags.forEach(tag => {
+  //       if (!knowns[tag]) { selectors[index++] = knowns[tag] = tag }
+  //     })
+  //   }
+  //   return GlazeImmutable(selectors.sort(CompareSelectors))
+  // })
 
-      tags.forEach(tag => {
-        if (!knowns[tag]) { selectors[index++] = knowns[tag] = tag }
-      })
-    }
-    return GlazeImmutable(selectors.sort(CompareSelectors))
-  })
-
-  _Type.addValueMethod(function allDefinedPublicSelectors() {
-    // All public selectors
-    // const definedSelectors = this.allDefinedSelectors
-    // return GlazeImmutable(definedSelectors.filter(IsPublicSelector))
-
-    return OwnVisiblesOf(this._blanker.$root$outer)
-  })
+  // _Type.addValueMethod(function allDefinedPublicSelectors() {
+  //   // All public selectors
+  //   const definedSelectors = this.allDefinedSelectors
+  //   return GlazeImmutable(definedSelectors.filter(IsPublicSelector))
+  // })
 
 
 

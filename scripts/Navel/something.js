@@ -1,8 +1,8 @@
 HandAxe(function (
   $BARRIER, $DELETE_IMMUTABILITY, $INNER, $OUTER, $RIND,
-  IMMUTABLE, SYMBOL_1ST_CHAR, SELF_METHOD, VALUE_METHOD, VISIBLE, _DURABLES,
+  IMMUTABLE, SYMBOL_1ST_CHAR, SELF_METHOD, VALUE_METHOD, _DURABLES,
   AsRetroactiveProperty, BasicSetInvisibly, NewAssignmentErrorHandler,
-  SignalError, _$Something, _Super
+  SignalError, _$Something, _BasicSetImmutable, _Super
 ) {
   "use strict"
 
@@ -12,10 +12,13 @@ HandAxe(function (
   _$Something.forAddAssigner(_DURABLES,
       NewAssignmentErrorHandler(_DURABLES, "addDurables"))
 
-  // addRetroactiveValue
-  _$Something.addValueMethod("self", AsRetroactiveProperty("self", function self() {
+  _$Something.addSharedProperty("isSomething", true, "INVISIBLE")
+
+  _$Something.addValueMethod("_setImmutable", _BasicSetImmutable, "INVISIBLE")
+
+  _$Something.addRetroactiveValue(function self() {
     return this[$RIND]
-  }), "INVISIBLE")
+  }, "INVISIBLE")
 
   // _$Something.addAlias("$", "self")
 
@@ -42,12 +45,8 @@ HandAxe(function (
 
 
   _$Something.addValueMethod(function is(value) {
-    return (this[$RIND] === value)
+    return (this === value) || (this[$RIND] === value)
   })
-
-  // _$Something.addValueMethod(function is(value) {
-  //   return (this === value) || (this[$RIND] === value)
-  // })
 
 
 
