@@ -115,6 +115,16 @@ HandAxe(function (
     return this._getContexts("ownKeys", VALUE)
   })
 
+
+  _Context.addValueMethod(function knownContextNames() {
+    return DeclareImmutable(this.knownContexts.map(context => context.name))
+  })
+
+  _Context.addValueMethod(function ownContextNames() {
+    return DeclareImmutable(this.ownContexts.map(context => context.name))
+  })
+
+
   _Context.addValueMethod(function knownContextKeys() {
     return this._getContexts("knownKeys", KEY)
   })
@@ -152,6 +162,10 @@ HandAxe(function (
       contexts.unshift(nextContext)
     } while ((nextContext = nextContext.supercontext))
     return DeclareImmutable(contexts)
+  })
+
+  _Context.addValueMethod(function ancestryPath() {
+    return this.ancestry.map(context => context.name).join("/")
   })
 
 
