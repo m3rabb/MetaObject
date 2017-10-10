@@ -38,7 +38,7 @@ HandAxe(function (
 
   _Type.addValueMethod(function formalName() {
     const context = this.context
-    const prefix = (context === DefaultContext) ? "" : context.formalName + "@"
+    const prefix = (context === DefaultContext) ? "" : context.formalName + "/"
     return `${prefix}${this.name}`
   })
 
@@ -471,7 +471,7 @@ HandAxe(function (
 
 
 
-  //// INSTANTIATION ////
+  //// INSTANTIATING ////
 
   // Add comments for new here
   // _basicNew
@@ -721,7 +721,7 @@ HandAxe(function (
 
 
 
-  //// CONVERSION ////
+  //// CONVERTING ////
 
   _Type.addValueMethod(function toString(_) { // eslint-disable-line
     return this.formalName
