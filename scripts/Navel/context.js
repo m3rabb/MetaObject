@@ -7,7 +7,7 @@ HandAxe(function (
   DefaultContext, Definition, Definition_init, EmptyThingAncestry,
   ExtractParamNames, InterMap, IsSubtypeOfThing,
   RootContext, SpawnFrom, TheEmptyArray, Type, ValueAsFact,
-  ValueIsSomething, ValueBeImmutable,
+  ValueIsSomething, ValueBeImmutable, UnnamedFuncError,
   _CopyProperty, _CopyValue, _HasOwnHandler,
   OwnKeysOf, _OwnKeysOf,
   _BasicNew, _Context
@@ -268,6 +268,24 @@ HandAxe(function (
   })
 
   _Context.addAlias("newSubcontext", "newSub")
+
+
+  _Context.addMethod(function ensureSub(execFunc) {
+    var subcontext, resultSubContext
+    const contextName = execFunc.name
+    if (!contextName) { return UnnamedFuncError(this, execFunc) }
+
+    subcontext = this[contextName]
+    if (subcontext) {
+      if (!subcontext[$IS_CONTEXT]) {
+        return this._signalError(`Non-context entry is already at '${contextName}'!!`)
+      }
+      resultSubContext = subcontext(execFunc)
+    }
+    else { resultSubContext = this.newSub(execFunc) }
+
+    return this.add(resultSubContext)
+  })
 
 
 
