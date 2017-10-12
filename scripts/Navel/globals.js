@@ -1,4 +1,4 @@
-(function (globals) {
+;(function (globals) { // eslint-disable-line
   "use strict"
 
 
