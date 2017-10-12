@@ -5,7 +5,7 @@ HandAxe(function (
   ASSIGNER_FUNC, BLANKER_FUNC, DISGUISE_PULP, DISGUISE_RIND,
   AsCapitalized, AsDecapitalized, BasicSetInvisibly, CompareSelectors,
   DefineProperty, FreezeSurface, Impermeable, IsArray, KnowFunc, KnownFuncs,
-  NewUniqueId, OwnSelectorsOf, SpawnFrom, ValueAsName,
+  NewUniqueId, OwnSelectorsOf, SpawnFrom, ValueAsName, _RootContext,
   DisguisedBarrier, InnerBarrier,
   InvisibleConfig, VisibleConfig,
   AssignmentOfUndefinedError, DisallowedAssignmentError,
@@ -272,7 +272,12 @@ HandAxe(function (
   }
 
 
-  function AsDefinitionFrom(args, context) {
+  // addDefinition(definition)
+  // addDefinition(tag, definition)
+  // addDefinition(namedFunc, mode_)
+  // addDefinition(selector, func, mode_)
+
+  function AsDefinitionFrom(args, context = _RootContext) {
     var def, tag, _$def
     const Def = context.atOrInRootAt("Definition")
 

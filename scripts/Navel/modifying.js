@@ -1,7 +1,7 @@
 HandAxe(function (
   $BLANKER, $INNER, $IS_INNER, $OUTER, $PULP, $RIND, IMMUTABLE,
   _DURABLES,
-  BasicSetInvisibly, FindAndSetDurables, FindDurables, FreezeSurface, InterMap,
+  BasicSetInvisibly, FreezeSurface, GetDurables, InterMap,
   KnowFunc, SetFuncImmutable, SpawnFrom, RootOf, _BasicSetImmutable,
   AssignmentOfUndefinedError, InvertedFuncCopyError,
   Shared, _Shared
@@ -32,7 +32,7 @@ HandAxe(function (
      _initFrom_.call(_target, _$source[$PULP], asImmutable, visited, context)
     }
     else {
-      durables = _$source[_DURABLES] || FindAndSetDurables(_$source)
+      durables = _$source[_DURABLES] || GetDurables(_$source)
       if (!_$target[_DURABLES]) { _$target[_DURABLES] = durables }
 
       next = durables.length
@@ -139,7 +139,7 @@ HandAxe(function (
       case Object :
         visited.set(source, (target = target || {})) // Handles cyclic objects
 
-        durables = source[_DURABLES] || FindDurables(source)
+        durables = source[_DURABLES] || GetDurables(source)
         if (immutability && !target[_DURABLES]) { target[_DURABLES] = durables }
 
         next = durables.length
@@ -199,7 +199,8 @@ HandAxe(function (
       case WeakSet : return target
 
       default :
-        durables = target[_DURABLES] || FindAndSetDurables(target)
+        durables = target[_DURABLES] ||
+          (target[_DURABLES] = GetDurables(target))
 
         next = durables.length
         while (next--) {

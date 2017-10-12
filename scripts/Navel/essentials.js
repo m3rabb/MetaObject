@@ -3,11 +3,13 @@ HandAxe(function (
   $OUTER_WRAPPER, $PULP, $RIND, ASSIGNER, DECLARATION, INHERIT, INVISIBLE,
   REINHERIT, SYMBOL_1ST_CHAR, VISIBLE,
   ASSIGNER_FUNC, HANDLER_FUNC, INNER_FUNC, OUTER_FUNC,
-  FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SETTER_METHOD,
+  FACT_METHOD, IMMEDIATE_METHOD, MANDATORY_SETTER_METHOD, SELF_METHOD,
+  SETTER_METHOD, VALUE_METHOD,
   AsPropertySymbol, ExtractParamListing, ImplementationSelectors, InterMap,
   IsPublicSelector, KnowFunc, KnowAndSetFuncImmutable,
-  NewAssignmentErrorHandler, SpawnFrom, ValueAsName, CompletelyDeleteProperty,
-  DefineProperty, InvisibleConfig, SetProperty, ValueAsFact,
+  NewAssignmentErrorHandler, NormalizeFuncArgs, SpawnFrom, ValueAsName,
+  CompletelyDeleteProperty, DefineProperty, InvisibleConfig, SetProperty,
+  ValueAsFact,
   _Shared
 ) {
   "use strict"
@@ -125,15 +127,25 @@ HandAxe(function (
     return this._propagateDefinition(tag)
   }
 
-  const Definition_init = function _init(selector, handler, mode, property_) {
+  const ModeMap = {
+     undefined     : FACT_METHOD,
+    "FACT"         : FACT_METHOD,
+    "VALUE"        : VALUE_METHOD,
+    "SELF"         : SELF_METHOD,
+  }
+
+  const Definition_init = function _init(selector_, func, mode_, property__) {
+    var [selector, handler, mode] = NormalizeFuncArgs(selector_, func, mode_)
+
     const isPublic = IsPublicSelector(selector)
     const $inner   = this[$INNER]
     const $outer   = $inner[$OUTER]
 
     if (!selector) { return this._invalidSelectorError(selector) }
+    if (typeof mode !== "object") { mode = ModeMap[mode] }
 
-    this.selector      = selector
     this.mode          = mode
+    this.selector      = selector
     this.isPublic      = isPublic
     // Move the following to shared properties!!!
     this.isImmediate   = false
@@ -153,15 +165,15 @@ HandAxe(function (
 
       case MANDATORY_SETTER_METHOD :
         this.isMandatory       = true
-        this.mappedSymbol      = AsPropertySymbol(property_)
+        this.mappedSymbol      = AsPropertySymbol(property__)
         $outer.assignmentError = $inner.assignmentError =
-          NewAssignmentErrorHandler(property_, selector)
+          NewAssignmentErrorHandler(property__, selector)
 
         // break omitted
 
       case SETTER_METHOD :
         this.isSetter = true
-        this.property = property_
+        this.property = property__
         break
 
       default :

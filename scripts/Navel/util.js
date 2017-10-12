@@ -14,8 +14,7 @@ HandAxe(function (
   //// INTRINSIC : Immutablility
 
   // This method should only be called on a mutable object!!!
-  // eslint-disable-next-line
-  function _basicSetImmutable(inPlace_, visited__) {
+  function _basicSetImmutable(inPlace_, visited__) {  // eslint-disable-line
     const _$target = this[$INNER]
     const  $target = _$target[$OUTER]
 
@@ -44,12 +43,15 @@ HandAxe(function (
 
   //// INTRINSIC : Durables
 
-  function FindDurables(target) {
-    return OwnVisibleNamesOf(target)
-  }
+  function GetDurables(target) {
+    var _$target, durables
 
-  function FindAndSetDurables(target) {
-    return (target[_DURABLES] = OwnVisibleNamesOf(target))
+    if (target[$IS_INNER] === PROOF) {
+      _$target = target[$INNER]
+      return (_$target[_DURABLES] = OwnVisibleNamesOf(_$target))
+    }
+    durables = OwnVisibleNamesOf(target)
+    return target[IMMUTABLE] ? (target[_DURABLES] = durables) : durables
   }
 
 
@@ -542,9 +544,8 @@ HandAxe(function (
   Shared.declareImmutable         = KnowFunc(DeclareImmutable)
   Shared.declareAsImmutable       = KnowFunc(DeclareAsImmutable)
 
-  Shared.findDurables             = KnowFunc(FindDurables)
-  Shared.findAndSetDurables       = KnowFunc(FindAndSetDurables)
-
+  Shared.getDurables              = KnowFunc(GetDurables)
+  
   Shared.diffAndSort              = KnowFunc(DiffAndSort)
   Shared.intersectAndSort         = KnowFunc(IntersectAndSort)
   Shared.unionAndSort             = KnowFunc(UnionAndSort)

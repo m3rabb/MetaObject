@@ -7,7 +7,6 @@ HandAxe(function (
   InterMap, InvisibleConfig, NewBlanker, NewInner, NewVacuousConstructor,
   NormalizeFuncArgs, RootOf, TheEmptyArray, SpawnFrom,
   AsContextDisguise, AsTypeDisguise,
-
   Context_atPut, Context_externalPrivateAccess, Context_init,
   Context_unknownProperty, Definition_init, SetDefinition,
   _AddDefinition, _BasicNew, _BasicSetImmutable, _SetDefinitionAt,
@@ -142,19 +141,19 @@ HandAxe(function (
 
   _Type._addDefinition(
     "addSelfMethod",
-    function addSelfMethod(func_selector, func_, visibility__) {
-      const args = NormalizeFuncArgs(func_selector, func_, visibility__)
+    function addSelfMethod(selector_, func, visibility_) {
+      const args = NormalizeFuncArgs(selector_, func, visibility_)
       this._addDefinition(...args, SELF_METHOD)
     },
     VISIBLE, SELF_METHOD)
 
-  _Type.addSelfMethod(function addMethod(func_selector, func_, visibility__) {
-    const args = NormalizeFuncArgs(func_selector, func_, visibility__)
+  _Type.addSelfMethod(function addMethod(selector_, func, visibility_) {
+    const args = NormalizeFuncArgs(selector_, func, visibility_)
     this._addDefinition(...args, FACT_METHOD)
   })
 
-  _Type.addSelfMethod(function addValueMethod(func_selector, func_, visibility__) {
-    const args = NormalizeFuncArgs(func_selector, func_, visibility__)
+  _Type.addSelfMethod(function addValueMethod(selector_, func, visibility_) {
+    const args = NormalizeFuncArgs(selector_, func, visibility_)
     this._addDefinition(...args, VALUE_METHOD)
   })
 
@@ -248,7 +247,6 @@ HandAxe(function (
   _Shared.AddIntrinsicDeclaration     = AddIntrinsicDeclaration
 
 })
-
 
 /*       1         2         3         4         5         6         7         8
 12345678901234567890123456789012345678901234567890123456789012345678901234567890

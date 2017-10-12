@@ -248,9 +248,9 @@ HandAxe(function (
     const displaySetterName   = ValueAsName(setterName)
     const displayPropertyName = ValueAsName(PropertyName)
     const name = `${displaySetterName}_$set_${displayPropertyName}`
-    return {
+    return ({
       [name] : function (value) { this[PropertyName] = value }
-    }[name]
+    })[name]
   }
 
 
@@ -260,18 +260,18 @@ HandAxe(function (
     const displaySetterName   = ValueAsName(setterName)
     const displayPropertyName = ValueAsName(PropertyName)
     const name = `${displaySetterName}_$assignSet_${displayPropertyName}`
-    return {
+    return ({
       [name] : function (...args) {
         this[PropertyName] = Assigner.apply(this, args)
       }
-    }[name]
+    })[name]
   }
 
 
   _Shared.AsRetroactiveProperty = function (Selector, Assigner) {
     const name     = `${ValueAsName(Selector)}_$retro`
     const IsPublic = IsPublicSelector(Selector)
-    return {
+    return ({
       [name] : function () {
         const _$receiver = this[$INNER]
         const   value    = Assigner.call(this)
@@ -281,13 +281,13 @@ HandAxe(function (
         DefineProperty(_$receiver, Selector, InvisibleConfig)
         return SetProperty(_$receiver, Selector, value, IsPublic)
       }
-    }[name]
+    })[name]
   }
 
   _Shared.AsLazyProperty = function (Selector, Assigner) {
     const name     = `${ValueAsName(Selector)}_$lazy`
     const IsPublic = IsPublicSelector(Selector)
-    return {
+    return ({
       [name] : function () {
         const _$receiver = this[$INNER]
         const   value    = Assigner.call(this)
@@ -299,7 +299,7 @@ HandAxe(function (
         DefineProperty(_$receiver, Selector, InvisibleConfig)
         return SetProperty(_$receiver, Selector, value, IsPublic)
       }
-    }[name]
+    })[name]
   }
 
 })

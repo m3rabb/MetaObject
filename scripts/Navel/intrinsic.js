@@ -5,7 +5,7 @@ HandAxe(function (
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
   AsDefinitionFrom, BasicSetInvisibly, CompareSelectors,
-  CompletelyDeleteProperty, DeclareImmutable, FindAndSetDurables,
+  CompletelyDeleteProperty, DeclareImmutable, GetDurables,
   MakeDefinitionsInfrastructure, NewUniqueId, NormalizeCopyArgs, PropertyAt,
   SetDefinition, SpawnFrom, ValueAsFact, ValueAsName,
   _BasicSetImmutable, _HasOwnHandler, _$Copy, _$Intrinsic,
@@ -59,7 +59,7 @@ HandAxe(function (
       _setPropertiesImmutable.call(this, inPlace, visited)
     }
     else {
-      durables = $inner[_DURABLES] || FindAndSetDurables($inner)
+      durables = $inner[_DURABLES] || GetDurables($inner)
       next      = durables.length
 
       while (next--) {
@@ -367,12 +367,8 @@ HandAxe(function (
   //// ADDING ////
 
   // eslint-disable-next-line
-  _$Intrinsic.addSelfMethod(function addOwnMethod(func_selector, func_, mode__) {
-    const [selector, handler, mode = FACT_METHOD] =
-      (typeof func_selector === "function") ?
-        [func_selector.name, func_selector, func_ ] :
-        [func_selector     , func_        , mode__]
-    const definition = this.context.Definition(selector, handler, mode)
+  _$Intrinsic.addSelfMethod(function addOwnMethod(selector_, func, mode_) {
+    const definition = this.context.Definition(selector_, func, mode_)
     this.addOwnDefinition(definition)
   })
 

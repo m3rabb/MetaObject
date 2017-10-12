@@ -1,5 +1,6 @@
 HandAxe(function (
-  $INNER, $OUTER, $PRIOR_IDS, $PULP, DefineProperty, InvisibleConfig, _Thing
+  $INNER, $OUTER, $PRIOR_IDS, $PULP, DefineProperty, InvisibleConfig,
+  _OwnKeysOf, _Thing
 ) {
   "use strict"
 
@@ -7,9 +8,7 @@ HandAxe(function (
 
   _Thing.addValueMethod(function _init(spec_) {
     if (spec_ != null) {
-      for (var selector in spec_) {
-        this[selector] = spec_[selector]
-      }
+      _OwnKeysOf(spec_).forEach(selector => (this[selector] = spec_[selector]))
     }
     return this
   })

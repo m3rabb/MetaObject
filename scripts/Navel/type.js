@@ -254,8 +254,8 @@ HandAxe(function (
   // addDefinition(namedFunc, mode_)
   // addDefinition(selector, func, mode_)
 
-  _Type.addSelfMethod(function addDefinition(...params) {
-    const definition = AsDefinitionFrom(params, this.context)
+  _Type.addSelfMethod(function addDefinition(...args) {
+    const definition = AsDefinitionFrom(args, this.context)
     this._setDefinitionAt(definition.tag, definition)
   })
 
@@ -390,6 +390,14 @@ HandAxe(function (
 
   _Type.addSelfMethod(function addMethods(items) {
     this.define(items, "METHOD")
+  })
+
+  _Type.addSelfMethod(function addValueMethods(items) {
+    this.define(items, "VALUE_METHOD")
+  })
+
+  _Type.addSelfMethod(function addSelfMethods(items) {
+    this.define(items, "SELF_METHOD")
   })
 
   _Type.addSelfMethod(function addAliases(items) {
@@ -573,7 +581,7 @@ HandAxe(function (
 
     if (properName[0] !== "$") {
       if (priorName != null) {
-        this.removeSharedProperty(AsMembershipSelector(priorName))
+        this.deleteSharedProperty(AsMembershipSelector(priorName))
       }
       const selector = AsMembershipSelector(properName)
       this.membershipSelector = selector
@@ -645,20 +653,20 @@ HandAxe(function (
 
   //// REMOVING ////
 
-  _Type.addSelfMethod(function removeSharedProperty(selector) {
+  _Type.addSelfMethod(function deleteSharedProperty(selector) {
     if (this._definitions[selector] !== undefined) {
       this._deleteDefinitionAt(selector)
     }
   })
 
-  _Type.addSelfMethod(function removeDeclaration(selector) {
+  _Type.addSelfMethod(function deleteDeclaration(selector) {
     const tag = `_declaration@${ValueAsName(selector)}`
   if (this._definitions[tag] !== undefined) {
       this._deleteDefinitionAt(tag)
     }
   })
 
-  _Type.addSelfMethod(function removeAssigner(selector) {
+  _Type.addSelfMethod(function deleteAssigner(selector) {
     const tag = `_assigner@${ValueAsName(selector)}`
     if (this._definitions[tag] !== undefined) {
       this._deleteDefinitionAt(tag)
@@ -666,8 +674,8 @@ HandAxe(function (
   })
 
 
-  _Type.addAlias("removeMethod"     , "removeSharedProperty")
-  _Type.addAlias("forRemoveAssigner", "removeAssigner"      )
+  _Type.addAlias("deleteMethod"     , "deleteSharedProperty")
+  _Type.addAlias("forRemoveAssigner", "deleteAssigner"      )
 
 
 
