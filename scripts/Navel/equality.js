@@ -5,9 +5,10 @@
 //                               mutable                       immutable
 // is(Same)                             the exact same object
 // isExactly                        same type/structure/mutablility
-// isIdentical (forever)      same object                   same type/values
-// isEqual (W|R)       same type/structure/mutability       same type/values
-// isEquivalent (for R)                  same ordering/values
+// isIdentical (forever)      same object                   same type/values/id
+// isEqual (W|R)       same type/structure/mutability/id    same type/values/id
+// isEquivalent (for R)                  same ordering/values/id
+// isAlike      (for R)                  same ordering/values
 // isSimilar    (for R)               similar values ignore case
 
 
@@ -17,462 +18,71 @@
 
 
 
-
 HandAxe._(function Equality(
-  $INNER, $PULP, $RIND, IMMUTABLE, VALUE_METHOD, _DURABLES,
-  FindAndSetDurables, FindDurables, InterMap, TheEmptyArray, ValueAsName,
-  $Intrinsic, Definition, Type, _Comparator, nil
+  $INNER, $INSTANCE_BLANKER, $PULP, $RIND, IMMUTABLE, _DURABLES,
+  GetDurables, InterMap, KnowFunc, OwnVisibleNamesOf, SpawnFrom,
+  ValueAsName, _RootContext, nil,
+  $Intrinsic, Definition, Type, _Comparator
 ) {
   "use strict"
 
-  var IsSame, IsEqual, IsExactly, IsEquivalent, IsSimilar, IsIdentical
 
   HandAxe.add(this)
-
-  $Intrinsic.addValueMethod(function isSame(value) {
-    return (this === value || this[$RIND] === value)
-  })
-
-  $Intrinsic.addAlias("is", "isSame")
-
-  $Intrinsic.addValueMethod(function isEqual(value, comparator_) {
-    if (this === value)                           { return true  }
-    const _$self = this[$INNER]
-    const   self = _$self[$RIND]
-    if (self === value)                           { return true  }
-
-    const _$value = InterMap.get(value)
-    if (_$value === undefined)                    { return false }
-    if (_$self[IMMUTABLE] !== _$value[IMMUTABLE]) { return false }
-
-    const konstructor = _$self.constructor
-    if (konstructor !== _$value.constructor)      { return false }
-
-    const comparator = comparator_ || IsEqual
-    return comparator[COMPARE](self, value, konstructor)
-  })
-
-  $Intrinsic.addValueMethod(function isExactly(value, comparator_) {
-    if (this === value)                           { return true  }
-    const _$self = this[$INNER]
-    const   self = _$self[$RIND]
-    if (self === value)                           { return true  }
-
-    const _$value = InterMap.get(value)
-    if (_$value === undefined)                    { return false }
-    if (_$self[IMMUTABLE] !== _$value[IMMUTABLE]) { return false }
-
-    const konstructor = _$self.constructor
-    if (konstructor !== _$value.constructor)      { return false }
-
-    const comparator = comparator_ || IsExactly
-    return comparator[COMPARE](self, value, konstructor)
-  })
-
-  $Intrinsic.addValueMethod(function isEquivalent(value, comparator_) {
-    if (this === value) { return true }
-    const _$self = this[$INNER]
-    const   self = _$self[$RIND]
-    if (self === value) { return true }
-    const comparator = comparator_ || IsEquivalent
-    return comparator[COMPARE](self, value, _$self.constructor)
-  })
-
-  $Intrinsic.addValueMethod(function isSimilar(value, comparator_) {
-    if (this === value) { return true }
-    const _$self = this[$INNER]
-    const   self = _$self[$RIND]
-    if (self === value) { return true }
-    const comparator = comparator_ || IsSimilar
-    return comparator[COMPARE](self, value, _$self.constructor)
-  })
-
-  $Intrinsic.addValueMethod(function isIdentical(value, comparator_) {
-    if (this === value)                            { return true  }
-    const _$self = this[$INNER]
-    const   self = _$self[$RIND]
-    if (self === value)                            { return true  }
-
-    const _$value = InterMap.get(value)
-    if (_$value === undefined)                     { return false }
-    if (!_$self[IMMUTABLE] || !_$value[IMMUTABLE]) { return false }
-
-    const konstructor = _$self.constructor
-    if (konstructor !== _$value.constructor)       { return false }
-
-    const comparator = comparator_ || IsIdentical
-    return comparator[COMPARE](self, value, _$self.constructor)
-  })
-
-
-  function areSame(a, b) {
-    return (a === b)
-  }
-
-
-  function areExactly(a, b) {
-    if (a === b) { return true }
-
-    switch (typeof a) {
-      default          : return false
-
-      case "number"    :
-        return (a === b) ?
-          ((a !== 0) || (1 / a) === (1 / b)) : // Check for 0 and -0
-          ((a !== a) && (b !== b))             // Check for NaN
-
-      case "object"    : if (a === null || b === null) { return false }
-      // break omitted
-      case "function"  : break
-    }
-
-    if (a[IMMUTABLE] !== b[IMMUTABLE]) { return false }
-
-    const konstructor = a.constructor
-    if (konstructor !== b.constructor) { return false }
-
-    const comparator = this || IsExactly
-    return comparator[COMPARE](a, b, konstructor)
-  }
-
-  function areIdentical(a, b) {
-    if (a === b)                        { return true  }
-    if (!a[IMMUTABLE] || !b[IMMUTABLE]) { return false }
-
-    switch (typeof a) {
-      default          : return false        // Check for NaN.  0 equals -0
-      case "number"    : return (a === b) || ((a !== a) && (b !== b))
-      case "object"    : if (a === null || b === null) { return false }
-      // break omitted
-      case "function"  : break
-    }
-
-    const konstructor = a.constructor
-    if (konstructor !== b.constructor) { return false }
-
-    const comparator = this || IsIdentical
-    return comparator[COMPARE](a, b, konstructor)
-  }
-
-  function areEqual(a, b) {
-    if (a === b) { return true }
-
-    switch (typeof a) {
-      default          : return false        // Check for NaN.  0 equals -0
-      case "number"    : return (a === b) || ((a !== a) && (b !== b))
-      case "object"    : if (a === null || b === null) { return false }
-      // break omitted
-      case "function"  : break
-    }
-
-    if (a[IMMUTABLE] !== b[IMMUTABLE]) { return false }
-
-    const konstructor = a.constructor
-    if (konstructor !== b.constructor) { return false }
-
-    const comparator = this || IsEqual
-    return comparator[COMPARE](a, b, konstructor)
-  }
-
-  function areEquivalent(a, b) {
-    if (a === b) { return true }
-
-    switch (typeof a) {
-      default          : return false        // Check for NaN.  0 equals -0
-      case "number"    : return (a === b) || ((a !== a) && (b !== b))
-      case "object"    : if (a === null || b === null) { return false }
-      // break omitted
-      case "function"  : break
-    }
-
-    const comparator = this || IsEquivalent
-    return comparator[COMPARE](a, b, a.constructor)
-  }
-
-  function areSimilar(a, b) {
-    var strA, m, n
-    if (a === b) { return true }
-
-    switch (typeof a) {
-      case "boolean"   : return false
-      case "undefined" : return (b === null)
-
-      case "object"    :
-        if (a === null) { return (b === undefined) || (b === nil) }
-        if (a === nil)  { return (b === null) }
-        break
-
-      case "symbol" :
-        strA = ValueAsName(a)
-
-        switch (typeof b) {
-          default       : return false
-          case "symbol" : return (strA === ValueAsName(b))
-          case "string" : return (strA === b)
-          case "number" :
-            m = +strA; n = b
-            return (m === m) && (m === n) // Check for NaN
-        }
-
-      case "string" :
-        switch (typeof b) {
-          default       : return false
-          case "symbol" : return (a === ValueAsName(b))
-          case "string" : return (a.toLowerCase() === b.toLowerCase())
-          case "number" :
-            m = +a; n = b
-            return (m === m) && (m === n) // Check for NaN
-        }
-
-      case "number" :
-        m = a
-        switch (typeof b) {
-          default       : return false
-          case "symbol" : n = +ValueAsName(b) ; break
-          case "string" : n = +b              ; break
-          case "number" : n = b ; return (m !== m && n !== n) // Check for NaN
-        }
-        return (n === n) && (m === n) // Check for NaN
-
-      case "function" :
-        if (typeof b !== "function")  { return false }
-        break
-
-    }
-
-    const comparator = this || IsSimilar
-    return comparator[COMPARE](a, b, a.constructor)
-  }
-
-  HandAxe.add(areSame)
-  HandAxe.add(areIdentical)
-  HandAxe.add(areExactly)
-  HandAxe.add(areEqual)
-  HandAxe.add(areEquivalent)
-  HandAxe.add(areSimilar)
-
-
-  const COMPARE = Symbol("COMPARE")
-
-  const _CompareDef = Definition(
-    COMPARE,
-    function _compare1(a, b, konstructor) {
-      const _$comparator = new this._blanker()
-      const  _comparator = _$comparator[$PULP]
-
-      _$comparator._rootA = a
-      _$comparator._rootB = b
-
-      return _comparator._compareProperties(a, b, konstructor)
-    },
-    undefined, VALUE_METHOD)
-
-
-  IsSame = _Comparator.newSubtype("IsSame", this)
-    .addOwnDefinition(_CompareDef)
-    .addValueMethod("compare", areSame)
-
-  IsEqual = _Comparator.newSubtype("IsEqual", this)
-    .addOwnDefinition(_CompareDef)
-    .addSharedProperty("_propertiesSelector", "_isEqualProperties")
-    .addValueMethod("compare", areEqual)
-
-  IsExactly = _Comparator.newSubtype("IsExactly", this)
-    .addOwnDefinition(_CompareDef)
-    .addSharedProperty("_propertiesSelector", "_isExactlyProperties")
-    .addValueMethod("compare", areExactly)
-
-    .addValueMethod(function _compareN(a, b, konstructor) {
-      var idA, idB
-      const ids = this.ids
-      if (!(idA = ids.get(a))) { ids.set(a, (idA = this._nextId++)) }
-      if (!(idB = ids.get(b))) { ids.set(b, (idB = this._nextId++)) }
-
-      if (this._haveDivergentPaths(idA, idB)) { return false }
-      if (this._alreadyCompared(idA, idB))    { return true  }
-
-      return this._compareProperties(a, b, konstructor)
-    })
-
-    .addValueMethod(function _compareMapProperties(a, b) {
-      if (a.size !== b.size) { return false }
-
-      a.forEach((valueA, key) => {
-        const valueB = b.get(key)
-        if (!this.compare(valueA, valueB))       { return false }
-        if (valueA === undefined && !b.has(key)) { return false }
-      })
-      return true
-    })
-
-  IsEquivalent = _Comparator.newSubtype("IsEquivalent", this)
-    .addOwnDefinition(_CompareDef)
-    .addSharedProperty("_propertiesSelector", "_isEquivalentProperties")
-    .addValueMethod("compare", areEquivalent)
-
-    .addValueMethod(function _compare2(a, b, konstructor) {
-      const ids    = new Map()
-      const cohort = [0, 1]
-      ids.set(this._rootA, 0)
-      ids.set(this._rootB, 1)
-
-      this._ids     = ids
-      this._nextId  = 2
-      this._cohorts = [cohort, cohort]
-
-      this[COMPARE] = this._compareN
-
-      return this._compareProperties(a, b, konstructor)
-    })
-
-    .addValueMethod(function _compareN(a, b, konstructor) {
-      var idA, idB
-      const ids = this.ids
-      if (!(idA = ids.get(a))) { ids.set(a, (idA = this._nextId++)) }
-      if (!(idB = ids.get(b))) { ids.set(b, (idB = this._nextId++)) }
-
-      if (this._alreadyCompared(idA, idB))    { return true  }
-
-      return this._compareProperties(a, b, konstructor)
-    })
-
-  IsSimilar = _Comparator.newSubtype("IsSimilar", this)
-    .addOwnDefinition(_CompareDef)
-    .addSharedProperty("_propertiesSelector", "_isSimilarProperties_")
-    .addValueMethod("compare", areSimilar)
-    .addDefinition(IsEquivalent.definitionAt("_compare2"))
-    .addDefinition(IsEquivalent.definitionAt("_compareN"))
-
-    .addValueMethod(function _compareFuncProperties_(a, b) {
-      if (a.name !== b.name)           { return false }
-      if (a.toString() !== b.toString) { return false }
-
-      const durablesA = a[_DURABLES] || FindDurables(a)
-      const durablesB = b[_DURABLES] || FindDurables(b)
-      return this._compareObjectProperties_(a, b, durablesA, durablesB)
-    })
-
-  IsIdentical = _Comparator.newSubtype("IsIdentical", this)
-    .addOwnDefinition(_CompareDef)
-    .addSharedProperty("_propertiesSelector", "_isIdenticalProperties")
-    .addValueMethod("compare", areIdentical)
-    .addDefinition(IsEquivalent.definitionAt("_compare2"))
-    .addDefinition(IsEquivalent.definitionAt("_compareN"))
-
-  this.add(IsSame)
-  this.add(IsIdentical)
-  this.add(IsExactly)
-  this.add(IsEqual)
-  this.add(IsEquivalent)
-  this.add(IsSimilar)
-
 
 
   _Comparator.setContext(this)
 
-  _Comparator.addSharedProperty("_compare", "_compare1")
-
-  _Comparator.addMethods([
-    "VALUE",
-
-    function _compare2(a, b, konstructor) {
-      const ids    = new Map()
-      const cohort = [0, 1]
-      ids.set(this._rootA, 0)
-      ids.set(this._rootB, 1)
-
-      this._ids     = ids
-      this._nextId  = 2
-      this._cohorts = [cohort, cohort]
-
-      this._pathA     = [-1, undefined]
-      this._pathB     = [undefined, -1]
-      this._pathCount = 1
-
-      this[COMPARE] = this._compareN
-
-      return this._compareProperties(a, b, konstructor)
-    },
-
-    function _compareN(a, b, konstructor) {
-      var idA, idB
-      const ids = this.ids
-      if (!(idA = ids.get(a))) { ids.set(a, (idA = this._nextId++)) }
-      if (!(idB = ids.get(b))) { ids.set(b, (idB = this._nextId++)) }
-
-      // Note: should this be checking for isFact vs IsImmutable???
-      if (!a[IMMUTABLE] && this._haveDivergentPaths(idA, idB)) { return false }
-      if (this._alreadyCompared(idA, idB))                     { return true  }
-
-      return this._compareProperties(a, b, konstructor)
-    },
-
+  _Comparator.addValueMethods([
 
     function _compareProperties(a, b, konstructor) {
-      var _$a, _$b, _a, _b, isFunc, handler, count, durablesA, durablesB
+      var _$a, _$b, _a, _b, isFunc, handler, result
 
       switch (konstructor) {
         case WeakMap  : return undefined
         case WeakSet  : return undefined
-        case Object   :
-          durablesA = FindDurables(a)
-          durablesB = FindDurables(b)
-          return this._compareObjectProperties_(a, b, durablesA, durablesB)
-
-        case Array    :
-          count = a.length
-          return (count !== b.length) ? false :
-            this._compareSequenceProperties_(a, b, count)
-
-        case Map      : return this._compareMapProperties(a, b)
-        case Set      : return this._compareSetProperties(a, b)
+        case Object   : return this.compareObjects_(a, b)
+        case Array    : return this.compareIndexed_(a, b)
+        case String   : return this.compareIndexed_(a, b)
+        case Map      : return this.compareMaps_(a, b)
+        case Set      : return this.compareSets_(a, b)
         case Function : isFunc = true ; break
       }
 
-      const comparePropertiesSelector = this._propertiesSelector
-
       _$a = InterMap.get(a)
       if (_$a === undefined) {
-        handler = a[comparePropertiesSelector]
-        if (handler) { return handler.call(a, b, this) }
-        if (isFunc)  { return this._compareFuncProperties_(a, b) }
-
-        durablesA = a[_DURABLES] || FindDurables(a)
-        if (durablesA === TheEmptyArray) {
-          count = a.length
-          return (count !== b.length) ? false :
-            this._compareSequenceProperties_(a, b, count)
+        handler = a._compareProperties
+        if (handler) {
+          result = handler.call(a, b, this)
+          if (result !== undefined) { return result }
         }
+        else if (isFunc) { return this.compareFuncs_(a, b) }
 
-        durablesB = b[_DURABLES] || FindDurables(b)
-        return this._compareObjectProperties_(a, b, durablesA, durablesB)
+        return this.compareObjects_(a, b)
       }
 
-      handler = _$a[comparePropertiesSelector]
+      handler = _$a._compareProperties
       _a      = _$a[$PULP]
-      if (handler) { return handler.call(_a, b, this) }
+      if (handler) {
+        result = handler.call(_a, b, this)
+        if (result !== undefined) { return result }
+      }
 
       _$b = InterMap.get(b)
-       _b = (_$b !== undefined) ? _$b[$PULP] : (_$b = b)
+       _b = (_$b !== undefined) ? _$b[$PULP] : b
 
-      durablesA = _$a[_DURABLES] || FindAndSetDurables(_$a)
-      if (durablesA === TheEmptyArray) {
-        count = _a.size
-        return (count !== _b.size) ? false :
-          this._compareSequenceProperties_(_a, _b, count)
-      }
-
-      durablesB = _$b[_DURABLES] || FindAndSetDurables(_$b)
-      return this._compareObjectProperties_(_a, _b, durablesA, durablesB)
-
+      return this.compareObjects_(_a, _b)
     },
 
-    function _compareFuncProperties_(a, b) {  // eslint-disable-line
+
+    function compareFuncs_(_a, _b) {  // eslint-disable-line
       return false
     },
 
-    function _compareObjectProperties_(_a, _b, durablesA, durablesB) {
+
+    function compareObjects_(_a, _b) {
       var next, selector
+      const durablesA = _a[_DURABLES] || GetDurables(_a)
+      const durablesB = _b[_DURABLES] || GetDurables(_b)
       next = durablesA.length
 
       if (durablesA !== durablesB) {
@@ -486,16 +96,41 @@ HandAxe._(function Equality(
       }
       else while (next--) {
         selector = durablesA[next]
-        if (!this.compare(_a[selector], _b[selector]))  { return false }
+        if (!this.compare(_a[selector], _b[selector]))   { return false }
       }
       return true
     },
 
 
-    function _compareSequenceProperties_(_a, _b, count) {
-      var next = count
+    function compareIndexed_(_a, _b) {
+      var countA, countB, elementsA, elementsB, next
+      countA = _a.length
+      countB = _b.length
+
+      if (countA !== undefined) {
+        if (countB !== undefined) {
+          next = countA
+          while (next--) {
+            if (!this.compare(_a[next], _b[next])) { return false }
+          }
+          return true
+        }
+        countB    = _b.size
+        elementsA = _a
+      }
+      else {
+        countA = _a.size
+        if (countB !== undefined) { elementsB = _b } else { countB = _b.size }
+      }
+
+      if (countA !== countB) { return false }
+
+      if (elementsA === undefined) { elementsA = _a.elements }
+      if (elementsB === undefined) { elementsB = _b.elements }
+
+      next = countA
       while (next--) {
-        if (!this.compare(_a[next], _b[next])) { return false }
+        if (!this.compare(elementsA[next], elementsB[next])) { return false }
       }
       return true
     },
@@ -504,38 +139,38 @@ HandAxe._(function Equality(
     // Note: This isn't entirely correct. When the equality measure is relaxed,
     // the only way to ensure equality inspect is to recursively comapre
     // key-value pairs.
-    function _compareMapProperties(a, b) {
-      const size = a.size
-      if (size !== b.size) { return false }
+    function compareMaps(_a, _b) {
+      const size = _a.size
+      if (size !== _b.size) { return false }
 
       const keys   = []
       const values = []
       var   next   = 0
 
-      b.forEach((valueB, keyB) => {
+      _b.forEach((valueB, keyB) => {
         values[next] = valueB
         keys[next++] = keyB
       })
 
-      for (let [keyA, valueA] of a) {
+      for (let [keyA, valueA] of _a) {
         if (!this._pairIsWithin(valueA, keyA, values, keys)) { return false }
       }
       return true
     },
 
 
-    function _compareSetProperties(a, b) {
-      const size = a.size
-      if (size !== b.size) { return false }
+    function compareSets(_a, _b) {
+      const size = _a.size
+      if (size !== _b.size) { return false }
 
       const values = []
       var   next   = 0
 
-      b.forEach((valueB) => {
+      _b.forEach((valueB) => {
         values[next++] = valueB
       })
 
-      for (let [valueA] of a) {
+      for (let [valueA] of _a) {
         if (!this._isWithin(valueA, values)) { return false }
       }
       return true
@@ -576,7 +211,7 @@ HandAxe._(function Equality(
     },
 
 
-    function _haveDivergentPaths(idA, idB) {
+    function _haveDivergentPaths([idA, idB]) {
       const pathA  = this._pathA
       const pathB  = this._pathB
       const crumbA = pathA[idA]
@@ -590,7 +225,7 @@ HandAxe._(function Equality(
     },
 
 
-    function _alreadyCompared(idA, idB) {
+    function _alreadyCompared([idA, idB]) {
       var cohortA, cohortB, newCohort
       const cohorts = this._cohorts
 
@@ -643,6 +278,359 @@ HandAxe._(function Equality(
         }
       }
     },
+
+    function _retroactivelyInit() {
+      const ids    = new Map()
+      const cohort = [0, 1]
+      ids.set(this._rootA, 0)
+      ids.set(this._rootB, 1)
+
+      this._ids     = ids
+      this._nextId  = 2
+      this._cohorts = [cohort, cohort]
+
+      this._compareObjects = this._compareObjectsN
+
+      return this
+    },
+
+    function _getIds(a, b) {
+      var idA, idB
+      const ids = this.ids
+      if (!(idA = ids.get(a))) { ids.set(a, (idA = this._nextId++)) }
+      if (!(idB = ids.get(b))) { ids.set(b, (idB = this._nextId++)) }
+      return [idA, idB]
+    },
+
+
+    function meetsRigorOf(comparator) {
+      const nameA = this.name
+      const nameB = comparator.name
+      const rankA = ComparatorRank[nameA]
+      const rankB = ComparatorRank[nameB]
+
+      return (rankA !== rankB) ? (rankA <= rankB) : (nameA === nameB || undefined)
+    },
+
+    function meetsLeniencyOf(comparator) {
+      const nameA = this.name
+      const nameB = comparator.name
+      const rankA = ComparatorRank[nameA]
+      const rankB = ComparatorRank[nameB]
+
+      return (rankA !== rankB) ? (rankA >= rankB) : (nameA === nameB || undefined)
+    },
+
   ])
 
+
+
+  function same(a, b) {
+    if (a === b)               { return true  }
+    if (typeof a !== "number") { return false }
+    return (a === b) ?
+      ((a !== 0) || (1 / a) === (1 / b)) : // Check for 0 and -0
+      ((a !== a) && (b !== b))             // Check for NaN
+  }
+
+  function exact(a, b) {
+    if (a === b) { return true }
+
+    switch (typeof a) {
+      default         : return false
+
+      case "number"   :
+        return (a === b) ?
+          ((a !== 0) || (1 / a) === (1 / b)) : // Check for 0 and -0
+          ((a !== a) && (b !== b))             // Check for NaN
+
+      case "object"   : if (a === null || b === null) { return false }
+      // break omitted
+      case "function" : return this.compareObjects(a, b)
+    }
+  }
+
+  function similar(a, b) {
+    var strA, strB, m, n
+    if (a === b) { return true }
+
+    switch (typeof a) {
+      case "boolean"   : return false
+      case "undefined" : return (b === null)
+
+      case "object"    :
+        if (a === null) { return (b === undefined || b === nil) }
+        if (a === nil)  { return (b === null) }
+        return this.compareObjects(a, b)
+
+      case "symbol" :
+        strA = ValueAsName(a)
+
+        switch (typeof b) {
+          default       : return false
+          case "object" : return this.compareObjects(strA, b)
+          case "symbol" : return (strA === ValueAsName(b))
+          case "string" : return (strA === b)
+          case "number" :
+            m = +strA, n = b
+            return (m === n) || (strA === "NaN" && m !== m && n !== n)
+        }
+
+      case "string" :
+        switch (typeof b) {
+          default       : return false
+          case "object" : return this.compareObjects(a, b)
+          case "symbol" : return (a === ValueAsName(b))
+          case "string" : return (a.toLowerCase() === b.toLowerCase())
+          case "number" :
+            m = +a, n = b
+            return (m === n) || (a === "NaN" && m !== m && n !== n)
+        }
+
+      case "number" :
+        m = a
+        switch (typeof b) {
+          default       : return false
+          case "symbol" : n =  +(strB = ValueAsName(b)) ; break
+          case "string" : n =  +(strB = b)              ; break
+          case "number" : n = b, strB = "NaN"           ; break
+        }
+        return (m === n) || (strB === "NaN" && m !== m && n !== n)
+
+      case "function" :
+        switch (typeof b) {
+          default         : return false
+          case "object"   : return this.compareObjects(a, b)
+          case "function" : return this.compareObjects(a, b)
+        }
+    }
+  }
+
+  function equ(a, b) {
+    if (a === b) { return true }
+
+    switch (typeof a) {
+      default          : return false        // Check for NaN.  0 equals -0
+      case "number"    : return (a === b) || ((a !== a) && (b !== b))
+      case "object"    : if (a === null || b === null) { return false }
+      // break omitted
+      case "function"  : return this.compareObjects(a, b)
+    }
+  }
+
+
+  function sameObjects(a, b) {
+    return (a === b)
+  }
+
+  function identicalObjects(a, b) {
+    if (!a[IMMUTABLE] || !b[IMMUTABLE]) { return false }
+    if ( a.id         !== b.id        ) { return false }
+
+    const konstructor = a.constructor
+    if (konstructor !== b.constructor)  { return false }
+
+    return this._compareObjects(a, b, konstructor)
+  }
+
+  function strictObjects(a, b) {
+    if (a[IMMUTABLE] !== b[IMMUTABLE]) { return false }
+    if (a.id         !== b.id        ) { return false }
+
+    const konstructor = a.constructor
+    if (konstructor !== b.constructor) { return false }
+
+    return this._compareObjects(a, b, konstructor)
+  }
+
+  function equivObjects(a, b) {
+    if (a.id !== b.id) { return false }
+    return this._compareObjects(a, b, a.constructor)
+  }
+
+  function relaxedObjects(a, b) {
+    return this._compareObjects(a, b, a.constructor)
+  }
+
+
+  function _compareObjects1(a, b, konstructor) {
+    const _$comparator = new this[$INSTANCE_BLANKER]()
+    const  _comparator = _$comparator[$PULP]
+
+    _$comparator._rootA = a
+    _$comparator._rootB = b
+
+    return _comparator._compareProperties(a, b, konstructor)
+  }
+
+
+  function _compareObjectsValues2(a, b, konstructor) {
+    return this._retroactivelyInit._compareProperties(a, b, konstructor)
+  }
+
+  function _compareObjectStructure2(a, b, konstructor) {
+    this._pathA     = [-1, undefined]
+    this._pathB     = [undefined, -1]
+    this._pathCount = 1
+
+    return this._retroactivelyInit._compareProperties(a, b, konstructor)
+  }
+
+
+  function _compareObjectsValuesN(a, b, konstructor) {
+    const ids = this._getIds(a, b)
+    if (this._alreadyCompared(ids)) { return true }
+    return this._compareProperties(a, b, konstructor)
+  }
+
+  function _compareObjectsMixedN(a, b, konstructor) {
+    const ids = this._getIds(a, b)
+    if (!a[IMMUTABLE] && this._haveDivergentPaths(ids)) { return false }
+    if (this._alreadyCompared(ids))                     { return true  }
+    return this._compareProperties(a, b, konstructor)
+  }
+
+  function _compareObjectsStructureN(a, b, konstructor) {
+    const ids = this._getIds(a, b)
+    if (this._haveDivergentPaths(ids)) { return false }
+    if (this._alreadyCompared(ids))    { return true  }
+    return this._compareProperties(a, b, konstructor)
+  }
+
+
+
+  const Def        = Definition
+
+  const Same       = Def("compare", same   , "VALUE")
+  const Exact      = Def("compare", exact  , "VALUE")
+  const Simlr      = Def("compare", similar, "VALUE")
+  const Equ        = Def("compare", equ    , "VALUE")
+
+  const SameObj    = Def("compareObjects" , sameObjects     , "VALUE")
+  const IdentObj   = Def("compareObjects" , identicalObjects, "VALUE")
+  const StrictObj  = Def("compareObjects" , strictObjects   , "VALUE")
+  const EquivObj   = Def("compareObjects" , equivObjects    , "VALUE")
+  const RelaxedObj = Def("compareObjects" , relaxedObjects  , "VALUE")
+
+  const _CompObj1 = Def("_compareObjects", _compareObjects1, "VALUE")
+
+  const _Value2  = Def("_compareObjects", _compareObjectsValues2    , "VALUE")
+  const _Struct2 = Def("_compareObjects", _compareObjectStructure2  , "VALUE")
+  const _ValueN  = Def("_compareObjects", _compareObjectsValuesN    , "VALUE")
+  const _MixedN  = Def("_compareObjects", _compareObjectsMixedN     , "VALUE")
+  const _StructN = Def("_compareObjects", _compareObjectsStructureN , "VALUE")
+
+  const ComparatorRank = SpawnFrom(null)
+
+  const Make = (rank, name, comp, compObj, _compObj2, _compObjN) => {
+    const type = _Comparator.newSubtype(name, this)
+    ComparatorRank[name] = rank
+    type.addSharedProperty("name", name)
+    type.addOwnDefinition(_CompObj1)
+    type.addOwnDefinition(comp)
+    type.addOwnDefinition(compObj)
+    type.addDefinition(comp)
+    type.addDefinition(compObj)
+    _compObj2 && type.addDefinition(_compObj2)
+    _compObjN && type.addDefinition(_compObjN)
+    this.add(type)
+    return type
+  }
+
+  var IsSame, IsIdentical, IsExactly, IsEqual, IsEquivalent, IsAlike, IsSimilar
+
+  IsSame       = Make(1, "IsSame"      , Same , SameObj   ,  null   ,  null   )
+  IsIdentical  = Make(2, "IsIdentical" , Equ  , IdentObj  , _Value2 , _ValueN )
+  IsExactly    = Make(2, "IsExactly"   , Exact, StrictObj , _Struct2, _StructN)
+  IsEqual      = Make(3, "IsEqual"     , Equ  , StrictObj , _Struct2, _MixedN )
+  IsEquivalent = Make(4, "IsEquivalent", Equ  , EquivObj  , _Value2 , _ValueN )
+  IsAlike      = Make(5, "IsAlike"     , Equ  , RelaxedObj, _Value2 , _ValueN )
+  IsSimilar    = Make(6, "IsSimilar"   , Simlr, RelaxedObj, _Value2 , _ValueN )
+
+
+  IsExactly.addValueMethod(function compareMaps_(a, b) {
+    if (a.size !== b.size) { return false }
+
+    a.forEach((valueA, key) => {
+      const valueB = b.get(key)
+      if (!this.compare(valueA, valueB))       { return false }
+      if (valueA === undefined && !b.has(key)) { return false }
+    })
+    return true
+  })
+
+
+  IsSimilar.addValueMethod(function compareFuncs_(a, b) {
+    if (a.name !== b.name)           { return false }
+    if (a.toString() !== b.toString) { return false }
+    return this.compareObjects_(a, b)
+  })
+
+
+
+  $Intrinsic.addValueMethods([
+    function isSame(value) {
+      return (this === value || this[$RIND] === value)
+    },
+
+    function isIdentical(value) {
+      return IsIdentical.compareObjects(this[$RIND], value)
+    },
+
+    function isExactly(value) {
+      return IsExactly.compareObjects(this[$RIND], value)
+    },
+
+    function isEqual(value) {
+      return IsEqual.compareObjects(this[$RIND], value)
+    },
+
+    function isEquivalent(value) {
+      return IsEquivalent.compareObjects(this[$RIND], value)
+    },
+
+    function isAlike(value) {
+      return IsAlike.compareObjects(this[$RIND], value)
+    },
+
+    function isSimilar(value) {
+      return IsSimilar.compareObjects(this[$RIND], value)
+    },
+  ])
+
+
+
+  _RootContext.add(KnowFunc(function areSame(a, b) {
+    return IsSame.compare(a, b)
+  }))
+
+  _RootContext.add(KnowFunc(function areIdentical(a, b) {
+    return IsIdentical.compare(a, b)
+  }))
+
+  _RootContext.add(KnowFunc(function areExactly(a, b) {
+    return IsExactly.compare(a, b)
+  }))
+
+  _RootContext.add(KnowFunc(function areEqual(a, b) {
+    return IsEqual.compare(a, b)
+  }))
+
+  _RootContext.add(KnowFunc(function areEquivalent(a, b) {
+    return IsEquivalent.compare(a, b)
+  }))
+
+  _RootContext.add(KnowFunc(function areAlike(a, b) {
+    return IsAlike.compare(a, b)
+  }))
+
+  _RootContext.add(KnowFunc(function areSimilar(a, b) {
+    return IsSimilar.compare(a, b)
+  }))
+
+
 })
+
+/*       1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+*/
