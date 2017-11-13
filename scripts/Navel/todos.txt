@@ -317,6 +317,28 @@ Add petrified
 asPetrified
 bePetrified
 
+==
+
+forRemoveAssigner
+forDeleteAssigner
+
+get Markdown writer into JSDoc
+Setup Docco
+push HandAxe
+
+add nullNew
+
+protected vs private
+
+beAbstract
+
+new singleton
+
+How is JQuery docs generated
+
+
+
+
 ==========
 
 ikigai

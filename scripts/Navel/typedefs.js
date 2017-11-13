@@ -1,13 +1,24 @@
 /**
  * Any
- * @typedef {(string|number|boolean|null|undefined|symbol)} Prim
+ * @typedef {(string|number|boolean|null|undefined|symbol)} primitive
  */
 
 
  /**
-  * Any
-  * @typedef {Object} BooBoo
-  * @property {boolean} hasCourage - Indicates whether the Courage component is present.
-  * @property {boolean} hasPower - Indicates whether the Power component is present.
-  * @property {boolean} hasWisdom - Indicates whether the Wisdom component is present.
-  */
+  * A selector is a string or a symbol.
+  * @typedef {string|symbol} selector
+ **/
+
+
+ /**
+  * @typedef JSObject
+ **/
+
+ /**
+  * @typedef HAObject
+ **/
+
+ /**
+  * Either a JSObject or a HAObject
+  * @typedef {JSObject|HAObject} Object
+ **/

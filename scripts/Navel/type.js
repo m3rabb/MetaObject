@@ -1,3 +1,9 @@
+/**
+ * The root context
+ * @namespace HandAxe
+ */
+
+
 HandAxe(function (
   $ASSIGNERS, $BARRIER, $BLANKER, $DISGUISE, $IMMEDIATES, $INNER, $IS_CONTEXT,
   $IS_DEFINITION, $IS_IMPENETRABLE, $IS_TYPE, $OUTER, $OWN_DEFINITIONS, $PULP,
@@ -30,11 +36,30 @@ HandAxe(function (
 
   //// ACCESSING ////
 
+  /**
+   * Answers the receiver's id.
+   * It's composed of the receiver's {@link Type#formalName formal name} and
+   * {@link Type#oid oid}.
+   *
+   * @method Type#id
+   * @return {string}
+   * @see Thing#id
+  **/
+
   _Type.addValueMethod(function id() { // Conditionally lazy property
     const newId = `${this.formalName},${this.oid}`
     if (this.context === DefaultContext) { return newId }
     return BasicSetInvisibly(this[$INNER], "id", newId, "SET OUTER TOO")
   })
+
+
+  /**
+   * Answers the receiver's formal name.
+   * It's composed of the receiver's context path and name.
+   * @method Type#formalName
+   * @return {string}
+   * @see Context#formalName
+  **/
 
   _Type.addValueMethod(function formalName() {
     const context = this.context
@@ -46,9 +71,26 @@ HandAxe(function (
 
   //// ACCESSING : Definitions
 
+  /**
+   * Answers the definition at the selector, or null if absent.
+   * @method Type#definitionAt
+   * @param {symbol|string} selector
+   * @return {?Definition}
+  **/
+
   _Type.addValueMethod(function definitionAt(selector) {
     return this._definitions[selector] || null
   })
+
+
+  /**
+   * Answers a list of tags for all of the type's definitions. Tags are
+   * the selectors (string|symbol), and specially composed strings representing
+   * declarations and assigners.
+   * @method Type#definitionTags
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+  **/
 
   _Type.addValueMethod(function definitionTags() {
     return OwnSelectorsOf(this._definitions)
@@ -58,15 +100,38 @@ HandAxe(function (
 
   //// ACCESSING : Methods
 
+  /**
+   * Answers the definition at the selector if it's a method, otherwise null.
+   * @method Type#methodAt
+   * @param {symbol|string} selector
+   * @return {?Definition}
+  **/
+
   _Type.addValueMethod(function methodAt(selector) {
     const property = PropertyAt(this._blanker.$root$inner, selector)
     return property.isMethod ? property : null
   })
 
+  /**
+   * Answers a list of all the types in the type's ancestry that have implemented
+   * the method.  The list is ordered in {@link Type#ancestry ancestry} order.
+   * @method Type#methodAncestry
+   * @param {symbol|string} selector
+   * @return {Indexable<Type>}
+  **/
+
   _Type.addValueMethod(function methodAncestry(selector) {
     return DeclareImmutable(
       this._ancestry.filter(type => type.hasDefinedMethod(selector)))
   })
+
+  /**
+   * Answers a listing of the {@link Type#methodAncestry methodAncestry}
+   * for the type's method.
+   * @method Type#methodAncestryListing
+   * @param {symbol|string} selector
+   * @return {string}
+  **/
 
   _Type.addValueMethod(function methodAncestryListing(selector) {
     const ancestry = this.methodAncestry(selector)
@@ -77,14 +142,60 @@ HandAxe(function (
 
   //// ACCESSING : Hierarchy
 
+  /**
+   * Answers the type's supertypes. The methods and properties of later types
+   * in the list will overshadow earlier types. Use the {@link Type#ancestry ancestry}
+   * method to see the full list of ancestor type created by the type's
+   * supertypes.
+   *
+   * Use {@link Type#ancestorNames supertypeNames} for a string listing of the
+   * supertype names.
+   * @method Type#supertypes
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<Type>}
+  **/
+
   _Type.addMethod(function supertypes() { return this._supertypes })
+
+  /**
+   * Answers a list of the type's ancestor types created by its
+   * {@link Type#supertypes supertypes}. The list is composed of all
+   * of the types the receiver inherits from most general to most specific. The
+   * ancestry list will always contain more types than the type's list of
+   * supertypes.
+   *
+   * Use {@link Type#ancestorNames ancestorNames} for a string listing of the
+   * ancestor type names.
+   * @method Type#ancestry
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<Type>}
+  **/
 
   _Type.addMethod(function ancestry() { return this._ancestry })
 
 
-  _Type.addValueMethod(function ancestryNames() {
+  /**
+   * Answers a string listing of the names of all of type's ancestors.
+   *
+   * Use {@link Type#ancestry ancestry} for the actual list of ancestor types.
+   * @method Type#ancestorNames
+   * @param {none} - execute immediately sans parens
+   * @return {string}
+  **/
+
+  _Type.addValueMethod(function ancestorNames() {
     return DeclareImmutable(this._ancestry.map(type => type.name))
   })
+
+
+  /**
+   * Answers a string listing of the names of all of type's ancestors.
+   *
+   * Use {@link Type#ancestry supertypes} for the actual list of supertypes.
+   * @method Type#supertypeNames
+   * @param {none} - execute immediately sans parens
+   * @return {string}
+  **/
 
   _Type.addValueMethod(function supertypeNames() {
     return DeclareImmutable(this._supertypes.map(type => type.name))
@@ -94,67 +205,260 @@ HandAxe(function (
 
   //// ACCESSING : Selector introspection
 
+  /**
+   * Answers a list of all of the selectors defined within the type.
+   *
+   * This is the base method in the selector introspection suite of methods. use
+   * the following methods to access meaningful subsets of the defined methods:
+   * {@link Type#definedImmediates definedImmediates},
+   * {@link Type#definedPublics definedPublics},
+   * {@link Type#definedPrivates definedPrivates},
+   * {@link Type#definedVisibles definedVisibles},
+   * {@link Type#definedInvisibles definedInvisibles}, and
+   * {@link Type#definedVisiblePublics definedVisiblePublics}.
+   *
+   * Use {@link Type#allDefinedSelectors allDefinedSelectors} to answer a list
+   * of all _defined_ selectors defined by the type's {@link Type#ancestry ancestry}.
+   * Note: {@link Type#allDefinedSelectors allDefinedSelectors} doesn't include
+   * selectors from the base types, Something and Intrinsic, as they are _intrinsic_ to HandAxe, and
+   * not _programmer defined_. Use {@link Type#allKnownSelectors allKnownSelectors}
+   * to include these selectors as well.
+   *
+   * | type realm | receiver | ancestors | instrinsic |
+   * |-----|:---:|:---:|:---:|
+   * |{@link Type#definedSelectors definedSelectors}          |•| | |
+   * |{@link Type#allDefinedSelectors allDefinedSelectors}    |•|•| |
+   * |{@link Type#allKnownSelectors allKnownSelectors}        |•|•|•|
+   *
+   * Like {@link Type#definedSelectors definedSelectors},
+   * {@link Type#allDefinedSelectors allDefinedSelectors} is the base method for its own
+   * suite of introspection methods.
+   *
+   * @method Type#definedSelectors
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+  **/
+
   _Type.addValueMethod(function definedSelectors() {
     return this._definedSelectors(OwnSelectorsOf)
   })
+
+
+  /**
+   * Answers a list of all of the _immediate_ selectors defined within the type.
+   * @method Type#definedImmediates
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#definedSelectors definedSelectors}
+  **/
 
   _Type.addValueMethod(function definedImmediates() {
     return this._definedSelectors(OwnSelectorsOf, true)
   })
 
+
+  /**
+   * Answers a list of all of the _public_ selectors defined within the type.
+   * @method Type#definedPublics
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#definedSelectors definedSelectors}
+  **/
+
   _Type.addValueMethod(function definedPublics() {
     return this._definedSelectors(OwnPublicsOf)
   })
+
+
+  /**
+   * Answers a list of all of the _private_ selectors defined within the type.
+   * @method Type#definedPrivates
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#definedSelectors definedSelectors}
+  **/
 
   _Type.addValueMethod(function definedPrivates() {
     return DiffAndSort(
       this.definedSelectors, this.definedPublics, CompareSelectors)
   })
 
+
+  /**
+   * Answers a list of all of the _visible_ selectors defined within the type.
+   * @method Type#definedVisibles
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#definedSelectors definedSelectors}
+  **/
+
   _Type.addValueMethod(function definedVisibles() {
     return this._definedSelectors(OwnVisiblesOf)
   })
+
+
+  /**
+   * Answers a list of all of the _invisible_ selectors defined within the type.
+   * @method Type#definedInvisibles
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#definedSelectors definedSelectors}
+  **/
 
   _Type.addValueMethod(function definedInvisibles() {
     return DiffAndSort(
       this.definedSelectors, this.definedVisibles, CompareSelectors)
   })
 
+
+  /**
+   * Answers a list of all of the _visible public_ selectors defined within the type.
+   * @method Type#definedVisiblePublics
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#definedSelectors definedSelectors}
+  **/
+
   _Type.addValueMethod(function definedVisiblePublics() {
     return DeclareImmutable(this.definedVisibles.filter(IsPublicSelector))
   })
 
 
+  /**
+   * Answers a list of all of the selectors defined within the
+   * {@link Type#ancestry ancestry}. Use {@link Type#definedSelectors definedSelectors}
+   * to simply get the selectors defined _explicitly_ by the type itself.
+   *
+   * Note: {@link Type#allDefinedSelectors allDefinedSelectors} doesn't include
+   * selectors from the base types, Something and Intrinsic, as they are _intrinsic_ to HandAxe, and
+   * not _programmer defined_. Use {@link Type#allKnownSelectors allKnownSelectors}
+   * to include these selectors as well.
+   *
+   * This is the base method in the selector introspection suite of methods. use
+   * the following methods to access meaningful subsets of the defined methods:
+   * {@link Type#allDefinedImmediates allDefinedImmediates},
+   * {@link Type#allDefinedPublics allDefinedPublics},
+   * {@link Type#allDefinedPrivates allDefinedPrivates},
+   * {@link Type#allDefinedVisibles allDefinedVisibles},
+   * {@link Type#allDefinedInvisibles allDefinedInvisibles}, and
+   * {@link Type#allDefinedVisiblePublics allDefinedVisiblePublics}.
+   *
+   * Refer to {@link Type#definedSelectors definedSelectors} for further
+   * explanation about the introspection suite of methods.
+   *
+   * @method Type#allDefinedSelectors
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+  **/
+
   _Type.addValueMethod(function allDefinedSelectors() {
     return OwnSelectorsOf(this._blanker.$root$inner)
   })
+
+
+  /**
+   * Answers a list of all of the _immediate_ selectors defined within the
+   * type's {@link Type#ancestry ancestry}.
+   * @method Type#allDefinedImmediates
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#allDefinedSelectors allDefinedSelectors}
+  **/
 
   _Type.addValueMethod(function allDefinedImmediates() {
     return _KnownSelectorsOf(this._blanker.$root$inner[$IMMEDIATES])
   })
 
+
+  /**
+   * Answers a list of all of the _public_ selectors defined within the
+   * type's {@link Type#ancestry ancestry}.
+   * @method Type#allDefinedPublics
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#allDefinedSelectors allDefinedSelectors}
+  **/
+
   _Type.addValueMethod(function allDefinedPublics() {
     return OwnPublicsOf(this._blanker.$root$inner)
   })
+
+
+  /**
+   * Answers a list of all of the _private_ selectors defined within the
+   * type's {@link Type#ancestry ancestry}.
+   * @method Type#allDefinedPrivates
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#allDefinedSelectors allDefinedSelectors}
+  **/
 
   _Type.addValueMethod(function allDefinedPrivates() {
     return DiffAndSort(
       this.allDefinedSelectors, this.allDefinedPublics, CompareSelectors)
   })
 
+
+  /**
+   * Answers a list of all of the _visible_ selectors defined within the
+   * type's {@link Type#ancestry ancestry}.
+   * @method Type#allDefinedVisibles
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#allDefinedSelectors allDefinedSelectors}
+  **/
+
   _Type.addValueMethod(function allDefinedVisibles() {
     return OwnVisiblesOf(this._blanker.$root$inner)
   })
+
+
+  /**
+   * Answers a list of all of the _invisible_ selectors defined within the
+   * type's {@link Type#ancestry ancestry}.
+   * @method Type#allDefinedInvisibles
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#allDefinedSelectors allDefinedSelectors}
+  **/
 
   _Type.addValueMethod(function allDefinedInvisibles() {
     return DiffAndSort(
       this.allDefinedSelectors, this.allDefinedVisibles, CompareSelectors)
   })
 
+
+  /**
+   * Answers a list of all of the _visible public_ selectors defined within the
+   * type's {@link Type#ancestry ancestry}.
+   * @method Type#allDefinedVisiblePublics
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+   * @see {@link Type#allDefinedSelectors allDefinedSelectors}
+  **/
+
   _Type.addValueMethod(function allDefinedVisiblePublics() {
     return DeclareImmutable(this.allDefinedVisibles.filter(IsPublicSelector))
   })
 
+
+  /**
+   * Answers a sorted list of all of the selectors known within the
+   * {@link Type#ancestry ancestry}, including those within the base types,
+   * Something and Intrinsic,
+   *
+   * Use {@link Type#allDefinedSelectors allDefinedSelectors} to only answer
+   * the all of the ancestry's _programmer defined_ selectors.
+   * Use {@link Type#definedSelectors definedSelectors}
+   * to simply get the selectors defined _explicitly_ by the type itself.
+   *
+   * Refer to {@link Type#definedSelectors definedSelectors} for further
+   * explanation about the introspection suite of methods.
+   *
+   * @method Type#allKnownSelectors
+   * @param {none} - execute immediately sans parens
+   * @return {Indexable<selector>}
+  **/
 
   _Type.addValueMethod(function allKnownSelectors() {
     return _KnownSelectorsOf(this._blanker.$root$inner)
@@ -567,6 +871,18 @@ HandAxe(function (
 
   //// SETTING ////
 
+  /**
+   * Sets the type's supertypes to the types in the array.  It makes no change
+   * if the list of types is the same as the current list. If the type
+   * isn't a root type, then it's not allow to set it's supertype to an empty
+   * array of types.  When the supertypes are changed the type reinherits all of
+   * the properties from its new ancestry list. Beware: this can be an expensive
+   * operation.
+   * @method Type#setSupertypes
+   * @param {Indexable<Type>} supertypes
+   * @return {self|copy} The receiver if mutable, otherwise an immutable copy.
+  **/
+
   _Type.addSelfMethod(function setSupertypes(supertypes) {
     if (this._supertypes === supertypes) { return }
     const ancestry = this._buildAncestry(supertypes)
@@ -574,8 +890,22 @@ HandAxe(function (
     this._setSupertypesAndAncestry(supertypes, ancestry, REINHERIT)
   })
 
-  _Type.addSelfMethod(function setName(newName) {
-    const properName = AsCapitalized(newName)
+
+  /**
+   * Answers the type's name.
+   * @method Type#name
+   * @param {none} - execute immediately sans parens
+   * @return {string}
+  **/
+  /**
+   * Sets the type's name.
+   * @method Type#setName
+   * @param {string} name
+   * @return {self|copy} The receiver if mutable, otherwise an immutable copy.
+  **/
+
+  _Type.addSelfMethod(function setName(name) {
+    const properName = AsCapitalized(name)
     const priorName = this.name
     if (properName === priorName) { return priorName }
 
@@ -592,16 +922,35 @@ HandAxe(function (
     this._setName(properName)
   })
 
+
+  /**
+   * Answers the type's context.
+   * @method Type#context
+   * @param {none} - execute immediately sans parens
+   * @return {Context}
+  **/
+  /**
+   * Sets the type's context.
+   * @method Type#setContext
+   * @param {Context} context
+   * @return {self|copy} The receiver if mutable, otherwise an immutable copy.
+  **/
+
   _Type.addSelfMethod(function setContext(context) {
     this._setContext(context)
     context.atPut(this.name, this[$RIND])
   })
 
 
+
+
+
+  //// SETTING : Support
+
   _Type.addMandatorySetter("_setName", function name(properName) {
     this._setDisplayNames(properName)
     return properName
-  })
+  }, "INVISIBLE")
 
   _Type.addMandatorySetter("_setContext", function context(context) {
     if (_HasOwnHandler.call(this, "context")) {
@@ -609,11 +958,7 @@ HandAxe(function (
     }
     this.addSharedProperty("context", context, "INVISIBLE")
     return context
-  })
-
-
-
-  //// SETTING : Support
+  }, "INVISIBLE")
 
   _Type.addValueMethod(function _setSupertypesAndAncestry(
                                       supertypes, ancestry, inheritSpec_) {
@@ -651,7 +996,16 @@ HandAxe(function (
 
 
 
-  //// REMOVING ////
+  //// DELETING ////
+
+  /**
+   * Deletes the shared property at the selector, if present.
+   * The {@link Type#deleteMethod deleteMethod} method is an
+   * alias for {@link Type#deleteSharedProperty deleteSharedProperty}.
+   * @method Type#deleteSharedProperty
+   * @param {string|symbol} selector
+   * @return {self|copy} The receiver if mutable, otherwise an immutable copy.
+  **/
 
   _Type.addSelfMethod(function deleteSharedProperty(selector) {
     if (this._definitions[selector] !== undefined) {
@@ -659,12 +1013,30 @@ HandAxe(function (
     }
   })
 
+
+  /**
+   * Deletes the declaration at the selector, if present.
+   * @method Type#deleteDeclaration
+   * @param {string|symbol} selector
+   * @return {self|copy} The receiver if mutable, otherwise an immutable copy.
+  **/
+
   _Type.addSelfMethod(function deleteDeclaration(selector) {
     const tag = `_declaration@${ValueAsName(selector)}`
   if (this._definitions[tag] !== undefined) {
       this._deleteDefinitionAt(tag)
     }
   })
+
+
+  /**
+   * Deletes the assigner at the selector, if present.
+   * The {@link Type#forRemoveAssigner forRemoveAssigner} method
+   * is an alias for {@link Type#deleteAssigner deleteAssigner}.
+   * @method Type#deleteAssigner
+   * @param {string|symbol} selector
+   * @return {self|copy} The receiver if mutable, otherwise an immutable copy.
+  **/
 
   _Type.addSelfMethod(function deleteAssigner(selector) {
     const tag = `_assigner@${ValueAsName(selector)}`
@@ -674,13 +1046,40 @@ HandAxe(function (
   })
 
 
-  _Type.addAlias("deleteMethod"     , "deleteSharedProperty")
-  _Type.addAlias("forRemoveAssigner", "deleteAssigner"      )
+  /**
+   * Deletes the shared property at the selector, if present.
+   * The {@link Type#deleteMethod deleteMethod} method is an
+   * alias for {@link Type#deleteSharedProperty deleteSharedProperty}.
+   * @method Type#deleteMethod
+   * @param {string|symbol} selector
+   * @return {self|copy} The receiver if mutable, otherwise an immutable copy.
+  **/
+
+  _Type.addAlias("deleteMethod", "deleteSharedProperty")
+
+
+  /**
+   * Deletes the assigner at the selector, if present.
+   * The {@link Type#forRemoveAssigner forRemoveAssigner} method
+   * is an alias for {@link Type#deleteAssigner deleteAssigner}.
+   * @method Type#forRemoveAssigner
+   * @param {string|symbol} selector
+   * @return {self|copy} The receiver if mutable, otherwise an immutable copy.
+  **/
+
+  _Type.addAlias("forRemoveAssigner", "deleteAssigner")
 
 
 
 
   //// INTRINSIC ////
+
+  /**
+   * When mutable, sets the receiver to be immutable.
+   * @method Type#beImpenetrable
+   * @param {none} - execute immediately sans parens
+   * @return {self} The receiver itself.
+  **/
 
   _Type.addValueMethod(function beImpenetrable() {
     this[$INNER][$IS_IMPENETRABLE]              = true
@@ -689,8 +1088,24 @@ HandAxe(function (
   })
 
 
+  /**
+   * Sets the receiver to be immutable.
+   * This method should only be called on a mutable object.
+   * Reimplement this method at your own risk. It's much safer, more reliable,
+   * and usually more appropriate to reimplement
+   * {@link Type#_setPropertiesImmutable _setPropertiesImmutable}
+   * instead. If you do, reimplementing this method, within, it must called
+   * {@link Type#_basicSetImmutable _basicSetImmutable}.
+   *
+   * @method Type#_setImmutable
+   * @param {boolean} inPlace - When false (default), make the
+   * immutable copies of the existing properties immutable. Otherwise when true,
+   * make the existing immutable.
+   * @param {WeakMap} visited - The map between original and immutable subobjects.
+   * @return {self} The receiver itself.
+   * @protected
+  **/
 
-  // This method should only be called on a mutable object!!!
   _Type.addValueMethod(function _setImmutable(inPlace, visited) { // eslint-disable-line
     this.id // Lazyily sets the id (& uid) befoe it's too late.
     this._subordinateTypes = TheEmptyArray
@@ -703,9 +1118,25 @@ HandAxe(function (
 
   //// TESTING ////
 
+  /**
+   * Answers whether or not the type is a root type; i.e. doesn't inherit from
+   * {@link Thing Thing}.
+   * @method Type#isRootType
+   * @param {none} - execute immediately sans parens
+   * @return {boolean}
+  **/
+
   _Type.addValueMethod(function isRootType() {
     return (RootOf(this._blanker.$root$inner) === $Something$root$inner)
   })
+
+
+  /**
+   * Answers whether or not the type is a subtype of another type.
+   * @method Type#inheritsFrom
+   * @param {Type} type
+   * @return {boolean}
+  **/
 
   _Type.addValueMethod(function inheritsFrom(type) {
     var self, ancestry, next
@@ -716,11 +1147,30 @@ HandAxe(function (
     return false
   })
 
+
+  /**
+   * Answers whether or not the type defines a particular method.
+   * @method Type#hasDefinedMethod
+   * @param {string|symbol} selector
+   * @return {boolean}
+  **/
+
   _Type.addValueMethod(function hasDefinedMethod(selector) {
     const value = this._definitions[selector]
     return (value) ? value.isMethod : false
   })
 
+
+  /**
+   * This method's selector is actually the JavaScript implementation symbol
+   * at [Symbol.hasInstance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance).
+   * It's used by the JavaScript VM to enable {@link HandAxe} types to work
+   * with the ```instanceof``` operator.
+   * @method Type#HAS_INSTANCE
+   * @param {primitive|Object} selector
+   * @return {boolean}
+   * @private
+  **/
 
   _Type.addValueMethod(Symbol.hasInstance, function (instance) {
     return instance[this.membershipSelector]
@@ -730,6 +1180,13 @@ HandAxe(function (
 
 
   //// CONVERTING ////
+
+  /**
+   * Answers the {@link Type#formalName formal name} of the type.
+   * @method Type#toString
+   * @param {empty} - execute using parens
+   * @return {string}
+  **/
 
   _Type.addValueMethod(function toString(_) { // eslint-disable-line
     return this.formalName
@@ -754,11 +1211,29 @@ HandAxe(function (
 
   //// INITIALIZING ////
 
+  /**
+   * Answers the object's {@link Type type}.
+   * @method Something#type
+   * @param {none} - execute immediately sans parens
+   * @return {Type}
+  **/
+
   //  spec
   //    name
   //    supertype|supertypes
   //    shared|sharedProperties
   //    methods|instanceMethods
+
+  /**
+   * The Type type is type of all other types. (Including itself.)
+   *
+   * When executed, it makes a new type from one of the following parameter protocols:
+   * @class Type
+   * @param {string|Object} spec_name - A name, or a parameter spec
+   * @param {null|Indexable<Type>|Type|Context} [supertypes_context] - Zero or more supertypes, null, or a context
+   * @param {Context} [context] - A context
+   * @return {Type}
+  **/
 
   _Type.addValueMethod(function _init(spec_name, supertypes_context_, context__) {
     const [name, supertypes, context, spec] =
@@ -793,7 +1268,7 @@ HandAxe(function (
     this._copyDefinitions(_type._definitions             , inheritSpec, false)
     this._copyDefinitions(_type[$INNER][$OWN_DEFINITIONS], inheritSpec, true )
 
-    // Note: the context is used for building the new type, but in general
+    // The context is used for building the new type, but in general
     // when instantiating a new object, it doesn't typically assign the new
     // object to a context. Such is the case here.
     //   this.setContext(context)
