@@ -115,9 +115,9 @@ HandAxe(function (
 //     string
 //     null
 //   object
-//     $Something --> thingy
+//     Something|HAObject
 //       Nothing
 //       $Intrinsic
 //        Thing
-//     jsobject
+//     JSObject
 //      Object

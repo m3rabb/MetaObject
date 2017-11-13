@@ -24,3 +24,6 @@ I still have a love hate relationship with the language.
 
 
  is now quite rich and
+
+
+https://www.joelonsoftware.com/2002/11/11/the-law-of-leaky-abstractions/

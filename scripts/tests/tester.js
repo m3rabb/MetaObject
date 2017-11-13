@@ -7,6 +7,31 @@
   var result = obj.xyz
 })()
 
+this.addEventListener("DOMContentLoaded", function(event) {
+  // HTMLIFrameElement.prototype.contentWindow
+  //
+  // Object.defineProperty(
+  //   HTMLIFrameElement.prototype, 'contentWindow', {
+  //     get: function() {
+  //       return this.
+  //     }
+  //   })
+
+
+  const originalCreateElement = document.createElement
+
+  document.createElement = function(...args) {
+    return originalCreateElement.apply(this, args)
+  }
+  // const iframe = document.createElement("iframe")
+  // iframe.hidden = true
+  // document.body.appendChild(iframe)
+  // const hasOwnPropertyhandler = iframe.contentWindow.Object.hasOwnProperty
+  //
+  // const iframe2 = new HTMLIFrameElement()
+})
+
+
 // (function (global) {
 //   "use strict"
 //

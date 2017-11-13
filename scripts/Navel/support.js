@@ -291,7 +291,8 @@ HandAxe(function (
         [tag, def] = args
         _$def      = InterMap.get(def)
         if (_$def && _$def[$IS_DEFINITION]) {
-          return (tag === def.tag) ? def : Def(tag, def.handler, def.mode)
+          return (tag === def.tag) ?
+            def : Def(tag, def.handler, def.mode, def.property)
         }
         // break omitted
       case 3 : return Def(...args) // selector, value, mode

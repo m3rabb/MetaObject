@@ -53,7 +53,7 @@ HandAxe(function (
 
   // Used to provide good "type" naming in the debugger.
   _$Something._setDisplayNames("Base")
-  _$Intrinsic._setDisplayNames("Shared"   )
+  _$Intrinsic._setDisplayNames("Shared")
 
   SetAsymmetricProperty(_$Intrinsic, "isOuter", false, true )
   SetAsymmetricProperty(_$Intrinsic, "isInner", true , false)

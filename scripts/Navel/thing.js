@@ -1,7 +1,4 @@
-HandAxe(function (
-  $INNER, $OUTER, $PRIOR_IDS, $PULP, DefineProperty, InvisibleConfig,
-  _OwnKeysOf, _Thing
-) {
+HandAxe(function ($PULP,_OwnKeysOf, _Thing) {
   "use strict"
 
   //// INITIALIZING ////
@@ -18,24 +15,9 @@ HandAxe(function (
 
   //// SETTING ////
 
-  _Thing.addSetterAndAssigner("setId", function id(newId_) {
-    const existingId = this.id
-    if (existingId == null) {
-      this._retarget
-      const $inner = this[$INNER]
-      DefineProperty($inner        , "id", InvisibleConfig)
-      DefineProperty($inner[$OUTER], "id", InvisibleConfig)
-      return (newId_ !== undefined) ? newId_ : this.oid
-    }
-    if (newId_ == null || newId_ === existingId) { return existingId }
+  _Thing.addAlias("setId", "basicSetId")
 
-    if (existingId != null) {
-      const $inner   = this[$INNER]
-      const priorIds = this[$PRIOR_IDS] || []
-      $inner[$PRIOR_IDS] = [...priorIds, existingId]
-    }
-    return newId_
-  })
+  _Thing.addAlias("setContext", "basicSetContext")
 
   _Thing.addSetter("_setName", "name")
 

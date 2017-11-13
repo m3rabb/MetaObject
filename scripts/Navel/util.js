@@ -361,8 +361,11 @@ HandAxe(function (
 
   //// VALUE TESTING ////
 
-  const _HasOwnHandler = Object.prototype.hasOwnProperty // ._hasOwn
+  // const _HasOwnHandler = Object.prototype.hasOwnProperty // ._hasOwn
 
+  const _HasOwnHandler = function (sel) {
+    return Object.prototype.hasOwnProperty.call(this, sel) // ._hasOwn
+  }
 
   function ValueHasOwn(value, selector) {
     return (value != null) && _HasOwnHandler.call(value, selector)
@@ -545,7 +548,7 @@ HandAxe(function (
   Shared.declareAsImmutable       = KnowFunc(DeclareAsImmutable)
 
   Shared.getDurables              = KnowFunc(GetDurables)
-  
+
   Shared.diffAndSort              = KnowFunc(DiffAndSort)
   Shared.intersectAndSort         = KnowFunc(IntersectAndSort)
   Shared.unionAndSort             = KnowFunc(UnionAndSort)

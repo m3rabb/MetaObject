@@ -1,14 +1,14 @@
 // Programmers should never redefine these intrinsic methods!!!
 
 HandAxe(function (
-  $BLANKER, $IMMEDIATES, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE,
+  $BLANKER, $IMMEDIATES, $INNER, $IS_DEFINITION, $IS_IMPENETRABLE, $PRIOR_IDS,
   $OUTER, $OWN_DEFINITIONS, $PULP, $RIND, DECLARATION, FACT_METHOD, IMMUTABLE,
   INVISIBLE, LAZY_INSTALLER, SYMBOL_1ST_CHAR, VALUE_METHOD, _DURABLES,
-  AsDefinitionFrom, BasicSetInvisibly, CompareSelectors,
-  CompletelyDeleteProperty, DeclareImmutable, GetDurables,
-  MakeDefinitionsInfrastructure, NewUniqueId, NormalizeCopyArgs, PropertyAt,
-  SetDefinition, SpawnFrom, ValueAsFact, ValueAsName,
-  _BasicSetImmutable, _HasOwnHandler, _$Copy, _$Intrinsic,
+  AsDefinitionFrom, BasicSetInvisibly, CompareSelectors, DefineProperty,
+  CompletelyDeleteProperty, DeclareImmutable, GetDurables, InvisibleConfig,
+  IsPublicSelector, MakeDefinitionsInfrastructure, NewUniqueId,
+  NormalizeCopyArgs, PropertyAt, SetDefinition, SpawnFrom, ValueAsFact,
+  ValueAsName, _BasicSetImmutable, _HasOwnHandler, _$Copy, _$Intrinsic,
   PrivateAccessFromOutsideError, SignalError,
   InterMap, PropertyToSymbolMap,
   _PrimaryPublicSelectorsOf, _PrimarySelectorsOf,
@@ -150,11 +150,41 @@ HandAxe(function (
 
   //// SETTING ////
 
-  _$Intrinsic.addValueMethod(function _basicSet(property, value) {
-    const selector = PropertyToSymbolMap[property] || property
+  _$Intrinsic.addSetter("basicSetId", function id(newId_) {
+    const existingId = this.id
+    if (existingId == null) {
+      this._retarget
+      const $inner = this[$INNER]
+      DefineProperty($inner        , "id", InvisibleConfig)
+      DefineProperty($inner[$OUTER], "id", InvisibleConfig)
+      return (newId_ !== undefined) ? newId_ : this.oid
+    }
+    if (newId_ == null || newId_ === existingId) { return existingId }
+
+    if (existingId != null) {
+      const $inner   = this[$INNER]
+      const priorIds = this[$PRIOR_IDS] || []
+      $inner[$PRIOR_IDS] = [...priorIds, existingId]
+    }
+    return newId_
+  })
+
+
+  _$Intrinsic.addValueMethod(function _basicSet(selector, value, visibility_) {
+    if (visibility_ !== undefined) {
+      const $inner = this[$INNER]
+      DefineProperty($inner, selector, InvisibleConfig)
+      if (IsPublicSelector(selector)) {
+        DefineProperty($inner[$OUTER], selector, InvisibleConfig)
+      }
+    }
+    selector = PropertyToSymbolMap[selector] || selector
     this[selector] = value
     return this
   })
+
+
+  _$Intrinsic.addSetter("basicSetContext", "context")
 
 
 
